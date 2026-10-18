@@ -667,6 +667,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/{id}/skips': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['addSkipEvent']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings/integrity/findings/{findingId}/delete': {
     parameters: {
       query?: never
@@ -723,7 +739,7 @@ export interface paths {
       cookie?: never
     }
     get: operations['getRecordingSegments']
-    put?: never
+    put: operations['putRecordingSegments']
     post?: never
     delete?: never
     options?: never
@@ -790,6 +806,22 @@ export interface paths {
     put?: never
     post: operations['stopRecording']
     delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/recordings/{id}/segments/answer': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['withdrawSegmentAnswer']
     options?: never
     head?: never
     patch?: never
@@ -1554,8 +1586,28 @@ export interface components {
     AddCandidateChannelRequest: {
       tuning?: null | components['schemas']['TuningParametersRequest']
     }
+    AddSkipEventRequest: {
+      /** @enum {null|string} */
+      event?: 'skipped' | 'dismissed' | 'returned' | null
+      /** @enum {null|string} */
+      kind?: 'break' | 'opening' | 'ending' | null
+      /** Format: double */
+      fromSec?: null | number | string
+      /** Format: double */
+      toSec?: null | number | string
+      /** Format: int32 */
+      modelVersion?: null | number | string
+    }
     /** @enum {null|string} */
     AllocationVerdict: 'secured' | 'contended' | 'pinned' | 'unreachable' | null
+    AnsweredSegmentRequest: {
+      /** Format: double */
+      startsAtSec: number | string
+      /** Format: double */
+      endsAtSec: number | string
+      /** @enum {null|string} */
+      kind?: 'programme' | 'break' | null
+    }
     ArchiveForgottenResponder: {
       /** Format: int32 */
       forgotten: number | string
@@ -2015,6 +2067,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['SignInOptionsResponder']
+    }
+    BaseResponderOfSkipEventResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SkipEventResponder']
     }
     BaseResponderOfStorageResponder: {
       status: boolean
@@ -3064,6 +3121,10 @@ export interface components {
     PutPlaybackPositionRequest: {
       /** Format: double */
       positionSec: null | number | string
+    }
+    PutRecordingSegmentsRequest: {
+      segments?: null | components['schemas']['AnsweredSegmentRequest'][]
+      confirmed?: null | boolean
     }
     QualityCandidateMeasuredResponder: {
       /** Format: double */
@@ -4270,9 +4331,10 @@ export interface components {
       learningChangedAt: null | string
     }
     /** @enum {string} */
-    SegmentSource: 'none' | 'detected'
+    SegmentSource: 'none' | 'detected' | 'answered'
     /** @enum {string} */
-    SegmentStandingState: 'none' | 'marked' | 'nothingFound' | 'discarded'
+    SegmentStandingState:
+      'none' | 'marked' | 'nothingFound' | 'discarded' | 'answered'
     SegmentStatusResponder: {
       learningData: components['schemas']['LearningDataResponder']
       catalog: components['schemas']['CatalogResponder']
@@ -4341,6 +4403,18 @@ export interface components {
       identityProvider: boolean
       providerName: null | string
       reach: components['schemas']['OidcReach']
+    }
+    SkipEventResponder: {
+      /** Format: date-time */
+      happenedAt: string
+      event: components['schemas']['ViewerActionKind']
+      kind: components['schemas']['SegmentKind']
+      /** Format: double */
+      fromSec: number | string
+      /** Format: double */
+      toSec: number | string
+      /** Format: int32 */
+      modelVersion: null | number | string
     }
     /** @enum {string} */
     SoundTrack: 'main' | 'secondary' | 'third'
@@ -4593,6 +4667,8 @@ export interface components {
       | 'progressive1080'
       | 'progressive2160'
       | 'progressive4320'
+    /** @enum {string} */
+    ViewerActionKind: 'skipped' | 'dismissed' | 'returned'
     VisitTallyResponder: {
       /** Format: int32 */
       serviceId: number | string
@@ -7507,6 +7583,77 @@ export interface operations {
       }
     }
   }
+  addSkipEvent: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['AddSkipEventRequest']
+        'application/*+json':
+          null | components['schemas']['AddSkipEventRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSkipEventResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSkipEventResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSkipEventResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSkipEventResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSkipEventResponder']
+        }
+      }
+    }
+  }
   deleteIntegrityFinding: {
     parameters: {
       query?: never
@@ -7824,6 +7971,78 @@ export interface operations {
       }
     }
   }
+  putRecordingSegments: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PutRecordingSegmentsRequest']
+        'application/*+json':
+          null | components['schemas']['PutRecordingSegmentsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+    }
+  }
   listRecordings: {
     parameters: {
       query?: {
@@ -8087,6 +8306,62 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
+        }
+      }
+    }
+  }
+  withdrawSegmentAnswer: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
         }
       }
     }

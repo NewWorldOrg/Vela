@@ -3767,6 +3767,107 @@
         }
       }
     },
+    "/api/recordings/{id}/skips": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "addSkipEvent",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddSkipEventRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/AddSkipEventRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSkipEventResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSkipEventResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSkipEventResponder"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSkipEventResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSkipEventResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recordings/integrity/findings/{findingId}/delete": {
       "post": {
         "tags": [
@@ -4112,6 +4213,105 @@
           },
           "404": {
             "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "putRecordingSegments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PutRecordingSegmentsRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PutRecordingSegmentsRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
             "content": {
               "application/json": {
                 "schema": {
@@ -4535,6 +4735,69 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/{id}/segments/answer": {
+      "delete": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "withdrawSegmentAnswer",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
                 }
               }
             }
@@ -8349,6 +8612,63 @@
           }
         }
       },
+      "AddSkipEventRequest": {
+        "type": "object",
+        "properties": {
+          "event": {
+            "enum": [
+              "skipped",
+              "dismissed",
+              "returned",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kind": {
+            "enum": [
+              "break",
+              "opening",
+              "ending",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fromSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "toSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "modelVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false
+      },
       "AllocationVerdict": {
         "enum": [
           "secured",
@@ -8361,6 +8681,43 @@
           "null",
           "string"
         ]
+      },
+      "AnsweredSegmentRequest": {
+        "required": [
+          "startsAtSec",
+          "endsAtSec"
+        ],
+        "type": "object",
+        "properties": {
+          "startsAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "endsAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "kind": {
+            "enum": [
+              "programme",
+              "break",
+              null
+            ],
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "ArchiveForgottenResponder": {
         "required": [
@@ -10709,6 +11066,32 @@
               },
               {
                 "$ref": "#/components/schemas/SignInOptionsResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfSkipEventResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SkipEventResponder"
               }
             ]
           }
@@ -15009,6 +15392,27 @@
             "format": "double"
           }
         }
+      },
+      "PutRecordingSegmentsRequest": {
+        "type": "object",
+        "properties": {
+          "segments": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/AnsweredSegmentRequest"
+            }
+          },
+          "confirmed": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "QualityCandidateMeasuredResponder": {
         "required": [
@@ -19835,7 +20239,8 @@
       "SegmentSource": {
         "enum": [
           "none",
-          "detected"
+          "detected",
+          "answered"
         ],
         "type": "string"
       },
@@ -19844,7 +20249,8 @@
           "none",
           "marked",
           "nothingFound",
-          "discarded"
+          "discarded",
+          "answered"
         ],
         "type": "string"
       },
@@ -20079,6 +20485,54 @@
           },
           "reach": {
             "$ref": "#/components/schemas/OidcReach"
+          }
+        }
+      },
+      "SkipEventResponder": {
+        "required": [
+          "happenedAt",
+          "event",
+          "kind",
+          "fromSec",
+          "toSec",
+          "modelVersion"
+        ],
+        "type": "object",
+        "properties": {
+          "happenedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "event": {
+            "$ref": "#/components/schemas/ViewerActionKind"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SegmentKind"
+          },
+          "fromSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "toSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "modelVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -21011,6 +21465,14 @@
           "progressive1080",
           "progressive2160",
           "progressive4320"
+        ],
+        "type": "string"
+      },
+      "ViewerActionKind": {
+        "enum": [
+          "skipped",
+          "dismissed",
+          "returned"
         ],
         "type": "string"
       },
