@@ -277,7 +277,7 @@ export const API接続なし: Story = {
   },
 }
 
-const LEARNING = 'CM・OP・ED の学習'
+const LEARNING = 'CM・OP・ED の検出'
 
 const NOT_SAVED = '変更を保存できませんでした。'
 
@@ -310,7 +310,7 @@ async function sitsBesideItsName(canvasElement: HTMLElement): Promise<void> {
   await expect(toggle.bottom).toBeGreaterThan(name.top)
 }
 
-export const 学習が切: Story = {
+export const 検出が切: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     const section = canvasElement.querySelector(
@@ -331,14 +331,14 @@ export const 学習が切: Story = {
   },
 }
 
-export const 学習が入: Story = {
+export const 検出が入: Story = {
   args: { segmentSettings: LEARNING_ON },
   play: async ({ canvasElement }) => {
     await expect(learningSwitch(canvasElement)).toBeChecked()
   },
 }
 
-export const 学習を入れる: Story = {
+export const 検出を入れる: Story = {
   play: async ({ canvasElement }) => {
     settleLearning.mockClear()
 
@@ -352,7 +352,7 @@ export const 学習を入れる: Story = {
   },
 }
 
-export const 学習の変更を保存できない: Story = {
+export const 検出の変更を保存できない: Story = {
   args: {
     segmentSettings: LEARNING_ON,
     onSettleLearning: async () => ({ state: 'notSaved' }) as const,

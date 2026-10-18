@@ -16,7 +16,7 @@ import { Surface } from '@/components/vela/surface'
 
 const DEVELOPER_FEATURES = '開発者機能'
 
-const LEARNING = 'CM・OP・ED の学習'
+const LEARNING = 'CM・OP・ED の検出'
 
 const LEARNING_ID = 'developer-features-learning'
 
