@@ -40,7 +40,7 @@ import {
   A_FULL_DAY_PROGRAMS,
   A_FULL_DAY_WINDOW,
 } from '@/stories/fixtures/a-full-day'
-import { ARRIVAL_SPAN_MS } from '@/lib/arrival'
+import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
 import { HOUR_PX } from '@/components/guide/guide-metrics'
 import { GuideView } from '@/components/guide/guide-page'
 import { inTheApp } from '@/stories/frames'
@@ -112,6 +112,50 @@ export const 通常: Story = {
     for (const [index, program] of IN_GRID_ORDER.entries()) {
       await expect(cells[index]).toHaveTextContent(program.title)
       await expect(cells[index]).toHaveTextContent(program.genreLabel)
+    }
+  },
+}
+
+const BROADCAST_MARKS = [
+  '🈑',
+  '🈞🈑',
+  '🈖',
+  '🈟🈑',
+  '🈔',
+  '🈀',
+  '🈐🈑',
+  '🈓🈑',
+] as const
+
+const MARKED_PROGRAMS = base.programs.map((program, index) => ({
+  ...program,
+  title: `${BROADCAST_MARKS[index % BROADCAST_MARKS.length]}${program.title}`,
+}))
+
+export const 放送マーク: Story = {
+  args: { guide: { ...base, programs: MARKED_PROGRAMS } },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const marks = BROADCAST_MARKS.join('')
+
+    await document.fonts.load(GUIDE_FACES[0], marks)
+    await expect(document.fonts.check(GUIDE_FACES[0], marks)).toBe(true)
+
+    const cells = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    )
+
+    const inGridOrder = CHANNEL_FIXTURES.flatMap((channel) =>
+      MARKED_PROGRAMS.filter((program) => program.channelId === channel.id),
+    )
+
+    await expect(cells).toHaveLength(inGridOrder.length)
+
+    for (const [index, program] of inGridOrder.entries()) {
+      await expect(cells[index]).toHaveTextContent(program.title)
     }
   },
 }

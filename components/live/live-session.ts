@@ -24,6 +24,8 @@ import {
   type LiveSeat,
 } from '@/repository/live-sessions'
 
+import { openWireAhead, takeWireAhead } from '@/components/live/live-wire-ahead'
+
 export interface LiveSocket {
   binaryType: BinaryType
   readyState: number
@@ -42,6 +44,7 @@ export interface LiveSessionEvents {
   onPicture: (payload: Uint8Array, pts: number) => void
   onCaptionCanvas: (canvas: CaptionCanvas) => void
   onCaption: (picture: CaptionPicture | null, pts: number) => void
+  onDataBroadcast: (payload: Uint8Array, pts: number) => void
   onProgress: (startup: LiveStartup) => void
   onRefusal: (
     refusal: LiveRefusal,
@@ -73,6 +76,14 @@ function socketUrl(href: string): string {
 
 const openWebSocket: OpenSocket = (href) => new WebSocket(socketUrl(href))
 
+/** Opens the wire at the moment a channel is chosen; the session opened for the same address takes it. */
+export function openTheWireAhead(
+  href: string,
+  openSocket: OpenSocket = openWebSocket,
+): void {
+  openWireAhead(href, openSocket)
+}
+
 export function openLiveSession(
   href: string,
   events: LiveSessionEvents,
@@ -85,7 +96,7 @@ export function openLiveSession(
   let lastCaptionPts = -1
   let laying: LiveSocket | null = null
   let laid: ReturnType<typeof setTimeout> | null = null
-  let carrying: LiveSocket = openSocket(href)
+  let carrying: LiveSocket = takeWireAhead(href) ?? openSocket(href)
 
   attach(carrying)
   arm(FRESH_WIRE_EVERY_MS)
@@ -170,6 +181,9 @@ export function openLiveSession(
         }
         break
       }
+      case 'dataBroadcast':
+        events.onDataBroadcast(frame.payload, frame.pts)
+        break
       case 'control':
         heard(socket, frame.payload)
         break

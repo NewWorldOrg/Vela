@@ -15,14 +15,14 @@ export const NO_LEARNING_DATA = learningData({
 export const LEARNING_DATA = learningData({
   recordings: 312,
   seconds: 674_100,
-  bytes: 4_617_089_843,
+  bytes: 440_000_000,
   waiting: 0,
 })
 
 export const LEARNING_DATA_WAITING = learningData({
   recordings: 312,
   seconds: 674_100,
-  bytes: 4_617_089_843,
+  bytes: 440_000_000,
   waiting: 12,
 })
 

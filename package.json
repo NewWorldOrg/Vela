@@ -1,6 +1,6 @@
 {
   "name": "vela",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "license": "AGPL-3.0-only",
   "engines": {
@@ -17,13 +17,15 @@
     "test": "node --experimental-test-module-mocks --import ./scripts/test-alias.mjs --test \"tests/**/*.test.ts\"",
     "codegen": "openapi-typescript repository/client/carina.json -o repository/client/schema.ts && prettier --write repository/client/schema.ts",
     "codegen:verify": "node scripts/codegen-verify.mjs",
+    "bml-runtime": "node scripts/bml-runtime.mjs",
     "codegen:fetch": "node --input-type=module -e \"const base = process.env.CARINA_API_BASE_URL; if (!base) { throw new Error('CARINA_API_BASE_URL is not set') } const response = await fetch(new URL('/openapi/v1.json', base)); if (!response.ok) { throw new Error(response.status + ' from ' + base) } const { writeFile } = await import('node:fs/promises'); await writeFile('repository/client/carina.json', await response.text())\" && yarn codegen",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "test-storybook": "test-storybook --maxWorkers=25%",
-    "test-storybook:ci": "concurrently -k -s first -n SB,TEST -c magenta,blue \"http-server storybook-static --port 6006 --silent\" \"wait-on http://127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006 --maxWorkers=2 --shard=${STORYBOOK_SHARD:-1/1}\""
+    "test-storybook:ci": "concurrently -k -s first -n SB,TEST -c magenta,blue \"http-server storybook-static --port 6006 --silent --cors\" \"wait-on http://127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006 --maxWorkers=2 --shard=${STORYBOOK_SHARD:-1/1}\""
   },
   "dependencies": {
+    "acorn": "^8.17.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "next": "16.2.10",
@@ -44,7 +46,9 @@
     "@types/node": "^24.0.0",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@xmldom/xmldom": "0.9.12",
     "concurrently": "^9",
+    "esbuild": "0.28.1",
     "eslint": "^9.39.2",
     "eslint-config-next": "16.2.10",
     "http-server": "^14",

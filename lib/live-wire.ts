@@ -9,7 +9,7 @@ export const LIVE_CHANNEL = {
   sound: 0x11,
   captionHeader: 0x20,
   caption: 0x21,
-  serviceInformation: 0x30,
+  dataBroadcast: 0x30,
   control: 0x40,
 } as const
 

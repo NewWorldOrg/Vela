@@ -37,6 +37,19 @@ import type {
   FeedRecording,
   RecordingFeedEvents,
 } from '@/components/recordings/recording-feed'
+import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
+import type { ReadDataBroadcast } from '@/components/recordings/read-data-broadcast'
+import {
+  DATA_BROADCAST_CATALOG,
+  PROGRAMME_READING_CATALOG,
+  dataBroadcastModules,
+  programmeReadingModules,
+  relativeTimeModules,
+} from '@/stories/fixtures/data-broadcast'
+import {
+  readingModulesOf,
+  throughout,
+} from '@/stories/fixtures/recording-data-broadcast'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -303,7 +316,7 @@ const meta = {
   decorators: [
     (Story) => (
       <div className="bg-bg py-6">
-        <ScreenMain>
+        <ScreenMain className="px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5">
           <Story />
         </ScreenMain>
       </div>
@@ -1908,7 +1921,9 @@ function faceOf(canvasElement: HTMLElement) {
   ) as HTMLElement
 
   return {
-    face: (bar.parentElement as HTMLElement).getBoundingClientRect(),
+    face: (
+      canvasElement.querySelector('[data-slot="player-face"]') as HTMLElement
+    ).getBoundingClientRect(),
     picture: (
       canvasElement.querySelector('video') as HTMLVideoElement
     ).getBoundingClientRect(),
@@ -3624,5 +3639,252 @@ export const 要素の全画面を断られたらページの中で窓いっぱ�
       'player-captions',
       'refused',
     )
+  },
+}
+
+const BROADCAST_THROUGHOUT = throughout(DATA_BROADCAST_CATALOG)
+
+const broadcastAsked: string[] = []
+
+function readingTheBroadcast(
+  answer: DataBroadcastRead = { state: 'read', timeline: BROADCAST_THROUGHOUT },
+): ReadDataBroadcast {
+  return async (id, source) => {
+    broadcastAsked.push(`${id}/${source ?? '—'}`)
+
+    return answer
+  }
+}
+
+const readingTheModules = readingModulesOf(dataBroadcastModules)
+
+const BROADCAST_PLAYING = {
+  detail: { ...detail('1266'), service: { networkId: 32736, serviceId: 1024 } },
+  plan: HANDED_OVER,
+  startAt: 0,
+  pictureHref: () => DRAWN_PICTURE,
+  readDataBroadcast: readingTheBroadcast(),
+  readDataBroadcastModule: readingTheModules,
+}
+
+function pictureOf(canvasElement: HTMLElement): HTMLElement {
+  const picture = canvasElement.querySelector('[data-slot="player-picture"]')
+
+  if (!(picture instanceof HTMLElement)) {
+    throw new Error('the picture is not on the screen')
+  }
+
+  return picture
+}
+
+export const データ放送のある録画は操作子を置く: Story = {
+  args: BROADCAST_PLAYING,
+  beforeEach: () => {
+    broadcastAsked.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(broadcastAsked[0]).toBe('1266/—')
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+    await expect(pictureOf(canvasElement)).not.toHaveAttribute('data-rect')
+
+    const row = toggle.closest('div')
+
+    await expect(
+      within(row as HTMLElement)
+        .getAllByRole('button')
+        .map((button) => button.getAttribute('aria-label')),
+    ).toEqual(expect.arrayContaining(['データ放送', '設定', '全画面']))
+  },
+}
+
+export const データ放送を開くと面と帯が出て映像が縮む: Story = {
+  parameters: { screen: { width: 1180, height: 820 } },
+  args: BROADCAST_PLAYING,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await userEvent.click(toggle)
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(
+      () =>
+        expect(pictureOf(canvasElement)).toHaveAttribute(
+          'data-rect',
+          '560,60,360,203',
+        ),
+      { timeout: 5000 },
+    )
+    const band = canvas.getByRole('group', { name: 'データ放送のリモコン' })
+
+    await expect(band).toBeVisible()
+    await expect(band).toHaveAttribute('data-place', 'under')
+
+    const chrome = canvasElement.querySelector(
+      '[data-slot="player-chrome"]',
+    ) as HTMLElement
+    const row = chrome.getBoundingClientRect()
+    const face = (
+      canvasElement.querySelector('[data-slot="player-face"]') as HTMLElement
+    ).getBoundingClientRect()
+
+    await expect(chrome.contains(band)).toBe(false)
+    await expect(Math.abs(row.top - face.bottom)).toBeLessThan(0.5)
+    await expect(
+      Math.abs(band.getBoundingClientRect().top - row.bottom),
+    ).toBeLessThan(0.5)
+    await expect(getComputedStyle(chrome).backgroundImage).toBe('none')
+    await expect(canvasElement.querySelector('iframe')).not.toBeNull()
+
+    await userEvent.click(toggle)
+
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await waitFor(() =>
+      expect(pictureOf(canvasElement)).not.toHaveAttribute('data-rect'),
+    )
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+  },
+}
+
+export const 秒の途中から始まった録画でも入口の文書が番組と自分の場所を読んで面へ進む: Story =
+  {
+    args: {
+      ...BROADCAST_PLAYING,
+      detail: {
+        ...BROADCAST_PLAYING.detail,
+        startedAt: '2026-08-08T12:29:45.250+09:00',
+      },
+      readDataBroadcast: readingTheBroadcast({
+        state: 'read',
+        timeline: throughout(PROGRAMME_READING_CATALOG),
+      }),
+      readDataBroadcastModule: readingModulesOf(programmeReadingModules),
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const toggle = await canvas.findByRole(
+        'button',
+        { name: 'データ放送' },
+        { timeout: 10000 },
+      )
+
+      await userEvent.click(toggle)
+
+      await waitFor(
+        () =>
+          expect(pictureOf(canvasElement)).toHaveAttribute(
+            'data-rect',
+            '80,120,400,225',
+          ),
+        { timeout: 5000 },
+      )
+    },
+  }
+
+export const 録画のデータ放送は番組の経過時間を再生した位置で答える: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: throughout(PROGRAMME_READING_CATALOG),
+    }),
+    readDataBroadcastModule: readingModulesOf(relativeTimeModules),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await userEvent.click(toggle)
+
+    await waitFor(
+      () =>
+        expect(pictureOf(canvasElement)).toHaveAttribute(
+          'data-rect',
+          '80,120,400,225',
+        ),
+      { timeout: 5000 },
+    )
+  },
+}
+
+export const データ放送を自動で開く: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    autoOpensDataBroadcast: true,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: { ...BROADCAST_THROUGHOUT, autoStart: true },
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = await canvas.findByRole(
+      'button',
+      { name: 'データ放送' },
+      { timeout: 10000 },
+    )
+
+    await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
+    await expect(canvasElement.querySelector('iframe')).not.toBeNull()
+  },
+}
+
+export const データ放送の無い録画は操作子を置かない: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    readDataBroadcast: readingTheBroadcast({ state: 'none' }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByRole('button', { name: '設定' })
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    await expect(
+      canvas.queryByRole('button', { name: 'データ放送' }),
+    ).toBeNull()
+  },
+}
+
+export const データ放送の起動文書がまだ無い時刻では操作子を置かない: Story = {
+  args: {
+    ...BROADCAST_PLAYING,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: {
+        ...BROADCAST_THROUGHOUT,
+        incomplete: true,
+        carousels: BROADCAST_THROUGHOUT.carousels.map((carousel) => ({
+          ...carousel,
+          versions: carousel.versions.map((version) =>
+            version.id === 0 ? { ...version, fromSec: 300 } : version,
+          ),
+        })),
+      },
+    }),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByRole('button', { name: '設定' })
+    await new Promise((resolve) => setTimeout(resolve, 600))
+    await expect(
+      canvas.queryByRole('button', { name: 'データ放送' }),
+    ).toBeNull()
   },
 }

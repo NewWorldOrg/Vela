@@ -6,7 +6,10 @@ const config: StorybookConfig = {
     '../stories/**/*.stories.@(js|jsx|mjs|ts|tsx)',
   ],
   addons: ['@storybook/addon-a11y'],
-  staticDirs: ['../public'],
+  staticDirs: [
+    '../public',
+    { from: '../stories/hybridcast-app', to: '/hybridcast-app' },
+  ],
   framework: {
     name: '@storybook/nextjs',
     options: {},

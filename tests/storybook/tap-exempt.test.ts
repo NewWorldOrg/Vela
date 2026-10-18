@@ -4,7 +4,10 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
-const WAIVED = ['components/guide/program-cell.tsx']
+const WAIVED = [
+  'components/data-broadcast/data-broadcast-player.tsx',
+  'components/guide/program-cell.tsx',
+]
 
 const NAMES_IT = [
   '.storybook/test-runner.ts',

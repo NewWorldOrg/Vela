@@ -38,6 +38,40 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/videos/{id}/data-broadcast': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** The catalog of a recording's data broadcast over the source it is played from: the carousel it is entered from, whether the broadcaster asks for it to open by itself, the path of the document it opens on, whether versions were left out of the record to keep it within its size, every version of every module of every download of every carousel with the seconds of that source it runs from and to and the bytes its module answers, and every event message at the second it fires, each counted from the source's own zero the way the captions are, so that the artefact and the recording itself give a scene the same second. A version that began before the source's zero runs from that zero, and nothing first seen or firing after the source's end is given. It answers 409 while the data broadcast is still being taken from the recording, or failed with tries left, and 404 where there is none to show beside that source. Opened with the reader's own session only, never with a ticket. */
+    get: operations['getVideoDataBroadcast']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/videos/{id}/data-broadcast/modules/{tag}/{download}/{module}/{version}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** One version of one module of a recording's data broadcast, as the live side channel carries it: the byte 0x02, the carousel's tag, the module id and the version, then each resource with its path, its kind and its bytes, to the end, so that the same reader reads both. It is answered with a tag that changes whenever the record is taken again, and asked again with that tag in If-None-Match it answers 304 without the bytes. It answers 404 where the recording's data broadcast is not ready or does not hold that version. Opened with the reader's own session only, never with a ticket. */
+    get: operations['getVideoDataBroadcastModule']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/videos/{id}/thumbnail': {
     parameters: {
       query?: never
@@ -921,6 +955,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/live/{networkId}-{serviceId}/data-broadcast/fetch': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['fetchLiveDataBroadcast']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/{networkId}-{serviceId}/data-broadcast/ait': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getLiveDataBroadcastAit']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/{networkId}-{serviceId}/data-broadcast/receiver-id': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getLiveDataBroadcastReceiverId']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/{networkId}-{serviceId}/data-broadcast/app/ticket': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['issueLiveHybridcastTicket']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/live/ticket': {
     parameters: {
       query?: never
@@ -995,6 +1093,22 @@ export interface paths {
     get: operations['listLiveSessions']
     put?: never
     post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/live/{networkId}-{serviceId}/data-broadcast/transmit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['transmitLiveDataBroadcast']
     delete?: never
     options?: never
     head?: never
@@ -1471,6 +1585,26 @@ export interface components {
       message: string
       data: null | components['schemas']['CollectionStatusResponder']
     }
+    BaseResponderOfDataBroadcastFetchFailureResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DataBroadcastFetchFailureResponder']
+    }
+    BaseResponderOfDataBroadcastReceiverIdResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DataBroadcastReceiverIdResponder']
+    }
+    BaseResponderOfDataBroadcastTimelineResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DataBroadcastTimelineResponder']
+    }
+    BaseResponderOfDataBroadcastTransmissionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DataBroadcastTransmissionResponder']
+    }
     BaseResponderOfDetectedTunersResponder: {
       status: boolean
       message: string
@@ -1540,6 +1674,16 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['GuideResponder']
+    }
+    BaseResponderOfHybridcastAitResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['HybridcastAitResponder']
+    }
+    BaseResponderOfHybridcastTicketResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['HybridcastTicketResponder']
     }
     BaseResponderOfIntegrityFindingRefusedResponder: {
       status: boolean
@@ -2032,6 +2176,67 @@ export interface components {
       marginAfterSeconds?: null | number | string
       encodeWhenRecorded?: null | boolean
     }
+    DataBroadcastCarouselResponder: {
+      /** Format: int32 */
+      tag: number | string
+      /** Format: uint32 */
+      downloadId: number | string
+      versions: components['schemas']['DataBroadcastVersionResponder'][]
+    }
+    DataBroadcastEventResponder: {
+      /** Format: int32 */
+      group: number | string
+      /** Format: int32 */
+      id: number | string
+      /** Format: int32 */
+      type: number | string
+      immediate: boolean
+      /** Format: double */
+      atSec: number | string
+      /** Format: byte */
+      privateData: string
+      /** Format: int32 */
+      componentTag: null | number | string
+    }
+    DataBroadcastFetchFailureResponder: {
+      /** Format: int32 */
+      result: number | string
+      /** Format: int32 */
+      httpStatus: null | number | string
+    }
+    DataBroadcastReceiverIdResponder: {
+      /** Format: int32 */
+      caSystemId: number | string
+      cardId: string
+    }
+    DataBroadcastTimelineResponder: {
+      /** Format: int32 */
+      entryTag: number | string
+      autoStart: boolean
+      startup: string
+      incomplete: boolean
+      carousels: components['schemas']['DataBroadcastCarouselResponder'][]
+      events: components['schemas']['DataBroadcastEventResponder'][]
+    }
+    DataBroadcastTransmissionResponder: {
+      /** Format: int32 */
+      result: number | string
+      /** Format: int32 */
+      httpStatus: null | number | string
+      body: null | string
+    }
+    DataBroadcastVersionResponder: {
+      /** Format: int32 */
+      id: number | string
+      /** Format: int32 */
+      version: number | string
+      /** Format: double */
+      fromSec: number | string
+      /** Format: double */
+      toSec: number | string
+      /** Format: int64 */
+      size: number | string
+    }
     /** @enum {string} */
     Deinterlace: 'leave' | 'everyFrame' | 'everyField'
     DetectedDeviceResponder: {
@@ -2314,6 +2519,33 @@ export interface components {
     HealthResponder: {
       status: string
       degraded: string[]
+    }
+    HybridcastAitResponder: {
+      applications: components['schemas']['HybridcastApplicationResponder'][]
+    }
+    HybridcastApplicationResponder: {
+      /** Format: int64 */
+      orgId: number | string
+      /** Format: int32 */
+      appId: number | string
+      /** Format: int32 */
+      controlCode: number | string
+      entryUrl: string
+      /** Format: int32 */
+      profile: null | number | string
+      boundary: components['schemas']['HybridcastBoundaryResponder'][]
+    }
+    HybridcastBoundaryResponder: {
+      /** Format: int32 */
+      permissionBitmap: number | string
+      managedUrls: string[]
+    }
+    HybridcastTicketResponder: {
+      inTheClear: string
+      /** Format: date-time */
+      lapsesAt: string
+      entryUrl: string
+      address: string
     }
     IntegrityCheckResponder: {
       /** Format: uuid */
@@ -4030,6 +4262,14 @@ export interface components {
     }
     /** @enum {string} */
     SoundTrack: 'main' | 'secondary' | 'third'
+    StartHybridcastRequest: {
+      ait?: null | string
+      /** Format: int64 */
+      orgId?: null | number | string
+      /** Format: int32 */
+      appId?: null | number | string
+      receiverScript?: null | string
+    }
     StartScanRequest: {
       systems?: null | components['schemas']['TuneSystem'][]
       channels?: null | components['schemas']['TuningParametersRequest'][]
@@ -4150,6 +4390,11 @@ export interface components {
     ThumbnailState: 'pending' | 'ready' | 'failed' | 'skipped'
     ToggleTunerRequest: {
       disabled?: null | boolean
+    }
+    TransmitDataBroadcastRequest: {
+      uri?: null | string
+      text?: null | string
+      charset?: null | string
     }
     /** @enum {null|string} */
     TuneFailureKind:
@@ -4369,6 +4614,15 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
         }
       }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
+        }
+      }
       /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
       401: {
         headers: {
@@ -4402,6 +4656,130 @@ export interface operations {
         content: {
           'application/json': components['schemas']['BaseResponderOfCaptionWindowResponder']
         }
+      }
+    }
+  }
+  getVideoDataBroadcast: {
+    parameters: {
+      query?: {
+        /** @description The second of the source the catalog starts at, counted from the source's own zero, as the player's position reads it: the versions still running there or later and the event messages firing there or later are given, to the source's end. Seconds may be fractional, and asking for none starts at the beginning. */
+        from?: number
+        /** @description Which of the two files the data broadcast is placed on, asked the way the plan was asked, as the captions are. The seconds of the artefact and of the recording itself differ by what the encode skipped at the head. */
+        source?: 'artefact' | 'recording'
+        /** @description The picture codings the browser says it decodes, named as the plan was asked with, so that the data broadcast is placed on the file the plan settled on: naming h265 lets that be an artefact encoded in H.265 and tagged hvc1. */
+        decodes?: ('h264' | 'h265')[]
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTimelineResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTimelineResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTimelineResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTimelineResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTimelineResponder']
+        }
+      }
+    }
+  }
+  getVideoDataBroadcastModule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+        tag: string
+        download: string
+        module: string
+        version: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Modified */
+      304: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }
@@ -8091,6 +8469,324 @@ export interface operations {
       }
     }
   }
+  fetchLiveDataBroadcast: {
+    parameters: {
+      query?: {
+        uri?: string
+      }
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastFetchFailureResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastFetchFailureResponder']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastFetchFailureResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastFetchFailureResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastFetchFailureResponder']
+        }
+      }
+    }
+  }
+  getLiveDataBroadcastAit: {
+    parameters: {
+      query?: {
+        uri?: string
+      }
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastAitResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastAitResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastAitResponder']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastAitResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastAitResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastFetchFailureResponder']
+        }
+      }
+    }
+  }
+  getLiveDataBroadcastReceiverId: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastReceiverIdResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastReceiverIdResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastReceiverIdResponder']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastReceiverIdResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastReceiverIdResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastReceiverIdResponder']
+        }
+      }
+    }
+  }
+  issueLiveHybridcastTicket: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['StartHybridcastRequest']
+        'application/*+json':
+          null | components['schemas']['StartHybridcastRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfHybridcastTicketResponder']
+        }
+      }
+    }
+  }
   issueLiveTicket: {
     parameters: {
       query?: never
@@ -8315,6 +9011,79 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfIReadOnlyListOfLiveSessionResponder']
+        }
+      }
+    }
+  }
+  transmitLiveDataBroadcast: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        networkId: number
+        serviceId: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['TransmitDataBroadcastRequest']
+        'application/*+json':
+          null | components['schemas']['TransmitDataBroadcastRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTransmissionResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTransmissionResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Forbidden */
+      403: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTransmissionResponder']
+        }
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTransmissionResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastTransmissionResponder']
         }
       }
     }
