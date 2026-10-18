@@ -32,7 +32,11 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: '/settings/tuners', label: 'チューナー', icon: TunerIcon },
   { href: '/settings/channels', label: 'チャンネル', icon: ChannelIcon },
   { href: '/settings/encode', label: 'エンコード', icon: EncodeIcon },
-  { href: '/settings/segments', label: 'CM・OP・ED', icon: SegmentsIcon },
+  {
+    href: '/settings/segments',
+    label: 'CM・OP・ED の検出',
+    icon: SegmentsIcon,
+  },
   { href: '/settings/quality', label: '品質', icon: QualityIcon },
   { href: '/settings/authentication', label: '認証', icon: KeyIcon },
   { href: '/settings/display', label: '表示', icon: DisplayIcon },

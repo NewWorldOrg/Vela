@@ -5,7 +5,7 @@ import { MarkDots } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { LearningDataPanel } from '@/components/segments/learning-data-panel'
 
-const SEGMENTS = 'CM・OP・ED'
+const SEGMENTS = 'CM・OP・ED の検出'
 
 function learningDataOf(status: Reading<SegmentStatus>): Reading<LearningData> {
   return status.state === 'ok'
