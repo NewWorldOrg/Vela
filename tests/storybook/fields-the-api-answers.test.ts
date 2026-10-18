@@ -357,10 +357,16 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the settings page for detecting CM, OP and ED shows the learning data alone; the catalog and the model version have no part of it drawn for them yet',
+      'the settings page for detecting CM, OP and ED shows the learning data alone; the catalog, the model version and its history, the precision, the evidence and the threshold of the skip button have no part of it drawn for them yet, and whether learning is on is read from the settings',
     fields: [
       'SegmentStatusResponder.catalog',
+      'SegmentStatusResponder.evidence',
+      'SegmentStatusResponder.learning',
+      'SegmentStatusResponder.metrics',
+      'SegmentStatusResponder.skipThreshold',
+      'SegmentStatusResponder.stations',
       'SegmentStatusResponder.version',
+      'SegmentStatusResponder.versions',
     ],
   },
 ]
