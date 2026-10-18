@@ -21,6 +21,10 @@ const STEPS: Partial<Record<string, number>> = {
   ArrowUp: STEP_SEC,
 }
 
+function focusOnArrival(node: HTMLElement | null) {
+  node?.focus()
+}
+
 function share(second: number, lengthSec: number): string {
   return `${(Math.min(lengthSec, Math.max(0, second)) / lengthSec) * 100}%`
 }
@@ -53,6 +57,7 @@ function BoundaryGrip({
   nth,
   lengthSec,
   snaps,
+  takesFocus,
   onGrab,
   onLetGo,
   secondAt,
@@ -62,6 +67,7 @@ function BoundaryGrip({
   nth: number
   lengthSec: number
   snaps: readonly number[]
+  takesFocus: boolean
   onGrab: () => void
   onLetGo: () => void
   secondAt: (clientX: number) => number | undefined
@@ -109,6 +115,7 @@ function BoundaryGrip({
 
   return (
     <span
+      ref={takesFocus ? focusOnArrival : undefined}
       role="slider"
       tabIndex={0}
       aria-label={BOUNDARY}
@@ -205,6 +212,7 @@ export function SegmentsBand({
               nth={nth}
               lengthSec={lengthSec}
               snaps={snaps}
+              takesFocus={nth === 1}
               onGrab={() => {
                 grabbed.current = true
               }}

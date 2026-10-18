@@ -44,6 +44,8 @@ export const WITHDRAWING = {
 
 const NOT_SAVED = '保存できませんでした。'
 
+export const SEGMENTS_SAVED = '保存しました。'
+
 export const SEGMENTS_NOT_SAVED: Record<SegmentsRefusal, string> = {
   gap: `区間のあいだに隙間があるため、${NOT_SAVED}`,
   overlap: `区間が重なっているため、${NOT_SAVED}`,

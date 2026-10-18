@@ -407,6 +407,22 @@ export const 変更の途中_ダーク: Story = {
   },
 }
 
+export const 開始の欄に触れて離れるだけでは境目は動かない: Story = {
+  play: async ({ canvasElement }) => {
+    const panel = await change(canvasElement)
+    const field = panel.getAllByRole('textbox', { name: '開始' })[0]
+
+    await userEvent.click(field)
+    await userEvent.tab()
+
+    await expect(field).toHaveValue('0:06:52.3')
+    await expect(
+      panel.getAllByRole('slider', { name: '境目' })[0],
+    ).toHaveAttribute('aria-valuetext', '0:06:52.3')
+    await expect(panel.getByRole('button', { name: '保存する' })).toBeDisabled()
+  },
+}
+
 export const 境目を動かすと候補に吸い付く: Story = {
   play: async ({ canvasElement }) => {
     const panel = await change(canvasElement)
@@ -456,6 +472,49 @@ export const 境目を動かすと候補に吸い付く: Story = {
     await expect(sentLast()[0].endsAtSec).toBe(412.41)
     await expect(sentLast()[4].startsAtSec).toBe(1310)
     await expect(panel.queryByRole('slider')).toBeNull()
+  },
+}
+
+export const 変更を押すと最初の境目へ焦点が移る: Story = {
+  play: async ({ canvasElement }) => {
+    const panel = await change(canvasElement)
+
+    await expect(
+      panel.getAllByRole('slider', { name: '境目' })[0],
+    ).toHaveFocus()
+  },
+}
+
+export const 保存すると変更へ焦点が戻り保存したと言う: Story = {
+  play: async ({ canvasElement }) => {
+    const panel = await change(canvasElement)
+
+    await choose(
+      canvasElement,
+      panel.getAllByRole('combobox', { name: '種類' })[1],
+      '本編',
+    )
+    await userEvent.click(panel.getByRole('button', { name: '保存する' }))
+
+    await waitFor(() =>
+      expect(panel.getByRole('button', { name: '変更' })).toHaveFocus(),
+    )
+    await expect(panel.getByText('保存しました。')).toBeVisible()
+
+    await userEvent.click(panel.getByRole('button', { name: '変更' }))
+
+    await expect(panel.queryByText('保存しました。')).toBeNull()
+  },
+}
+
+export const キャンセルすると変更へ焦点が戻る: Story = {
+  play: async ({ canvasElement }) => {
+    const panel = await change(canvasElement)
+
+    await userEvent.click(panel.getByRole('button', { name: 'キャンセル' }))
+
+    await expect(panel.getByRole('button', { name: '変更' })).toHaveFocus()
+    await expect(panel.queryByText('保存しました。')).toBeNull()
   },
 }
 
@@ -541,6 +600,7 @@ export const 一つだけの区間は削除できない: Story = {
     const panel = await change(canvasElement)
 
     await expect(rowsOf(panel)).toHaveLength(1)
+    await expect(panel.getByRole('combobox', { name: '種類' })).toHaveFocus()
     await expect(panel.queryByRole('button', { name: '削除' })).toBeNull()
     await expect(panel.queryByRole('slider')).toBeNull()
   },
@@ -582,9 +642,12 @@ export const 確認済みにする: Story = {
     await expect(answers[0].confirmed).toBe(true)
     await expect(answers[0].segments).toEqual(DETECTED_SEGMENTS.segments)
     await waitFor(() => expect(canvas.getByText('確認済み')).toBeVisible())
-    await expect(
-      panel.getByRole('button', { name: '確認を取り消し' }),
-    ).toBeVisible()
+    await waitFor(() =>
+      expect(
+        panel.getByRole('button', { name: '確認を取り消し' }),
+      ).toHaveFocus(),
+    )
+    await expect(panel.getByText('保存しました。')).toBeVisible()
     await expect(
       panel.getByRole('button', { name: '自動の判定に戻す' }),
     ).toBeVisible()
@@ -603,6 +666,10 @@ export const 保存の断り: Story = {
       await panel.findByText('区間が重なっているため、保存できませんでした。'),
     ).toBeVisible()
     await expect(panel.getByRole('button', { name: '保存する' })).toBeEnabled()
+    await waitFor(() =>
+      expect(panel.getByRole('button', { name: '保存する' })).toHaveFocus(),
+    )
+    await expect(panel.queryByText('保存しました。')).toBeNull()
     await expect(rowsOf(panel)).toHaveLength(4)
 
     await userEvent.click(panel.getByRole('button', { name: 'キャンセル' }))
@@ -642,6 +709,11 @@ export const 人が直した録画は自動の判定に戻せる: Story = {
 
     await waitFor(() => expect(withdrawals).toEqual(['1274']))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    await waitFor(() =>
+      expect(
+        within(canvasElement).getByRole('button', { name: HEADING }),
+      ).toHaveFocus(),
+    )
     await afterTheArrival(canvasElement)
     await expect(within(rowsOf(panel)[3]).getByText('0:21:05')).toBeVisible()
     await expect(

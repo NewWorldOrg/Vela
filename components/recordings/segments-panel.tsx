@@ -1,6 +1,14 @@
 'use client'
 
-import { useId, useState, useTransition, type KeyboardEvent } from 'react'
+import {
+  useEffect,
+  useId,
+  useRef,
+  useState,
+  useTransition,
+  type KeyboardEvent,
+  type RefObject,
+} from 'react'
 
 import { cn } from '@/lib/utils'
 import { wordFor } from '@/lib/not-yet-in-this-build'
@@ -23,6 +31,7 @@ import {
   CONFIRMED,
   SEGMENTS_HEADING,
   SEGMENTS_NOT_SAVED,
+  SEGMENTS_SAVED,
   SEGMENTS_SIGNED_OUT,
   SEGMENT_ACTION,
   SEGMENT_COLUMN,
@@ -143,6 +152,10 @@ function BoundaryField({
   }
 
   const place = () => {
+    if (text === formatSegmentField(second)) {
+      return
+    }
+
     const typed = readSegmentField(text)
 
     if (typed === undefined) {
@@ -234,6 +247,7 @@ function SegmentRow({
           >
             <SelectTrigger
               size="sm"
+              autoFocus={count === 1}
               aria-label={SEGMENT_COLUMN.kind}
               className="w-[calc(96rem/16)]"
             >
@@ -327,6 +341,25 @@ export function SegmentsPanel({
   const [pending, startTransition] = useTransition()
   const [asking, setAsking] = useState(false)
   const [withdrawRefusal, setWithdrawRefusal] = useState<string>()
+  const [saved, setSaved] = useState(false)
+  const toggle = useRef<HTMLButtonElement>(null)
+  const changeButton = useRef<HTMLButtonElement>(null)
+  const confirmButton = useRef<HTMLButtonElement>(null)
+  const saveButton = useRef<HTMLButtonElement>(null)
+  const owed = useRef<RefObject<HTMLButtonElement | null>>(undefined)
+  const withdrew = useRef(false)
+  const editing = draft !== undefined
+
+  useEffect(() => {
+    const target = owed.current?.current
+
+    if (pending || !target) {
+      return
+    }
+
+    owed.current = undefined
+    target.focus()
+  }, [pending, editing])
 
   if (reading !== given) {
     setGiven(reading)
@@ -343,7 +376,6 @@ export function SegmentsPanel({
     return null
   }
 
-  const editing = draft !== undefined
   const segments = draft ?? shown.segments
   const answerable = answerOf(shown.segments) !== undefined
   const changed = draft !== undefined && !sameSegments(draft, shown.segments)
@@ -368,11 +400,14 @@ export function SegmentsPanel({
     }
 
     setPressed(what)
+    setSaved(false)
     startTransition(async () => {
       const result = await onAnswer(recordingId, answer, confirmed)
 
       if (result.state === 'ok') {
         took(result.segments)
+        setSaved(true)
+        owed.current = what === 'save' ? changeButton : confirmButton
 
         if (what === 'save') {
           setDraft(undefined)
@@ -380,6 +415,8 @@ export function SegmentsPanel({
 
         return
       }
+
+      owed.current = what === 'save' ? saveButton : confirmButton
 
       setRefusal(
         result.state === 'unauthenticated'
@@ -396,10 +433,12 @@ export function SegmentsPanel({
 
     startTransition(async () => {
       setWithdrawRefusal(undefined)
+      setSaved(false)
 
       const result = await onWithdraw(recordingId)
 
       if (result.state === 'ok') {
+        withdrew.current = true
         setAsking(false)
         took(result.segments)
 
@@ -419,6 +458,7 @@ export function SegmentsPanel({
   const leave = () => {
     setDraft(undefined)
     setRefusal(undefined)
+    owed.current = changeButton
 
     if (arrived) {
       setShown(arrived)
@@ -436,11 +476,15 @@ export function SegmentsPanel({
       <div className="flex flex-wrap items-center gap-x-[calc(9rem/16)] gap-y-2 py-[calc(11rem/16)]">
         <h2 id={headingId}>
           <button
+            ref={toggle}
             type="button"
             aria-expanded={open}
             aria-controls={open ? bodyId : undefined}
             data-open={open ? '' : undefined}
-            onClick={() => setOpen(!open)}
+            onClick={() => {
+              setOpen(!open)
+              setSaved(false)
+            }}
             className="tap-target group flex cursor-pointer items-center gap-[calc(9rem/16)] py-1 text-ui font-bold text-ink-2 transition-colors duration-150 ease-out hover:text-ink focus-visible:shadow-ring focus-visible:outline-none"
           >
             <ChevronRightIcon className="size-[calc(15rem/16)] text-brand transition-transform duration-150 ease-toy group-data-[open]:rotate-90" />
@@ -464,14 +508,17 @@ export function SegmentsPanel({
               variant="change"
               size="sm"
               disabled={pending}
+              ref={changeButton}
               onClick={() => {
                 setRefusal(undefined)
+                setSaved(false)
                 setDraft(shown.segments)
               }}
             >
               {SEGMENT_ACTION.change}
             </Button>
             <Button
+              ref={confirmButton}
               type="button"
               variant={shown.confirmed ? 'halt' : 'change'}
               size="sm"
@@ -510,6 +557,9 @@ export function SegmentsPanel({
               <InlineAlert tone="warn" className="mb-3">
                 {refusal}
               </InlineAlert>
+            )}
+            {saved && !editing && (
+              <p className="mb-3 text-note text-mint">{SEGMENTS_SAVED}</p>
             )}
           </div>
           <SegmentsBand
@@ -571,6 +621,7 @@ export function SegmentsPanel({
                 {SEGMENT_ACTION.cancel}
               </Button>
               <Button
+                ref={saveButton}
                 type="button"
                 disabled={!changed || pending}
                 onClick={() => draft && send(draft, shown.confirmed, 'save')}
@@ -582,48 +633,54 @@ export function SegmentsPanel({
           )}
         </div>
       )}
-      {shown.source === 'answered' && (
-        <AlertDialog
-          open={asking}
-          onOpenChange={(next) => {
-            if (!next) {
-              setWithdrawRefusal(undefined)
+      <AlertDialog
+        open={asking}
+        onOpenChange={(next) => {
+          if (!next) {
+            setWithdrawRefusal(undefined)
+          }
+
+          setAsking(next)
+        }}
+      >
+        <AlertDialogContent
+          onCloseAutoFocus={(event) => {
+            if (!withdrew.current) {
+              return
             }
 
-            setAsking(next)
+            withdrew.current = false
+            event.preventDefault()
+            toggle.current?.focus()
           }}
         >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>{WITHDRAWING.title}</AlertDialogTitle>
-              <AlertDialogDescription>
-                {WITHDRAWING.body}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <span aria-live="polite">
-              {withdrawRefusal && (
-                <InlineAlert tone="warn">{withdrawRefusal}</InlineAlert>
-              )}
-            </span>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={pending}>
-                {SEGMENT_ACTION.cancel}
-              </AlertDialogCancel>
-              <AlertDialogAction
-                variant="default"
-                disabled={pending}
-                onClick={(event) => {
-                  event.preventDefault()
-                  withdraw()
-                }}
-              >
-                {pending && <Spinner size="control" />}
-                {WITHDRAWING.confirm}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+          <AlertDialogHeader>
+            <AlertDialogTitle>{WITHDRAWING.title}</AlertDialogTitle>
+            <AlertDialogDescription>{WITHDRAWING.body}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <span aria-live="polite">
+            {withdrawRefusal && (
+              <InlineAlert tone="warn">{withdrawRefusal}</InlineAlert>
+            )}
+          </span>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={pending}>
+              {SEGMENT_ACTION.cancel}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              variant="default"
+              disabled={pending}
+              onClick={(event) => {
+                event.preventDefault()
+                withdraw()
+              }}
+            >
+              {pending && <Spinner size="control" />}
+              {WITHDRAWING.confirm}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </section>
   )
 }
