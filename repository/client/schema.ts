@@ -715,6 +715,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/{id}/segments': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getRecordingSegments']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings': {
     parameters: {
       query?: never
@@ -1870,6 +1886,11 @@ export interface components {
       message: string
       data: null | components['schemas']['RecordingListResponder']
     }
+    BaseResponderOfRecordingSegmentsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['RecordingSegmentsResponder']
+    }
     BaseResponderOfRecordingStopResponder: {
       status: boolean
       message: string
@@ -2127,6 +2148,20 @@ export interface components {
       /** Format: double */
       untilSec: number | string
       cues: components['schemas']['CaptionCueResponder'][]
+    }
+    CatalogResponder: {
+      /** Format: int32 */
+      cm: number | string
+      /** Format: int32 */
+      opening: number | string
+      /** Format: int32 */
+      ending: number | string
+      /** Format: int32 */
+      programmeFixture: number | string
+      /** Format: int32 */
+      stationFixture: number | string
+      /** Format: int32 */
+      unknown: number | string
     }
     ChangePasswordRequest: {
       currentPassword?: null | string
@@ -2926,6 +2961,7 @@ export interface components {
       /** Format: double */
       endsAtSec: number | string
       kind: components['schemas']['ChapterKind']
+      skippable: boolean
     }
     PlaybackPlanResponder: {
       standing: components['schemas']['PlaybackStanding']
@@ -3622,6 +3658,32 @@ export interface components {
       /** Format: int64 */
       missedMs: number | string
     }
+    RecordingSegmentResponder: {
+      /** Format: double */
+      startsAtSec: number | string
+      /** Format: double */
+      endsAtSec: number | string
+      kind: components['schemas']['SegmentKind']
+      /** Format: double */
+      probability: null | number | string
+    }
+    RecordingSegmentsResponder: {
+      /** Format: double */
+      lengthSec: number | string
+      source: components['schemas']['SegmentSource']
+      state: components['schemas']['SegmentStandingState']
+      /** Format: int32 */
+      modelVersion: null | number | string
+      confirmed: boolean
+      /** Format: date-time */
+      answeredAt: null | string
+      /** Format: date-time */
+      detectedAt: null | string
+      /** Format: double */
+      cmShare: null | number | string
+      segments: components['schemas']['RecordingSegmentResponder'][]
+      snaps: (number | string)[]
+    }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
     /** @enum {string} */
@@ -4198,13 +4260,33 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
+    /** @enum {string} */
+    SegmentKind: 'programme' | 'break' | 'opening' | 'ending'
+    /** @enum {string} */
+    SegmentModelVersionState: 'candidate' | 'active' | 'retired'
     SegmentSettingsResponder: {
       learning: boolean
       /** Format: date-time */
       learningChangedAt: null | string
     }
+    /** @enum {string} */
+    SegmentSource: 'none' | 'detected'
+    /** @enum {string} */
+    SegmentStandingState: 'none' | 'marked' | 'nothingFound' | 'discarded'
     SegmentStatusResponder: {
       learningData: components['schemas']['LearningDataResponder']
+      catalog: components['schemas']['CatalogResponder']
+      version: components['schemas']['SegmentVersionResponder']
+    }
+    SegmentVersionResponder: {
+      /** Format: int32 */
+      number: number | string
+      state: components['schemas']['SegmentModelVersionState']
+      byHand: boolean
+      /** Format: date-time */
+      trainedAt: string
+      /** Format: date-time */
+      adoptedAt: null | string
     }
     SelectedChannelRequest: {
       /** Format: uuid */
@@ -7682,6 +7764,62 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfIntegrityListResponder']
+        }
+      }
+    }
+  }
+  getRecordingSegments: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
         }
       }
     }
