@@ -1907,6 +1907,97 @@
         }
       }
     },
+    "/api/segments/version": {
+      "patch": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "patchSegmentVersion",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PatchSegmentVersionRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/PatchSegmentVersionRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentVersionResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentVersionResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentVersionResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentVersionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentVersionResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/tuners/scan/{scanId}/apply": {
       "post": {
         "tags": [
@@ -11019,6 +11110,32 @@
           }
         }
       },
+      "BaseResponderOfSegmentVersionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentVersionResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfServiceReachSettingsResponder": {
         "required": [
           "status",
@@ -14861,6 +14978,36 @@
               "null",
               "boolean"
             ]
+          },
+          "skipThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        },
+        "additionalProperties": false
+      },
+      "PatchSegmentVersionRequest": {
+        "type": "object",
+        "properties": {
+          "number": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "byHand": {
+            "type": [
+              "null",
+              "boolean"
+            ]
           }
         },
         "additionalProperties": false
@@ -14960,7 +15107,8 @@
           "sounds",
           "chapters",
           "captions",
-          "artefactFile"
+          "artefactFile",
+          "recordingOffsetSec"
         ],
         "type": "object",
         "properties": {
@@ -15053,6 +15201,16 @@
                 "$ref": "#/components/schemas/PlaybackArtefactFileResponder"
               }
             ]
+          },
+          "recordingOffsetSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "How many seconds a time in the recording, as /api/recordings/{id}/segments gives it, stands ahead of the same moment in the file this plan plays: the file's time is the recording's time less this. 0 for the recording itself, and for an artefact the head the encode that made it skipped. A time that falls before 0 or past the end of the file is not in the file. Null for an artefact whose timeline was not kept, on which no time in the recording can be placed.",
+            "format": "double"
           }
         }
       },
@@ -20200,6 +20358,53 @@
           }
         }
       },
+      "SegmentEvidenceResponder": {
+        "required": [
+          "confirmedRecordings",
+          "boundaries",
+          "enough",
+          "recordingsNeeded",
+          "boundariesNeeded"
+        ],
+        "type": "object",
+        "properties": {
+          "confirmedRecordings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "boundaries": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "enough": {
+            "type": "boolean"
+          },
+          "recordingsNeeded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "boundariesNeeded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "SegmentKind": {
         "enum": [
           "programme",
@@ -20209,6 +20414,134 @@
         ],
         "type": "string"
       },
+      "SegmentKindMetricsResponder": {
+        "required": [
+          "kind",
+          "recall",
+          "precision"
+        ],
+        "type": "object",
+        "properties": {
+          "kind": {
+            "$ref": "#/components/schemas/SegmentKind"
+          },
+          "recall": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "precision": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "SegmentMetricsResponder": {
+        "required": [
+          "boundaryRecallWithin2s",
+          "boundaryRecallWithin1s",
+          "extraBoundariesPerRecording",
+          "programmeSkippedSecondsPerHour",
+          "kinds",
+          "returnedAfterSkipShare",
+          "skips"
+        ],
+        "type": "object",
+        "properties": {
+          "boundaryRecallWithin2s": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "boundaryRecallWithin1s": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "extraBoundariesPerRecording": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "programmeSkippedSecondsPerHour": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "kinds": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentKindMetricsResponder"
+            }
+          },
+          "returnedAfterSkipShare": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "skips": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SegmentMetricsSummaryResponder": {
+        "required": [
+          "boundaryRecallWithin2s",
+          "programmeSkippedSecondsPerHour"
+        ],
+        "type": "object",
+        "properties": {
+          "boundaryRecallWithin2s": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "programmeSkippedSecondsPerHour": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "SegmentModelVersionState": {
         "enum": [
           "candidate",
@@ -20217,10 +20550,51 @@
         ],
         "type": "string"
       },
+      "SegmentRolledBackResponder": {
+        "required": [
+          "at",
+          "returnedAfterSkipShare",
+          "previousShare",
+          "skips"
+        ],
+        "type": "object",
+        "properties": {
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "returnedAfterSkipShare": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "previousShare": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "skips": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
       "SegmentSettingsResponder": {
         "required": [
           "learning",
-          "learningChangedAt"
+          "learningChangedAt",
+          "skipThreshold",
+          "skipThresholdChangedAt"
         ],
         "type": "object",
         "properties": {
@@ -20228,6 +20602,21 @@
             "type": "boolean"
           },
           "learningChangedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "skipThreshold": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "skipThresholdChangedAt": {
             "type": [
               "null",
               "string"
@@ -20254,14 +20643,61 @@
         ],
         "type": "string"
       },
-      "SegmentStatusResponder": {
+      "SegmentStationResponder": {
         "required": [
-          "learningData",
-          "catalog",
-          "version"
+          "networkId",
+          "serviceId",
+          "confirmedRecordings",
+          "metrics"
         ],
         "type": "object",
         "properties": {
+          "networkId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "serviceId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "confirmedRecordings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "metrics": {
+            "$ref": "#/components/schemas/SegmentMetricsSummaryResponder"
+          }
+        }
+      },
+      "SegmentStatusResponder": {
+        "required": [
+          "learning",
+          "learningData",
+          "catalog",
+          "version",
+          "evidence",
+          "metrics",
+          "stations",
+          "versions",
+          "skipThreshold"
+        ],
+        "type": "object",
+        "properties": {
+          "learning": {
+            "type": "boolean"
+          },
           "learningData": {
             "$ref": "#/components/schemas/LearningDataResponder"
           },
@@ -20270,6 +20706,101 @@
           },
           "version": {
             "$ref": "#/components/schemas/SegmentVersionResponder"
+          },
+          "evidence": {
+            "$ref": "#/components/schemas/SegmentEvidenceResponder"
+          },
+          "metrics": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentMetricsResponder"
+              }
+            ]
+          },
+          "stations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentStationResponder"
+            }
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SegmentVersionHistoryResponder"
+            }
+          },
+          "skipThreshold": {
+            "$ref": "#/components/schemas/SkipThresholdResponder"
+          }
+        }
+      },
+      "SegmentVersionHistoryResponder": {
+        "required": [
+          "number",
+          "state",
+          "byHand",
+          "trainedAt",
+          "adoptedAt",
+          "retiredAt",
+          "rolledBack",
+          "metrics"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SegmentModelVersionState"
+          },
+          "byHand": {
+            "type": "boolean"
+          },
+          "trainedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "adoptedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "retiredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "rolledBack": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentRolledBackResponder"
+              }
+            ]
+          },
+          "metrics": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentMetricsSummaryResponder"
+              }
+            ]
           }
         }
       },
@@ -20533,6 +21064,32 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "SkipThresholdResponder": {
+        "required": [
+          "current",
+          "recommended"
+        ],
+        "type": "object",
+        "properties": {
+          "current": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "recommended": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },

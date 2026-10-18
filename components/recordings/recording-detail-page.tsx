@@ -26,7 +26,6 @@ import type { SoundTrack } from '@/repository/sounds'
 import type { PlaybackProfile } from '@/repository/video-paths'
 import type { EncodeChoices, EncodeJob, EncodeWrite } from '@/repository/encode'
 import type { RecordingSegments } from '@/repository/recording-segments'
-import { headSkipPlayed } from '@/lib/watch-link'
 import {
   ChevronLeftIcon,
   ListIcon,
@@ -184,7 +183,6 @@ export function RecordingDetailView({
   startsHeld = false,
   autoOpensDataBroadcast = false,
   segments,
-  artefactHeadSkipSec,
   onAnswerSegments,
   onWithdrawSegmentAnswer,
   onNoteSkip,
@@ -213,7 +211,6 @@ export function RecordingDetailView({
   startsHeld?: boolean
   autoOpensDataBroadcast?: boolean
   segments?: RecordingSegments
-  artefactHeadSkipSec?: number
   onAnswerSegments: AnswerSegments
   onWithdrawSegmentAnswer: WithdrawSegmentAnswer
   onNoteSkip: NoteSkip
@@ -248,11 +245,8 @@ export function RecordingDetailView({
       className={cn(GUTTER, 'pb-16')}
     >
       <WatchLinkSeat
+        key={d.id}
         recordingId={d.id}
-        headSkipSec={headSkipPlayed(
-          playback.state === 'planned' ? playback.plan : undefined,
-          artefactHeadSkipSec,
-        )}
         modelVersion={segments?.modelVersion}
         onNoteSkip={onNoteSkip}
       >

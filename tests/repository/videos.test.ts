@@ -140,6 +140,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
     sounds: ['main', 'secondary'],
     chapters: [],
     captions: 'ready',
+    recordingOffsetSec: 0,
   }
 
   const read = await getPlaybackPlan('1266')
@@ -173,6 +174,7 @@ test('the plan is asked for as the plan, not as the picture', async () => {
       chapters: [],
       captions: 'ready',
       artefactCodec: undefined,
+      recordingOffsetSec: 0,
     },
   })
 })
@@ -376,6 +378,34 @@ test('a codec this build does not know, or a file nobody read, leaves the codec 
     const read = await getPlaybackPlan(`r-codec-${String(artefactFile)}`)
 
     assert.equal(read.state === 'planned' && read.plan.artefactCodec, undefined)
+  }
+})
+
+test('the plan says how far the recording’s time stands ahead of the file it plays', async () => {
+  for (const [said, read] of [
+    [0, 0],
+    ['14.5', 14.5],
+  ] as const) {
+    store.planStatus = 200
+    store.plan = { ...WITH_AN_ARTEFACT, recordingOffsetSec: said }
+
+    const plan = await getPlaybackPlan(`r-offset-${said}`)
+
+    assert.equal(plan.state === 'planned' && plan.plan.recordingOffsetSec, read)
+  }
+})
+
+test('a file no time in the recording can be placed on names no offset', async () => {
+  for (const recordingOffsetSec of [null, undefined]) {
+    store.planStatus = 200
+    store.plan = { ...WITH_AN_ARTEFACT, recordingOffsetSec }
+
+    const plan = await getPlaybackPlan(`r-offset-${String(recordingOffsetSec)}`)
+
+    assert.equal(
+      plan.state === 'planned' && plan.plan.recordingOffsetSec,
+      undefined,
+    )
   }
 })
 

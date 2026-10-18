@@ -87,6 +87,7 @@ const ON_THE_FLY: PlaybackPlan = {
   sounds: ['main'],
   chapters: [],
   captions: 'none',
+  recordingOffsetSec: 0,
 }
 
 function planned(over: Partial<PlaybackPlan> = {}): PlaybackRead {
@@ -104,6 +105,17 @@ const ARTEFACT_MARKED = planned({
   canSeek: true,
   transcodes: false,
   chapters: chaptersOf(DETECTED_SEGMENTS.segments, HEAD_SKIP),
+  recordingOffsetSec: HEAD_SKIP,
+})
+
+const ARTEFACT_UNPLACED = planned({
+  route: 'direct',
+  source: 'artefact',
+  seeking: 'byRange',
+  canSeek: true,
+  transcodes: false,
+  chapters: [],
+  recordingOffsetSec: undefined,
 })
 
 function stalling() {
@@ -769,7 +781,6 @@ export const 人が直した録画で飛ばすとモデルのバージョンを�
 export const エンコード済みの再生でも録画の中の時刻で扱う: Story = {
   args: {
     playback: ARTEFACT_MARKED,
-    artefactHeadSkipSec: HEAD_SKIP,
     startAt: 405.5,
   },
   play: async ({ canvasElement }) => {
@@ -790,5 +801,37 @@ export const エンコード済みの再生でも録画の中の時刻で扱う:
 
     await userEvent.click(rowsOf(panel)[3])
     await waitFor(() => expect(canvas.getByText('19:21 / 30:04')).toBeVisible())
+  },
+}
+
+export const 録画の時刻を置けない再生では帯も行も飛ばない: Story = {
+  args: { playback: ARTEFACT_UNPLACED, startAt: 300 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const panel = await unfold(canvasElement)
+
+    await expect(rowsOf(panel)).toHaveLength(5)
+    await expect(bandOf(canvasElement)).toBeVisible()
+    await expect(rowsOf(panel)[1]).not.toHaveAttribute('data-pressable-row')
+    await expect(
+      canvasElement.querySelector('[data-slot="segments-playhead"]'),
+    ).toBeNull()
+
+    await userEvent.click(rowsOf(panel)[3])
+    fireEvent.click(bandOf(canvasElement), {
+      clientX: bandOf(canvasElement).getBoundingClientRect().left + 10,
+    })
+
+    await expect(canvas.getByText('5:00 / 30:04')).toBeVisible()
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+
+    await userEvent.click(panel.getByRole('button', { name: '変更' }))
+
+    await expect(
+      panel.queryByRole('button', { name: '現在位置で分割' }),
+    ).toBeNull()
+    await expect(skips).toEqual([])
   },
 }

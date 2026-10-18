@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation'
 
 import {
   getLatestEncodeJob,
+  getStandingArtefact,
   listEncodeChoices,
-  readStandingArtefact,
 } from '@/repository/encode'
 import {
   ENCODE_JOBS_EVENT,
@@ -94,7 +94,7 @@ export default async function Page({
     getUnaskedPlaybackProfile(),
     listEncodeChoices(),
     getLatestEncodeJob(id),
-    readStandingArtefact(id).catch((error: unknown) => {
+    getStandingArtefact(id).catch((error: unknown) => {
       console.warn('[recording] the standing artefact was not read', id, error)
 
       return undefined
@@ -123,8 +123,7 @@ export default async function Page({
         onTakeTicket={takeTicket}
         onAskForTheSound={askForTheSound}
         onKeepPosition={keepThePosition}
-        artefact={artefact?.id}
-        artefactHeadSkipSec={artefact?.headSkipSec}
+        artefact={artefact}
         onAskWhichArtefact={askWhichArtefact}
         onQueueEncode={queueEncoding}
         encodeChoices={encodeChoices}

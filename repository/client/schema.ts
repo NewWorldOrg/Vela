@@ -395,6 +395,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/segments/version': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch: operations['patchSegmentVersion']
+    trace?: never
+  }
   '/api/tuners/scan/{scanId}/apply': {
     parameters: {
       query?: never
@@ -2058,6 +2074,11 @@ export interface components {
       message: string
       data: null | components['schemas']['SegmentStatusResponder']
     }
+    BaseResponderOfSegmentVersionResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SegmentVersionResponder']
+    }
     BaseResponderOfServiceReachSettingsResponder: {
       status: boolean
       message: string
@@ -3000,6 +3021,13 @@ export interface components {
     }
     PatchSegmentSettingsRequest: {
       learning?: null | boolean
+      /** Format: double */
+      skipThreshold?: null | number | string
+    }
+    PatchSegmentVersionRequest: {
+      /** Format: int32 */
+      number?: null | number | string
+      byHand?: null | boolean
     }
     PcrReanchorResponder: {
       /** Format: int32 */
@@ -3040,6 +3068,11 @@ export interface components {
       captions: components['schemas']['CaptionStanding']
       artefactFile:
         null | components['schemas']['PlaybackArtefactFileResponder']
+      /**
+       * Format: double
+       * @description How many seconds a time in the recording, as /api/recordings/{id}/segments gives it, stands ahead of the same moment in the file this plan plays: the file's time is the recording's time less this. 0 for the recording itself, and for an artefact the head the encode that made it skipped. A time that falls before 0 or past the end of the file is not in the file. Null for an artefact whose timeline was not kept, on which no time in the recording can be placed.
+       */
+      recordingOffsetSec: null | number | string
     }
     PlaybackPositionResponder: {
       recordingId: string
@@ -4321,24 +4354,106 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
+    SegmentEvidenceResponder: {
+      /** Format: int32 */
+      confirmedRecordings: number | string
+      /** Format: int32 */
+      boundaries: number | string
+      enough: boolean
+      /** Format: int32 */
+      recordingsNeeded: number | string
+      /** Format: int32 */
+      boundariesNeeded: number | string
+    }
     /** @enum {string} */
     SegmentKind: 'programme' | 'break' | 'opening' | 'ending'
+    SegmentKindMetricsResponder: {
+      kind: components['schemas']['SegmentKind']
+      /** Format: double */
+      recall: null | number | string
+      /** Format: double */
+      precision: null | number | string
+    }
+    SegmentMetricsResponder: {
+      /** Format: double */
+      boundaryRecallWithin2s: null | number | string
+      /** Format: double */
+      boundaryRecallWithin1s: null | number | string
+      /** Format: double */
+      extraBoundariesPerRecording: number | string
+      /** Format: double */
+      programmeSkippedSecondsPerHour: number | string
+      kinds: components['schemas']['SegmentKindMetricsResponder'][]
+      /** Format: double */
+      returnedAfterSkipShare: null | number | string
+      /** Format: int32 */
+      skips: number | string
+    }
+    SegmentMetricsSummaryResponder: {
+      /** Format: double */
+      boundaryRecallWithin2s: null | number | string
+      /** Format: double */
+      programmeSkippedSecondsPerHour: number | string
+    }
     /** @enum {string} */
     SegmentModelVersionState: 'candidate' | 'active' | 'retired'
+    SegmentRolledBackResponder: {
+      /** Format: date-time */
+      at: string
+      /** Format: double */
+      returnedAfterSkipShare: number | string
+      /** Format: double */
+      previousShare: number | string
+      /** Format: int32 */
+      skips: number | string
+    }
     SegmentSettingsResponder: {
       learning: boolean
       /** Format: date-time */
       learningChangedAt: null | string
+      /** Format: double */
+      skipThreshold: number | string
+      /** Format: date-time */
+      skipThresholdChangedAt: null | string
     }
     /** @enum {string} */
     SegmentSource: 'none' | 'detected' | 'answered'
     /** @enum {string} */
     SegmentStandingState:
       'none' | 'marked' | 'nothingFound' | 'discarded' | 'answered'
+    SegmentStationResponder: {
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      confirmedRecordings: number | string
+      metrics: components['schemas']['SegmentMetricsSummaryResponder']
+    }
     SegmentStatusResponder: {
+      learning: boolean
       learningData: components['schemas']['LearningDataResponder']
       catalog: components['schemas']['CatalogResponder']
       version: components['schemas']['SegmentVersionResponder']
+      evidence: components['schemas']['SegmentEvidenceResponder']
+      metrics: null | components['schemas']['SegmentMetricsResponder']
+      stations: components['schemas']['SegmentStationResponder'][]
+      versions: components['schemas']['SegmentVersionHistoryResponder'][]
+      skipThreshold: components['schemas']['SkipThresholdResponder']
+    }
+    SegmentVersionHistoryResponder: {
+      /** Format: int32 */
+      number: number | string
+      state: components['schemas']['SegmentModelVersionState']
+      byHand: boolean
+      /** Format: date-time */
+      trainedAt: string
+      /** Format: date-time */
+      adoptedAt: null | string
+      /** Format: date-time */
+      retiredAt: null | string
+      rolledBack: null | components['schemas']['SegmentRolledBackResponder']
+      metrics: null | components['schemas']['SegmentMetricsSummaryResponder']
     }
     SegmentVersionResponder: {
       /** Format: int32 */
@@ -4415,6 +4530,12 @@ export interface components {
       toSec: number | string
       /** Format: int32 */
       modelVersion: null | number | string
+    }
+    SkipThresholdResponder: {
+      /** Format: double */
+      current: number | string
+      /** Format: double */
+      recommended: null | number | string
     }
     /** @enum {string} */
     SoundTrack: 'main' | 'secondary' | 'third'
@@ -6164,6 +6285,76 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfSegmentStatusResponder']
+        }
+      }
+    }
+  }
+  patchSegmentVersion: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PatchSegmentVersionRequest']
+        'application/*+json':
+          null | components['schemas']['PatchSegmentVersionRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
         }
       }
     }

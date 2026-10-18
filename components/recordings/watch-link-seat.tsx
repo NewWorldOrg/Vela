@@ -42,38 +42,21 @@ function sending(id: string, onNoteSkip: NoteSkip) {
   }
 }
 
-/** The link between the player and the stretches under it, made anew when the clock of the file played moves. */
+/** The link between the player and the stretches under it, for the one recording the page is about. */
 export function WatchLinkSeat({
   recordingId,
-  headSkipSec,
   modelVersion,
   onNoteSkip,
   children,
 }: {
   recordingId: string
-  headSkipSec: number | undefined
   modelVersion: number | undefined
   onNoteSkip: NoteSkip
   children: ReactNode
 }) {
-  const [link, setLink] = useState(
-    () =>
-      new WatchLink(
-        headSkipSec,
-        modelVersion,
-        sending(recordingId, onNoteSkip),
-      ),
+  const [link] = useState(
+    () => new WatchLink(modelVersion, sending(recordingId, onNoteSkip)),
   )
-
-  if (link.headSkipSec !== headSkipSec) {
-    setLink(
-      new WatchLink(
-        headSkipSec,
-        link.modelVersionInUse,
-        sending(recordingId, onNoteSkip),
-      ),
-    )
-  }
 
   return <Shared.Provider value={link}>{children}</Shared.Provider>
 }

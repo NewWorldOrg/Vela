@@ -259,19 +259,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   {
     because:
       'the encoding screens show a job by where it has got to; how the picture lined up against the recording it came from, and which settings have been retired, have no part of a screen drawn for them yet',
-    fields: ['EncodeRemovalResponder.retiredAt'],
-  },
-  {
-    because:
-      'a recording’s detail reads how much of the head the encode of the artefact it plays left out, to stand the stretches under the player on the clock it plays; the rest of how the picture lined up against the recording has no part of a screen drawn for it yet',
-    fields: [
-      'EncodeTimelineResponder.artefactLengthSeconds',
-      'EncodeTimelineResponder.captionShiftSeconds',
-      'EncodeTimelineResponder.driftSeconds',
-      'EncodeTimelineResponder.lengthsAgree',
-      'EncodeTimelineResponder.sourceLengthSeconds',
-      'EncodeTimelineResponder.sourceStartSeconds',
-    ],
+    fields: ['EncodeJobResponder.timeline', 'EncodeRemovalResponder.retiredAt'],
   },
   {
     because:
@@ -379,10 +367,16 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the settings page for detecting CM, OP and ED shows the learning data alone; the catalog and the model version have no part of it drawn for them yet',
+      'the settings page for detecting CM, OP and ED shows the learning data alone; the catalog, the model version and its history, the precision, the evidence and the threshold of the skip button have no part of it drawn for them yet, and whether learning is on is read from the settings',
     fields: [
       'SegmentStatusResponder.catalog',
+      'SegmentStatusResponder.evidence',
+      'SegmentStatusResponder.learning',
+      'SegmentStatusResponder.metrics',
+      'SegmentStatusResponder.skipThreshold',
+      'SegmentStatusResponder.stations',
       'SegmentStatusResponder.version',
+      'SegmentStatusResponder.versions',
     ],
   },
 ]

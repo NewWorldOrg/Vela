@@ -1,5 +1,4 @@
 import type { SkipEvent, SkipEventKind } from '@/repository/recording-segments'
-import type { PlaybackPlan } from '@/repository/videos'
 
 /** How long after a break was skipped a seek back into it still counts as going back to it. */
 export const RETURNS_WITHIN_MS = 30_000
@@ -27,21 +26,12 @@ function hundredths(second: number): number {
   return Math.round(second * 100) / 100
 }
 
-/** How far the clock of the file a plan plays runs behind the recording's own: an artefact handed over as it is starts after the head its encode skipped, and anything else plays the recording's own time. */
-export function headSkipPlayed(
-  plan: Pick<PlaybackPlan, 'route' | 'source'> | undefined,
-  artefactHeadSkipSec: number | undefined,
-): number | undefined {
-  return plan?.route === 'direct' && plan.source === 'artefact'
-    ? artefactHeadSkipSec
-    : 0
-}
-
 /**
  * What the player and the stretches under it share. The player says where its playhead stands on the clock of
- * the file it plays and what the person did with the button that skips a break; the stretches are read in the
- * recording's own time, which is that clock moved on by the head an artefact was cut with, and ask the player to
- * seek and to plan its chapters again. Without that head known, the stretches neither see the playhead nor seek.
+ * the file it plays, how far the recording's own time stands ahead of that clock, and what the person did with
+ * the button that skips a break; the stretches are read in the recording's own time and ask the player to seek
+ * and to plan its chapters again. While no time in the recording can be placed on the file, the stretches
+ * neither see the playhead nor seek, and nothing done with the button is sent.
  */
 export class WatchLink {
   private position = 0
@@ -52,7 +42,7 @@ export class WatchLink {
 
   private readonly listeners = new Set<() => void>()
 
-  readonly headSkipSec: number | undefined
+  private offset: number | undefined
 
   private modelVersion: number | undefined
 
@@ -61,12 +51,10 @@ export class WatchLink {
   private readonly now: () => number
 
   constructor(
-    headSkipSec: number | undefined,
     modelVersion: number | undefined,
     note: (skip: SkipEvent) => void,
     now: () => number = Date.now,
   ) {
-    this.headSkipSec = headSkipSec
     this.modelVersion = modelVersion
     this.note = note
     this.now = now
@@ -82,17 +70,13 @@ export class WatchLink {
 
   /** The second of the recording the playhead stands at, or nothing while no player is heard or its clock is not known. */
   playhead = (): number | undefined =>
-    this.player && this.headSkipSec !== undefined
-      ? hundredths(this.position + this.headSkipSec)
+    this.player && this.offset !== undefined
+      ? hundredths(this.position + this.offset)
       : undefined
 
   /** Whether a player is heard on a clock the stretches can be read against, so that they can seek it. */
   follows = (): boolean =>
-    this.player !== undefined && this.headSkipSec !== undefined
-
-  get modelVersionInUse(): number | undefined {
-    return this.modelVersion
-  }
+    this.player !== undefined && this.offset !== undefined
 
   hear(player: HeardPlayer): () => void {
     this.player = player
@@ -110,6 +94,16 @@ export class WatchLink {
     this.modelVersion = modelVersion
   }
 
+  /** How far the recording's own time stands ahead of the file the player plays, or nothing when it cannot be placed. */
+  runsBehindBy(offsetSec: number | undefined): void {
+    if (offsetSec === this.offset) {
+      return
+    }
+
+    this.offset = offsetSec
+    this.told()
+  }
+
   tell(second: number): void {
     if (second === this.position) {
       return
@@ -121,11 +115,11 @@ export class WatchLink {
   }
 
   seek(recordingSecond: number): void {
-    if (!this.player || this.headSkipSec === undefined) {
+    if (!this.player || this.offset === undefined) {
       return
     }
 
-    this.player.seek(Math.max(0, recordingSecond - this.headSkipSec))
+    this.player.seek(Math.max(0, recordingSecond - this.offset))
   }
 
   replan(): void {
@@ -176,7 +170,11 @@ export class WatchLink {
   }
 
   private send(event: SkipEventKind, fromSec: number, toSec: number): void {
-    const head = this.headSkipSec ?? 0
+    const head = this.offset
+
+    if (head === undefined) {
+      return
+    }
 
     this.note({
       event,

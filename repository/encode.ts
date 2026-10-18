@@ -275,41 +275,19 @@ export async function getLatestEncodeJob(
 
 const COMPLETED_LOOKED_THROUGH = 10
 
-/** The artefact a recording is played from, and how much of the recording's head its encode left out. */
-export interface StandingArtefact {
-  id: string
-  headSkipSec?: number
-}
-
-export async function readStandingArtefact(
+export async function getStandingArtefact(
   recordingId: string,
-): Promise<StandingArtefact | undefined> {
+): Promise<string | undefined> {
   const completed = await fetchJobs({
     status: 'completed',
     recordingId,
     page: 1,
     perPage: COMPLETED_LOOKED_THROUGH,
   })
-  const standing = completed.items.find(
+
+  return completed.items.find(
     (one) => one.artefactName !== null && one.replacedAt === null,
-  )
-
-  if (!standing) {
-    return undefined
-  }
-
-  const head = Number(standing.timeline?.headSkipSeconds)
-
-  return {
-    id: standing.id,
-    headSkipSec: standing.timeline && Number.isFinite(head) ? head : undefined,
-  }
-}
-
-export async function getStandingArtefact(
-  recordingId: string,
-): Promise<string | undefined> {
-  return (await readStandingArtefact(recordingId))?.id
+  )?.id
 }
 
 export interface EncodeAsking {

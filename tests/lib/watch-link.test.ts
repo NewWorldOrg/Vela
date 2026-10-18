@@ -5,24 +5,24 @@ import {
   RETURNS_WITHIN_MS,
   WATCHED_FOR_SEC,
   WatchLink,
-  headSkipPlayed,
   type HeardPlayer,
 } from '@/lib/watch-link'
 import type { SkipEvent } from '@/repository/recording-segments'
 
 const BREAK = { startsAtSec: 412.3, endsAtSec: 502.3 }
 
-function linked(headSkipSec: number | undefined, modelVersion?: number) {
+function linked(offsetSec: number | undefined, modelVersion?: number) {
   const sent: SkipEvent[] = []
   const clock = { now: 1_000_000 }
   const sought: number[] = []
   let replanned = 0
   const link = new WatchLink(
-    headSkipSec,
     modelVersion,
     (skip) => sent.push(skip),
     () => clock.now,
   )
+
+  link.runsBehindBy(offsetSec)
   const player: HeardPlayer = {
     seek: (second) => sought.push(second),
     replan: () => {
@@ -264,25 +264,32 @@ test('whoever follows the playhead is told when it moves, and not when it stands
   assert.equal(told, 3)
 })
 
-test('an artefact handed over as it is plays behind the recording by the head its encode left out', () => {
-  assert.equal(
-    headSkipPlayed({ route: 'direct', source: 'artefact' }, 14.5),
-    14.5,
-  )
-  assert.equal(
-    headSkipPlayed({ route: 'direct', source: 'artefact' }, undefined),
-    undefined,
-  )
+test('while no time in the recording can be placed on the file, nothing done with the button is sent', () => {
+  const { link, sent } = linked(undefined, 3)
+
+  link.skippedTheBreak(415, BREAK)
+  link.leftTheBreak(420, 502.3)
+
+  assert.deepEqual(sent, [])
 })
 
-test('the recording itself, and anything transcoded while it plays, plays the recording’s own time', () => {
-  assert.equal(
-    headSkipPlayed({ route: 'direct', source: 'recording' }, 14.5),
-    0,
-  )
-  assert.equal(
-    headSkipPlayed({ route: 'onTheFly', source: 'artefact' }, 14.5),
-    0,
-  )
-  assert.equal(headSkipPlayed(undefined, 14.5), 0)
+test('the offset the player says it plays at reaches the playhead the stretches see', () => {
+  const { link, player } = linked(0)
+  let told = 0
+
+  link.subscribe(() => {
+    told += 1
+  })
+  link.hear(player)
+  link.tell(100)
+  link.runsBehindBy(14.5)
+  link.runsBehindBy(14.5)
+
+  assert.equal(link.playhead(), 114.5)
+  assert.equal(told, 3)
+
+  link.runsBehindBy(undefined)
+
+  assert.equal(link.playhead(), undefined)
+  assert.equal(link.follows(), false)
 })

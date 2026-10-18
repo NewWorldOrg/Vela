@@ -823,6 +823,10 @@ export function Player({
   })
 
   useEffect(() => {
+    link?.runsBehindBy(plan.recordingOffsetSec)
+  }, [link, plan.recordingOffsetSec])
+
+  useEffect(() => {
     link?.tell(position)
   }, [link, position])
 
