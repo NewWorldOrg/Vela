@@ -259,7 +259,29 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   {
     because:
       'the encoding screens show a job by where it has got to; how the picture lined up against the recording it came from, and which settings have been retired, have no part of a screen drawn for them yet',
-    fields: ['EncodeJobResponder.timeline', 'EncodeRemovalResponder.retiredAt'],
+    fields: ['EncodeRemovalResponder.retiredAt'],
+  },
+  {
+    because:
+      'a recording’s detail reads how much of the head the encode of the artefact it plays left out, to stand the stretches under the player on the clock it plays; the rest of how the picture lined up against the recording has no part of a screen drawn for it yet',
+    fields: [
+      'EncodeTimelineResponder.artefactLengthSeconds',
+      'EncodeTimelineResponder.captionShiftSeconds',
+      'EncodeTimelineResponder.driftSeconds',
+      'EncodeTimelineResponder.lengthsAgree',
+      'EncodeTimelineResponder.sourceLengthSeconds',
+      'EncodeTimelineResponder.sourceStartSeconds',
+    ],
+  },
+  {
+    because:
+      'the stretches under the player are drawn by their kind alone, however likely the detection found each one, so that a likely break and an unlikely one look the same',
+    fields: ['RecordingSegmentResponder.probability'],
+  },
+  {
+    because:
+      'what a person did with the button that skips a break is sent for the backend to keep and the player goes on whether it arrived or not, so what the write hands back is read by nothing',
+    fields: ['BaseResponderOfSkipEventResponder.data'],
   },
   {
     because:

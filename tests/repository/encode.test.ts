@@ -282,6 +282,7 @@ const {
   getLatestEncodeJob,
   getStandingArtefact,
   listEncodeChoices,
+  readStandingArtefact,
   queueEncode,
   removeDestination,
   removeProfile,
@@ -363,6 +364,41 @@ test('a recording whose completed jobs were all replaced, or that has none, has 
   store.jobs = []
 
   assert.equal(await getStandingArtefact(RECORDING.id), undefined)
+})
+
+test('the standing artefact says how much of the recording’s head its encode left out', async () => {
+  store.jobs = [
+    {
+      ...COMPLETED,
+      timeline: {
+        sourceStartSeconds: 1.4,
+        headSkipSeconds: '14.5',
+        captionShiftSeconds: 0,
+        sourceLengthSeconds: 1804,
+        artefactLengthSeconds: 1789.5,
+        driftSeconds: 0,
+        lengthsAgree: true,
+      },
+    },
+  ]
+
+  assert.deepEqual(await readStandingArtefact(RECORDING.id), {
+    id: COMPLETED.id,
+    headSkipSec: 14.5,
+  })
+})
+
+test('a standing artefact whose timeline was not kept names no head', async () => {
+  store.jobs = [{ ...COMPLETED, timeline: null }]
+
+  assert.deepEqual(await readStandingArtefact(RECORDING.id), {
+    id: COMPLETED.id,
+    headSkipSec: undefined,
+  })
+
+  store.jobs = []
+
+  assert.equal(await readStandingArtefact(RECORDING.id), undefined)
 })
 
 test('the screen reads the ledger into names, values and counts', async () => {
