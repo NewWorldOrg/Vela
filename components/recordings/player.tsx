@@ -167,6 +167,7 @@ import {
   widestColumn,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
+import { useWatchLink } from '@/components/recordings/watch-link-seat'
 
 const RESTS = 3000
 
@@ -243,6 +244,7 @@ export function Player({
   const router = useRouter()
   const pathname = usePathname()
   const inTheAddress = useSearchParams()
+  const link = useWatchLink()
   const video = useRef<HTMLVideoElement>(null)
   const holder = useRef<HTMLCanvasElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -350,6 +352,7 @@ export function Player({
   const attempt = useRef(0)
   const openedOn = useRef(artefact)
   const replanned = useRef(0)
+  const rechaptered = useRef(0)
 
   const asItStands = useRef({ position, profile, plan, sound })
 
@@ -382,7 +385,8 @@ export function Player({
   const drops = d.qualitySpots?.map((spot) => spot.second)
   const chapters = chaptersToDraw(plan.chapters)
   const nextChapterAt = nextBoundaryAfter(position, chapters)
-  const breakEndsAt = skippableBreakAt(position, chapters)?.endsAtSec
+  const breakHere = skippableBreakAt(position, chapters)
+  const breakEndsAt = breakHere?.endsAtSec
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -705,6 +709,7 @@ export function Player({
   const choose = (second: number) => {
     const at = Math.min(duration, Math.max(0, second))
 
+    link?.sought(wanted.current ?? position, at)
     wanted.current = at
     setPosition(at)
     standsAs({ position: at })
@@ -768,14 +773,67 @@ export function Player({
   }
 
   const skipTheBreak = (to: number) => {
+    const from = position
+
     shell?.focus({ preventScroll: true })
     choose(to)
+
+    if (breakHere) {
+      link?.skippedTheBreak(from, breakHere)
+    }
   }
 
   const leaveTheBreak = (to: number) => {
     shell?.focus({ preventScroll: true })
     setBreaksLeftAlone((were) => [...were, to])
+    link?.leftTheBreak(position, to)
   }
+
+  const seekFromBelow = useEffectEvent((second: number) => choose(second))
+
+  const rechapter = useEffectEvent(() => {
+    const mine = (rechaptered.current += 1)
+
+    void onAskForTheSound(
+      d.id,
+      asItStands.current.sound,
+      plan.source,
+      plan.decodes,
+    )
+      .then((answer) => {
+        if (rechaptered.current !== mine || answer.state !== 'planned') {
+          return
+        }
+
+        const next = {
+          ...asItStands.current.plan,
+          chapters: answer.plan.chapters,
+        }
+
+        setPlan(next)
+        standsAs({ plan: next })
+      })
+      .catch((error) => {
+        console.warn(
+          '[player] the chapters were not planned again',
+          d.id,
+          error,
+        )
+      })
+  })
+
+  useEffect(() => {
+    link?.tell(position)
+  }, [link, position])
+
+  useEffect(
+    () =>
+      link?.hear({
+        seek: (second) => seekFromBelow(second),
+        replan: () => rechapter(),
+      }),
+    [link],
+  )
 
   const offersTheSkip =
     breakEndsAt !== undefined &&

@@ -4,8 +4,8 @@ import { notFound } from 'next/navigation'
 
 import {
   getLatestEncodeJob,
-  getStandingArtefact,
   listEncodeChoices,
+  readStandingArtefact,
 } from '@/repository/encode'
 import {
   ENCODE_JOBS_EVENT,
@@ -13,6 +13,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
+import { getRecordingSegments } from '@/repository/recording-segments'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
 import {
   AUTO_OPEN_SPELLING,
@@ -27,12 +28,15 @@ import { RecordingDetailView } from '@/components/recordings/recording-detail-pa
 import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { callOffJob } from '@/app/(app)/settings/encode/actions'
 import {
+  answerTheSegments,
   askForTheSound,
   askWhichArtefact,
   keepThePosition,
+  noteTheSkip,
   queueEncoding,
   redrawThumbnail,
   takeTicket,
+  withdrawTheAnswer,
 } from './actions'
 
 export async function generateMetadata({
@@ -76,23 +80,27 @@ export default async function Page({
     AUTO_OPEN_SPELLING,
   )
 
-  const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
-    await Promise.all([
-      getRecording(id),
-      getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
-      getUnaskedPlaybackProfile(),
-      listEncodeChoices(),
-      getLatestEncodeJob(id),
-      getStandingArtefact(id).catch((error: unknown) => {
-        console.warn(
-          '[recording] the standing artefact was not read',
-          id,
-          error,
-        )
+  const [
+    detail,
+    playback,
+    unaskedProfile,
+    encodeChoices,
+    encodeJob,
+    artefact,
+    segments,
+  ] = await Promise.all([
+    getRecording(id),
+    getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
+    getUnaskedPlaybackProfile(),
+    listEncodeChoices(),
+    getLatestEncodeJob(id),
+    readStandingArtefact(id).catch((error: unknown) => {
+      console.warn('[recording] the standing artefact was not read', id, error)
 
-        return undefined
-      }),
-    ])
+      return undefined
+    }),
+    getRecordingSegments(id),
+  ])
 
   if (!detail) {
     notFound()
@@ -115,12 +123,17 @@ export default async function Page({
         onTakeTicket={takeTicket}
         onAskForTheSound={askForTheSound}
         onKeepPosition={keepThePosition}
-        artefact={artefact}
+        artefact={artefact?.id}
+        artefactHeadSkipSec={artefact?.headSkipSec}
         onAskWhichArtefact={askWhichArtefact}
         onQueueEncode={queueEncoding}
         encodeChoices={encodeChoices}
         encodeJob={encodeJob}
         onCallOffEncode={callOffJob}
+        segments={segments.state === 'ok' ? segments.value : undefined}
+        onAnswerSegments={answerTheSegments}
+        onWithdrawSegmentAnswer={withdrawTheAnswer}
+        onNoteSkip={noteTheSkip}
       />
     </>
   )
