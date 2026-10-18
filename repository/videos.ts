@@ -40,6 +40,7 @@ export interface PlaybackChapter {
   startsAtSec: number
   endsAtSec: number
   kind: ChapterKind
+  skippable: boolean
 }
 
 export interface PlaybackPlan {
@@ -89,6 +90,7 @@ function toChapter(
     startsAtSec: Number(one.startsAtSec),
     endsAtSec: Number(one.endsAtSec),
     kind: shapeFor(CHAPTER_KINDS, one.kind, 'unknown'),
+    skippable: one.skippable === true,
   }
 }
 

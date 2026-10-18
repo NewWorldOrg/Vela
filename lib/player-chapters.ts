@@ -2,10 +2,15 @@ import type { PlaybackChapter } from '@/repository/videos'
 
 const ALREADY_THERE = 0.5
 
+/** The chapters this build can place; one of a kind it has never heard of draws nothing and is never jumped to. */
+export function chaptersToDraw(chapters: PlaybackChapter[]): PlaybackChapter[] {
+  return chapters.filter((one) => one.kind !== 'unknown')
+}
+
 export function chapterBoundaries(chapters: PlaybackChapter[]): number[] {
   const found = new Set<number>()
 
-  for (const one of chapters) {
+  for (const one of chaptersToDraw(chapters)) {
     if (Number.isFinite(one.startsAtSec) && one.startsAtSec > 0) {
       found.add(one.startsAtSec)
     }
@@ -23,30 +28,18 @@ export function nextBoundaryAfter(
   )
 }
 
-/** Where the programme resumes after the break being played, or nothing when no break is being played or it runs to the end. */
-export function whereTheBreakEnds(
+/** The break being played when the backend lets it be skipped, or nothing. */
+export function skippableBreakAt(
   position: number,
   chapters: PlaybackChapter[],
-): number | undefined {
-  const inBreak = chapters.some(
+): PlaybackChapter | undefined {
+  return chapters.find(
     (one) =>
       one.kind === 'break' &&
+      one.skippable &&
+      Number.isFinite(one.startsAtSec) &&
+      Number.isFinite(one.endsAtSec) &&
       one.startsAtSec <= position &&
       position < one.endsAtSec,
   )
-
-  if (!inBreak) {
-    return undefined
-  }
-
-  const resumes = chapters
-    .filter(
-      (one) =>
-        one.kind === 'programme' &&
-        Number.isFinite(one.startsAtSec) &&
-        one.startsAtSec > position,
-    )
-    .map((one) => one.startsAtSec)
-
-  return resumes.length > 0 ? Math.min(...resumes) : undefined
 }

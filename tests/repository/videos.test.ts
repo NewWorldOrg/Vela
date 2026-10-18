@@ -546,18 +546,64 @@ test('the breaks a recording was marked with come back as they were read', async
     bytes: '3490550128',
     sounds: ['main'],
     chapters: [
-      { startsAtSec: 0, endsAtSec: '212.5', kind: 'programme' },
-      { startsAtSec: '212.5', endsAtSec: 272.5, kind: 'break' },
-      { startsAtSec: 272.5, endsAtSec: 1800, kind: 'programme' },
+      {
+        startsAtSec: 0,
+        endsAtSec: '212.5',
+        kind: 'programme',
+        skippable: false,
+      },
+      {
+        startsAtSec: '212.5',
+        endsAtSec: 272.5,
+        kind: 'break',
+        skippable: true,
+      },
+      {
+        startsAtSec: 272.5,
+        endsAtSec: 1800,
+        kind: 'programme',
+        skippable: false,
+      },
     ],
   }
 
   const read = await getPlaybackPlan('1266')
 
   assert.deepEqual(read.state === 'planned' && read.plan.chapters, [
-    { startsAtSec: 0, endsAtSec: 212.5, kind: 'programme' },
-    { startsAtSec: 212.5, endsAtSec: 272.5, kind: 'break' },
-    { startsAtSec: 272.5, endsAtSec: 1800, kind: 'programme' },
+    { startsAtSec: 0, endsAtSec: 212.5, kind: 'programme', skippable: false },
+    { startsAtSec: 212.5, endsAtSec: 272.5, kind: 'break', skippable: true },
+    {
+      startsAtSec: 272.5,
+      endsAtSec: 1800,
+      kind: 'programme',
+      skippable: false,
+    },
+  ])
+})
+
+test('a chapter from a build that never said whether it may be skipped is not offered to skip', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main'],
+    chapters: [
+      { startsAtSec: 0, endsAtSec: 212, kind: 'programme' },
+      { startsAtSec: 212, endsAtSec: 272, kind: 'break' },
+    ],
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.chapters, [
+    { startsAtSec: 0, endsAtSec: 212, kind: 'programme', skippable: false },
+    { startsAtSec: 212, endsAtSec: 272, kind: 'break', skippable: false },
   ])
 })
 
@@ -613,16 +659,16 @@ test('a kind this build has never heard of is still carried, and named as unknow
     bytes: '3490550128',
     sounds: ['main'],
     chapters: [
-      { startsAtSec: 0, endsAtSec: 300, kind: 'programme' },
-      { startsAtSec: 300, endsAtSec: 360, kind: 'trailer' },
+      { startsAtSec: 0, endsAtSec: 300, kind: 'programme', skippable: false },
+      { startsAtSec: 300, endsAtSec: 360, kind: 'trailer', skippable: true },
     ],
   }
 
   const read = await getPlaybackPlan('1266')
 
   assert.deepEqual(read.state === 'planned' && read.plan.chapters, [
-    { startsAtSec: 0, endsAtSec: 300, kind: 'programme' },
-    { startsAtSec: 300, endsAtSec: 360, kind: 'unknown' },
+    { startsAtSec: 0, endsAtSec: 300, kind: 'programme', skippable: false },
+    { startsAtSec: 300, endsAtSec: 360, kind: 'unknown', skippable: true },
   ])
 })
 

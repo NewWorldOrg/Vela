@@ -3,17 +3,18 @@ import { test } from 'node:test'
 
 import {
   chapterBoundaries,
+  chaptersToDraw,
   nextBoundaryAfter,
-  whereTheBreakEnds,
+  skippableBreakAt,
 } from '@/lib/player-chapters'
 import type { PlaybackChapter } from '@/repository/videos'
 
 const MARKED: PlaybackChapter[] = [
-  { startsAtSec: 0, endsAtSec: 212, kind: 'programme' },
-  { startsAtSec: 212, endsAtSec: 272, kind: 'break' },
-  { startsAtSec: 272, endsAtSec: 1130.5, kind: 'programme' },
-  { startsAtSec: 1130.5, endsAtSec: 1220.5, kind: 'break' },
-  { startsAtSec: 1220.5, endsAtSec: 1800, kind: 'programme' },
+  { startsAtSec: 0, endsAtSec: 212, kind: 'programme', skippable: false },
+  { startsAtSec: 212, endsAtSec: 272, kind: 'break', skippable: true },
+  { startsAtSec: 272, endsAtSec: 1130.5, kind: 'programme', skippable: false },
+  { startsAtSec: 1130.5, endsAtSec: 1220.5, kind: 'break', skippable: true },
+  { startsAtSec: 1220.5, endsAtSec: 1800, kind: 'programme', skippable: false },
 ]
 
 test('the opening of the recording is not a boundary anyone jumps to', () => {
@@ -43,67 +44,96 @@ test('past the last boundary there is nowhere left to send anyone', () => {
 
 test('boundaries come back in order, and the same second only once', () => {
   const outOfOrder: PlaybackChapter[] = [
-    { startsAtSec: 900, endsAtSec: 960, kind: 'break' },
-    { startsAtSec: 120, endsAtSec: 900, kind: 'programme' },
-    { startsAtSec: 900, endsAtSec: 960, kind: 'unknown' },
+    { startsAtSec: 900, endsAtSec: 960, kind: 'break', skippable: true },
+    { startsAtSec: 120, endsAtSec: 900, kind: 'programme', skippable: false },
+    { startsAtSec: 900, endsAtSec: 960, kind: 'break', skippable: true },
   ]
 
   assert.deepEqual(chapterBoundaries(outOfOrder), [120, 900])
   assert.equal(nextBoundaryAfter(0, outOfOrder), 120)
 })
 
-test('a chapter this build cannot place is still a boundary', () => {
+test('a chapter this build cannot place is no boundary and nowhere to jump to', () => {
   const unknown: PlaybackChapter[] = [
-    { startsAtSec: 0, endsAtSec: 300, kind: 'programme' },
-    { startsAtSec: 300, endsAtSec: 360, kind: 'unknown' },
+    { startsAtSec: 0, endsAtSec: 300, kind: 'programme', skippable: false },
+    { startsAtSec: 300, endsAtSec: 360, kind: 'unknown', skippable: true },
+    { startsAtSec: 360, endsAtSec: 900, kind: 'programme', skippable: false },
   ]
 
-  assert.deepEqual(chapterBoundaries(unknown), [300])
-  assert.equal(nextBoundaryAfter(0, unknown), 300)
+  assert.deepEqual(chapterBoundaries(unknown), [360])
+  assert.equal(nextBoundaryAfter(0, unknown), 360)
+  assert.equal(nextBoundaryAfter(360, unknown), undefined)
 })
 
-test('inside a break, the way out is the start of the programme after it', () => {
-  assert.equal(whereTheBreakEnds(212, MARKED), 272)
-  assert.equal(whereTheBreakEnds(250, MARKED), 272)
-  assert.equal(whereTheBreakEnds(1200, MARKED), 1220.5)
+test('only the chapters this build can place are drawn', () => {
+  const mixed: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 300, kind: 'programme', skippable: false },
+    { startsAtSec: 300, endsAtSec: 360, kind: 'unknown', skippable: true },
+    { startsAtSec: 360, endsAtSec: 420, kind: 'break', skippable: false },
+  ]
+
+  assert.deepEqual(chaptersToDraw(mixed), [mixed[0], mixed[2]])
+  assert.deepEqual(
+    chaptersToDraw([
+      { startsAtSec: 0, endsAtSec: 60, kind: 'unknown', skippable: false },
+    ]),
+    [],
+  )
+})
+
+test('inside a break that may be skipped, the skip goes to where that break ends', () => {
+  assert.equal(skippableBreakAt(212, MARKED)?.endsAtSec, 272)
+  assert.equal(skippableBreakAt(250, MARKED)?.endsAtSec, 272)
+  assert.equal(skippableBreakAt(1200, MARKED)?.endsAtSec, 1220.5)
 })
 
 test('outside a break there is nothing to skip', () => {
-  assert.equal(whereTheBreakEnds(0, MARKED), undefined)
-  assert.equal(whereTheBreakEnds(211.9, MARKED), undefined)
-  assert.equal(whereTheBreakEnds(272, MARKED), undefined)
-  assert.equal(whereTheBreakEnds(1500, MARKED), undefined)
-  assert.equal(whereTheBreakEnds(100, []), undefined)
+  assert.equal(skippableBreakAt(0, MARKED), undefined)
+  assert.equal(skippableBreakAt(211.9, MARKED), undefined)
+  assert.equal(skippableBreakAt(272, MARKED), undefined)
+  assert.equal(skippableBreakAt(1500, MARKED), undefined)
+  assert.equal(skippableBreakAt(100, []), undefined)
 })
 
-test('breaks that follow one another are skipped together', () => {
+test('a break the backend did not let be skipped is not offered', () => {
+  const heldBack: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 1700, kind: 'programme', skippable: false },
+    { startsAtSec: 1700, endsAtSec: 1800, kind: 'break', skippable: false },
+  ]
+
+  assert.equal(skippableBreakAt(1750, heldBack), undefined)
+})
+
+test('breaks that follow one another are each skipped to their own end', () => {
   const backToBack: PlaybackChapter[] = [
-    { startsAtSec: 0, endsAtSec: 600, kind: 'programme' },
-    { startsAtSec: 600, endsAtSec: 630, kind: 'break' },
-    { startsAtSec: 630, endsAtSec: 690, kind: 'break' },
-    { startsAtSec: 690, endsAtSec: 1200, kind: 'programme' },
+    { startsAtSec: 0, endsAtSec: 600, kind: 'programme', skippable: false },
+    { startsAtSec: 600, endsAtSec: 630, kind: 'break', skippable: true },
+    { startsAtSec: 630, endsAtSec: 690, kind: 'break', skippable: true },
+    { startsAtSec: 690, endsAtSec: 1200, kind: 'programme', skippable: false },
   ]
 
-  assert.equal(whereTheBreakEnds(605, backToBack), 690)
-  assert.equal(whereTheBreakEnds(650, backToBack), 690)
+  assert.equal(skippableBreakAt(605, backToBack)?.endsAtSec, 630)
+  assert.equal(skippableBreakAt(650, backToBack)?.endsAtSec, 690)
 })
 
-test('a break that runs to the end of the recording has nowhere to skip to', () => {
-  const endsInABreak: PlaybackChapter[] = [
-    { startsAtSec: 0, endsAtSec: 1700, kind: 'programme' },
-    { startsAtSec: 1700, endsAtSec: 1800, kind: 'break' },
+test('only a break is skipped, whatever else is said to be skippable', () => {
+  const others: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 300, kind: 'unknown', skippable: true },
+    { startsAtSec: 300, endsAtSec: 360, kind: 'programme', skippable: true },
+    { startsAtSec: 360, endsAtSec: 400, kind: 'unknown', skippable: true },
   ]
 
-  assert.equal(whereTheBreakEnds(1750, endsInABreak), undefined)
+  assert.equal(skippableBreakAt(100, others), undefined)
+  assert.equal(skippableBreakAt(320, others), undefined)
+  assert.equal(skippableBreakAt(380, others), undefined)
 })
 
-test('a chapter this build cannot place is neither a break nor where one ends', () => {
-  const unknown: PlaybackChapter[] = [
-    { startsAtSec: 0, endsAtSec: 300, kind: 'unknown' },
-    { startsAtSec: 300, endsAtSec: 360, kind: 'break' },
-    { startsAtSec: 360, endsAtSec: 400, kind: 'unknown' },
+test('a break whose seconds cannot be read is not offered', () => {
+  const unread: PlaybackChapter[] = [
+    { startsAtSec: Number.NaN, endsAtSec: 360, kind: 'break', skippable: true },
+    { startsAtSec: 400, endsAtSec: Number.NaN, kind: 'break', skippable: true },
   ]
 
-  assert.equal(whereTheBreakEnds(100, unknown), undefined)
-  assert.equal(whereTheBreakEnds(320, unknown), undefined)
+  assert.equal(skippableBreakAt(320, unread), undefined)
+  assert.equal(skippableBreakAt(420, unread), undefined)
 })
