@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Carina",
-    "description": "The HTTP surface of the app process. Eight contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server (`GET /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`). The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
-    "version": "0.1.2"
+    "description": "The HTTP surface of the app process. Eight contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server, and what it posts there (`GET` and `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`); the frame has no origin of its own, so these two answer any origin without credentials. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
+    "version": "0.2.0"
   },
   "servers": [
     {
@@ -4066,6 +4066,69 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfIntegrityListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/recordings/{id}/segments": {
+      "get": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "getRecordingSegments",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
                 }
               }
             }
@@ -9975,6 +10038,32 @@
           }
         }
       },
+      "BaseResponderOfRecordingSegmentsResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/RecordingSegmentsResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfRecordingStopResponder": {
         "required": [
           "status",
@@ -11226,6 +11315,67 @@
             "items": {
               "$ref": "#/components/schemas/CaptionCueResponder"
             }
+          }
+        }
+      },
+      "CatalogResponder": {
+        "required": [
+          "cm",
+          "opening",
+          "ending",
+          "programmeFixture",
+          "stationFixture",
+          "unknown"
+        ],
+        "type": "object",
+        "properties": {
+          "cm": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "opening": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "ending": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "programmeFixture": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stationFixture": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "unknown": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -14381,7 +14531,8 @@
         "required": [
           "startsAtSec",
           "endsAtSec",
-          "kind"
+          "kind",
+          "skippable"
         ],
         "type": "object",
         "properties": {
@@ -14403,6 +14554,9 @@
           },
           "kind": {
             "$ref": "#/components/schemas/ChapterKind"
+          },
+          "skippable": {
+            "type": "boolean"
           }
         }
       },
@@ -17230,6 +17384,128 @@
           }
         }
       },
+      "RecordingSegmentResponder": {
+        "required": [
+          "startsAtSec",
+          "endsAtSec",
+          "kind",
+          "probability"
+        ],
+        "type": "object",
+        "properties": {
+          "startsAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "endsAtSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "kind": {
+            "$ref": "#/components/schemas/SegmentKind"
+          },
+          "probability": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "RecordingSegmentsResponder": {
+        "required": [
+          "lengthSec",
+          "source",
+          "state",
+          "modelVersion",
+          "confirmed",
+          "answeredAt",
+          "detectedAt",
+          "cmShare",
+          "segments",
+          "snaps"
+        ],
+        "type": "object",
+        "properties": {
+          "lengthSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "source": {
+            "$ref": "#/components/schemas/SegmentSource"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SegmentStandingState"
+          },
+          "modelVersion": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "confirmed": {
+            "type": "boolean"
+          },
+          "answeredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "detectedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "cmShare": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "segments": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecordingSegmentResponder"
+            }
+          },
+          "snaps": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+              "type": [
+                "number",
+                "string"
+              ],
+              "format": "double"
+            }
+          }
+        }
+      },
       "RecordingSort": {
         "enum": [
           "startedAt",
@@ -19520,6 +19796,23 @@
           }
         }
       },
+      "SegmentKind": {
+        "enum": [
+          "programme",
+          "break",
+          "opening",
+          "ending"
+        ],
+        "type": "string"
+      },
+      "SegmentModelVersionState": {
+        "enum": [
+          "candidate",
+          "active",
+          "retired"
+        ],
+        "type": "string"
+      },
       "SegmentSettingsResponder": {
         "required": [
           "learning",
@@ -19539,14 +19832,75 @@
           }
         }
       },
+      "SegmentSource": {
+        "enum": [
+          "none",
+          "detected"
+        ],
+        "type": "string"
+      },
+      "SegmentStandingState": {
+        "enum": [
+          "none",
+          "marked",
+          "nothingFound",
+          "discarded"
+        ],
+        "type": "string"
+      },
       "SegmentStatusResponder": {
         "required": [
-          "learningData"
+          "learningData",
+          "catalog",
+          "version"
         ],
         "type": "object",
         "properties": {
           "learningData": {
             "$ref": "#/components/schemas/LearningDataResponder"
+          },
+          "catalog": {
+            "$ref": "#/components/schemas/CatalogResponder"
+          },
+          "version": {
+            "$ref": "#/components/schemas/SegmentVersionResponder"
+          }
+        }
+      },
+      "SegmentVersionResponder": {
+        "required": [
+          "number",
+          "state",
+          "byHand",
+          "trainedAt",
+          "adoptedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "number": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "state": {
+            "$ref": "#/components/schemas/SegmentModelVersionState"
+          },
+          "byHand": {
+            "type": "boolean"
+          },
+          "trainedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "adoptedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },

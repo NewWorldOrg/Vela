@@ -355,6 +355,14 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'the screen names only what the driver lacks, which arrives as the missing list, so the list of everything the driver can do is not drawn',
     fields: ['DriverHelloResponder.capabilities'],
   },
+  {
+    because:
+      'the settings page for detecting CM, OP and ED shows the learning data alone; the catalog and the model version have no part of it drawn for them yet',
+    fields: [
+      'SegmentStatusResponder.catalog',
+      'SegmentStatusResponder.version',
+    ],
+  },
 ]
 
 const NOT_ASKED_FOR_ON_PURPOSE: { because: string; routes: string[] }[] = [

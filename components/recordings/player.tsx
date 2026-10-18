@@ -22,7 +22,11 @@ import {
 import { AUTO_OPEN_SPELLING, DATA_BROADCAST_AUTO_OPEN } from '@/lib/stored-flag'
 import { cn } from '@/lib/utils'
 import { formatPlayerTime } from '@/lib/format'
-import { nextBoundaryAfter, whereTheBreakEnds } from '@/lib/player-chapters'
+import {
+  chaptersToDraw,
+  nextBoundaryAfter,
+  skippableBreakAt,
+} from '@/lib/player-chapters'
 import {
   SECOND_TAP_WITHIN,
   tapZone,
@@ -376,9 +380,9 @@ export function Player({
   const pip = usePictureInPicture(video)
   const duration = d.lengthSec ?? 0
   const drops = d.qualitySpots?.map((spot) => spot.second)
-  const chapters = plan.chapters
+  const chapters = chaptersToDraw(plan.chapters)
   const nextChapterAt = nextBoundaryAfter(position, chapters)
-  const breakEndsAt = whereTheBreakEnds(position, chapters)
+  const breakEndsAt = skippableBreakAt(position, chapters)?.endsAtSec
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||

@@ -3,7 +3,11 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
 
-import type { PlaybackPlan, PlaybackRead } from '@/repository/videos'
+import type {
+  PlaybackChapter,
+  PlaybackPlan,
+  PlaybackRead,
+} from '@/repository/videos'
 import type { TicketWrite } from '@/repository/tickets'
 import type { PlaybackSource } from '@/repository/playback-sources'
 import type { SoundTrack } from '@/repository/sounds'
@@ -118,22 +122,50 @@ const NOTHING_WAS_ENCODED: PlaybackPlan = {
   source: 'recording',
 }
 
+const MARKED_CHAPTERS: PlaybackChapter[] = [
+  { startsAtSec: 0, endsAtSec: 1200, kind: 'programme', skippable: false },
+  { startsAtSec: 1200, endsAtSec: 1320, kind: 'break', skippable: true },
+  { startsAtSec: 1320, endsAtSec: 3600, kind: 'programme', skippable: false },
+  { startsAtSec: 3600, endsAtSec: 3750, kind: 'break', skippable: true },
+  { startsAtSec: 3750, endsAtSec: 15158, kind: 'programme', skippable: false },
+]
+
 const MARKED: PlaybackPlan = {
   ...HANDED_OVER,
+  chapters: MARKED_CHAPTERS,
+}
+
+const MARKED_BUT_NOT_TO_SKIP: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: MARKED_CHAPTERS.map((one) => ({ ...one, skippable: false })),
+}
+
+const THE_RECORDING_ITSELF_MARKED: PlaybackPlan = {
+  ...THE_RECORDING_ITSELF,
+  chapters: MARKED_CHAPTERS,
+}
+
+const MARKED_WITH_AN_UNKNOWN_KIND: PlaybackPlan = {
+  ...HANDED_OVER,
   chapters: [
-    { startsAtSec: 0, endsAtSec: 1200, kind: 'programme' },
-    { startsAtSec: 1200, endsAtSec: 1320, kind: 'break' },
-    { startsAtSec: 1320, endsAtSec: 3600, kind: 'programme' },
-    { startsAtSec: 3600, endsAtSec: 3750, kind: 'break' },
-    { startsAtSec: 3750, endsAtSec: 15158, kind: 'programme' },
+    { startsAtSec: 0, endsAtSec: 1200, kind: 'programme', skippable: false },
+    { startsAtSec: 1200, endsAtSec: 1320, kind: 'unknown', skippable: true },
+    { startsAtSec: 1320, endsAtSec: 3600, kind: 'programme', skippable: false },
+    { startsAtSec: 3600, endsAtSec: 3750, kind: 'break', skippable: true },
+    {
+      startsAtSec: 3750,
+      endsAtSec: 15158,
+      kind: 'programme',
+      skippable: false,
+    },
   ],
 }
 
 const ENDS_IN_A_BREAK: PlaybackPlan = {
   ...HANDED_OVER,
   chapters: [
-    { startsAtSec: 0, endsAtSec: 14800, kind: 'programme' },
-    { startsAtSec: 14800, endsAtSec: 15158, kind: 'break' },
+    { startsAtSec: 0, endsAtSec: 14800, kind: 'programme', skippable: false },
+    { startsAtSec: 14800, endsAtSec: 15158, kind: 'break', skippable: false },
   ],
 }
 
@@ -3176,7 +3208,7 @@ export const CM区間ではCMを飛ばすが出る: Story = {
   },
 }
 
-export const CMを飛ばすと次の本編の頭へ: Story = {
+export const CMを飛ばすとその区間の終わりへ: Story = {
   args: {
     detail: detail('1266'),
     plan: MARKED,
@@ -3229,6 +3261,82 @@ export const 閉じたCM区間では出さない: Story = {
     await expect(
       canvas.getByRole('button', { name: SKIP_THE_BREAK }),
     ).toBeVisible()
+  },
+}
+
+export const 飛ばせないCM区間は印だけ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED_BUT_NOT_TO_SKIP,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(2)
+    await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(4)
+    await expect(
+      canvas.getByRole('button', { name: NEXT_CHAPTER }),
+    ).toBeEnabled()
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+  },
+}
+
+export const 元のままの再生でもCMの印と飛ばすが出る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THE_RECORDING_ITSELF_MARKED,
+    startAt: 1250,
+    pictureHref: carryingTheSource,
+    feedRecording: keptForTheFeed,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(2)
+    await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(4)
+
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+
+    await waitFor(() =>
+      expect(canvas.getByText('22:00 / 4:12:38')).toBeVisible(),
+    )
+    await waitFor(() => expect(asked.at(-1)).toContain('from=1320'))
+    await expect(asked.at(-1)).toContain('source=recording')
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
+  },
+}
+
+export const 知らない種類の区間は印も飛ぶ先も持たない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED_WITH_AN_UNKNOWN_KIND,
+    startAt: 600,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(1)
+    await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(3)
+
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+    await waitFor(() =>
+      expect(canvas.getByText('22:00 / 4:12:38')).toBeVisible(),
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒戻る' }))
+    await waitFor(() =>
+      expect(canvas.getByText('21:50 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeNull()
   },
 }
 
