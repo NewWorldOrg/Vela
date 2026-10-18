@@ -111,6 +111,10 @@
     --pl-done: #9fd9be;
     --pl-warn: #e5ba6c;
     --pl-err: #ec9a93;
+    --remote-blue: #3a78c8;
+    --remote-red: #d8443c;
+    --remote-green: #2e9e5b;
+    --remote-yellow: #f0c235;
     --pl-scrim: linear-gradient(
       to top,
       rgba(6, 5, 9, 0.92) 0%,
@@ -354,14 +358,15 @@
   }
 }
 
-/* The broadcast marks (字, 再, デ …). Noto Sans CJK JP 2.004 (© 2014-2021 Adobe),
-   subset to these blocks, SIL Open Font License 1.1: http://scripts.sil.org/OFL */
+/* The broadcast marks (字, 再, デ …) come from Denpa Font, the round gothic
+   bundled for data broadcasting, held to these blocks so the rest of the UI
+   keeps its own faces. SIL Open Font License 1.1: http://scripts.sil.org/OFL */
 @font-face {
-  font-family: 'Broadcast Marks';
+  font-family: 'Denpa Font';
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/broadcast-marks.woff2') format('woff2');
+  src: url('/fonts/denpa-font.woff2') format('woff2');
   unicode-range:
     U+1F110-1F16F, U+1F200-1F202, U+1F210-1F23B, U+1F240-1F248, U+1F250-1F251;
 }
@@ -370,14 +375,13 @@
    numbers / model names / times = M PLUS 1 Code with tabular-nums. */
 @theme {
   --font-heading:
-    'Broadcast Marks', 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN',
-    sans-serif;
+    'Denpa Font', 'Zen Maru Gothic', 'Hiragino Maru Gothic ProN', sans-serif;
   --font-body:
-    'Broadcast Marks', 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP',
+    'Denpa Font', 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP',
     sans-serif;
   --font-code: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
   --font-sans:
-    'Broadcast Marks', 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP',
+    'Denpa Font', 'Zen Kaku Gothic New', 'Hiragino Sans', 'Noto Sans JP',
     sans-serif;
   --font-mono: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
 }

@@ -14,6 +14,11 @@ import {
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
+import {
+  AUTO_OPEN_SPELLING,
+  DATA_BROADCAST_AUTO_OPEN,
+  flagOf,
+} from '@/lib/stored-flag'
 import { isRecordingId } from '@/lib/recordings'
 import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
 import { theHoldAsked, theSourceAsked } from '@/lib/playback-source'
@@ -64,7 +69,12 @@ export default async function Page({
     notFound()
   }
 
-  const decodes = decodesOf((await cookies()).get(DECODES_COOKIE)?.value)
+  const jar = await cookies()
+  const decodes = decodesOf(jar.get(DECODES_COOKIE)?.value)
+  const autoOpensDataBroadcast = flagOf(
+    jar.get(DATA_BROADCAST_AUTO_OPEN)?.value,
+    AUTO_OPEN_SPELLING,
+  )
 
   const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
     await Promise.all([
@@ -99,6 +109,7 @@ export default async function Page({
         unaskedProfile={unaskedProfile}
         startAt={secondsIn(at)}
         startsHeld={theHoldAsked(paused)}
+        autoOpensDataBroadcast={autoOpensDataBroadcast}
         onRemakeThumbnail={redrawThumbnail}
         onDelete={throwRecordingAway}
         onTakeTicket={takeTicket}

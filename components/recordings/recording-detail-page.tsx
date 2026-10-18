@@ -1,6 +1,6 @@
 import Link from 'next/link'
 
-import type { ReactNode } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
 import type { Route } from 'next'
 
 import type { BrowserDecoding } from '@/lib/browser-decodes'
@@ -42,6 +42,7 @@ import {
   PLAYER_COLUMN,
 } from '@/components/recordings/player-palette'
 import { PlayerSeat } from '@/components/recordings/player-seat'
+import type { Player } from '@/components/recordings/player'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
@@ -49,7 +50,16 @@ import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
 import { ScreenMain } from '@/components/vela/app-shell'
 
-const GUTTER = 'mx-[calc(30rem/16)] max-[1060px]:mx-5 max-[700px]:mx-3.5'
+const GUTTER = 'px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5'
+
+/** The page's one column, which the link back, the player and the programme's information share: as wide as the picture the window's height allows, centred. While the data broadcast's remote stands beside the player, it is as wide as the box, the gap and the remote's column, still centred, so everything above and below starts at the box's left edge. */
+const WATCH_COLUMN = cn(
+  PLAYER_COLUMN,
+  'has-[[data-remote=beside]]:w-fit has-[[data-remote=beside]]:max-w-full',
+)
+
+/** What runs along the column above and below the player: as wide as the column and no wider however long its text, so the player alone sets the column's width. */
+const ALONG = 'w-0 min-w-full'
 
 const OUTCOME_STYLE = {
   truncated: 'bg-tint-butter',
@@ -130,6 +140,16 @@ const OUTCOME_LABEL = {
   failed: '失敗',
 } as const
 
+/** What the stories hand the player in place of the API: the picture and how it is fed, its frames, and the data broadcast. */
+type PlayerStandIns = Pick<
+  ComponentProps<typeof Player>,
+  | 'pictureHref'
+  | 'frameHref'
+  | 'feedRecording'
+  | 'readDataBroadcast'
+  | 'readDataBroadcastModule'
+>
+
 function Dot() {
   return <span className="text-ink-3">・</span>
 }
@@ -151,7 +171,9 @@ export function RecordingDetailView({
   onCallOffEncode,
   startAt,
   startsHeld = false,
-}: {
+  autoOpensDataBroadcast = false,
+  ...standIns
+}: PlayerStandIns & {
   detail: RecordingDetail
   playback: PlaybackRead
   unaskedProfile?: PlaybackProfile
@@ -173,6 +195,7 @@ export function RecordingDetailView({
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
   startAt?: number
   startsHeld?: boolean
+  autoOpensDataBroadcast?: boolean
 }) {
   const plays =
     !d.fileMissing &&
@@ -194,9 +217,12 @@ export function RecordingDetailView({
   const banded = alarming ?? (d.leftScrambled ? 'failed' : null)
 
   return (
-    <ScreenMain width={watching ? 'full' : 'default'} className="pb-16">
-      <div className={GUTTER}>
-        <div className={PLAYER_COLUMN}>
+    <ScreenMain
+      width={watching ? 'full' : 'default'}
+      className={cn(GUTTER, 'pb-16')}
+    >
+      <div className={WATCH_COLUMN}>
+        <div className={ALONG}>
           <div className="flex items-center pt-[calc(18rem/16)] pb-3">
             <Link
               href="/library"
@@ -250,32 +276,32 @@ export function RecordingDetailView({
 
           {whyNothingPlays(d, playback)}
         </div>
-      </div>
 
-      {watching && (
-        <PlayerSeat
-          key={whatOpensThePlayerAnew(
-            d.id,
-            startAt,
-            playback.plan.source,
-            startsHeld,
-          )}
-          detail={d}
-          plan={playback.plan}
-          unaskedProfile={unaskedProfile}
-          onTakeTicket={onTakeTicket}
-          onAskForTheSound={onAskForTheSound}
-          onKeepPosition={onKeepPosition}
-          artefact={artefact}
-          onAskWhichArtefact={onAskWhichArtefact}
-          startAt={opens.at}
-          playsAtOnce={opens.playing}
-          holdsAtOnce={opens.held}
-        />
-      )}
+        {watching && (
+          <PlayerSeat
+            key={whatOpensThePlayerAnew(
+              d.id,
+              startAt,
+              playback.plan.source,
+              startsHeld,
+            )}
+            detail={d}
+            plan={playback.plan}
+            unaskedProfile={unaskedProfile}
+            onTakeTicket={onTakeTicket}
+            onAskForTheSound={onAskForTheSound}
+            onKeepPosition={onKeepPosition}
+            artefact={artefact}
+            onAskWhichArtefact={onAskWhichArtefact}
+            startAt={opens.at}
+            playsAtOnce={opens.playing}
+            holdsAtOnce={opens.held}
+            autoOpensDataBroadcast={autoOpensDataBroadcast}
+            {...standIns}
+          />
+        )}
 
-      <div className={GUTTER}>
-        <div className={cn(PLAYER_COLUMN, 'pt-5')}>
+        <div className={cn(ALONG, 'pt-5')}>
           <h1 className="heading text-[calc(24rem/16)] leading-[1.45]">
             {d.title}
           </h1>

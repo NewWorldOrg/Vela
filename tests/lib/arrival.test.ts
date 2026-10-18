@@ -92,7 +92,7 @@ test('the glyphs a guide will draw are gathered once, each only once', () => {
 
 test('each face and weight the guide draws in is loaded ahead of scrolling', () => {
   assert.deepEqual(GUIDE_FACES, [
-    '400 1em "Broadcast Marks"',
+    '400 1em "Denpa Font"',
     '400 1em "Zen Kaku Gothic New"',
     '500 1em "Zen Kaku Gothic New"',
     '700 1em "Zen Kaku Gothic New"',

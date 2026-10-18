@@ -32,6 +32,12 @@ export class MediaFeed {
 
   private readonly remotePlaybackWas: boolean
 
+  private readonly video: HTMLVideoElement
+
+  private readonly onFault: (fault: FeedFault) => void
+
+  private readonly onAppended: () => void
+
   private buffer: SourceBuffer | null = null
 
   private readonly queue: Uint8Array[] = []
@@ -45,11 +51,15 @@ export class MediaFeed {
   private finishing = false
 
   constructor(
-    private readonly video: HTMLVideoElement,
-    private readonly onFault: (fault: FeedFault) => void,
+    video: HTMLVideoElement,
+    onFault: (fault: FeedFault) => void,
     order: SourceOrder,
-    private readonly onAppended: () => void = () => {},
+    onAppended: () => void = () => {},
   ) {
+    this.video = video
+    this.onFault = onFault
+    this.onAppended = onAppended
+
     const kind = kindFor(order)
 
     if (!kind) {

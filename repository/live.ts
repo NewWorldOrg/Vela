@@ -45,6 +45,7 @@ const EVERY_CHANNEL = 200
 
 export interface LiveProgramme {
   id: string
+  eventId?: number
   title: string
   description?: string
   items?: ProgrammeItem[]
@@ -295,6 +296,7 @@ export function nowNextOf(
 function toLiveProgramme(programme: Programme): LiveProgramme {
   return {
     id: programme.id,
+    eventId: programme.eventId,
     title: programme.name,
     description: programme.summary || undefined,
     items: programme.items.length > 0 ? programme.items : undefined,

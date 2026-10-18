@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 
 import {
+  AUTO_OPEN_SPELLING,
+  DATA_BROADCAST_AUTO_OPEN,
   FOLD_SPELLING,
   LIVE_CHANNELS_FOLDED,
   LIVE_SUB_CHANNELS_FOLDED,
@@ -41,6 +43,10 @@ export default async function Page({
         subChannelsFolded={flagOf(
           jar.get(LIVE_SUB_CHANNELS_FOLDED)?.value,
           FOLD_SPELLING,
+        )}
+        autoOpensDataBroadcast={flagOf(
+          jar.get(DATA_BROADCAST_AUTO_OPEN)?.value,
+          AUTO_OPEN_SPELLING,
         )}
       />
     </>

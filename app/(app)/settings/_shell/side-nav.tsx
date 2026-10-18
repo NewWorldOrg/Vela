@@ -13,6 +13,7 @@ import {
   EncodeIcon,
   KeyIcon,
   ListIcon,
+  PlayIcon,
   QualityIcon,
   SystemIcon,
   TunerIcon,
@@ -33,6 +34,7 @@ const ADMIN_NAV: AdminNavItem[] = [
   { href: '/settings/quality', label: '品質', icon: QualityIcon },
   { href: '/settings/authentication', label: '認証', icon: KeyIcon },
   { href: '/settings/display', label: '表示', icon: DisplayIcon },
+  { href: '/settings/viewing', label: '視聴', icon: PlayIcon },
 ]
 
 const MIGRATION_NAV: AdminNavItem = {

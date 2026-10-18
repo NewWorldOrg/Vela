@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Carina",
-    "description": "The HTTP surface of the app process. Six contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
+    "description": "The HTTP surface of the app process. Eight contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server (`GET /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`). The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
     "version": "0.1.2"
   },
   "servers": [
@@ -186,6 +186,16 @@
               }
             }
           },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCaptionWindowResponder"
+                }
+              }
+            }
+          },
           "404": {
             "description": "Not Found",
             "content": {
@@ -218,6 +228,186 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/data-broadcast": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "The catalog of a recording's data broadcast over the source it is played from: the carousel it is entered from, whether the broadcaster asks for it to open by itself, the path of the document it opens on, whether versions were left out of the record to keep it within its size, every version of every module of every download of every carousel with the seconds of that source it runs from and to and the bytes its module answers, and every event message at the second it fires, each counted from the source's own zero the way the captions are, so that the artefact and the recording itself give a scene the same second. A version that began before the source's zero runs from that zero, and nothing first seen or firing after the source's end is given. It answers 409 while the data broadcast is still being taken from the recording, or failed with tries left, and 404 where there is none to show beside that source. Opened with the reader's own session only, never with a ticket.",
+        "operationId": "getVideoDataBroadcast",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "The second of the source the catalog starts at, counted from the source's own zero, as the player's position reads it: the versions still running there or later and the event messages firing there or later are given, to the source's end. Seconds may be fractional, and asking for none starts at the beginning.",
+            "schema": {
+              "type": "number",
+              "format": "double",
+              "default": 0
+            }
+          },
+          {
+            "name": "source",
+            "in": "query",
+            "description": "Which of the two files the data broadcast is placed on, asked the way the plan was asked, as the captions are. The seconds of the artefact and of the recording itself differ by what the encode skipped at the head.",
+            "schema": {
+              "enum": [
+                "artefact",
+                "recording"
+              ],
+              "type": "string",
+              "default": "artefact"
+            }
+          },
+          {
+            "name": "decodes",
+            "in": "query",
+            "description": "The picture codings the browser says it decodes, named as the plan was asked with, so that the data broadcast is placed on the file the plan settled on: naming h265 lets that be an artefact encoded in H.265 and tagged hvc1.",
+            "schema": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "h264",
+                  "h265"
+                ],
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTimelineResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTimelineResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTimelineResponder"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTimelineResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTimelineResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/data-broadcast/modules/{tag}/{download}/{module}/{version}": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "One version of one module of a recording's data broadcast, as the live side channel carries it: the byte 0x02, the carousel's tag, the module id and the version, then each resource with its path, its kind and its bytes, to the end, so that the same reader reads both. It is answered with a tag that changes whenever the record is taken again, and asked again with that tag in If-None-Match it answers 304 without the bytes. It answers 404 where the recording's data broadcast is not ready or does not hold that version. Opened with the reader's own session only, never with a ticket.",
+        "operationId": "getVideoDataBroadcastModule",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tag",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "download",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "module",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "version",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "304": {
+            "description": "Not Modified"
+          },
+          "400": {
+            "description": "Bad Request"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
           }
         }
       }
@@ -1677,6 +1867,39 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfSegmentSettingsResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/segments/status": {
+      "get": {
+        "tags": [
+          "segments"
+        ],
+        "operationId": "getSegmentStatus",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentStatusResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfSegmentStatusResponder"
                 }
               }
             }
@@ -4989,6 +5212,431 @@
         }
       }
     },
+    "/api/live/{networkId}-{serviceId}/data-broadcast/fetch": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "fetchLiveDataBroadcast",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastFetchFailureResponder"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastFetchFailureResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastFetchFailureResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastFetchFailureResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastFetchFailureResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/{networkId}-{serviceId}/data-broadcast/ait": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "getLiveDataBroadcastAit",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "uri",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastAitResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastAitResponder"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastAitResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastAitResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastFetchFailureResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastAitResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/{networkId}-{serviceId}/data-broadcast/receiver-id": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "getLiveDataBroadcastReceiverId",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastReceiverIdResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastReceiverIdResponder"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastReceiverIdResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastReceiverIdResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastReceiverIdResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastReceiverIdResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/{networkId}-{serviceId}/data-broadcast/app/ticket": {
+      "post": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "issueLiveHybridcastTicket",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartHybridcastRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartHybridcastRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too Many Requests",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfHybridcastTicketResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/live/ticket": {
       "post": {
         "tags": [
@@ -5257,6 +5905,119 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfIReadOnlyListOfLiveSessionResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/live/{networkId}-{serviceId}/data-broadcast/transmit": {
+      "post": {
+        "tags": [
+          "live"
+        ],
+        "operationId": "transmitLiveDataBroadcast",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TransmitDataBroadcastRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/TransmitDataBroadcastRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTransmissionResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTransmissionResponder"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTransmissionResponder"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTransmissionResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfDataBroadcastTransmissionResponder"
                 }
               }
             }
@@ -7737,6 +8498,110 @@
           }
         }
       },
+      "BaseResponderOfDataBroadcastFetchFailureResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DataBroadcastFetchFailureResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfDataBroadcastReceiverIdResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DataBroadcastReceiverIdResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfDataBroadcastTimelineResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DataBroadcastTimelineResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfDataBroadcastTransmissionResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DataBroadcastTransmissionResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfDetectedTunersResponder": {
         "required": [
           "status",
@@ -8096,6 +8961,58 @@
               },
               {
                 "$ref": "#/components/schemas/GuideResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfHybridcastAitResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HybridcastAitResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfHybridcastTicketResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/HybridcastTicketResponder"
               }
             ]
           }
@@ -9630,6 +10547,32 @@
           }
         }
       },
+      "BaseResponderOfSegmentStatusResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentStatusResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfServiceReachSettingsResponder": {
         "required": [
           "status",
@@ -10503,6 +11446,273 @@
               "null",
               "boolean"
             ]
+          }
+        }
+      },
+      "DataBroadcastCarouselResponder": {
+        "required": [
+          "tag",
+          "downloadId",
+          "versions"
+        ],
+        "type": "object",
+        "properties": {
+          "tag": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "downloadId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "uint32"
+          },
+          "versions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataBroadcastVersionResponder"
+            }
+          }
+        }
+      },
+      "DataBroadcastEventResponder": {
+        "required": [
+          "group",
+          "id",
+          "type",
+          "immediate",
+          "atSec",
+          "privateData",
+          "componentTag"
+        ],
+        "type": "object",
+        "properties": {
+          "group": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "type": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "immediate": {
+            "type": "boolean"
+          },
+          "atSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "privateData": {
+            "type": "string",
+            "format": "byte"
+          },
+          "componentTag": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DataBroadcastFetchFailureResponder": {
+        "required": [
+          "result",
+          "httpStatus"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "httpStatus": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DataBroadcastReceiverIdResponder": {
+        "required": [
+          "caSystemId",
+          "cardId"
+        ],
+        "type": "object",
+        "properties": {
+          "caSystemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardId": {
+            "type": "string"
+          }
+        }
+      },
+      "DataBroadcastTimelineResponder": {
+        "required": [
+          "entryTag",
+          "autoStart",
+          "startup",
+          "incomplete",
+          "carousels",
+          "events"
+        ],
+        "type": "object",
+        "properties": {
+          "entryTag": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "autoStart": {
+            "type": "boolean"
+          },
+          "startup": {
+            "type": "string"
+          },
+          "incomplete": {
+            "type": "boolean"
+          },
+          "carousels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataBroadcastCarouselResponder"
+            }
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DataBroadcastEventResponder"
+            }
+          }
+        }
+      },
+      "DataBroadcastTransmissionResponder": {
+        "required": [
+          "result",
+          "httpStatus",
+          "body"
+        ],
+        "type": "object",
+        "properties": {
+          "result": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "httpStatus": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "body": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DataBroadcastVersionResponder": {
+        "required": [
+          "id",
+          "version",
+          "fromSec",
+          "toSec",
+          "size"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fromSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "toSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "size": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
           }
         }
       },
@@ -11598,6 +12808,122 @@
           }
         }
       },
+      "HybridcastAitResponder": {
+        "required": [
+          "applications"
+        ],
+        "type": "object",
+        "properties": {
+          "applications": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HybridcastApplicationResponder"
+            }
+          }
+        }
+      },
+      "HybridcastApplicationResponder": {
+        "required": [
+          "orgId",
+          "appId",
+          "controlCode",
+          "entryUrl",
+          "profile",
+          "boundary"
+        ],
+        "type": "object",
+        "properties": {
+          "orgId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "appId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "controlCode": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "entryUrl": {
+            "type": "string"
+          },
+          "profile": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "boundary": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/HybridcastBoundaryResponder"
+            }
+          }
+        }
+      },
+      "HybridcastBoundaryResponder": {
+        "required": [
+          "permissionBitmap",
+          "managedUrls"
+        ],
+        "type": "object",
+        "properties": {
+          "permissionBitmap": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "managedUrls": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "HybridcastTicketResponder": {
+        "required": [
+          "inTheClear",
+          "lapsesAt",
+          "entryUrl",
+          "address"
+        ],
+        "type": "object",
+        "properties": {
+          "inTheClear": {
+            "type": "string"
+          },
+          "lapsesAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "entryUrl": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          }
+        }
+      },
       "IntegrityCheckResponder": {
         "required": [
           "id",
@@ -11899,6 +13225,49 @@
             "$ref": "#/components/schemas/IntegrityCheckResponder"
           },
           "findings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "LearningDataResponder": {
+        "required": [
+          "recordings",
+          "seconds",
+          "bytes",
+          "waiting"
+        ],
+        "type": "object",
+        "properties": {
+          "recordings": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "seconds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "bytes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "waiting": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -18170,6 +19539,17 @@
           }
         }
       },
+      "SegmentStatusResponder": {
+        "required": [
+          "learningData"
+        ],
+        "type": "object",
+        "properties": {
+          "learningData": {
+            "$ref": "#/components/schemas/LearningDataResponder"
+          }
+        }
+      },
       "SelectedChannelRequest": {
         "type": "object",
         "properties": {
@@ -18355,6 +19735,42 @@
           "third"
         ],
         "type": "string"
+      },
+      "StartHybridcastRequest": {
+        "type": "object",
+        "properties": {
+          "ait": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "orgId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "appId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "receiverScript": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "StartScanRequest": {
         "type": "object",
@@ -18789,6 +20205,30 @@
             ]
           }
         }
+      },
+      "TransmitDataBroadcastRequest": {
+        "type": "object",
+        "properties": {
+          "uri": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "text": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "charset": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        },
+        "additionalProperties": false
       },
       "TuneFailureKind": {
         "enum": [

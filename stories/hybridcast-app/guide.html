@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <script
+      src="/data-broadcast/hybridcast-receiver.js"
+      data-hybridcast-relay="/hybridcast-app/guide.html"
+      data-hybridcast-socket="/hybridcast-app/socket"
+      data-hybridcast-document="http://example.test/hc/guide.html"
+    ></script>
+    <title>Hybridcast の番組表の見本</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+      }
+      body {
+        position: absolute;
+        background: #000;
+        font: 40px sans-serif;
+        color: #222;
+      }
+      #area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+      #area object {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 1920px;
+        height: 1080px;
+      }
+      #panel {
+        position: absolute;
+        left: 120px;
+        top: 120px;
+        width: 900px;
+        height: 800px;
+        background: rgba(255, 255, 255, 0.92);
+      }
+      #row {
+        position: absolute;
+        left: 1100px;
+        top: 700px;
+        width: 700px;
+        height: 200px;
+        background: #3a78c8;
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="area">
+      <!-- The relay writes the type of the broadcast's picture object as data-hybridcast-type. -->
+      <object
+        id="av"
+        data-hybridcast-type="video/x-iptvf-broadcast"
+        style="visibility: hidden"
+      ></object>
+    </div>
+    <div id="panel">番組表</div>
+    <div id="row">いま放送中</div>
+    <script>
+      // A self-made page laid out as a guide is: its picture object fills the screen and starts hidden, and the guide is drawn over where it would be.
+      var report = {}
+      var say = function (name, value) {
+        report[name] = String(value)
+        parent.postMessage({ probe: report }, '*')
+      }
+      var under = function () {
+        return [].slice
+          .call(document.querySelectorAll('[data-hybridcast-under]'))
+          .map(function (element) {
+            return element.id || element.localName
+          })
+          .sort()
+          .join(',')
+      }
+      var look = function (name) {
+        setTimeout(function () {
+          say(name + '-under', under())
+          say(
+            name + '-panel',
+            getComputedStyle(document.getElementById('panel')).backgroundColor,
+          )
+          say(
+            name + '-row',
+            getComputedStyle(document.getElementById('row')).backgroundColor,
+          )
+        }, 300)
+      }
+      window.addEventListener('load', function () {
+        look('hidden')
+      })
+      document.addEventListener('keydown', function (event) {
+        if (event.which === VK_RED) {
+          document.getElementById('av').style.visibility = 'visible'
+          look('shown')
+        }
+      })
+    </script>
+  </body>
+</html>

@@ -6,6 +6,19 @@ export const PLAYER_SCRIM = 'var(--pl-scrim)'
 export const PLAYER_CHROME_FADE =
   'transition-[opacity,translate] duration-100 ease-[cubic-bezier(.4,0,1,1)] data-[up]:duration-[250ms] data-[up]:ease-[cubic-bezier(0,0,.2,1)]'
 
+/** The control row over the picture: on the board's bottom, which is the picture's, above the safe area when the page fills the screen, and fading out when the pointer rests. */
+export const PLAYER_CHROME_OVER = cn(
+  'absolute inset-x-0 bottom-0 z-10',
+  '[[data-fill]_&]:right-[env(safe-area-inset-right)] [[data-fill]_&]:bottom-[env(safe-area-inset-bottom)] [[data-fill]_&]:left-[env(safe-area-inset-left)]',
+  'pointer-events-none translate-y-2 opacity-0',
+  PLAYER_CHROME_FADE,
+  'data-[up]:pointer-events-auto data-[up]:translate-y-0 data-[up]:opacity-100',
+  'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
+)
+
+/** The control row under the picture, while the data broadcast's face is open in a window: in the board's flow on the box's own ground, and always there, so nothing lies over the face. */
+export const PLAYER_CHROME_UNDER = 'relative z-10 bg-(--pl-bg)'
+
 export const PLAYER_BREAK_BAND = 'var(--pl-break-band)'
 
 export const PLAYER_SCRIM_TOP = 'var(--pl-scrim-top)'

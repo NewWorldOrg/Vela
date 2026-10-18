@@ -15,7 +15,7 @@ const built = join(root, '.next')
 const traced = join(built, 'standalone')
 const notices = join(root, 'THIRD-PARTY-NOTICES.md')
 const tableHeading = '## npm packages'
-const emittedByTheBuild = ['node_modules/tailwindcss']
+const emittedByTheBuild = ['node_modules/acorn', 'node_modules/tailwindcss']
 const licenseFile = /^(licen[cs]e|copying|notice)|\.legal\.txt$/i
 
 function fail(message) {

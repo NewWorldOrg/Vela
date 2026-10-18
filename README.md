@@ -85,6 +85,21 @@ docker compose exec app yarn codegen:verify   # コミット済みの文書か�
 `codegen:fetch` には、動いているバックエンドが要る。
 `codegen:verify` は何も動いていなくても実行できるので、CI ではこちらを実行する。
 
+## データ放送のランタイム
+
+データ放送の文書は、別オリジンの枠の中で 1 本のスクリプトが描く。
+そのスクリプトは `lib/bml/` と `components/data-broadcast/` から組み、`components/data-broadcast/runtime-script.generated.ts` として**コミットする**。
+Hybridcast のアプリの文書に渡す受信機のスクリプトも同じ手順で `lib/hybridcast/` から組み、`public/data-broadcast/hybridcast-receiver.js` として**コミットする**。
+バックエンドの中継は、アプリの文書にこのパスのスクリプトを差し込む。
+どれかを変えたら組み直す。
+組み直していないと単体試験が落ちる。
+
+```bash
+docker compose exec app yarn bml-runtime   # ランタイムと受信機のスクリプトを組み直す
+```
+
+放送向けの字(データ放送の面・番組名の放送マーク)は `public/fonts/denpa-font.woff2`(Denpa Font)で、`sh scripts/fetch-denpa-font.sh` が版を固定して取り直し、sha256 を確かめる。
+
 ## ライセンス
 
 ライセンスは AGPL-3.0-only で、著作権者は NewWorldOrg である。

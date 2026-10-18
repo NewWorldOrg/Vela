@@ -3,7 +3,15 @@ import coreWebVitals from 'eslint-config-next/core-web-vitals'
 import vela from './scripts/eslint-rules.mjs'
 
 const config = [
-  { ignores: ['.next/**', 'storybook-static/**', 'test-results/**'] },
+  {
+    ignores: [
+      '.next/**',
+      'storybook-static/**',
+      'test-results/**',
+      'components/data-broadcast/runtime-script.generated.ts',
+      'public/data-broadcast/hybridcast-receiver.js',
+    ],
+  },
   ...coreWebVitals,
   {
     plugins: { vela },

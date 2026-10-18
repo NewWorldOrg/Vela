@@ -10,13 +10,10 @@ import {
 import type { Reservation } from '@/repository/reservations'
 import { Checkbox } from '@/components/ui/checkbox'
 import { TableCell, TableRow } from '@/components/ui/table'
+import { OriginCell } from '@/components/reservations/origin-cell'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ChannelMark } from '@/components/vela/channel-mark'
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ListIcon,
-} from '@/components/vela/icons'
+import { ChevronDownIcon, ChevronRightIcon } from '@/components/vela/icons'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import {
   ReservationStateChip,
@@ -107,16 +104,7 @@ export function RelayRow({
       <TableCell className="align-top font-code text-ink-2">
         {formatMomentSpan(summary.startAt, summary.endAt)}
       </TableCell>
-      <TableCell className="align-top">
-        {first.ruleName ? (
-          <span className="inline-flex items-center gap-1.5 text-ui text-ink-2">
-            <ListIcon className="size-3" />
-            {first.ruleName}
-          </span>
-        ) : (
-          <span className="text-ink-2">{first.origin}</span>
-        )}
-      </TableCell>
+      <OriginCell origin={first.origin} ruleName={first.ruleName} />
       <TableCell className="align-top">
         <StatusCell>
           <ReservationStateChip

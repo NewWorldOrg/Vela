@@ -177,6 +177,17 @@ async function applyNow(canvasElement: HTMLElement): Promise<HTMLElement> {
   })
 }
 
+async function pressable(
+  scope: ReturnType<typeof within>,
+  name: string,
+): Promise<HTMLElement> {
+  const button = await scope.findByRole('button', { name })
+
+  await waitFor(() => expect(button).toBeEnabled())
+
+  return button
+}
+
 async function choose(list: string, option: string): Promise<void> {
   await userEvent.click(screen.getByRole('combobox', { name: list }))
   await userEvent.click(await screen.findByRole('option', { name: option }))
@@ -309,7 +320,7 @@ export const ルールを編集: Story = {
       '3 件は除外されました(同時放送 2 件、移動 1 件)。',
     )
 
-    await userEvent.click(canvas.getByRole('button', { name: '保存' }))
+    await userEvent.click(await pressable(canvas, '保存'))
 
     const dialog = within(await screen.findByRole('dialog'))
 
@@ -328,7 +339,7 @@ export const ルールを編集: Story = {
       '3 件は除外されました(同時放送 2 件、移動 1 件)。',
     )
 
-    await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() =>
       expect(editSaved).toEqual([
@@ -362,8 +373,9 @@ export const ルールを編集: Story = {
     )
 
     retired.length = 0
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await afterTheArrival(canvasElement)
-    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+    await userEvent.click(await pressable(canvas, '削除'))
     await expect(await screen.findByRole('alertdialog')).toHaveTextContent(
       'このルールを削除します',
     )
@@ -383,9 +395,10 @@ export const ルールを編集: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: '削除' }))
     await userEvent.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: '削除する',
-      }),
+      await pressable(
+        within(await screen.findByRole('alertdialog')),
+        '削除する',
+      ),
     )
     await waitFor(() => expect(retired).toEqual(['rule-301']))
   },
@@ -408,9 +421,7 @@ export const 開いて保存し直しても条件は変わらない: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() => expect(untouchedSaved).toHaveLength(1))
     await expect(untouchedSaved[0].draft.terms).toEqual(RULE_FIXTURES[3].terms)
@@ -470,9 +481,7 @@ export const 曜日とサブジャンルと期間を足す: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() => expect(widenedSaved).toHaveLength(1))
     await expect(widenedSaved[0].draft.terms).toEqual({
@@ -528,9 +537,7 @@ export const 印と除外する印を足す: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() => expect(markedSaved).toHaveLength(1))
     await expect(markedSaved[0].draft.terms).toEqual({
@@ -700,9 +707,7 @@ export const 検索から作る: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() =>
       expect(draftSaved).toEqual([
@@ -773,9 +778,7 @@ export const 番組詳細から作る: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() => expect(seriesSaved).toHaveLength(1))
     await expect(seriesSaved[0].draft.terms).toEqual(HANDED_OVER)
@@ -825,9 +828,7 @@ export const 条件のないルール: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() => expect(emptySaved).toHaveLength(1))
     await expect(emptySaved[0].draft.terms.q).toBe('台風')
@@ -898,7 +899,7 @@ export const 影響を数えられないとき: Story = {
     await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
     await expect(refusedSaved).toEqual([])
 
-    await userEvent.click(canvas.getByRole('button', { name: '削除' }))
+    await userEvent.click(await pressable(canvas, '削除'))
     await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
     await expect(retired).toEqual([])
   },
@@ -943,9 +944,7 @@ export const 削除の件数は保存済みのルールから数える: Story = 
     )
 
     await userEvent.click(
-      within(screen.getByRole('alertdialog')).getByRole('button', {
-        name: '削除する',
-      }),
+      await pressable(within(screen.getByRole('alertdialog')), '削除する'),
     )
     await waitFor(() => expect(retired).toEqual(['rule-301']))
     await expect(standingSaved).toEqual([])
@@ -975,9 +974,7 @@ export const エンコードしないルール: Story = {
 
     await afterTheArrival(canvasElement)
 
-    await userEvent.click(
-      await dialog.findByRole('button', { name: '保存する' }),
-    )
+    await userEvent.click(await pressable(dialog, '保存する'))
 
     await waitFor(() => expect(encodeSaved).toHaveLength(1))
     await expect(encodeSaved[0].draft.encodeWhenRecorded).toBe(true)

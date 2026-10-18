@@ -839,6 +839,17 @@ export function CaptionsGlyph({ className, ...props }: IconProps) {
   )
 }
 
+export function DataBroadcastIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="3.4" y="4.6" width="17.2" height="12.4" rx="1.6" />
+      <path d="M8.2 20h7.6" />
+      <circle cx="11" cy="12.2" r="2.2" />
+      <path d="M13.2 8v6.4" />
+    </Icon>
+  )
+}
+
 export function AirPlayIcon(props: IconProps) {
   return (
     <Icon {...props}>

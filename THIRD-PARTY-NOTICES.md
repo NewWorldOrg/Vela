@@ -64,6 +64,7 @@ file has one written there from the license its `package.json` states.
 | `@radix-ui/react-use-size` | MIT |
 | `@radix-ui/react-visually-hidden` | MIT |
 | `@swc/helpers` | Apache-2.0 |
+| `acorn` | MIT |
 | `aria-hidden` | MIT |
 | `class-variance-authority` | Apache-2.0 |
 | `client-only` | MIT |
@@ -91,9 +92,9 @@ carries, and the license files Next.js ships with them, are under
 
 | File | Font | License |
 | --- | --- | --- |
-| `public/fonts/broadcast-marks.woff2` | Noto Sans CJK JP 2.004, subset to the broadcast marks. Copyright © 2014-2021 Adobe | OFL-1.1 |
+| `public/fonts/denpa-font.woff2` | Denpa Font 3.2, a monospaced round gothic for broadcast captions, data broadcasting and programme guides. Copyright 2022 The BIZ UDGothic Project Authors, Copyright (c) 2026 danything | OFL-1.1 |
 
-The license is at `/usr/share/doc/vela/fonts/broadcast-marks.woff2.txt`.
+Each license is at `/usr/share/doc/vela/fonts/<file>.txt`.
 
 ## The base image
 

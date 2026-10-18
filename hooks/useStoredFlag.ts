@@ -2,7 +2,12 @@
 
 import { useCallback, useSyncExternalStore } from 'react'
 
-import { type FlagSpelling, cookieIn, storingCookie } from '@/lib/stored-flag'
+import {
+  type FlagSpelling,
+  cookieIn,
+  flagOf,
+  storingCookie,
+} from '@/lib/stored-flag'
 
 const CHANGED = 'vela-stored-flag-changed'
 
@@ -50,13 +55,15 @@ export function useStoredFlag(
     [key],
   )
 
-  const read = useCallback(() => {
-    const said = cookieIn(document.cookie, key)
-
-    return said === undefined
-      ? (unstored.get(key) ?? stored)
-      : said === spelling.yes
-  }, [key, spelling.yes, stored])
+  const read = useCallback(
+    () =>
+      flagOf(
+        cookieIn(document.cookie, key),
+        spelling,
+        unstored.get(key) ?? stored,
+      ),
+    [key, spelling, stored],
+  )
 
   const readOnTheServer = useCallback(() => stored, [stored])
 
