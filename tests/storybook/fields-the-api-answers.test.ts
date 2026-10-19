@@ -265,13 +265,10 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
     because:
       'the recording page reads the stretches of a recording only for the version of the model that found them, which goes out with what a person did with the skip button; the player draws its breaks from the chapters of the play plan, and no screen shows the stretches, where they came from or when they were found',
     fields: [
-      'RecordingSegmentsResponder.answeredAt',
       'RecordingSegmentsResponder.cmShare',
-      'RecordingSegmentsResponder.confirmed',
       'RecordingSegmentsResponder.detectedAt',
       'RecordingSegmentsResponder.lengthSec',
       'RecordingSegmentsResponder.segments',
-      'RecordingSegmentsResponder.snaps',
       'RecordingSegmentsResponder.source',
       'RecordingSegmentsResponder.state',
     ],
@@ -387,8 +384,8 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      "the precision panel says how often a skip was followed by a return, not how many skips that was taken over, and how much of each kind's seconds was found is no row of it until the OP and ED row arrives with the stage that finds them",
-    fields: ['SegmentMetricsResponder.kinds', 'SegmentMetricsResponder.skips'],
+      'the precision panel says how often a skip was followed by a return, not how many skips that was taken over',
+    fields: ['SegmentMetricsResponder.skips'],
   },
   {
     because:

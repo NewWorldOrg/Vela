@@ -46,10 +46,7 @@ const LEARNING_DATA = {
   waiting: 12,
 }
 
-const SUMMARY = {
-  boundaryRecallWithin2s: 0.96,
-  programmeSkippedSecondsPerHour: 1.4,
-}
+const SUMMARY = { boundaryRecallWithin2s: 0.96 }
 
 const STATUS = {
   learning: true,
@@ -70,7 +67,7 @@ const STATUS = {
     adoptedAt: '2026-11-01T18:05:00Z',
   },
   evidence: {
-    confirmedRecordings: 12,
+    recordings: 12,
     boundaries: 148,
     enough: true,
     recordingsNeeded: 10,
@@ -79,22 +76,22 @@ const STATUS = {
   metrics: {
     boundaryRecallWithin2s: 0.93,
     boundaryRecallWithin1s: null,
-    extraBoundariesPerRecording: 1.2,
-    programmeSkippedSecondsPerHour: 2.1,
-    kinds: [{ kind: 'break', recall: 0.95, precision: 0.97 }],
+    kinds: [
+      { kind: 'ending', recall: null },
+      { kind: 'programme', recall: 0.99 },
+      { kind: 'break', recall: 0.95 },
+      { kind: 'trailer', recall: 0.5 },
+    ],
     returnedAfterSkipShare: 0.03,
     skips: 64,
   },
   stations: [
-    { networkId: 1, serviceId: 101, confirmedRecordings: 5, metrics: SUMMARY },
+    { networkId: 1, serviceId: 101, recordings: 5, metrics: SUMMARY },
     {
       networkId: 1,
       serviceId: 109,
-      confirmedRecordings: 2,
-      metrics: {
-        boundaryRecallWithin2s: null,
-        programmeSkippedSecondsPerHour: 0,
-      },
+      recordings: 2,
+      metrics: { boundaryRecallWithin2s: null },
     },
   ],
   versions: [
@@ -134,7 +131,7 @@ const STATUS = {
       metrics: null,
     },
   ],
-  skipThreshold: { current: 0.7, recommended: 0.65 },
+  skipThreshold: { current: 0.7 },
 }
 
 const LOGO = { declaration: 'inTheCommonDataTable', href: '/logo/1-101' }
@@ -227,11 +224,13 @@ test('the status is read as the API answers it', async () => {
   assert.deepEqual(status.metrics, {
     boundaryRecallWithin2s: 0.93,
     boundaryRecallWithin1s: undefined,
-    extraBoundariesPerRecording: 1.2,
-    programmeSkippedSecondsPerHour: 2.1,
+    kinds: [
+      { kind: 'break', recall: 0.95 },
+      { kind: 'ending', recall: undefined },
+    ],
     returnedAfterSkipping: 0.03,
   })
-  assert.deepEqual(status.skipThreshold, { current: 0.7, recommended: 0.65 })
+  assert.deepEqual(status.skipThreshold, { current: 0.7 })
   assert.deepEqual(asked.sort(), ['/api/segments/status', 'services'])
 })
 
@@ -244,7 +243,7 @@ test('a station is named the way the other screens name it, and by its numbers w
       name: '湾岸放送1',
       no: '1',
       logo: LOGO,
-      confirmedRecordings: 5,
+      recordings: 5,
       metrics: SUMMARY,
     },
     {
@@ -252,11 +251,8 @@ test('a station is named the way the other screens name it, and by its numbers w
       name: '1-109',
       no: undefined,
       logo: undefined,
-      confirmedRecordings: 2,
-      metrics: {
-        boundaryRecallWithin2s: undefined,
-        programmeSkippedSecondsPerHour: 0,
-      },
+      recordings: 2,
+      metrics: { boundaryRecallWithin2s: undefined },
     },
   ])
 
@@ -302,7 +298,6 @@ test('what is not there yet is read as not there', async () => {
     version: { ...STATUS.version, number: 1, adoptedAt: null },
     metrics: null,
     stations: [],
-    skipThreshold: { current: 0.7, recommended: null },
   }
 
   const status = await readValue()
@@ -310,10 +305,6 @@ test('what is not there yet is read as not there', async () => {
   assert.equal(status.version.adoptedAt, undefined)
   assert.equal(status.metrics, undefined)
   assert.deepEqual(status.stations, [])
-  assert.deepEqual(status.skipThreshold, {
-    current: 0.7,
-    recommended: undefined,
-  })
 })
 
 test('a count the API spells as a string is read as a number', async () => {
@@ -325,7 +316,15 @@ test('a count the API spells as a string is read as a number', async () => {
       bytes: '450887680',
       waiting: '0',
     },
-    skipThreshold: { current: '0.7', recommended: '0.65' },
+    evidence: {
+      recordings: '4',
+      boundaries: '37',
+      enough: false,
+      recordingsNeeded: '10',
+      boundariesNeeded: '100',
+    },
+    stations: [{ ...STATUS.stations[0], recordings: '5' }],
+    skipThreshold: { current: '0.7' },
   }
 
   const status = await readValue()
@@ -336,7 +335,15 @@ test('a count the API spells as a string is read as a number', async () => {
     bytes: 450887680,
     waiting: 0,
   })
-  assert.deepEqual(status.skipThreshold, { current: 0.7, recommended: 0.65 })
+  assert.deepEqual(status.evidence, {
+    recordings: 4,
+    boundaries: 37,
+    enough: false,
+    recordingsNeeded: 10,
+    boundariesNeeded: 100,
+  })
+  assert.equal(status.stations[0].recordings, 5)
+  assert.deepEqual(status.skipThreshold, { current: 0.7 })
 })
 
 test('a status the API cannot be asked for, or answers without, is unread', async () => {

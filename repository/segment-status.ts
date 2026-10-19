@@ -14,6 +14,8 @@ type SegmentMetricsSummaryResponder =
 type SegmentStationResponder = components['schemas']['SegmentStationResponder']
 type SegmentVersionHistoryResponder =
   components['schemas']['SegmentVersionHistoryResponder']
+type SegmentKindMetricsResponder =
+  components['schemas']['SegmentKindMetricsResponder']
 
 export type SegmentVersionState =
   components['schemas']['SegmentModelVersionState']
@@ -37,24 +39,29 @@ export interface SegmentVersionInUse {
 }
 
 export interface SegmentEvidence {
-  confirmedRecordings: number
+  recordings: number
   boundaries: number
   enough: boolean
   recordingsNeeded: number
   boundariesNeeded: number
 }
 
+export type RecalledKind = 'break' | 'opening' | 'ending'
+
+export interface SegmentKindRecall {
+  kind: RecalledKind
+  recall?: number
+}
+
 export interface SegmentMetrics {
   boundaryRecallWithin2s?: number
   boundaryRecallWithin1s?: number
-  extraBoundariesPerRecording: number
-  programmeSkippedSecondsPerHour: number
+  kinds: SegmentKindRecall[]
   returnedAfterSkipping?: number
 }
 
 export interface SegmentMetricsSummary {
   boundaryRecallWithin2s?: number
-  programmeSkippedSecondsPerHour: number
 }
 
 export interface SegmentStation {
@@ -62,7 +69,7 @@ export interface SegmentStation {
   name: string
   no?: string
   logo?: StationLogo
-  confirmedRecordings: number
+  recordings: number
   metrics: SegmentMetricsSummary
 }
 
@@ -76,7 +83,6 @@ export interface SegmentVersion {
 
 export interface SkipThreshold {
   current: number
-  recommended?: number
 }
 
 export interface SegmentStatus {
@@ -95,15 +101,20 @@ function numberOr(value: null | number | string): number | undefined {
   return value === null ? undefined : Number(value)
 }
 
+const RECALLED_KINDS: RecalledKind[] = ['break', 'opening', 'ending']
+
 function summaryOf(
   metrics: SegmentMetricsSummaryResponder,
 ): SegmentMetricsSummary {
-  return {
-    boundaryRecallWithin2s: numberOr(metrics.boundaryRecallWithin2s),
-    programmeSkippedSecondsPerHour: Number(
-      metrics.programmeSkippedSecondsPerHour,
-    ),
-  }
+  return { boundaryRecallWithin2s: numberOr(metrics.boundaryRecallWithin2s) }
+}
+
+function kindsOf(kinds: SegmentKindMetricsResponder[]): SegmentKindRecall[] {
+  return RECALLED_KINDS.flatMap((kind) => {
+    const said = kinds.find((one) => one.kind === kind)
+
+    return said ? [{ kind, recall: numberOr(said.recall) }] : []
+  })
 }
 
 function stationOf(
@@ -118,7 +129,7 @@ function stationOf(
     name: channel?.name || key,
     no: channel?.no,
     logo: channel?.logo,
-    confirmedRecordings: Number(station.confirmedRecordings),
+    recordings: Number(station.recordings),
     metrics: summaryOf(station.metrics),
   }
 }
@@ -162,7 +173,7 @@ function statusOf(
         : undefined,
     },
     evidence: {
-      confirmedRecordings: Number(evidence.confirmedRecordings),
+      recordings: Number(evidence.recordings),
       boundaries: Number(evidence.boundaries),
       enough: evidence.enough,
       recordingsNeeded: Number(evidence.recordingsNeeded),
@@ -172,21 +183,13 @@ function statusOf(
       ? {
           boundaryRecallWithin2s: numberOr(metrics.boundaryRecallWithin2s),
           boundaryRecallWithin1s: numberOr(metrics.boundaryRecallWithin1s),
-          extraBoundariesPerRecording: Number(
-            metrics.extraBoundariesPerRecording,
-          ),
-          programmeSkippedSecondsPerHour: Number(
-            metrics.programmeSkippedSecondsPerHour,
-          ),
+          kinds: kindsOf(metrics.kinds),
           returnedAfterSkipping: numberOr(metrics.returnedAfterSkipShare),
         }
       : undefined,
     stations: status.stations.map((one) => stationOf(one, known)),
     versions: status.versions.map(versionOf),
-    skipThreshold: {
-      current: Number(skipThreshold.current),
-      recommended: numberOr(skipThreshold.recommended),
-    },
+    skipThreshold: { current: Number(skipThreshold.current) },
   }
 }
 

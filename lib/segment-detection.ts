@@ -1,6 +1,10 @@
 import { signedOut } from '@/lib/signed-out'
 import { couldNot } from '@/lib/try-again'
 import type {
+  RecalledKind,
+  SegmentKindRecall,
+} from '@/repository/segment-status'
+import type {
   SkipThresholdRefusal,
   SegmentVersionRefusal,
 } from '@/repository/segments'
@@ -33,12 +37,34 @@ export function boundaryMatchOf(
   return said.length === 0 ? NOT_APPLICABLE : said.join('・')
 }
 
-export function extraBoundariesOf(perRecording: number): string {
-  return `1 件あたり ${perRecording.toFixed(1)}`
+export const CHECKED_RECORDINGS = 'カタログで答え合わせした録画'
+
+export function recordingsOf(count: number): string {
+  return `${count} 本`
 }
 
-export function programmeSkippedOf(secondsPerHour: number): string {
-  return `1 時間あたり ${secondsPerHour.toFixed(1)} 秒`
+const RECALL_NAMES: Record<RecalledKind, string> = {
+  break: 'CM の再現率',
+  opening: 'OP の再現率',
+  ending: 'ED の再現率',
+}
+
+export function recallOf(recall: number | undefined): string {
+  return recall === undefined ? NOT_APPLICABLE : shareOf(recall)
+}
+
+export function recallRowsOf(
+  kinds: SegmentKindRecall[] | undefined,
+): { name: string; value: string }[] {
+  const said = kinds ?? []
+  const shown: SegmentKindRecall[] = said.some((one) => one.kind === 'break')
+    ? said
+    : [{ kind: 'break' }, ...said]
+
+  return shown.map((one) => ({
+    name: RECALL_NAMES[one.kind],
+    value: recallOf(one.recall),
+  }))
 }
 
 export function returnedAfterSkipOf(share: number | undefined): string {
@@ -50,7 +76,7 @@ export function thresholdOf(threshold: number): string {
 }
 
 export interface EvidenceCounts {
-  confirmedRecordings: number
+  recordings: number
   boundaries: number
   enough: boolean
   recordingsNeeded: number
@@ -62,10 +88,9 @@ export function evidenceShortOf(evidence: EvidenceCounts): string | undefined {
     return undefined
   }
 
-  const recordingsShort =
-    evidence.confirmedRecordings < evidence.recordingsNeeded
+  const recordingsShort = evidence.recordings < evidence.recordingsNeeded
   const boundariesShort = evidence.boundaries < evidence.boundariesNeeded
-  const recordings = `確かめた録画 ${evidence.confirmedRecordings} / ${evidence.recordingsNeeded} 件`
+  const recordings = `答え合わせできる録画 ${evidence.recordings} / ${evidence.recordingsNeeded} 本`
   const boundaries = `CM の境目 ${evidence.boundaries} / ${evidence.boundariesNeeded} か所`
 
   if (boundariesShort && !recordingsShort) {

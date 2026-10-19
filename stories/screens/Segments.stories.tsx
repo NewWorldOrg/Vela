@@ -6,9 +6,10 @@ import {
   DETECTION_BY_HAND,
   DETECTION_BY_HAND_LEARNING_OFF,
   DETECTION_LEARNING_OFF,
-  DETECTION_NOTHING_CONFIRMED,
+  DETECTION_NOTHING_CHECKED,
   DETECTION_NOT_YET_EVALUATED,
   DETECTION_STATUS,
+  DETECTION_WITH_OP_AND_ED,
   LEARNING_DATA,
   LEARNING_DATA_WAITING,
   NO_LEARNING_DATA,
@@ -134,22 +135,24 @@ function thresholdPanel(canvasElement: HTMLElement): HTMLElement {
   return slotted(canvasElement, 'skip-threshold')
 }
 
+const CHECKED = 'カタログで答え合わせした録画'
+
 const FULL_PRECISION: [string, string][] = [
   ['モデルのバージョン', '第 3 版自動'],
   ['採用', '11/1(日) 03:05'],
-  ['確かめた録画', '12 件'],
+  [CHECKED, '12 本'],
   ['境目の一致', '±2 秒 93%・±1 秒 85%'],
-  ['余計な境目', '1 件あたり 1.2'],
-  ['本編を飛ばす誤り', '1 時間あたり 2.1 秒'],
+  ['CM の再現率', '95%'],
   ['飛ばした直後に戻った割合', '3%(直近 7 日)'],
 ]
 
 const NOT_APPLICABLE_METRICS: [string, string][] = [
   ['境目の一致', '対象なし'],
-  ['余計な境目', '対象なし'],
-  ['本編を飛ばす誤り', '対象なし'],
+  ['CM の再現率', '対象なし'],
   ['飛ばした直後に戻った割合', '対象なし'],
 ]
+
+const THRESHOLD_ONLY: [string, string][] = [['閾値', '0.70']]
 
 export const 評価のある検出: Story = {
   play: async ({ canvasElement }) => {
@@ -167,53 +170,27 @@ export const 評価のある検出: Story = {
         .slice(1)
         .map(cellsOf),
     ).toEqual([
-      ['湾岸放送1', '5 件', '±2 秒 96%', '1 時間あたり 1.4 秒'],
-      ['4第一テレビ1', '4 件', '±2 秒 91%', '1 時間あたり 2.6 秒'],
-      ['6港町テレビ', '3 件', '対象なし', '1 時間あたり 2.5 秒'],
+      ['湾岸放送1', '5 本', '±2 秒 96%'],
+      ['4第一テレビ1', '4 本', '±2 秒 91%'],
+      ['6港町テレビ', '3 本', '対象なし'],
     ])
+    await expect(
+      within(precision(canvasElement).parentElement as HTMLElement)
+        .getAllByRole('columnheader')
+        .map((one) => one.textContent),
+    ).toEqual(['局', CHECKED, '境目の一致'])
     await expect(versionRows(canvasElement)).toEqual([
-      [
-        '第 4 版',
-        '11/8(日) 03:00',
-        '候補',
-        '±2 秒 94%',
-        '1 時間あたり 3.6 秒',
-        SWITCH,
-      ],
-      [
-        '第 3 版',
-        '11/1(日) 03:00',
-        '使用中',
-        '±2 秒 93%',
-        '1 時間あたり 2.1 秒',
-        '',
-      ],
-      [
-        '第 2 版',
-        '10/25(日) 03:00',
-        '使用終了',
-        '±2 秒 95%',
-        '1 時間あたり 2.4 秒',
-        SWITCH,
-      ],
-      [
-        '第 1 版',
-        '10/18(日) 12:00',
-        '使用終了',
-        '対象なし',
-        '対象なし',
-        SWITCH,
-      ],
+      ['第 4 版', '11/8(日) 03:00', '候補', '±2 秒 94%', SWITCH],
+      ['第 3 版', '11/1(日) 03:00', '使用中', '±2 秒 93%', ''],
+      ['第 2 版', '10/25(日) 03:00', '使用終了', '±2 秒 95%', SWITCH],
+      ['第 1 版', '10/18(日) 12:00', '使用終了', '対象なし', SWITCH],
     ])
     await expect(
       within(versions(canvasElement)).queryByRole('button', {
         name: BACK_TO_AUTOMATIC,
       }),
     ).toBeNull()
-    await rowsAre(canvasElement, 'skip-threshold', [
-      ['閾値', '0.70'],
-      ['おすすめの値', '0.65'],
-    ])
+    await rowsAre(canvasElement, 'skip-threshold', THRESHOLD_ONLY)
     await rowsAre(canvasElement, 'learning-data', [
       ['データのある録画', '312 件'],
       ['時間', '187 時間'],
@@ -242,7 +219,7 @@ export const 学習が切: Story = {
       history.queryByRole('button', { name: BACK_TO_AUTOMATIC }),
     ).toBeNull()
     await expect(history.queryByText('操作')).toBeNull()
-    await expect(history.getAllByRole('columnheader')).toHaveLength(5)
+    await expect(history.getAllByRole('columnheader')).toHaveLength(4)
     await expect(
       within(thresholdPanel(canvasElement)).getByRole('button', {
         name: '変更',
@@ -293,7 +270,7 @@ export const 人が選んだ版: Story = {
       heading.getBoundingClientRect().top,
     )
     await expect(
-      versionRows(canvasElement).map((row) => [row[0], row[2], row[5]]),
+      versionRows(canvasElement).map((row) => [row[0], row[2], row[4]]),
     ).toEqual([
       ['第 4 版', '候補', SWITCH],
       ['第 3 版', '使用終了', SWITCH],
@@ -457,8 +434,8 @@ export const 評価がまだ無い: Story = {
     await rowsAre(canvasElement, 'segment-precision', [
       ['モデルのバージョン', '第 1 版自動'],
       ['採用', '10/18(日) 12:00'],
-      ['学習', '確かめた録画 4 / 10 件・CM の境目 37 / 100 か所'],
-      ['確かめた録画', '4 件'],
+      ['学習', '答え合わせできる録画 4 / 10 本・CM の境目 37 / 100 か所'],
+      [CHECKED, '4 本'],
       ...NOT_APPLICABLE_METRICS,
     ])
     await expect(
@@ -467,12 +444,9 @@ export const 評価がまだ無い: Story = {
       ),
     ).toBeNull()
     await expect(versionRows(canvasElement)).toEqual([
-      ['第 1 版', '10/18(日) 12:00', '使用中', '対象なし', '対象なし'],
+      ['第 1 版', '10/18(日) 12:00', '使用中', '対象なし'],
     ])
-    await rowsAre(canvasElement, 'skip-threshold', [
-      ['閾値', '0.70'],
-      ['おすすめの値', '対象なし'],
-    ])
+    await rowsAre(canvasElement, 'skip-threshold', THRESHOLD_ONLY)
   },
 }
 
@@ -487,15 +461,27 @@ export const 境目が足りない: Story = {
   },
 }
 
-export const 確かめた録画が無い: Story = {
-  args: { status: DETECTION_NOTHING_CONFIRMED },
+export const 答え合わせした録画が無い: Story = {
+  args: { status: DETECTION_NOTHING_CHECKED },
   play: async ({ canvasElement }) => {
     await rowsAre(canvasElement, 'segment-precision', [
       ['モデルのバージョン', '第 1 版自動'],
       ['採用', '10/18(日) 12:00'],
-      ['学習', '確かめた録画 0 / 10 件・CM の境目 0 / 100 か所'],
-      ['確かめた録画', '0 件'],
+      ['学習', '答え合わせできる録画 0 / 10 本・CM の境目 0 / 100 か所'],
+      [CHECKED, '0 本'],
       ...NOT_APPLICABLE_METRICS,
+    ])
+  },
+}
+
+export const OPとEDの再現率: Story = {
+  args: { status: DETECTION_WITH_OP_AND_ED },
+  play: async ({ canvasElement }) => {
+    await rowsAre(canvasElement, 'segment-precision', [
+      ...FULL_PRECISION.slice(0, 5),
+      ['OP の再現率', '90%'],
+      ['ED の再現率', '対象なし'],
+      FULL_PRECISION[5],
     ])
   },
 }
@@ -511,6 +497,9 @@ async function editTheThreshold(canvasElement: HTMLElement) {
 
   await expect(field).toHaveFocus()
   await expect(field).toHaveValue('0.70')
+  await expect(
+    panel.getAllByRole('button').map((one) => one.textContent),
+  ).toEqual(['キャンセル', '保存する'])
 
   return { panel, field }
 }
@@ -530,33 +519,6 @@ export const 閾値を変える: Story = {
       expect(panel.getByRole('button', { name: '変更' })).toHaveFocus(),
     )
     await expect(panel.queryByRole('textbox')).toBeNull()
-  },
-}
-
-export const 閾値におすすめの値を入れる: Story = {
-  play: async ({ canvasElement }) => {
-    settleThreshold.mockClear()
-
-    const { panel, field } = await editTheThreshold(canvasElement)
-
-    await userEvent.click(panel.getByRole('button', { name: 'おすすめの値' }))
-    await expect(field).toHaveValue('0.65')
-    await expect(settleThreshold).not.toHaveBeenCalled()
-
-    await userEvent.click(panel.getByRole('button', { name: '保存する' }))
-
-    await waitFor(() => expect(settleThreshold).toHaveBeenCalledWith(0.65))
-  },
-}
-
-export const おすすめの値が無いときの閾値の変更: Story = {
-  args: { status: DETECTION_NOT_YET_EVALUATED },
-  play: async ({ canvasElement }) => {
-    const { panel } = await editTheThreshold(canvasElement)
-
-    await expect(
-      panel.queryByRole('button', { name: 'おすすめの値' }),
-    ).toBeNull()
   },
 }
 

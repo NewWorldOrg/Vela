@@ -1,10 +1,11 @@
 import {
+  CHECKED_RECORDINGS,
   LEARNING_OFF,
   NOT_APPLICABLE,
   boundaryMatchOf,
   evidenceShortOf,
-  extraBoundariesOf,
-  programmeSkippedOf,
+  recallRowsOf,
+  recordingsOf,
   returnedAfterSkipOf,
   versionLabel,
 } from '@/lib/segment-detection'
@@ -28,7 +29,7 @@ import { ValueRow, ValueRows } from '@/components/segments/value-rows'
 
 export const PRECISION_SLOT = 'segment-precision'
 
-const STATION_COLUMNS = ['局', '確かめた録画', '境目の一致', '本編を飛ばす誤り']
+const STATION_COLUMNS = ['局', CHECKED_RECORDINGS, '境目の一致']
 
 const NUMBERS = 'font-code tabular-nums text-ink-2'
 
@@ -61,8 +62,8 @@ export function PrecisionPanel({ status }: { status: SegmentStatus }) {
           </ValueRow>
           <ValueRow name="採用">{version.adoptedAt ?? NOT_APPLICABLE}</ValueRow>
           {learning && <ValueRow name="学習">{learning}</ValueRow>}
-          <ValueRow name="確かめた録画">
-            {evidence.confirmedRecordings} 件
+          <ValueRow name={CHECKED_RECORDINGS}>
+            {recordingsOf(evidence.recordings)}
           </ValueRow>
           <ValueRow name="境目の一致">
             {said(metrics, (one) =>
@@ -72,16 +73,11 @@ export function PrecisionPanel({ status }: { status: SegmentStatus }) {
               ),
             )}
           </ValueRow>
-          <ValueRow name="余計な境目">
-            {said(metrics, (one) =>
-              extraBoundariesOf(one.extraBoundariesPerRecording),
-            )}
-          </ValueRow>
-          <ValueRow name="本編を飛ばす誤り">
-            {said(metrics, (one) =>
-              programmeSkippedOf(one.programmeSkippedSecondsPerHour),
-            )}
-          </ValueRow>
+          {recallRowsOf(metrics?.kinds).map((row) => (
+            <ValueRow key={row.name} name={row.name}>
+              {row.value}
+            </ValueRow>
+          ))}
           <ValueRow name="飛ばした直後に戻った割合">
             {returnedAfterSkipOf(metrics?.returnedAfterSkipping)}
           </ValueRow>
@@ -114,15 +110,10 @@ function StationTable({ stations }: { stations: SegmentStation[] }) {
               </span>
             </TableCell>
             <TableCell className={NUMBERS}>
-              {station.confirmedRecordings} 件
+              {recordingsOf(station.recordings)}
             </TableCell>
             <TableCell className={NUMBERS}>
               {boundaryMatchOf(station.metrics.boundaryRecallWithin2s)}
-            </TableCell>
-            <TableCell className={NUMBERS}>
-              {programmeSkippedOf(
-                station.metrics.programmeSkippedSecondsPerHour,
-              )}
             </TableCell>
           </TableRow>
         ))}

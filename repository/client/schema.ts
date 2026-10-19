@@ -755,7 +755,7 @@ export interface paths {
       cookie?: never
     }
     get: operations['getRecordingSegments']
-    put: operations['putRecordingSegments']
+    put?: never
     post?: never
     delete?: never
     options?: never
@@ -822,22 +822,6 @@ export interface paths {
     put?: never
     post: operations['stopRecording']
     delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/api/recordings/{id}/segments/answer': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post?: never
-    delete: operations['withdrawSegmentAnswer']
     options?: never
     head?: never
     patch?: never
@@ -1616,14 +1600,6 @@ export interface components {
     }
     /** @enum {null|string} */
     AllocationVerdict: 'secured' | 'contended' | 'pinned' | 'unreachable' | null
-    AnsweredSegmentRequest: {
-      /** Format: double */
-      startsAtSec: number | string
-      /** Format: double */
-      endsAtSec: number | string
-      /** @enum {null|string} */
-      kind?: 'programme' | 'break' | null
-    }
     ArchiveForgottenResponder: {
       /** Format: int32 */
       forgotten: number | string
@@ -2246,7 +2222,7 @@ export interface components {
       newPassword?: null | string
     }
     /** @enum {string} */
-    ChapterKind: 'programme' | 'break'
+    ChapterKind: 'programme' | 'break' | 'opening' | 'ending'
     CollectionStatusResponder: {
       /** Format: int32 */
       wantedCoverageHours: number | string
@@ -3155,10 +3131,6 @@ export interface components {
       /** Format: double */
       positionSec: null | number | string
     }
-    PutRecordingSegmentsRequest: {
-      segments?: null | components['schemas']['AnsweredSegmentRequest'][]
-      confirmed?: null | boolean
-    }
     QualityCandidateMeasuredResponder: {
       /** Format: double */
       lockRate: number | string
@@ -3768,15 +3740,11 @@ export interface components {
       state: components['schemas']['SegmentStandingState']
       /** Format: int32 */
       modelVersion: null | number | string
-      confirmed: boolean
-      /** Format: date-time */
-      answeredAt: null | string
       /** Format: date-time */
       detectedAt: null | string
       /** Format: double */
       cmShare: null | number | string
       segments: components['schemas']['RecordingSegmentResponder'][]
-      snaps: (number | string)[]
     }
     /** @enum {string} */
     RecordingSort: 'startedAt' | 'programmeStartsAt'
@@ -4356,7 +4324,7 @@ export interface components {
     }
     SegmentEvidenceResponder: {
       /** Format: int32 */
-      confirmedRecordings: number | string
+      recordings: number | string
       /** Format: int32 */
       boundaries: number | string
       enough: boolean
@@ -4371,18 +4339,12 @@ export interface components {
       kind: components['schemas']['SegmentKind']
       /** Format: double */
       recall: null | number | string
-      /** Format: double */
-      precision: null | number | string
     }
     SegmentMetricsResponder: {
       /** Format: double */
       boundaryRecallWithin2s: null | number | string
       /** Format: double */
       boundaryRecallWithin1s: null | number | string
-      /** Format: double */
-      extraBoundariesPerRecording: number | string
-      /** Format: double */
-      programmeSkippedSecondsPerHour: number | string
       kinds: components['schemas']['SegmentKindMetricsResponder'][]
       /** Format: double */
       returnedAfterSkipShare: null | number | string
@@ -4392,8 +4354,6 @@ export interface components {
     SegmentMetricsSummaryResponder: {
       /** Format: double */
       boundaryRecallWithin2s: null | number | string
-      /** Format: double */
-      programmeSkippedSecondsPerHour: number | string
     }
     /** @enum {string} */
     SegmentModelVersionState: 'candidate' | 'active' | 'retired'
@@ -4417,17 +4377,16 @@ export interface components {
       skipThresholdChangedAt: null | string
     }
     /** @enum {string} */
-    SegmentSource: 'none' | 'detected' | 'answered'
+    SegmentSource: 'none' | 'detected'
     /** @enum {string} */
-    SegmentStandingState:
-      'none' | 'marked' | 'nothingFound' | 'discarded' | 'answered'
+    SegmentStandingState: 'none' | 'marked' | 'nothingFound' | 'discarded'
     SegmentStationResponder: {
       /** Format: int32 */
       networkId: number | string
       /** Format: int32 */
       serviceId: number | string
       /** Format: int32 */
-      confirmedRecordings: number | string
+      recordings: number | string
       metrics: components['schemas']['SegmentMetricsSummaryResponder']
     }
     SegmentStatusResponder: {
@@ -4534,8 +4493,6 @@ export interface components {
     SkipThresholdResponder: {
       /** Format: double */
       current: number | string
-      /** Format: double */
-      recommended: null | number | string
     }
     /** @enum {string} */
     SoundTrack: 'main' | 'secondary' | 'third'
@@ -8162,78 +8119,6 @@ export interface operations {
       }
     }
   }
-  putRecordingSegments: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        id: string
-      }
-      cookie?: never
-    }
-    requestBody?: {
-      content: {
-        'application/json':
-          null | components['schemas']['PutRecordingSegmentsRequest']
-        'application/*+json':
-          null | components['schemas']['PutRecordingSegmentsRequest']
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-    }
-  }
   listRecordings: {
     parameters: {
       query?: {
@@ -8497,62 +8382,6 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfRecordingStopResponder']
-        }
-      }
-    }
-  }
-  withdrawSegmentAnswer: {
-    parameters: {
-      query?: never
-      header?: never
-      path: {
-        id: string
-      }
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description Bad Request */
-      400: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
-      401: {
-        headers: {
-          [name: string]: unknown
-        }
-        content?: never
-      }
-      /** @description Not Found */
-      404: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
-        }
-      }
-      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
-      500: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfRecordingSegmentsResponder']
         }
       }
     }

@@ -44,8 +44,6 @@ const DETECTED = {
   source: 'detected',
   state: 'marked',
   modelVersion: '3',
-  confirmed: false,
-  answeredAt: null,
   detectedAt: '2026-10-18T03:02:00Z',
   cmShare: 0.1,
   segments: [
@@ -59,7 +57,6 @@ const DETECTED = {
     },
     { startsAtSec: 1680, endsAtSec: 1804, kind: 'ending', probability: 0.8 },
   ],
-  snaps: [412.28, '502.30'],
 }
 
 const answered = (status: number) => ({ status, ok: status < 400 })

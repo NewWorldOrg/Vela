@@ -4326,105 +4326,6 @@
             }
           }
         }
-      },
-      "put": {
-        "tags": [
-          "recordings"
-        ],
-        "operationId": "putRecordingSegments",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/PutRecordingSegmentsRequest"
-                  }
-                ]
-              }
-            },
-            "application/*+json": {
-              "schema": {
-                "oneOf": [
-                  {
-                    "type": "null"
-                  },
-                  {
-                    "$ref": "#/components/schemas/PutRecordingSegmentsRequest"
-                  }
-                ]
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
-          },
-          "500": {
-            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          }
-        }
       }
     },
     "/api/recordings": {
@@ -4826,69 +4727,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BaseResponderOfRecordingStopResponder"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/recordings/{id}/segments/answer": {
-      "delete": {
-        "tags": [
-          "recordings"
-        ],
-        "operationId": "withdrawSegmentAnswer",
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
-          },
-          "500": {
-            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfRecordingSegmentsResponder"
                 }
               }
             }
@@ -8773,43 +8611,6 @@
           "string"
         ]
       },
-      "AnsweredSegmentRequest": {
-        "required": [
-          "startsAtSec",
-          "endsAtSec"
-        ],
-        "type": "object",
-        "properties": {
-          "startsAtSec": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "endsAtSec": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "kind": {
-            "enum": [
-              "programme",
-              "break",
-              null
-            ],
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
       "ArchiveForgottenResponder": {
         "required": [
           "forgotten"
@@ -11899,7 +11700,9 @@
       "ChapterKind": {
         "enum": [
           "programme",
-          "break"
+          "break",
+          "opening",
+          "ending"
         ],
         "type": "string"
       },
@@ -15551,27 +15354,6 @@
           }
         }
       },
-      "PutRecordingSegmentsRequest": {
-        "type": "object",
-        "properties": {
-          "segments": {
-            "type": [
-              "null",
-              "array"
-            ],
-            "items": {
-              "$ref": "#/components/schemas/AnsweredSegmentRequest"
-            }
-          },
-          "confirmed": {
-            "type": [
-              "null",
-              "boolean"
-            ]
-          }
-        },
-        "additionalProperties": false
-      },
       "QualityCandidateMeasuredResponder": {
         "required": [
           "lockRate",
@@ -17991,12 +17773,9 @@
           "source",
           "state",
           "modelVersion",
-          "confirmed",
-          "answeredAt",
           "detectedAt",
           "cmShare",
-          "segments",
-          "snaps"
+          "segments"
         ],
         "type": "object",
         "properties": {
@@ -18023,16 +17802,6 @@
             ],
             "format": "int32"
           },
-          "confirmed": {
-            "type": "boolean"
-          },
-          "answeredAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
           "detectedAt": {
             "type": [
               "null",
@@ -18053,17 +17822,6 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/RecordingSegmentResponder"
-            }
-          },
-          "snaps": {
-            "type": "array",
-            "items": {
-              "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-              "type": [
-                "number",
-                "string"
-              ],
-              "format": "double"
             }
           }
         }
@@ -20360,7 +20118,7 @@
       },
       "SegmentEvidenceResponder": {
         "required": [
-          "confirmedRecordings",
+          "recordings",
           "boundaries",
           "enough",
           "recordingsNeeded",
@@ -20368,7 +20126,7 @@
         ],
         "type": "object",
         "properties": {
-          "confirmedRecordings": {
+          "recordings": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -20417,8 +20175,7 @@
       "SegmentKindMetricsResponder": {
         "required": [
           "kind",
-          "recall",
-          "precision"
+          "recall"
         ],
         "type": "object",
         "properties": {
@@ -20433,15 +20190,6 @@
               "string"
             ],
             "format": "double"
-          },
-          "precision": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
-              "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
           }
         }
       },
@@ -20449,8 +20197,6 @@
         "required": [
           "boundaryRecallWithin2s",
           "boundaryRecallWithin1s",
-          "extraBoundariesPerRecording",
-          "programmeSkippedSecondsPerHour",
           "kinds",
           "returnedAfterSkipShare",
           "skips"
@@ -20470,22 +20216,6 @@
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
               "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "extraBoundariesPerRecording": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "programmeSkippedSecondsPerHour": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
               "number",
               "string"
             ],
@@ -20518,8 +20248,7 @@
       },
       "SegmentMetricsSummaryResponder": {
         "required": [
-          "boundaryRecallWithin2s",
-          "programmeSkippedSecondsPerHour"
+          "boundaryRecallWithin2s"
         ],
         "type": "object",
         "properties": {
@@ -20527,14 +20256,6 @@
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
               "null",
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "programmeSkippedSecondsPerHour": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
               "number",
               "string"
             ],
@@ -20628,8 +20349,7 @@
       "SegmentSource": {
         "enum": [
           "none",
-          "detected",
-          "answered"
+          "detected"
         ],
         "type": "string"
       },
@@ -20638,8 +20358,7 @@
           "none",
           "marked",
           "nothingFound",
-          "discarded",
-          "answered"
+          "discarded"
         ],
         "type": "string"
       },
@@ -20647,7 +20366,7 @@
         "required": [
           "networkId",
           "serviceId",
-          "confirmedRecordings",
+          "recordings",
           "metrics"
         ],
         "type": "object",
@@ -20668,7 +20387,7 @@
             ],
             "format": "int32"
           },
-          "confirmedRecordings": {
+          "recordings": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",
@@ -21069,23 +20788,13 @@
       },
       "SkipThresholdResponder": {
         "required": [
-          "current",
-          "recommended"
+          "current"
         ],
         "type": "object",
         "properties": {
           "current": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
-              "number",
-              "string"
-            ],
-            "format": "double"
-          },
-          "recommended": {
-            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
-            "type": [
-              "null",
               "number",
               "string"
             ],

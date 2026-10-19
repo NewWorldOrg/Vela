@@ -5,8 +5,9 @@ import {
   backToAutomaticRefusalOf,
   boundaryMatchOf,
   evidenceShortOf,
-  extraBoundariesOf,
-  programmeSkippedOf,
+  recallOf,
+  recallRowsOf,
+  recordingsOf,
   repeatedSoundsOf,
   returnedAfterSkipOf,
   shareOf,
@@ -19,7 +20,7 @@ import {
 } from '@/lib/segment-detection'
 
 const EVIDENCE = {
-  confirmedRecordings: 12,
+  recordings: 12,
   boundaries: 148,
   enough: true,
   recordingsNeeded: 10,
@@ -43,12 +44,44 @@ test('the boundary match says each window it has, and nothing when it has none',
   assert.equal(boundaryMatchOf(undefined), '対象なし')
 })
 
-test('the rates are said per recording and per hour to one place', () => {
-  assert.equal(extraBoundariesOf(1.2), '1 件あたり 1.2')
-  assert.equal(extraBoundariesOf(2), '1 件あたり 2.0')
-  assert.equal(programmeSkippedOf(2.14), '1 時間あたり 2.1 秒')
+test('the share that went back after a skip is said over the last seven days', () => {
   assert.equal(returnedAfterSkipOf(0.03), '3%(直近 7 日)')
   assert.equal(returnedAfterSkipOf(undefined), '対象なし')
+})
+
+test('recordings are counted in 本', () => {
+  assert.equal(recordingsOf(12), '12 本')
+  assert.equal(recordingsOf(0), '0 本')
+})
+
+test('a recall is a whole percent, and nothing when it was not measured', () => {
+  assert.equal(recallOf(0.95), '95%')
+  assert.equal(recallOf(undefined), '対象なし')
+})
+
+test('the CM recall is always a row, and OP and ED are rows only when the backend sends them', () => {
+  assert.deepEqual(recallRowsOf([{ kind: 'break', recall: 0.95 }]), [
+    { name: 'CM の再現率', value: '95%' },
+  ])
+  assert.deepEqual(recallRowsOf(undefined), [
+    { name: 'CM の再現率', value: '対象なし' },
+  ])
+  assert.deepEqual(
+    recallRowsOf([
+      { kind: 'break', recall: 0.95 },
+      { kind: 'opening', recall: 0.9 },
+      { kind: 'ending' },
+    ]),
+    [
+      { name: 'CM の再現率', value: '95%' },
+      { name: 'OP の再現率', value: '90%' },
+      { name: 'ED の再現率', value: '対象なし' },
+    ],
+  )
+  assert.deepEqual(recallRowsOf([{ kind: 'opening', recall: 0.9 }]), [
+    { name: 'CM の再現率', value: '対象なし' },
+    { name: 'OP の再現率', value: '90%' },
+  ])
 })
 
 test('the threshold is said to two places', () => {
@@ -61,11 +94,11 @@ test('enough evidence says nothing, and too little says what is short of what', 
   assert.equal(
     evidenceShortOf({
       ...EVIDENCE,
-      confirmedRecordings: 4,
+      recordings: 4,
       boundaries: 120,
       enough: false,
     }),
-    '確かめた録画 4 / 10 件',
+    '答え合わせできる録画 4 / 10 本',
   )
   assert.equal(
     evidenceShortOf({ ...EVIDENCE, boundaries: 84, enough: false }),
@@ -74,11 +107,11 @@ test('enough evidence says nothing, and too little says what is short of what', 
   assert.equal(
     evidenceShortOf({
       ...EVIDENCE,
-      confirmedRecordings: 4,
+      recordings: 4,
       boundaries: 37,
       enough: false,
     }),
-    '確かめた録画 4 / 10 件・CM の境目 37 / 100 か所',
+    '答え合わせできる録画 4 / 10 本・CM の境目 37 / 100 か所',
   )
 })
 

@@ -1,6 +1,7 @@
 import { LOGO_FULL_COLOUR } from '@/repository/logos.fixtures'
 import type {
   LearningData,
+  SegmentMetrics,
   SegmentStatus,
   SegmentVersion,
 } from '@/repository/segment-status'
@@ -11,29 +12,20 @@ const VERSIONS: SegmentVersion[] = [
     number: 4,
     state: 'candidate',
     trainedAt: '11/8(日) 03:00',
-    metrics: {
-      boundaryRecallWithin2s: 0.94,
-      programmeSkippedSecondsPerHour: 3.6,
-    },
+    metrics: { boundaryRecallWithin2s: 0.94 },
   },
   {
     number: 3,
     state: 'active',
     trainedAt: '11/1(日) 03:00',
-    metrics: {
-      boundaryRecallWithin2s: 0.93,
-      programmeSkippedSecondsPerHour: 2.1,
-    },
+    metrics: { boundaryRecallWithin2s: 0.93 },
   },
   {
     number: 2,
     state: 'retired',
     trainedAt: '10/25(日) 03:00',
     rolledBackAt: '10/28(水) 21:40',
-    metrics: {
-      boundaryRecallWithin2s: 0.95,
-      programmeSkippedSecondsPerHour: 2.4,
-    },
+    metrics: { boundaryRecallWithin2s: 0.95 },
   },
   { number: 1, state: 'retired', trainedAt: '10/18(日) 12:00' },
 ]
@@ -41,6 +33,13 @@ const VERSIONS: SegmentVersion[] = [
 const FIRST_VERSION: SegmentVersion[] = [
   { number: 1, state: 'active', trainedAt: '10/18(日) 12:00' },
 ]
+
+const METRICS: SegmentMetrics = {
+  boundaryRecallWithin2s: 0.93,
+  boundaryRecallWithin1s: 0.85,
+  kinds: [{ kind: 'break', recall: 0.95 }],
+  returnedAfterSkipping: 0.03,
+}
 
 const STATUS: SegmentStatus = {
   learning: true,
@@ -53,51 +52,39 @@ const STATUS: SegmentStatus = {
   catalog: { cm: 820, programmeFixture: 40 },
   version: { number: 3, byHand: false, adoptedAt: '11/1(日) 03:05' },
   evidence: {
-    confirmedRecordings: 12,
+    recordings: 12,
     boundaries: 148,
     enough: true,
     recordingsNeeded: 10,
     boundariesNeeded: 100,
   },
-  metrics: {
-    boundaryRecallWithin2s: 0.93,
-    boundaryRecallWithin1s: 0.85,
-    extraBoundariesPerRecording: 1.2,
-    programmeSkippedSecondsPerHour: 2.1,
-    returnedAfterSkipping: 0.03,
-  },
+  metrics: METRICS,
   stations: [
     {
       key: '1-101',
       name: '湾岸放送1',
       no: '1',
       logo: LOGO_FULL_COLOUR,
-      confirmedRecordings: 5,
-      metrics: {
-        boundaryRecallWithin2s: 0.96,
-        programmeSkippedSecondsPerHour: 1.4,
-      },
+      recordings: 5,
+      metrics: { boundaryRecallWithin2s: 0.96 },
     },
     {
       key: '1-104',
       name: '第一テレビ1',
       no: '4',
-      confirmedRecordings: 4,
-      metrics: {
-        boundaryRecallWithin2s: 0.91,
-        programmeSkippedSecondsPerHour: 2.6,
-      },
+      recordings: 4,
+      metrics: { boundaryRecallWithin2s: 0.91 },
     },
     {
       key: '1-106',
       name: '港町テレビ',
       no: '6',
-      confirmedRecordings: 3,
-      metrics: { programmeSkippedSecondsPerHour: 2.5 },
+      recordings: 3,
+      metrics: {},
     },
   ],
   versions: VERSIONS,
-  skipThreshold: { current: 0.7, recommended: 0.65 },
+  skipThreshold: { current: 0.7 },
 }
 
 function read(value: SegmentStatus): Reading<SegmentStatus> {
@@ -123,11 +110,11 @@ const BY_HAND: SegmentStatus = {
   ],
 }
 
-const NOTHING_CONFIRMED: SegmentStatus = {
+const NOTHING_CHECKED: SegmentStatus = {
   ...STATUS,
   version: { number: 1, byHand: false, adoptedAt: '10/18(日) 12:00' },
   evidence: {
-    confirmedRecordings: 0,
+    recordings: 0,
     boundaries: 0,
     enough: false,
     recordingsNeeded: 10,
@@ -136,7 +123,6 @@ const NOTHING_CONFIRMED: SegmentStatus = {
   metrics: undefined,
   stations: [],
   versions: FIRST_VERSION,
-  skipThreshold: { current: 0.7 },
 }
 
 export const DETECTION_BY_HAND = read(BY_HAND)
@@ -150,7 +136,7 @@ export const DETECTION_NOT_YET_EVALUATED = read({
   ...STATUS,
   version: { number: 1, byHand: false, adoptedAt: '10/18(日) 12:00' },
   evidence: {
-    confirmedRecordings: 4,
+    recordings: 4,
     boundaries: 37,
     enough: false,
     recordingsNeeded: 10,
@@ -159,13 +145,12 @@ export const DETECTION_NOT_YET_EVALUATED = read({
   metrics: undefined,
   stations: [],
   versions: FIRST_VERSION,
-  skipThreshold: { current: 0.7 },
 })
 
 export const DETECTION_BOUNDARIES_SHORT = read({
   ...STATUS,
   evidence: {
-    confirmedRecordings: 11,
+    recordings: 11,
     boundaries: 84,
     enough: false,
     recordingsNeeded: 10,
@@ -173,10 +158,22 @@ export const DETECTION_BOUNDARIES_SHORT = read({
   },
 })
 
-export const DETECTION_NOTHING_CONFIRMED = read(NOTHING_CONFIRMED)
+export const DETECTION_WITH_OP_AND_ED = read({
+  ...STATUS,
+  metrics: {
+    ...METRICS,
+    kinds: [
+      { kind: 'break', recall: 0.95 },
+      { kind: 'opening', recall: 0.9 },
+      { kind: 'ending' },
+    ],
+  },
+})
+
+export const DETECTION_NOTHING_CHECKED = read(NOTHING_CHECKED)
 
 export const NO_LEARNING_DATA = read({
-  ...NOTHING_CONFIRMED,
+  ...NOTHING_CHECKED,
   learningData: { recordings: 0, seconds: 0, bytes: 0, waiting: 0 },
   catalog: { cm: 0, programmeFixture: 0 },
 })

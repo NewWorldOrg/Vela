@@ -7,7 +7,6 @@ import {
   NOT_APPLICABLE,
   backToAutomaticRefusalOf,
   boundaryMatchOf,
-  programmeSkippedOf,
   switchRefusalOf,
   versionLabel,
 } from '@/lib/segment-detection'
@@ -58,7 +57,7 @@ const STATES: Record<SegmentVersionState, { word: string; tone: StateTone }> = {
 const ROLLED_BACK =
   '飛ばした直後に戻った割合が上がったため、前の版に戻しました。'
 
-const COLUMNS = ['版', '作成', '状態', '境目の一致', '本編を飛ばす誤り']
+const COLUMNS = ['版', '作成', '状態', '境目の一致']
 
 const ACTIONS = '操作'
 
@@ -159,13 +158,6 @@ export function VersionHistory({
                 <TableCell className={NUMBERS}>
                   {version.metrics
                     ? boundaryMatchOf(version.metrics.boundaryRecallWithin2s)
-                    : NOT_APPLICABLE}
-                </TableCell>
-                <TableCell className={NUMBERS}>
-                  {version.metrics
-                    ? programmeSkippedOf(
-                        version.metrics.programmeSkippedSecondsPerHour,
-                      )
                     : NOT_APPLICABLE}
                 </TableCell>
                 {choosable && (

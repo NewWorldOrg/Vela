@@ -3,7 +3,6 @@
 import { useId, useState, useTransition, type FormEvent } from 'react'
 
 import {
-  NOT_APPLICABLE,
   skipThresholdProblem,
   skipThresholdRefusalOf,
   skipThresholdToSend,
@@ -21,8 +20,6 @@ import { ValueRow, ValueRows } from '@/components/segments/value-rows'
 export const SKIP_THRESHOLD_SLOT = 'skip-threshold'
 
 const THRESHOLD = '閾値'
-
-const RECOMMENDED = 'おすすめの値'
 
 export type SettleSkipThreshold = (
   threshold: number,
@@ -44,7 +41,7 @@ export function SkipThresholdPanel({
   const id = useId()
   const errorId = `${id}-error`
   const said = (checking ? skipThresholdProblem(typed) : undefined) ?? refusal
-  const { current, recommended } = threshold
+  const { current } = threshold
 
   const edit = () => {
     setTyped(thresholdOf(current))
@@ -102,7 +99,7 @@ export function SkipThresholdPanel({
             name={editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD}
           >
             {editing ? (
-              <span className="flex flex-wrap items-center gap-2.5 font-sans">
+              <span className="flex items-center font-sans">
                 <Input
                   id={id}
                   inputMode="decimal"
@@ -116,26 +113,10 @@ export function SkipThresholdPanel({
                   aria-describedby={said ? errorId : undefined}
                   onChange={(event) => retype(event.target.value)}
                 />
-                {recommended !== undefined && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => retype(thresholdOf(recommended))}
-                  >
-                    {RECOMMENDED}
-                  </Button>
-                )}
               </span>
             ) : (
               thresholdOf(current)
             )}
-          </ValueRow>
-          <ValueRow name={RECOMMENDED}>
-            {recommended === undefined
-              ? NOT_APPLICABLE
-              : thresholdOf(recommended)}
           </ValueRow>
         </ValueRows>
         <span aria-live="polite">
