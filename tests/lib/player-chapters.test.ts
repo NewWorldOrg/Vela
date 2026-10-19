@@ -4,8 +4,9 @@ import { test } from 'node:test'
 import {
   chapterBoundaries,
   chaptersToDraw,
+  isSkippableKind,
   nextBoundaryAfter,
-  skippableBreakAt,
+  skippableChapterAt,
 } from '@/lib/player-chapters'
 import type { PlaybackChapter } from '@/repository/videos'
 
@@ -82,17 +83,17 @@ test('only the chapters this build can place are drawn', () => {
 })
 
 test('inside a break that may be skipped, the skip goes to where that break ends', () => {
-  assert.equal(skippableBreakAt(212, MARKED)?.endsAtSec, 272)
-  assert.equal(skippableBreakAt(250, MARKED)?.endsAtSec, 272)
-  assert.equal(skippableBreakAt(1200, MARKED)?.endsAtSec, 1220.5)
+  assert.equal(skippableChapterAt(212, MARKED)?.endsAtSec, 272)
+  assert.equal(skippableChapterAt(250, MARKED)?.endsAtSec, 272)
+  assert.equal(skippableChapterAt(1200, MARKED)?.endsAtSec, 1220.5)
 })
 
 test('outside a break there is nothing to skip', () => {
-  assert.equal(skippableBreakAt(0, MARKED), undefined)
-  assert.equal(skippableBreakAt(211.9, MARKED), undefined)
-  assert.equal(skippableBreakAt(272, MARKED), undefined)
-  assert.equal(skippableBreakAt(1500, MARKED), undefined)
-  assert.equal(skippableBreakAt(100, []), undefined)
+  assert.equal(skippableChapterAt(0, MARKED), undefined)
+  assert.equal(skippableChapterAt(211.9, MARKED), undefined)
+  assert.equal(skippableChapterAt(272, MARKED), undefined)
+  assert.equal(skippableChapterAt(1500, MARKED), undefined)
+  assert.equal(skippableChapterAt(100, []), undefined)
 })
 
 test('a break the backend did not let be skipped is not offered', () => {
@@ -101,7 +102,7 @@ test('a break the backend did not let be skipped is not offered', () => {
     { startsAtSec: 1700, endsAtSec: 1800, kind: 'break', skippable: false },
   ]
 
-  assert.equal(skippableBreakAt(1750, heldBack), undefined)
+  assert.equal(skippableChapterAt(1750, heldBack), undefined)
 })
 
 test('breaks that follow one another are each skipped to their own end', () => {
@@ -112,20 +113,60 @@ test('breaks that follow one another are each skipped to their own end', () => {
     { startsAtSec: 690, endsAtSec: 1200, kind: 'programme', skippable: false },
   ]
 
-  assert.equal(skippableBreakAt(605, backToBack)?.endsAtSec, 630)
-  assert.equal(skippableBreakAt(650, backToBack)?.endsAtSec, 690)
+  assert.equal(skippableChapterAt(605, backToBack)?.endsAtSec, 630)
+  assert.equal(skippableChapterAt(650, backToBack)?.endsAtSec, 690)
 })
 
-test('only a break is skipped, whatever else is said to be skippable', () => {
+test('neither the programme nor a kind this build cannot place is skipped, whatever is said of it', () => {
   const others: PlaybackChapter[] = [
     { startsAtSec: 0, endsAtSec: 300, kind: 'unknown', skippable: true },
     { startsAtSec: 300, endsAtSec: 360, kind: 'programme', skippable: true },
     { startsAtSec: 360, endsAtSec: 400, kind: 'unknown', skippable: true },
   ]
 
-  assert.equal(skippableBreakAt(100, others), undefined)
-  assert.equal(skippableBreakAt(320, others), undefined)
-  assert.equal(skippableBreakAt(380, others), undefined)
+  assert.equal(skippableChapterAt(100, others), undefined)
+  assert.equal(skippableChapterAt(320, others), undefined)
+  assert.equal(skippableChapterAt(380, others), undefined)
+})
+
+const THEMED: PlaybackChapter[] = [
+  { startsAtSec: 0, endsAtSec: 95, kind: 'programme', skippable: false },
+  { startsAtSec: 95, endsAtSec: 185, kind: 'opening', skippable: true },
+  { startsAtSec: 185, endsAtSec: 245, kind: 'break', skippable: true },
+  { startsAtSec: 245, endsAtSec: 1650, kind: 'programme', skippable: false },
+  { startsAtSec: 1650, endsAtSec: 1740, kind: 'ending', skippable: true },
+  { startsAtSec: 1740, endsAtSec: 1770, kind: 'programme', skippable: false },
+  { startsAtSec: 1770, endsAtSec: 1800, kind: 'ending', skippable: false },
+]
+
+test('inside an opening or an ending that may be skipped, the skip goes to where it ends and says which it is', () => {
+  assert.deepEqual(skippableChapterAt(95, THEMED), THEMED[1])
+  assert.deepEqual(skippableChapterAt(1700, THEMED), THEMED[4])
+})
+
+test('an opening followed by a break is skipped to the break, and the break to the programme', () => {
+  assert.equal(skippableChapterAt(184.9, THEMED)?.kind, 'opening')
+  assert.equal(skippableChapterAt(185, THEMED)?.kind, 'break')
+  assert.equal(skippableChapterAt(185, THEMED)?.endsAtSec, 245)
+})
+
+test('an ending the backend did not let be skipped is not offered', () => {
+  assert.equal(skippableChapterAt(1780, THEMED), undefined)
+})
+
+test('the edges of an opening and an ending are boundaries to jump to', () => {
+  assert.deepEqual(chapterBoundaries(THEMED), [95, 185, 245, 1650, 1740, 1770])
+  assert.equal(nextBoundaryAfter(10, THEMED), 95)
+  assert.equal(nextBoundaryAfter(1700, THEMED), 1740)
+})
+
+test('a break, an opening and an ending are the kinds that may be skipped', () => {
+  assert.deepEqual(
+    (['programme', 'break', 'opening', 'ending', 'unknown'] as const).filter(
+      isSkippableKind,
+    ),
+    ['break', 'opening', 'ending'],
+  )
 })
 
 test('a break whose seconds cannot be read is not offered', () => {
@@ -134,6 +175,6 @@ test('a break whose seconds cannot be read is not offered', () => {
     { startsAtSec: 400, endsAtSec: Number.NaN, kind: 'break', skippable: true },
   ]
 
-  assert.equal(skippableBreakAt(320, unread), undefined)
-  assert.equal(skippableBreakAt(420, unread), undefined)
+  assert.equal(skippableChapterAt(320, unread), undefined)
+  assert.equal(skippableChapterAt(420, unread), undefined)
 })

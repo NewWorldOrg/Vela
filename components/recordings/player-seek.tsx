@@ -3,16 +3,31 @@
 import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 
 import { formatPlayhead, formatPlayerTime } from '@/lib/format'
-import { chapterBoundaries } from '@/lib/player-chapters'
-import { PLAYER_BREAK_BAND } from '@/components/recordings/player-palette'
+import { chapterBoundaries, isSkippableKind } from '@/lib/player-chapters'
+import {
+  PLAYER_BREAK_BAND,
+  PLAYER_THEME_BAND,
+} from '@/components/recordings/player-palette'
 import { videoFrameHref } from '@/repository/video-paths'
-import type { PlaybackChapter } from '@/repository/videos'
+import type { PlaybackChapter, SkippableKind } from '@/repository/videos'
 
 const SETTLES = 140
 
 const STEP = 10
 
 const PAGE = 60
+
+const BANDS: Record<SkippableKind, { name: string; band: string }> = {
+  break: { name: 'CM と判定した区間', band: PLAYER_BREAK_BAND },
+  opening: { name: 'OP と判定した区間', band: PLAYER_THEME_BAND },
+  ending: { name: 'ED と判定した区間', band: PLAYER_THEME_BAND },
+}
+
+function bandsOf(chapters: PlaybackChapter[]) {
+  return chapters.flatMap((one) =>
+    isSkippableKind(one.kind) ? [{ ...one, ...BANDS[one.kind] }] : [],
+  )
+}
 
 export function PlayerSeek({
   id,
@@ -175,7 +190,7 @@ export function PlayerSeek({
   }
 
   const wanted = hover !== null || dragging !== null
-  const breaks = (chapters ?? []).filter((one) => one.kind === 'break')
+  const bands = bandsOf(chapters ?? [])
   const boundaries = chapterBoundaries(chapters ?? [])
   const share = (second: number) =>
     Math.min(100, Math.max(0, (second / duration) * 100))
@@ -214,16 +229,16 @@ export function PlayerSeek({
           style={{ width: `${playedPct}%` }}
         />
         {duration > 0 &&
-          breaks.map((one) => (
+          bands.map((one) => (
             <span
-              key={one.startsAtSec}
+              key={`${one.kind}-${one.startsAtSec}`}
               aria-hidden="true"
-              title="CM と判定した区間"
+              title={one.name}
               className="absolute inset-y-0 rounded-full"
               style={{
                 left: `${share(one.startsAtSec)}%`,
                 width: `${share(one.endsAtSec) - share(one.startsAtSec)}%`,
-                backgroundImage: PLAYER_BREAK_BAND,
+                backgroundImage: one.band,
               }}
             />
           ))}

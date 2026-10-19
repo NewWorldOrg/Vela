@@ -3203,7 +3203,7 @@ export const CM区間ではCMを飛ばすが出る: Story = {
     await expect(skip).toBeVisible()
     await expect(canvas.getByRole('button', { name: '閉じる' })).toBeVisible()
     await expect(
-      canvasElement.querySelector('[data-slot="player-skip-break"]'),
+      canvasElement.querySelector('[data-slot="player-skip"]'),
     ).toHaveAttribute('data-raised', 'true')
   },
 }
@@ -3394,8 +3394,7 @@ export const 操作列が消えるとCMを飛ばすは下へ戻る: Story = {
     pictureHref: keeping,
   },
   play: async ({ canvasElement }) => {
-    const skip = () =>
-      canvasElement.querySelector('[data-slot="player-skip-break"]')
+    const skip = () => canvasElement.querySelector('[data-slot="player-skip"]')
 
     canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
     await waitFor(() => expect(skip()).toHaveAttribute('data-raised', 'true'))
@@ -3449,7 +3448,7 @@ export const 動きを止めていると印は育たない: Story = {
       ).toBe('player-shown')
 
       const skip = canvasElement.querySelector(
-        '[data-slot="player-skip-break"]',
+        '[data-slot="player-skip"]',
       ) as Element
 
       await expect(getComputedStyle(skip).transitionProperty).toBe('none')

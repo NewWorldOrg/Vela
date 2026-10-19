@@ -2,13 +2,14 @@ import { unstable_rethrow } from 'next/navigation'
 
 import { carinaClient } from '@/repository/client/carina'
 import type { Reading } from '@/repository/system'
+import type { SkippableKind } from '@/repository/videos'
 
 export type SkipEventKind = 'skipped' | 'dismissed' | 'returned'
 
-/** What a person did with the button that skips a break, in the recording's own time. */
+/** What a person did with the button that skips a break, an opening or an ending, in the recording's own time. */
 export interface SkipEvent {
   event: SkipEventKind
-  kind: 'break'
+  kind: SkippableKind
   fromSec: number
   toSec: number
   modelVersion?: number

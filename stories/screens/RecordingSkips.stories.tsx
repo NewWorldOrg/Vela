@@ -15,7 +15,7 @@ import type { EncodeWrite } from '@/repository/encode'
 import { ENCODE_CHOICES } from '@/repository/encode.fixtures'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import type { FeedRecording } from '@/components/recordings/recording-feed'
-import { SKIP_THE_BREAK } from '@/components/recordings/player-skip-break'
+import { SKIP_THE } from '@/components/recordings/player-skip'
 import { skipNoted, skips } from '@/stories/noted-skips'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame } from '@/stories/fixtures/frames'
@@ -160,7 +160,7 @@ export const CMを飛ばすと操作を送る: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.break }))
 
     await waitFor(() => expect(canvas.getByText('8:22 / 30:04')).toBeVisible())
     await expect(skips).toEqual([
@@ -182,7 +182,7 @@ export const CMを飛ばすを閉じると操作を送る: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
 
     await expect(
-      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+      canvas.queryByRole('button', { name: SKIP_THE.break }),
     ).toBeNull()
     await expect(skips).toEqual([
       {
@@ -201,7 +201,7 @@ export const モデルのバージョンが無い録画で飛ばすとバージ�
     args: { modelVersion: undefined },
     play: async ({ canvasElement }) => {
       await userEvent.click(
-        within(canvasElement).getByRole('button', { name: SKIP_THE_BREAK }),
+        within(canvasElement).getByRole('button', { name: SKIP_THE.break }),
       )
 
       await waitFor(() => expect(skips).toHaveLength(1))
@@ -217,7 +217,7 @@ export const エンコード済みの再生でも録画の中の時刻で送る:
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.break }))
 
     await waitFor(() => expect(canvas.getByText('8:07 / 30:04')).toBeVisible())
     await expect(skips).toEqual([
@@ -240,7 +240,7 @@ export const 録画の時刻を置けない再生では飛ばしても操作を�
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.break }))
 
     await waitFor(() => expect(canvas.getByText('8:07 / 30:04')).toBeVisible())
     await expect(skips).toEqual([])

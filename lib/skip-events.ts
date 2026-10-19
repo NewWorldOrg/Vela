@@ -1,14 +1,16 @@
 import type { SkipEvent, SkipEventKind } from '@/repository/recording-segments'
+import type { SkippableKind } from '@/repository/videos'
 
-/** How long after a break was skipped a seek back into it still counts as going back to it. */
+/** How long after a stretch was skipped a seek back into it still counts as going back to it. */
 export const RETURNS_WITHIN_MS = 30_000
 
-/** How long, from where the seek back landed, a person watches before the break counts as one they went back to. */
+/** How long, from where the seek back landed, a person watches before the stretch counts as one they went back to. */
 export const WATCHED_FOR_SEC = 10
 
 export interface Stretch {
   startsAtSec: number
   endsAtSec: number
+  kind: SkippableKind
 }
 
 interface LastSkip extends Stretch {
@@ -21,10 +23,11 @@ function hundredths(second: number): number {
 }
 
 /**
- * What a person did with the button that skips a break, sent in the recording's own time. The player says where
- * its playhead stands on the clock of the file it plays, how far the recording's own time stands ahead of that
- * clock, and when the button was pressed or closed; a seek back into a break skipped moments before counts once
- * the person has watched there for a while. While no time in the recording can be placed on the file, nothing is sent.
+ * What a person did with the button that skips a break, an opening or an ending, sent in the recording's own time.
+ * The player says where its playhead stands on the clock of the file it plays, how far the recording's own time
+ * stands ahead of that clock, and when the button was pressed or closed; a seek back into a stretch skipped moments
+ * before counts once the person has watched there for a while. While no time in the recording can be placed on the
+ * file, nothing is sent.
  */
 export class SkipEvents {
   private lastSkip: LastSkip | undefined
@@ -57,27 +60,29 @@ export class SkipEvents {
   }
 
   tell(second: number): void {
-    const back = this.lastSkip?.back
+    const skip = this.lastSkip
+    const back = skip?.back
 
-    if (!back || second - back.toSec < WATCHED_FOR_SEC) {
+    if (!skip || !back || second - back.toSec < WATCHED_FOR_SEC) {
       return
     }
 
     this.lastSkip = undefined
-    this.send('returned', back.fromSec, back.toSec)
+    this.send('returned', skip.kind, back.fromSec, back.toSec)
   }
 
-  skippedTheBreak(fromSec: number, skipped: Stretch): void {
+  skippedTheStretch(fromSec: number, skipped: Stretch): void {
     this.lastSkip = {
       startsAtSec: skipped.startsAtSec,
       endsAtSec: skipped.endsAtSec,
+      kind: skipped.kind,
       at: this.now(),
     }
-    this.send('skipped', fromSec, skipped.endsAtSec)
+    this.send('skipped', skipped.kind, fromSec, skipped.endsAtSec)
   }
 
-  leftTheBreak(atSec: number, endsAtSec: number): void {
-    this.send('dismissed', atSec, endsAtSec)
+  leftTheStretch(atSec: number, left: Stretch): void {
+    this.send('dismissed', left.kind, atSec, left.endsAtSec)
   }
 
   sought(fromSec: number, toSec: number): void {
@@ -99,7 +104,12 @@ export class SkipEvents {
         : undefined
   }
 
-  private send(event: SkipEventKind, fromSec: number, toSec: number): void {
+  private send(
+    event: SkipEventKind,
+    kind: SkippableKind,
+    fromSec: number,
+    toSec: number,
+  ): void {
     const head = this.offset
 
     if (head === undefined) {
@@ -108,7 +118,7 @@ export class SkipEvents {
 
     this.note({
       event,
-      kind: 'break',
+      kind,
       fromSec: hundredths(Math.max(0, fromSec + head)),
       toSec: hundredths(Math.max(0, toSec + head)),
       modelVersion: this.modelVersion,
