@@ -34,7 +34,10 @@ export type PlaybackSeeking = NonNullable<
   components['schemas']['PlaybackSeeking']
 >
 
-export type ChapterKind = 'programme' | 'break' | 'unknown'
+/** The kinds of chapter a person may be offered to skip: a break, an opening theme and an ending theme. */
+export type SkippableKind = 'break' | 'opening' | 'ending'
+
+export type ChapterKind = 'programme' | SkippableKind | 'unknown'
 
 export interface PlaybackChapter {
   startsAtSec: number
@@ -83,6 +86,8 @@ const CHAPTER_KINDS: Record<components['schemas']['ChapterKind'], ChapterKind> =
   {
     programme: 'programme',
     break: 'break',
+    opening: 'opening',
+    ending: 'ending',
   }
 
 function toChapter(

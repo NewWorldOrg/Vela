@@ -2246,7 +2246,7 @@ export interface components {
       newPassword?: null | string
     }
     /** @enum {string} */
-    ChapterKind: 'programme' | 'break'
+    ChapterKind: 'programme' | 'break' | 'opening' | 'ending'
     CollectionStatusResponder: {
       /** Format: int32 */
       wantedCoverageHours: number | string

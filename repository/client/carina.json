@@ -11899,7 +11899,9 @@
       "ChapterKind": {
         "enum": [
           "programme",
-          "break"
+          "break",
+          "opening",
+          "ending"
         ],
         "type": "string"
       },
