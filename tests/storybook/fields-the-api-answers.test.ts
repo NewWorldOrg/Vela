@@ -263,6 +263,26 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'the recording page reads the stretches of a recording only for the version of the model that found them, which goes out with what a person did with the skip button; the player draws its breaks from the chapters of the play plan, and no screen shows the stretches, where they came from or when they were found',
+    fields: [
+      'RecordingSegmentsResponder.answeredAt',
+      'RecordingSegmentsResponder.cmShare',
+      'RecordingSegmentsResponder.confirmed',
+      'RecordingSegmentsResponder.detectedAt',
+      'RecordingSegmentsResponder.lengthSec',
+      'RecordingSegmentsResponder.segments',
+      'RecordingSegmentsResponder.snaps',
+      'RecordingSegmentsResponder.source',
+      'RecordingSegmentsResponder.state',
+    ],
+  },
+  {
+    because:
+      'what a person did with the button that skips a break is sent for the backend to keep and the player goes on whether it arrived or not, so what the write hands back is read by nothing',
+    fields: ['BaseResponderOfSkipEventResponder.data'],
+  },
+  {
+    because:
       'the screen says how many finished jobs the average was made of and over what window they ran; how far back the ledger was read to find them is how the figure was arrived at, which is a note on the method rather than anything the screen reports',
     fields: ['EncodeDurationsResponder.lookedAtAtMost'],
   },

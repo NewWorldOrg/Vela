@@ -167,6 +167,7 @@ import {
   widestColumn,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
+import { useSkipEvents } from '@/components/recordings/skip-events-seat'
 
 const RESTS = 3000
 
@@ -243,6 +244,7 @@ export function Player({
   const router = useRouter()
   const pathname = usePathname()
   const inTheAddress = useSearchParams()
+  const skipEvents = useSkipEvents()
   const video = useRef<HTMLVideoElement>(null)
   const holder = useRef<HTMLCanvasElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -382,7 +384,8 @@ export function Player({
   const drops = d.qualitySpots?.map((spot) => spot.second)
   const chapters = chaptersToDraw(plan.chapters)
   const nextChapterAt = nextBoundaryAfter(position, chapters)
-  const breakEndsAt = skippableBreakAt(position, chapters)?.endsAtSec
+  const breakHere = skippableBreakAt(position, chapters)
+  const breakEndsAt = breakHere?.endsAtSec
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -705,6 +708,7 @@ export function Player({
   const choose = (second: number) => {
     const at = Math.min(duration, Math.max(0, second))
 
+    skipEvents?.sought(wanted.current ?? position, at)
     wanted.current = at
     setPosition(at)
     standsAs({ position: at })
@@ -768,14 +772,29 @@ export function Player({
   }
 
   const skipTheBreak = (to: number) => {
+    const from = position
+
     shell?.focus({ preventScroll: true })
     choose(to)
+
+    if (breakHere) {
+      skipEvents?.skippedTheBreak(from, breakHere)
+    }
   }
 
   const leaveTheBreak = (to: number) => {
     shell?.focus({ preventScroll: true })
     setBreaksLeftAlone((were) => [...were, to])
+    skipEvents?.leftTheBreak(position, to)
   }
+
+  useEffect(() => {
+    skipEvents?.runsBehindBy(plan.recordingOffsetSec)
+  }, [skipEvents, plan.recordingOffsetSec])
+
+  useEffect(() => {
+    skipEvents?.tell(position)
+  }, [skipEvents, position])
 
   const offersTheSkip =
     breakEndsAt !== undefined &&

@@ -48,6 +48,10 @@ import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
 import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
+import {
+  SkipEventsSeat,
+  type NoteSkip,
+} from '@/components/recordings/skip-events-seat'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 const GUTTER = 'px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5'
@@ -172,6 +176,8 @@ export function RecordingDetailView({
   startAt,
   startsHeld = false,
   autoOpensDataBroadcast = false,
+  modelVersion,
+  onNoteSkip,
   ...standIns
 }: PlayerStandIns & {
   detail: RecordingDetail
@@ -196,6 +202,8 @@ export function RecordingDetailView({
   startAt?: number
   startsHeld?: boolean
   autoOpensDataBroadcast?: boolean
+  modelVersion?: number
+  onNoteSkip: NoteSkip
 }) {
   const plays =
     !d.fileMissing &&
@@ -278,27 +286,34 @@ export function RecordingDetailView({
         </div>
 
         {watching && (
-          <PlayerSeat
-            key={whatOpensThePlayerAnew(
-              d.id,
-              startAt,
-              playback.plan.source,
-              startsHeld,
-            )}
-            detail={d}
-            plan={playback.plan}
-            unaskedProfile={unaskedProfile}
-            onTakeTicket={onTakeTicket}
-            onAskForTheSound={onAskForTheSound}
-            onKeepPosition={onKeepPosition}
-            artefact={artefact}
-            onAskWhichArtefact={onAskWhichArtefact}
-            startAt={opens.at}
-            playsAtOnce={opens.playing}
-            holdsAtOnce={opens.held}
-            autoOpensDataBroadcast={autoOpensDataBroadcast}
-            {...standIns}
-          />
+          <SkipEventsSeat
+            key={d.id}
+            recordingId={d.id}
+            modelVersion={modelVersion}
+            onNoteSkip={onNoteSkip}
+          >
+            <PlayerSeat
+              key={whatOpensThePlayerAnew(
+                d.id,
+                startAt,
+                playback.plan.source,
+                startsHeld,
+              )}
+              detail={d}
+              plan={playback.plan}
+              unaskedProfile={unaskedProfile}
+              onTakeTicket={onTakeTicket}
+              onAskForTheSound={onAskForTheSound}
+              onKeepPosition={onKeepPosition}
+              artefact={artefact}
+              onAskWhichArtefact={onAskWhichArtefact}
+              startAt={opens.at}
+              playsAtOnce={opens.playing}
+              holdsAtOnce={opens.held}
+              autoOpensDataBroadcast={autoOpensDataBroadcast}
+              {...standIns}
+            />
+          </SkipEventsSeat>
         )}
 
         <div className={cn(ALONG, 'pt-5')}>
