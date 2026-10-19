@@ -13,6 +13,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
+import { getSegmentModelVersion } from '@/repository/recording-segments'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
 import {
   AUTO_OPEN_SPELLING,
@@ -30,6 +31,7 @@ import {
   askForTheSound,
   askWhichArtefact,
   keepThePosition,
+  noteTheSkip,
   queueEncoding,
   redrawThumbnail,
   takeTicket,
@@ -76,23 +78,27 @@ export default async function Page({
     AUTO_OPEN_SPELLING,
   )
 
-  const [detail, playback, unaskedProfile, encodeChoices, encodeJob, artefact] =
-    await Promise.all([
-      getRecording(id),
-      getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
-      getUnaskedPlaybackProfile(),
-      listEncodeChoices(),
-      getLatestEncodeJob(id),
-      getStandingArtefact(id).catch((error: unknown) => {
-        console.warn(
-          '[recording] the standing artefact was not read',
-          id,
-          error,
-        )
+  const [
+    detail,
+    playback,
+    unaskedProfile,
+    encodeChoices,
+    encodeJob,
+    artefact,
+    modelVersion,
+  ] = await Promise.all([
+    getRecording(id),
+    getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
+    getUnaskedPlaybackProfile(),
+    listEncodeChoices(),
+    getLatestEncodeJob(id),
+    getStandingArtefact(id).catch((error: unknown) => {
+      console.warn('[recording] the standing artefact was not read', id, error)
 
-        return undefined
-      }),
-    ])
+      return undefined
+    }),
+    getSegmentModelVersion(id),
+  ])
 
   if (!detail) {
     notFound()
@@ -121,6 +127,10 @@ export default async function Page({
         encodeChoices={encodeChoices}
         encodeJob={encodeJob}
         onCallOffEncode={callOffJob}
+        modelVersion={
+          modelVersion.state === 'ok' ? modelVersion.value : undefined
+        }
+        onNoteSkip={noteTheSkip}
       />
     </>
   )

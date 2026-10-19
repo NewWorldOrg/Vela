@@ -61,6 +61,8 @@ export interface PlaybackPlan {
   chapters: PlaybackChapter[]
   captions: CaptionStanding
   artefactCodec?: EncodeCodec
+  /** How far a time in the recording stands ahead of the same moment in the file played; nothing when no time in the recording can be placed on that file. */
+  recordingOffsetSec?: number
 }
 
 export type PlaybackRefusal =
@@ -104,6 +106,12 @@ function sourcesThisBuildKnows(
   return said.flatMap((one) => sourceThisBuildKnows(one) ?? [])
 }
 
+function offsetIn(said: number | string | null | undefined) {
+  const offset = said == null ? undefined : Number(said)
+
+  return offset !== undefined && Number.isFinite(offset) ? offset : undefined
+}
+
 function toPlan(
   data: components['schemas']['PlaybackPlanResponder'],
   decodes: BrowserDecoding[],
@@ -127,6 +135,7 @@ function toPlan(
     chapters: Array.isArray(data.chapters) ? data.chapters.map(toChapter) : [],
     captions: shapeFor(CAPTION_STANDINGS, data.captions, 'none'),
     artefactCodec: codecThisBuildKnows(data.artefactFile?.codec),
+    recordingOffsetSec: offsetIn(data.recordingOffsetSec),
   }
 }
 
