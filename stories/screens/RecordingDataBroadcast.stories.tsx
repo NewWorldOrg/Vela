@@ -10,11 +10,7 @@ import type { TicketWrite } from '@/repository/tickets'
 import type { EncodeWrite } from '@/repository/encode'
 import { ENCODE_CHOICES } from '@/repository/encode.fixtures'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
-import {
-  answeredAsSent,
-  skipNoted,
-  withdrawnToTheDetection,
-} from '@/stories/answered-segments'
+import { skipNoted } from '@/stories/noted-skips'
 import type { FeedRecording } from '@/components/recordings/recording-feed'
 import {
   BAND_UNDER_THE_BOX,
@@ -121,8 +117,6 @@ const meta = {
     onQueueEncode: done,
     onCallOffEncode: done,
     encodeChoices: ENCODE_CHOICES,
-    onAnswerSegments: answeredAsSent,
-    onWithdrawSegmentAnswer: withdrawnToTheDetection,
     onNoteSkip: skipNoted,
     pictureHref: () => DRAWN_PICTURE,
     frameHref: drawnFrame,

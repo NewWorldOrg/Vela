@@ -167,7 +167,7 @@ import {
   widestColumn,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
-import { useWatchLink } from '@/components/recordings/watch-link-seat'
+import { useSkipEvents } from '@/components/recordings/skip-events-seat'
 
 const RESTS = 3000
 
@@ -244,7 +244,7 @@ export function Player({
   const router = useRouter()
   const pathname = usePathname()
   const inTheAddress = useSearchParams()
-  const link = useWatchLink()
+  const skipEvents = useSkipEvents()
   const video = useRef<HTMLVideoElement>(null)
   const holder = useRef<HTMLCanvasElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -352,7 +352,6 @@ export function Player({
   const attempt = useRef(0)
   const openedOn = useRef(artefact)
   const replanned = useRef(0)
-  const rechaptered = useRef(0)
 
   const asItStands = useRef({ position, profile, plan, sound })
 
@@ -709,7 +708,7 @@ export function Player({
   const choose = (second: number) => {
     const at = Math.min(duration, Math.max(0, second))
 
-    link?.sought(wanted.current ?? position, at)
+    skipEvents?.sought(wanted.current ?? position, at)
     wanted.current = at
     setPosition(at)
     standsAs({ position: at })
@@ -779,65 +778,23 @@ export function Player({
     choose(to)
 
     if (breakHere) {
-      link?.skippedTheBreak(from, breakHere)
+      skipEvents?.skippedTheBreak(from, breakHere)
     }
   }
 
   const leaveTheBreak = (to: number) => {
     shell?.focus({ preventScroll: true })
     setBreaksLeftAlone((were) => [...were, to])
-    link?.leftTheBreak(position, to)
+    skipEvents?.leftTheBreak(position, to)
   }
 
-  const seekFromBelow = useEffectEvent((second: number) => choose(second))
-
-  const rechapter = useEffectEvent(() => {
-    const mine = (rechaptered.current += 1)
-
-    void onAskForTheSound(
-      d.id,
-      asItStands.current.sound,
-      plan.source,
-      plan.decodes,
-    )
-      .then((answer) => {
-        if (rechaptered.current !== mine || answer.state !== 'planned') {
-          return
-        }
-
-        const next = {
-          ...asItStands.current.plan,
-          chapters: answer.plan.chapters,
-        }
-
-        setPlan(next)
-        standsAs({ plan: next })
-      })
-      .catch((error) => {
-        console.warn(
-          '[player] the chapters were not planned again',
-          d.id,
-          error,
-        )
-      })
-  })
+  useEffect(() => {
+    skipEvents?.runsBehindBy(plan.recordingOffsetSec)
+  }, [skipEvents, plan.recordingOffsetSec])
 
   useEffect(() => {
-    link?.runsBehindBy(plan.recordingOffsetSec)
-  }, [link, plan.recordingOffsetSec])
-
-  useEffect(() => {
-    link?.tell(position)
-  }, [link, position])
-
-  useEffect(
-    () =>
-      link?.hear({
-        seek: (second) => seekFromBelow(second),
-        replan: () => rechapter(),
-      }),
-    [link],
-  )
+    skipEvents?.tell(position)
+  }, [skipEvents, position])
 
   const offersTheSkip =
     breakEndsAt !== undefined &&

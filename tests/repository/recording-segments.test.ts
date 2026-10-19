@@ -96,28 +96,6 @@ const client = () => ({
 
     return answer(store.segments)
   },
-  PUT: async (path: string, options?: Options) => {
-    sent.push({
-      method: 'PUT',
-      path,
-      id: options?.params?.path?.id,
-      body: options?.body,
-    })
-
-    return answer({
-      ...DETECTED,
-      source: 'answered',
-      state: 'answered',
-      modelVersion: null,
-      confirmed: options?.body?.confirmed,
-      segments: options?.body?.segments,
-    })
-  },
-  DELETE: async (path: string, options?: Options) => {
-    sent.push({ method: 'DELETE', path, id: options?.params?.path?.id })
-
-    return answer(DETECTED)
-  },
   POST: async (path: string, options?: Options) => {
     sent.push({
       method: 'POST',
@@ -134,19 +112,10 @@ mock.module('@/repository/client/carina', {
   namedExports: { carinaClient: client, revalidatingCarinaClient: client },
 })
 
-const {
-  answerRecordingSegments,
-  getRecordingSegments,
-  noteSkip,
-  withdrawSegmentAnswer,
-} = await import('@/repository/recording-segments')
+const { getSegmentModelVersion, noteSkip } =
+  await import('@/repository/recording-segments')
 
 const ID = '0123456789abcdef0123456789abcdef'
-
-const ANSWER = [
-  { startsAtSec: 0, endsAtSec: 412.28, kind: 'programme' as const },
-  { startsAtSec: 412.28, endsAtSec: 1804, kind: 'break' as const },
-]
 
 beforeEach(() => {
   sent.length = 0
@@ -156,138 +125,43 @@ beforeEach(() => {
   store.segments = DETECTED
 })
 
-test('the stretches of a recording are read in numbers, with the version that found them', async () => {
-  const read = await getRecordingSegments(ID)
+test('the version of the model that found the stretches of a recording is read as a number', async () => {
+  const read = await getSegmentModelVersion(ID)
 
   assert.deepEqual(sent, [
     { method: 'GET', path: '/api/recordings/{id}/segments', id: ID },
   ])
-  assert.equal(read.state, 'ok')
+  assert.deepEqual(read, { state: 'ok', value: 3 })
+})
 
-  if (read.state !== 'ok') {
-    return
+test('a recording no model found the stretches of reads no version', async () => {
+  for (const modelVersion of [null, 'none']) {
+    store.segments = { ...DETECTED, source: 'none', modelVersion }
+
+    assert.deepEqual(await getSegmentModelVersion(ID), {
+      state: 'ok',
+      value: undefined,
+    })
   }
-
-  assert.equal(read.value.lengthSec, 1804)
-  assert.equal(read.value.source, 'detected')
-  assert.equal(read.value.modelVersion, 3)
-  assert.equal(read.value.confirmed, false)
-  assert.deepEqual(read.value.snaps, [412.28, 502.3])
-  assert.deepEqual(read.value.segments[1], {
-    startsAtSec: 412.3,
-    endsAtSec: 502.3,
-    kind: 'break',
-  })
-})
-
-test('a stretch of a kind this build has no word for is read as unknown', async () => {
-  const read = await getRecordingSegments(ID)
-
-  assert.equal(read.state === 'ok' && read.value.segments[3].kind, 'unknown')
-})
-
-test('a person’s answer names no version and a source this build does not know reads as none', async () => {
-  store.segments = { ...DETECTED, source: 'guessed', modelVersion: null }
-
-  const read = await getRecordingSegments(ID)
-
-  assert.equal(read.state === 'ok' && read.value.source, 'none')
-  assert.equal(read.state === 'ok' && read.value.modelVersion, undefined)
 })
 
 test('the stretches that cannot be read say so, and a lapsed session says that instead', async () => {
   store.status = 404
 
-  assert.deepEqual(await getRecordingSegments(ID), { state: 'unavailable' })
+  assert.deepEqual(await getSegmentModelVersion(ID), { state: 'unavailable' })
 
   store.status = 401
 
-  assert.deepEqual(await getRecordingSegments(ID), {
+  assert.deepEqual(await getSegmentModelVersion(ID), {
     state: 'unauthenticated',
   })
 
   store.throwing = true
 
-  assert.deepEqual(await getRecordingSegments(ID), { state: 'unavailable' })
+  assert.deepEqual(await getSegmentModelVersion(ID), { state: 'unavailable' })
 })
 
-test('an answer is sent whole with whether it is confirmed, and what comes back replaces the stretches', async () => {
-  const written = await answerRecordingSegments(ID, ANSWER, true)
-
-  assert.deepEqual(sent, [
-    {
-      method: 'PUT',
-      path: '/api/recordings/{id}/segments',
-      id: ID,
-      body: { segments: ANSWER, confirmed: true },
-    },
-  ])
-  assert.equal(written.state, 'ok')
-  assert.equal(written.state === 'ok' && written.segments.source, 'answered')
-  assert.equal(written.state === 'ok' && written.segments.confirmed, true)
-})
-
-test('an answer refused is named by what is wrong with it', async () => {
-  const said: [number, string, string][] = [
-    [400, 'segments: a gap between segments', 'gap'],
-    [400, 'segments: segments overlap', 'overlap'],
-    [400, 'segments: outside the recording', 'outside'],
-    [400, 'segments: unknown kind', 'unknownKind'],
-    [400, 'segments: too many segments', 'tooMany'],
-    [400, 'segments: a segment ends before it starts', 'endsBeforeStarts'],
-    [400, 'confirmed: expected true to confirm', 'unanswered'],
-    [409, 'Recording is still being written', 'stillRecording'],
-    [404, 'There is no recording', 'gone'],
-    [500, '', 'unanswered'],
-  ]
-
-  for (const [status, message, refusal] of said) {
-    store.status = status
-    store.message = message
-
-    assert.deepEqual(
-      await answerRecordingSegments(ID, ANSWER, false),
-      { state: 'refused', refusal },
-      message,
-    )
-  }
-})
-
-test('an answer that cannot reach the backend is refused, and a lapsed session says so', async () => {
-  store.status = 401
-
-  assert.deepEqual(await answerRecordingSegments(ID, ANSWER, false), {
-    state: 'unauthenticated',
-  })
-
-  store.throwing = true
-
-  assert.deepEqual(await answerRecordingSegments(ID, ANSWER, false), {
-    state: 'refused',
-    refusal: 'unanswered',
-  })
-})
-
-test('withdrawing the answer goes back to the stretches the detection found', async () => {
-  const withdrawn = await withdrawSegmentAnswer(ID)
-
-  assert.deepEqual(sent, [
-    { method: 'DELETE', path: '/api/recordings/{id}/segments/answer', id: ID },
-  ])
-  assert.equal(
-    withdrawn.state === 'ok' && withdrawn.segments.source,
-    'detected',
-  )
-
-  store.status = 404
-
-  assert.deepEqual(await withdrawSegmentAnswer(ID), {
-    state: 'refused',
-    refusal: 'gone',
-  })
-})
-
-test('a skip is sent in the recording’s own time, with no version for an answered recording', async () => {
+test('a skip is sent in the recording’s own time, with no version when no model found the stretches', async () => {
   assert.deepEqual(
     await noteSkip(ID, {
       event: 'returned',

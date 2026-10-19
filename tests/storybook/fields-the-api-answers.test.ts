@@ -263,8 +263,18 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the stretches under the player are drawn by their kind alone, however likely the detection found each one, so that a likely break and an unlikely one look the same',
-    fields: ['RecordingSegmentResponder.probability'],
+      'the recording page reads the stretches of a recording only for the version of the model that found them, which goes out with what a person did with the skip button; the player draws its breaks from the chapters of the play plan, and no screen shows the stretches, where they came from or when they were found',
+    fields: [
+      'RecordingSegmentsResponder.answeredAt',
+      'RecordingSegmentsResponder.cmShare',
+      'RecordingSegmentsResponder.confirmed',
+      'RecordingSegmentsResponder.detectedAt',
+      'RecordingSegmentsResponder.lengthSec',
+      'RecordingSegmentsResponder.segments',
+      'RecordingSegmentsResponder.snaps',
+      'RecordingSegmentsResponder.source',
+      'RecordingSegmentsResponder.state',
+    ],
   },
   {
     because:

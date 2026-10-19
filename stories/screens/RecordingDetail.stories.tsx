@@ -25,11 +25,7 @@ import {
 import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
-import {
-  answeredAsSent,
-  skipNoted,
-  withdrawnToTheDetection,
-} from '@/stories/answered-segments'
+import { skipNoted } from '@/stories/noted-skips'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import {
   AN_IPAD,
@@ -188,8 +184,6 @@ const meta = {
     onCallOffEncode: callingOff,
     encodeChoices: ENCODE_CHOICES,
     playback: planned(),
-    onAnswerSegments: answeredAsSent,
-    onWithdrawSegmentAnswer: withdrawnToTheDetection,
     onNoteSkip: skipNoted,
     unaskedProfile: '1080p60',
   },

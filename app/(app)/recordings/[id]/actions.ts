@@ -9,17 +9,8 @@ import type { PlaybackSource } from '@/repository/playback-sources'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 import type { SoundTrack } from '@/repository/sounds'
-import type {
-  AnsweredSegment,
-  SegmentsWrite,
-  SkipEvent,
-  SkipWrite,
-} from '@/repository/recording-segments'
-import {
-  answerRecordingSegments,
-  noteSkip,
-  withdrawSegmentAnswer,
-} from '@/repository/recording-segments'
+import type { SkipEvent, SkipWrite } from '@/repository/recording-segments'
+import { noteSkip } from '@/repository/recording-segments'
 import type { TicketWrite } from '@/repository/tickets'
 import type { PlaybackRead, PositionWrite } from '@/repository/videos'
 import {
@@ -89,18 +80,6 @@ export async function queueEncoding(
   }
 
   return result
-}
-
-export async function answerTheSegments(
-  id: string,
-  segments: AnsweredSegment[],
-  confirmed: boolean,
-): Promise<SegmentsWrite> {
-  return answerRecordingSegments(id, segments, confirmed)
-}
-
-export async function withdrawTheAnswer(id: string): Promise<SegmentsWrite> {
-  return withdrawSegmentAnswer(id)
 }
 
 export async function noteTheSkip(

@@ -13,7 +13,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { getRecording } from '@/repository/recordings'
-import { getRecordingSegments } from '@/repository/recording-segments'
+import { getSegmentModelVersion } from '@/repository/recording-segments'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
 import {
   AUTO_OPEN_SPELLING,
@@ -28,7 +28,6 @@ import { RecordingDetailView } from '@/components/recordings/recording-detail-pa
 import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { callOffJob } from '@/app/(app)/settings/encode/actions'
 import {
-  answerTheSegments,
   askForTheSound,
   askWhichArtefact,
   keepThePosition,
@@ -36,7 +35,6 @@ import {
   queueEncoding,
   redrawThumbnail,
   takeTicket,
-  withdrawTheAnswer,
 } from './actions'
 
 export async function generateMetadata({
@@ -87,7 +85,7 @@ export default async function Page({
     encodeChoices,
     encodeJob,
     artefact,
-    segments,
+    modelVersion,
   ] = await Promise.all([
     getRecording(id),
     getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
@@ -99,7 +97,7 @@ export default async function Page({
 
       return undefined
     }),
-    getRecordingSegments(id),
+    getSegmentModelVersion(id),
   ])
 
   if (!detail) {
@@ -129,9 +127,9 @@ export default async function Page({
         encodeChoices={encodeChoices}
         encodeJob={encodeJob}
         onCallOffEncode={callOffJob}
-        segments={segments.state === 'ok' ? segments.value : undefined}
-        onAnswerSegments={answerTheSegments}
-        onWithdrawSegmentAnswer={withdrawTheAnswer}
+        modelVersion={
+          modelVersion.state === 'ok' ? modelVersion.value : undefined
+        }
         onNoteSkip={noteTheSkip}
       />
     </>
