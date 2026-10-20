@@ -2,11 +2,25 @@ import type { Metadata } from 'next'
 
 import { getSegmentStatus } from '@/repository/segment-status'
 import { SegmentsView } from '@/components/segments/segments-page'
+import {
+  chooseTheVersion,
+  leaveTheVersionToLearning,
+  settleTheSkipThreshold,
+} from './actions'
 
 export const metadata: Metadata = { title: 'CM・OP・ED の検出' }
 
 export default async function Page() {
   const status = await getSegmentStatus()
 
-  return <SegmentsView status={status} />
+  return (
+    <SegmentsView
+      status={status}
+      actions={{
+        onChooseVersion: chooseTheVersion,
+        onLeaveVersionToLearning: leaveTheVersionToLearning,
+        onSettleSkipThreshold: settleTheSkipThreshold,
+      }}
+    />
+  )
 }
