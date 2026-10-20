@@ -169,9 +169,58 @@ const ENDS_IN_A_BREAK: PlaybackPlan = {
   ],
 }
 
+const THEMED_CHAPTERS: PlaybackChapter[] = [
+  { startsAtSec: 0, endsAtSec: 90, kind: 'programme', skippable: false },
+  { startsAtSec: 90, endsAtSec: 180, kind: 'opening', skippable: true },
+  { startsAtSec: 180, endsAtSec: 1200, kind: 'programme', skippable: false },
+  { startsAtSec: 1200, endsAtSec: 1320, kind: 'break', skippable: true },
+  { startsAtSec: 1320, endsAtSec: 14800, kind: 'programme', skippable: false },
+  { startsAtSec: 14800, endsAtSec: 14890, kind: 'ending', skippable: true },
+  { startsAtSec: 14890, endsAtSec: 15158, kind: 'programme', skippable: false },
+]
+
+const THEMED: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: THEMED_CHAPTERS,
+}
+
+const THEMED_BUT_NOT_TO_SKIP: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: THEMED_CHAPTERS.map((one) => ({ ...one, skippable: false })),
+}
+
+const THE_RECORDING_ITSELF_THEMED: PlaybackPlan = {
+  ...THE_RECORDING_ITSELF,
+  chapters: THEMED_CHAPTERS,
+}
+
+const OPENING_THEN_A_BREAK: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 90, kind: 'programme', skippable: false },
+    { startsAtSec: 90, endsAtSec: 180, kind: 'opening', skippable: true },
+    { startsAtSec: 180, endsAtSec: 240, kind: 'break', skippable: true },
+    { startsAtSec: 240, endsAtSec: 15158, kind: 'programme', skippable: false },
+  ],
+}
+
+const ENDS_IN_AN_ENDING: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 15000, kind: 'programme', skippable: false },
+    { startsAtSec: 15000, endsAtSec: 15158, kind: 'ending', skippable: false },
+  ],
+}
+
 const NEXT_CHAPTER = '次のチャプターへ'
 
 const SKIP_THE_BREAK = 'CM を飛ばす'
+
+const SKIP_THE_OPENING = 'OP を飛ばす'
+
+const SKIP_THE_ENDING = 'ED を飛ばす'
+
+const ANY_SKIP = /^(CM|OP|ED) を飛ばす$/
 
 function marksOn(canvasElement: HTMLElement, named: string) {
   return canvasElement.querySelectorAll(`[title="${named}"]`).length
@@ -3203,7 +3252,7 @@ export const CM区間ではCMを飛ばすが出る: Story = {
     await expect(skip).toBeVisible()
     await expect(canvas.getByRole('button', { name: '閉じる' })).toBeVisible()
     await expect(
-      canvasElement.querySelector('[data-slot="player-skip-break"]'),
+      canvasElement.querySelector('[data-slot="player-skip"]'),
     ).toHaveAttribute('data-raised', 'true')
   },
 }
@@ -3394,8 +3443,7 @@ export const 操作列が消えるとCMを飛ばすは下へ戻る: Story = {
     pictureHref: keeping,
   },
   play: async ({ canvasElement }) => {
-    const skip = () =>
-      canvasElement.querySelector('[data-slot="player-skip-break"]')
+    const skip = () => canvasElement.querySelector('[data-slot="player-skip"]')
 
     canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
     await waitFor(() => expect(skip()).toHaveAttribute('data-raised', 'true'))
@@ -3449,7 +3497,7 @@ export const 動きを止めていると印は育たない: Story = {
       ).toBe('player-shown')
 
       const skip = canvasElement.querySelector(
-        '[data-slot="player-skip-break"]',
+        '[data-slot="player-skip"]',
       ) as Element
 
       await expect(getComputedStyle(skip).transitionProperty).toBe('none')
@@ -3461,6 +3509,273 @@ export const 動きを止めていると印は育たない: Story = {
         root.dataset.motion = was
       }
     }
+  },
+}
+
+function bandOf(canvasElement: HTMLElement, named: string) {
+  const band = canvasElement.querySelector(`[title="${named}"]`)
+
+  return band ? getComputedStyle(band).backgroundImage : undefined
+}
+
+async function themesAreMarked(canvasElement: HTMLElement) {
+  await expect(marksOn(canvasElement, 'OP と判定した区間')).toBe(1)
+  await expect(marksOn(canvasElement, 'ED と判定した区間')).toBe(1)
+  await expect(marksOn(canvasElement, 'CM と判定した区間')).toBe(1)
+  await expect(marksOn(canvasElement, 'チャプターの区切り')).toBe(6)
+
+  const opening = bandOf(canvasElement, 'OP と判定した区間')
+  const ending = bandOf(canvasElement, 'ED と判定した区間')
+  const theBreak = bandOf(canvasElement, 'CM と判定した区間')
+
+  await expect(opening).toBe(ending)
+  await expect(opening).not.toBe(theBreak)
+}
+
+export const OPとEDの印: Story = {
+  args: { detail: detail('1266'), plan: THEMED, pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    await themesAreMarked(canvasElement)
+  },
+}
+
+export const OPとEDの印_ダーク: Story = {
+  args: { detail: detail('1266'), plan: THEMED, pictureHref: keeping },
+  globals: { theme: 'dark' },
+  play: async ({ canvasElement }) => {
+    await themesAreMarked(canvasElement)
+  },
+}
+
+export const OP区間ではOPを飛ばすが出る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 120,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING }),
+    ).toBeVisible()
+    await expect(
+      canvas.getAllByRole('button', { name: ANY_SKIP }),
+    ).toHaveLength(1)
+    await expect(canvas.getByRole('button', { name: '閉じる' })).toBeVisible()
+  },
+}
+
+export const OPを飛ばすとその区間の終わりへ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 120,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING }),
+    )
+
+    await waitFor(() =>
+      expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+    await expect(document.activeElement).toBe(board(canvasElement))
+  },
+}
+
+export const 閉じたOP区間では出さない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 120,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_OPENING }),
+    ).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
+    await waitFor(() =>
+      expect(canvas.getByText('2:10 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_OPENING }),
+    ).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+    await waitFor(() =>
+      expect(canvas.getByText('20:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.getByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeVisible()
+  },
+}
+
+export const ED区間ではEDを飛ばすが出る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 14820,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: SKIP_THE_ENDING }),
+    ).toBeVisible()
+    await expect(
+      canvas.getAllByRole('button', { name: ANY_SKIP }),
+    ).toHaveLength(1)
+  },
+}
+
+export const EDを飛ばすとその後ろの続きへ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 14820,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_ENDING }))
+
+    await waitFor(() =>
+      expect(canvas.getByText('4:08:10 / 4:12:38')).toBeVisible(),
+    )
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+  },
+}
+
+export const 閉じたED区間では出さない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 14820,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒戻る' }))
+    await waitFor(() =>
+      expect(canvas.getByText('4:06:50 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_ENDING }),
+    ).toBeNull()
+  },
+}
+
+export const OPのすぐ後のCMは続けて飛ばせる: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getAllByRole('button', { name: ANY_SKIP }),
+    ).toHaveLength(1)
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING }),
+    )
+
+    await waitFor(() =>
+      expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
+    )
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: SKIP_THE_BREAK }),
+      ).toBeVisible(),
+    )
+    await expect(
+      canvas.getAllByRole('button', { name: ANY_SKIP }),
+    ).toHaveLength(1)
+
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+
+    await waitFor(() =>
+      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+  },
+}
+
+export const 最後まで続くEDでは出さない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: ENDS_IN_AN_ENDING,
+    startAt: 15050,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    await expect(marksOn(canvasElement, 'ED と判定した区間')).toBe(1)
+    await expect(
+      within(canvasElement).queryByRole('button', { name: SKIP_THE_ENDING }),
+    ).toBeNull()
+  },
+}
+
+export const 飛ばせないOPとEDは印だけ: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED_BUT_NOT_TO_SKIP,
+    startAt: 120,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'OP と判定した区間')).toBe(1)
+    await expect(marksOn(canvasElement, 'ED と判定した区間')).toBe(1)
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+  },
+}
+
+export const 元のままの再生でもOPとEDの印と飛ばすが出る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THE_RECORDING_ITSELF_THEMED,
+    startAt: 120,
+    pictureHref: carryingTheSource,
+    feedRecording: keptForTheFeed,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(marksOn(canvasElement, 'OP と判定した区間')).toBe(1)
+    await expect(marksOn(canvasElement, 'ED と判定した区間')).toBe(1)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING }),
+    )
+
+    await waitFor(() =>
+      expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
+    )
+    await waitFor(() => expect(asked.at(-1)).toContain('from=180'))
+    await expect(asked.at(-1)).toContain('source=recording')
   },
 }
 

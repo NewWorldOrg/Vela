@@ -21,6 +21,8 @@ export const PLAYER_CHROME_UNDER = 'relative z-10 bg-(--pl-bg)'
 
 export const PLAYER_BREAK_BAND = 'var(--pl-break-band)'
 
+export const PLAYER_THEME_BAND = 'var(--pl-theme-band)'
+
 export const PLAYER_SCRIM_TOP = 'var(--pl-scrim-top)'
 
 const PLAYER_BUTTON_OFF =

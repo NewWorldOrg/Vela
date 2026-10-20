@@ -1,4 +1,8 @@
-import type { PlaybackChapter } from '@/repository/videos'
+import type {
+  ChapterKind,
+  PlaybackChapter,
+  SkippableKind,
+} from '@/repository/videos'
 
 const ALREADY_THERE = 0.5
 
@@ -28,14 +32,29 @@ export function nextBoundaryAfter(
   )
 }
 
-/** The break being played when the backend lets it be skipped, or nothing. */
-export function skippableBreakAt(
+const SKIPPABLE: ReadonlySet<ChapterKind> = new Set<SkippableKind>([
+  'break',
+  'opening',
+  'ending',
+])
+
+/** A chapter of a kind a person may be offered to skip. */
+export interface SkippableChapter extends PlaybackChapter {
+  kind: SkippableKind
+}
+
+export function isSkippableKind(kind: ChapterKind): kind is SkippableKind {
+  return SKIPPABLE.has(kind)
+}
+
+/** The break, opening or ending being played when the backend lets it be skipped, or nothing. */
+export function skippableChapterAt(
   position: number,
   chapters: PlaybackChapter[],
-): PlaybackChapter | undefined {
+): SkippableChapter | undefined {
   return chapters.find(
-    (one) =>
-      one.kind === 'break' &&
+    (one): one is SkippableChapter =>
+      isSkippableKind(one.kind) &&
       one.skippable &&
       Number.isFinite(one.startsAtSec) &&
       Number.isFinite(one.endsAtSec) &&

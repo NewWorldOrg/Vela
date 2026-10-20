@@ -676,6 +676,43 @@ test('a plan from a build that never named the chapters offers none to jump to',
   assert.deepEqual(read.state === 'planned' && read.plan.chapters, [])
 })
 
+test('an opening and an ending are carried with their own kinds, apart from the breaks', async () => {
+  store.planStatus = 200
+  store.plan = {
+    standing: 'whole',
+    route: 'onTheFly',
+    seeking: 'byStartingAgain',
+    canSeek: false,
+    transcodes: true,
+    showsAsAWholeRecording: true,
+    mediaType: 'video/mp4',
+    bytes: null,
+    sounds: ['main'],
+    chapters: [
+      { startsAtSec: 0, endsAtSec: 95, kind: 'programme', skippable: false },
+      { startsAtSec: 95, endsAtSec: '185', kind: 'opening', skippable: true },
+      { startsAtSec: 185, endsAtSec: 245, kind: 'break', skippable: true },
+      {
+        startsAtSec: 245,
+        endsAtSec: 1650,
+        kind: 'programme',
+        skippable: false,
+      },
+      { startsAtSec: 1650, endsAtSec: 1800, kind: 'ending', skippable: false },
+    ],
+  }
+
+  const read = await getPlaybackPlan('1266')
+
+  assert.deepEqual(read.state === 'planned' && read.plan.chapters, [
+    { startsAtSec: 0, endsAtSec: 95, kind: 'programme', skippable: false },
+    { startsAtSec: 95, endsAtSec: 185, kind: 'opening', skippable: true },
+    { startsAtSec: 185, endsAtSec: 245, kind: 'break', skippable: true },
+    { startsAtSec: 245, endsAtSec: 1650, kind: 'programme', skippable: false },
+    { startsAtSec: 1650, endsAtSec: 1800, kind: 'ending', skippable: false },
+  ])
+})
+
 test('a kind this build has never heard of is still carried, and named as unknown', async () => {
   store.planStatus = 200
   store.plan = {

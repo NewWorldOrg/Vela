@@ -263,7 +263,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'the recording page reads the stretches of a recording only for the version of the model that found them, which goes out with what a person did with the skip button; the player draws its breaks from the chapters of the play plan, and no screen shows the stretches, where they came from or when they were found',
+      'the recording page reads the stretches of a recording only for the version of the model that found them, which goes out with what a person did with the skip button; the player draws its breaks, openings and endings from the chapters of the play plan, and no screen shows the stretches, where they came from or when they were found',
     fields: [
       'RecordingSegmentsResponder.cmShare',
       'RecordingSegmentsResponder.detectedAt',
@@ -275,7 +275,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
-      'what a person did with the button that skips a break is sent for the backend to keep and the player goes on whether it arrived or not, so what the write hands back is read by nothing',
+      'what a person did with the button that skips a break, an opening or an ending is sent for the backend to keep and the player goes on whether it arrived or not, so what the write hands back is read by nothing',
     fields: ['BaseResponderOfSkipEventResponder.data'],
   },
   {

@@ -25,7 +25,7 @@ import { formatPlayerTime } from '@/lib/format'
 import {
   chaptersToDraw,
   nextBoundaryAfter,
-  skippableBreakAt,
+  skippableChapterAt,
 } from '@/lib/player-chapters'
 import {
   SECOND_TAP_WITHIN,
@@ -122,7 +122,7 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
-import { PlayerSkipBreak } from '@/components/recordings/player-skip-break'
+import { PlayerSkip } from '@/components/recordings/player-skip'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
@@ -338,7 +338,7 @@ export function Player({
   const dismissing = useRef(false)
   const tapRun = useRef<TapRun | null>(null)
   const tapWaits = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const [breaksLeftAlone, setBreaksLeftAlone] = useState<number[]>([])
+  const [stretchesLeftAlone, setStretchesLeftAlone] = useState<number[]>([])
   const [held, setHeld] = useState(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -384,8 +384,7 @@ export function Player({
   const drops = d.qualitySpots?.map((spot) => spot.second)
   const chapters = chaptersToDraw(plan.chapters)
   const nextChapterAt = nextBoundaryAfter(position, chapters)
-  const breakHere = skippableBreakAt(position, chapters)
-  const breakEndsAt = breakHere?.endsAtSec
+  const skipHere = skippableChapterAt(position, chapters)
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -771,21 +770,24 @@ export function Player({
     step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS, at)
   }
 
-  const skipTheBreak = (to: number) => {
+  const skipTheStretch = (to: number) => {
     const from = position
 
     shell?.focus({ preventScroll: true })
     choose(to)
 
-    if (breakHere) {
-      skipEvents?.skippedTheBreak(from, breakHere)
+    if (skipHere) {
+      skipEvents?.skippedTheStretch(from, skipHere)
     }
   }
 
-  const leaveTheBreak = (to: number) => {
+  const leaveTheStretch = (to: number) => {
     shell?.focus({ preventScroll: true })
-    setBreaksLeftAlone((were) => [...were, to])
-    skipEvents?.leftTheBreak(position, to)
+    setStretchesLeftAlone((were) => [...were, to])
+
+    if (skipHere) {
+      skipEvents?.leftTheStretch(position, skipHere)
+    }
   }
 
   useEffect(() => {
@@ -797,8 +799,8 @@ export function Player({
   }, [skipEvents, position])
 
   const offersTheSkip =
-    breakEndsAt !== undefined &&
-    !breaksLeftAlone.includes(breakEndsAt) &&
+    skipHere !== undefined &&
+    !stretchesLeftAlone.includes(skipHere.endsAtSec) &&
     (phase === 'playing' || phase === 'paused' || phase === 'waiting') &&
     !pip.out
 
@@ -1310,11 +1312,13 @@ export function Player({
           />
           <PlayerSeekFlash flash={flash ?? undefined} />
           {offersTheSkip && (
-            <PlayerSkipBreak
-              to={breakEndsAt}
+            <PlayerSkip
+              key={skipHere.endsAtSec}
+              kind={skipHere.kind}
+              to={skipHere.endsAtSec}
               raised={chromeUp && !underTheBox}
-              onSkip={skipTheBreak}
-              onDismiss={leaveTheBreak}
+              onSkip={skipTheStretch}
+              onDismiss={leaveTheStretch}
               container={shell}
             />
           )}

@@ -4,19 +4,26 @@ import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 import { PlayerTip } from '@/components/recordings/player-tip'
+import type { SkippableKind } from '@/repository/videos'
 
-export const SKIP_THE_BREAK = 'CM を飛ばす'
+export const SKIP_THE: Record<SkippableKind, string> = {
+  break: 'CM を飛ばす',
+  opening: 'OP を飛ばす',
+  ending: 'ED を飛ばす',
+}
 
 const ON_THE_PICTURE =
   'tap-target flex items-center justify-center rounded-full border border-white/25 bg-black/80 text-(--pl-ink) transition-[translate,background-color,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-black/90 hover:text-white active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none still:transition-none'
 
-export function PlayerSkipBreak({
+export function PlayerSkip({
+  kind,
   to,
   raised,
   onSkip,
   onDismiss,
   container,
 }: {
+  kind: SkippableKind
   to: number
   raised: boolean
   onSkip: (to: number) => void
@@ -25,7 +32,7 @@ export function PlayerSkipBreak({
 }) {
   return (
     <div
-      data-slot="player-skip-break"
+      data-slot="player-skip"
       data-raised={raised ? 'true' : undefined}
       className={cn(
         'absolute right-4 bottom-5 z-20 flex items-center gap-2 appears [--from-y:8px] max-[700px]:right-3',
@@ -41,7 +48,7 @@ export function PlayerSkipBreak({
           pressable,
         )}
       >
-        {SKIP_THE_BREAK}
+        {SKIP_THE[kind]}
       </button>
       <PlayerTip name="閉じる" container={container}>
         <button

@@ -15,7 +15,7 @@ import type { EncodeWrite } from '@/repository/encode'
 import { ENCODE_CHOICES } from '@/repository/encode.fixtures'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import type { FeedRecording } from '@/components/recordings/recording-feed'
-import { SKIP_THE_BREAK } from '@/components/recordings/player-skip-break'
+import { SKIP_THE } from '@/components/recordings/player-skip'
 import { skipNoted, skips } from '@/stories/noted-skips'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame } from '@/stories/fixtures/frames'
@@ -31,6 +31,16 @@ const STRETCHES: Omit<PlaybackChapter, 'skippable'>[] = [
   { startsAtSec: 1265.6, endsAtSec: LENGTH, kind: 'programme' },
 ]
 
+const THEMED_STRETCHES: Omit<PlaybackChapter, 'skippable'>[] = [
+  { startsAtSec: 0, endsAtSec: 60, kind: 'programme' },
+  { startsAtSec: 60, endsAtSec: 150, kind: 'opening' },
+  { startsAtSec: 150, endsAtSec: 412.3, kind: 'programme' },
+  { startsAtSec: 412.3, endsAtSec: 502.3, kind: 'break' },
+  { startsAtSec: 502.3, endsAtSec: 1650, kind: 'programme' },
+  { startsAtSec: 1650, endsAtSec: 1740, kind: 'ending' },
+  { startsAtSec: 1740, endsAtSec: LENGTH, kind: 'programme' },
+]
+
 const HEAD_SKIP = 14.5
 
 function detail(id: string) {
@@ -43,12 +53,12 @@ function detail(id: string) {
   return found
 }
 
-function chaptersOf(headSkipSec = 0): PlaybackChapter[] {
-  return STRETCHES.map((one) => ({
+function chaptersOf(headSkipSec = 0, stretches = STRETCHES): PlaybackChapter[] {
+  return stretches.map((one) => ({
     ...one,
     startsAtSec: Math.max(0, one.startsAtSec - headSkipSec),
     endsAtSec: one.endsAtSec - headSkipSec,
-    skippable: one.kind === 'break',
+    skippable: one.kind !== 'programme',
   }))
 }
 
@@ -121,7 +131,7 @@ function forgetWhatWasSent() {
 }
 
 const meta = {
-  title: 'Screens/録画詳細/CM を飛ばす操作',
+  title: 'Screens/録画詳細/CM・OP・ED を飛ばす操作',
   component: RecordingDetailView,
   parameters: {
     nextjs: {
@@ -160,7 +170,7 @@ export const CMを飛ばすと操作を送る: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.break }))
 
     await waitFor(() => expect(canvas.getByText('8:22 / 30:04')).toBeVisible())
     await expect(skips).toEqual([
@@ -182,7 +192,7 @@ export const CMを飛ばすを閉じると操作を送る: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
 
     await expect(
-      canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+      canvas.queryByRole('button', { name: SKIP_THE.break }),
     ).toBeNull()
     await expect(skips).toEqual([
       {
@@ -201,7 +211,7 @@ export const モデルのバージョンが無い録画で飛ばすとバージ�
     args: { modelVersion: undefined },
     play: async ({ canvasElement }) => {
       await userEvent.click(
-        within(canvasElement).getByRole('button', { name: SKIP_THE_BREAK }),
+        within(canvasElement).getByRole('button', { name: SKIP_THE.break }),
       )
 
       await waitFor(() => expect(skips).toHaveLength(1))
@@ -217,7 +227,7 @@ export const エンコード済みの再生でも録画の中の時刻で送る:
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.break }))
 
     await waitFor(() => expect(canvas.getByText('8:07 / 30:04')).toBeVisible())
     await expect(skips).toEqual([
@@ -240,9 +250,143 @@ export const 録画の時刻を置けない再生では飛ばしても操作を�
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.break }))
 
     await waitFor(() => expect(canvas.getByText('8:07 / 30:04')).toBeVisible())
     await expect(skips).toEqual([])
+  },
+}
+
+const THEMED = chaptersOf(0, THEMED_STRETCHES)
+
+export const OPを飛ばすと操作を送る: Story = {
+  args: { playback: planned({ chapters: THEMED }), startAt: 100 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE.opening }),
+    )
+
+    await waitFor(() => expect(canvas.getByText('2:30 / 30:04')).toBeVisible())
+    await expect(skips).toEqual([
+      {
+        event: 'skipped',
+        kind: 'opening',
+        fromSec: 100,
+        toSec: 150,
+        modelVersion: 3,
+      },
+    ])
+  },
+}
+
+export const OPを飛ばすを閉じると操作を送る: Story = {
+  args: { playback: planned({ chapters: THEMED }), startAt: 100 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE.opening }),
+    ).toBeNull()
+    await expect(skips).toEqual([
+      {
+        event: 'dismissed',
+        kind: 'opening',
+        fromSec: 100,
+        toSec: 150,
+        modelVersion: 3,
+      },
+    ])
+  },
+}
+
+export const EDを飛ばすと操作を送る: Story = {
+  args: { playback: planned({ chapters: THEMED }), startAt: 1660 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE.ending }))
+
+    await waitFor(() => expect(canvas.getByText('29:00 / 30:04')).toBeVisible())
+    await expect(skips).toEqual([
+      {
+        event: 'skipped',
+        kind: 'ending',
+        fromSec: 1660,
+        toSec: 1740,
+        modelVersion: 3,
+      },
+    ])
+  },
+}
+
+export const EDを飛ばすを閉じると操作を送る: Story = {
+  args: { playback: planned({ chapters: THEMED }), startAt: 1660 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE.ending }),
+    ).toBeNull()
+    await expect(skips).toEqual([
+      {
+        event: 'dismissed',
+        kind: 'ending',
+        fromSec: 1660,
+        toSec: 1740,
+        modelVersion: 3,
+      },
+    ])
+  },
+}
+
+export const エンコード済みの再生でもOPとEDを録画の中の時刻で送る: Story = {
+  args: {
+    playback: planned({
+      ...ARTEFACT,
+      chapters: chaptersOf(HEAD_SKIP, THEMED_STRETCHES),
+      recordingOffsetSec: HEAD_SKIP,
+    }),
+    startAt: 85.5,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE.opening }),
+    )
+    await waitFor(() => expect(canvas.getByText('2:15 / 30:04')).toBeVisible())
+
+    for (let turn = 0; turn < 3; turn += 1) {
+      await userEvent.click(
+        canvas.getByRole('button', { name: '次のチャプターへ' }),
+      )
+    }
+
+    await userEvent.click(
+      await canvas.findByRole('button', { name: SKIP_THE.ending }),
+    )
+    await waitFor(() => expect(canvas.getByText('28:45 / 30:04')).toBeVisible())
+    await expect(skips).toEqual([
+      {
+        event: 'skipped',
+        kind: 'opening',
+        fromSec: 100,
+        toSec: 150,
+        modelVersion: 3,
+      },
+      {
+        event: 'skipped',
+        kind: 'ending',
+        fromSec: 1650,
+        toSec: 1740,
+        modelVersion: 3,
+      },
+    ])
   },
 }

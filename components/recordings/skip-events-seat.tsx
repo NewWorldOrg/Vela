@@ -30,7 +30,7 @@ function sending(id: string, onNoteSkip: NoteSkip) {
   }
 }
 
-/** Where the player of one recording sends what a person did with the button that skips a break. */
+/** Where the player of one recording sends what a person did with the button that skips a break, an opening or an ending. */
 export function SkipEventsSeat({
   recordingId,
   modelVersion,

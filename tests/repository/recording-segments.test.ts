@@ -182,6 +182,43 @@ test('a skip is sent in the recording’s own time, with no version when no mode
   })
 })
 
+test('a skip over an opening or an ending is sent with its own kind', async () => {
+  await noteSkip(ID, {
+    event: 'skipped',
+    kind: 'opening',
+    fromSec: 100,
+    toSec: 185,
+    modelVersion: 3,
+  })
+  await noteSkip(ID, {
+    event: 'dismissed',
+    kind: 'ending',
+    fromSec: 1700,
+    toSec: 1740,
+    modelVersion: 3,
+  })
+
+  assert.deepEqual(
+    sent.slice(-2).map((one) => one.body),
+    [
+      {
+        event: 'skipped',
+        kind: 'opening',
+        fromSec: 100,
+        toSec: 185,
+        modelVersion: 3,
+      },
+      {
+        event: 'dismissed',
+        kind: 'ending',
+        fromSec: 1700,
+        toSec: 1740,
+        modelVersion: 3,
+      },
+    ],
+  )
+})
+
 test('a skip turned away for too many is told apart from one refused', async () => {
   const skip = {
     event: 'skipped' as const,
