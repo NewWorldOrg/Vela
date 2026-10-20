@@ -389,6 +389,11 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
   },
   {
     because:
+      'the latest round is said by when it was taken; the day it was for is how the backend counts one round a day',
+    fields: ['SegmentLearningRoundResponder.day'],
+  },
+  {
+    because:
       'a version put back says that it was put back and when; the shares and the count that moved it are how the backend decided, which the history does not report',
     fields: [
       'SegmentRolledBackResponder.previousShare',

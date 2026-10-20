@@ -102,6 +102,22 @@ export function formatDate(at: Moment) {
   return `${moment.month}/${moment.day}`
 }
 
+function spokenDayOf(moment: Stamp): string {
+  return `${Number(moment.month)}月${Number(moment.day)}日`
+}
+
+export function formatSpokenMoment(at: Moment) {
+  const moment = stampOf(at)
+
+  return `${spokenDayOf(moment)} ${Number(moment.hour)}:${moment.minute}`
+}
+
+export function formatSpokenHour(at: Moment) {
+  const moment = stampOf(at)
+
+  return `${spokenDayOf(moment)} ${Number(moment.hour)}時`
+}
+
 export function formatCalendarDate(date: string, now: Moment = Date.now()) {
   const [year, month, day] = date.split('-')
   const weekday = WEEKDAY_OF_CALENDAR.format(new Date(`${date}T00:00:00Z`))

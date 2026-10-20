@@ -16,6 +16,8 @@ import {
   formatPlayerTime,
   formatSpan,
   formatSpanToTheMillisecond,
+  formatSpokenHour,
+  formatSpokenMoment,
 } from '@/lib/format'
 
 const ZONES = ['Etc/UTC', 'Asia/Tokyo', 'America/New_York', 'Pacific/Auckland']
@@ -272,5 +274,14 @@ inEveryZone(
       formatCalendarDate('2027-01-10', A_DAY_IN_2026),
       '2027/01/10(日)',
     )
+  },
+)
+
+inEveryZone(
+  'a moment said in a sentence names the month and day in Japanese, the hour without a leading zero',
+  () => {
+    assert.equal(formatSpokenMoment('2026-10-19T18:06:00Z'), '10月20日 3:06')
+    assert.equal(formatSpokenMoment('2026-12-31T14:59:00Z'), '12月31日 23:59')
+    assert.equal(formatSpokenHour('2026-10-20T18:00:00Z'), '10月21日 3時')
   },
 )

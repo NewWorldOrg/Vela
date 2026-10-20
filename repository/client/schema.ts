@@ -1599,6 +1599,14 @@ export interface components {
       modelVersion?: null | number | string
     }
     /** @enum {null|string} */
+    AdoptionVerdict:
+      | 'adopted'
+      | 'chosenByHand'
+      | 'tooLittleEvidence'
+      | 'noBetterAtBoundaries'
+      | 'heldAfterRollback'
+      | null
+    /** @enum {null|string} */
     AllocationVerdict: 'secured' | 'contended' | 'pinned' | 'unreachable' | null
     ArchiveForgottenResponder: {
       /** Format: int32 */
@@ -4340,6 +4348,19 @@ export interface components {
       /** Format: double */
       recall: null | number | string
     }
+    SegmentLearningRoundResponder: {
+      /** Format: date */
+      day: string
+      /** Format: date-time */
+      takenAt: string
+      outcome: components['schemas']['SegmentTrainingOutcome']
+      /** Format: int32 */
+      candidate: null | number | string
+      verdict: null | components['schemas']['AdoptionVerdict']
+      inUse: null | components['schemas']['SegmentRoundMetricsResponder']
+      evidence: null | components['schemas']['SegmentEvidenceResponder']
+      metrics: null | components['schemas']['SegmentRoundMetricsResponder']
+    }
     SegmentMetricsResponder: {
       /** Format: double */
       boundaryRecallWithin2s: null | number | string
@@ -4366,6 +4387,12 @@ export interface components {
       previousShare: number | string
       /** Format: int32 */
       skips: number | string
+    }
+    SegmentRoundMetricsResponder: {
+      /** Format: double */
+      boundaryRecallWithin2s: null | number | string
+      /** Format: double */
+      breakRecall: null | number | string
     }
     SegmentSettingsResponder: {
       learning: boolean
@@ -4399,7 +4426,20 @@ export interface components {
       stations: components['schemas']['SegmentStationResponder'][]
       versions: components['schemas']['SegmentVersionHistoryResponder'][]
       skipThreshold: components['schemas']['SkipThresholdResponder']
+      lastRound: null | components['schemas']['SegmentLearningRoundResponder']
+      /** Format: date-time */
+      nextRoundNotBefore: string
     }
+    /** @enum {string} */
+    SegmentTrainingOutcome:
+      | 'nothingToLearnFrom'
+      | 'kept'
+      | 'adopted'
+      | 'stopped'
+      | 'inUseChangedMeanwhile'
+      | 'nothingNew'
+      | 'heldAfterRollback'
+      | 'failed'
     SegmentVersionHistoryResponder: {
       /** Format: int32 */
       number: number | string
