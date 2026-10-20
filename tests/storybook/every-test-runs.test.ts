@@ -7,6 +7,7 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/(app)/settings/segments/actions.test.ts',
   'tests/app/(app)/settings/system/actions.test.ts',
   'tests/app/a-fold-comes-with-the-page.test.ts',
   'tests/app/the-app-goes-on-the-home-screen.test.ts',
@@ -130,6 +131,7 @@ const THE_SUITE = [
   'tests/lib/reservations.test.ts',
   'tests/lib/rules.test.ts',
   'tests/lib/search-condition.test.ts',
+  'tests/lib/segment-detection.test.ts',
   'tests/lib/signed-out.test.ts',
   'tests/lib/skip-events.test.ts',
   'tests/lib/state-terms.test.ts',

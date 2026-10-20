@@ -83,6 +83,8 @@ const CHAPTER_KINDS: Record<components['schemas']['ChapterKind'], ChapterKind> =
   {
     programme: 'programme',
     break: 'break',
+    opening: 'unknown',
+    ending: 'unknown',
   }
 
 function toChapter(
