@@ -17,7 +17,7 @@ export function LearningRounds({
 }: {
   learning: boolean
   lastRound?: SegmentRound
-  nextRound: string
+  nextRound?: string
 }) {
   return (
     <div data-slot={LEARNING_ROUNDS_SLOT} className="mb-3 space-y-1">

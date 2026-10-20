@@ -84,7 +84,7 @@ export function VersionHistory({
   byHand: boolean
   learning: boolean
   lastRound?: SegmentRound
-  nextRound: string
+  nextRound?: string
   onChoose: ChooseSegmentVersion
   onLeaveToLearning: LeaveSegmentVersionToLearning
 }) {

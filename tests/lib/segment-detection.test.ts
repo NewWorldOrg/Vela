@@ -197,6 +197,7 @@ test('the rounds are explained while learning is on, and said not to switch whil
     ROUNDS_LEARNING_OFF,
     '学習が無効のため、候補の版は作られず切り替わりません。',
   )
+  assert.equal(nextRoundOf(undefined), '次の回: 次の空き時間。')
   assert.equal(
     nextRoundOf('10月21日 3時'),
     '次の回: 10月21日 3時以降の空き時間。',

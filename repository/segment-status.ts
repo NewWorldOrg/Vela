@@ -128,7 +128,7 @@ export interface SegmentStatus {
   versions: SegmentVersion[]
   skipThreshold: SkipThreshold
   lastRound?: SegmentRound
-  nextRound: string
+  nextRound?: string
 }
 
 function numberOr(value: null | number | string): number | undefined {
@@ -201,6 +201,10 @@ function roundOf(round: SegmentLearningRoundResponder): SegmentRound {
   }
 }
 
+function upcomingOf(notBefore: string, now: number): string | undefined {
+  return Date.parse(notBefore) > now ? formatSpokenHour(notBefore) : undefined
+}
+
 function versionOf(version: SegmentVersionHistoryResponder): SegmentVersion {
   return {
     number: Number(version.number),
@@ -216,6 +220,7 @@ function versionOf(version: SegmentVersionHistoryResponder): SegmentVersion {
 function statusOf(
   status: SegmentStatusResponder,
   known: GuideChannel[],
+  now: number,
 ): SegmentStatus {
   const { learningData, catalog, version, evidence, metrics, skipThreshold } =
     status
@@ -252,7 +257,7 @@ function statusOf(
     versions: status.versions.map(versionOf),
     skipThreshold: { current: Number(skipThreshold.current) },
     lastRound: status.lastRound ? roundOf(status.lastRound) : undefined,
-    nextRound: formatSpokenHour(status.nextRoundNotBefore),
+    nextRound: upcomingOf(status.nextRoundNotBefore, now),
   }
 }
 
@@ -283,7 +288,7 @@ export async function getSegmentStatus(): Promise<Reading<SegmentStatus>> {
       return { state: 'unavailable' }
     }
 
-    return { state: 'ok', value: statusOf(status, known) }
+    return { state: 'ok', value: statusOf(status, known, Date.now()) }
   } catch (error) {
     unstable_rethrow(error)
 

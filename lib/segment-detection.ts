@@ -173,8 +173,10 @@ export const NO_ROUND_YET = 'まだ学習の回はありません。'
 
 const NOT_SWITCHED = '切り替えていません。'
 
-export function nextRoundOf(nextRound: string): string {
-  return `次の回: ${nextRound}以降の空き時間。`
+export function nextRoundOf(nextRound: string | undefined): string {
+  return nextRound === undefined
+    ? '次の回: 次の空き時間。'
+    : `次の回: ${nextRound}以降の空き時間。`
 }
 
 function candidateOf(round: SegmentRound): string {

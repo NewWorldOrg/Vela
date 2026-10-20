@@ -292,6 +292,12 @@ export const ROUND_IN_USE_CHANGED = afterRound(
   BY_HAND,
 )
 
+export const ROUND_DUE = read({
+  ...STATUS,
+  lastRound: { takenAt: '11月7日 3:01', outcome: 'nothingNew' },
+  nextRound: undefined,
+})
+
 export const ROUND_FAILED = read({
   ...STATUS,
   lastRound: { takenAt: '11月9日 3:04', outcome: 'failed' },

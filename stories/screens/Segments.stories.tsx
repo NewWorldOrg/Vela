@@ -15,6 +15,7 @@ import {
   NO_LEARNING_DATA,
   ROUND_ADOPTED,
   ROUND_CHOSEN_BY_HAND,
+  ROUND_DUE,
   ROUND_EVIDENCE_SHORT,
   ROUND_FAILED,
   ROUND_HELD_AFTER_ROLLBACK,
@@ -349,6 +350,16 @@ export const 学習の回の途中で使用中の版が替わった: Story = {
     await roundsSay(canvasElement, [
       ROUNDS_EXPLAINED,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りましたが、学習中に使用中の版が替わったため切り替えていません。次の回: 11月9日 3時以降の空き時間。',
+    ])
+  },
+}
+
+export const 次の回の時刻を過ぎている: Story = {
+  args: { status: ROUND_DUE },
+  play: async ({ canvasElement }) => {
+    await roundsSay(canvasElement, [
+      ROUNDS_EXPLAINED,
+      '直近の回(11月7日 3:01): 新しいデータが無く、候補を作りませんでした。次の回: 次の空き時間。',
     ])
   },
 }
