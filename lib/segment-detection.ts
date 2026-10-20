@@ -163,9 +163,6 @@ export function skipThresholdRefusalOf(refusal: SkipThresholdRefusal): string {
     : couldNot('保存できませんでした')
 }
 
-export const ROUNDS_EXPLAINED =
-  '学習が有効のあいだ、毎日 3 時以降の空き時間に 1 回学習して候補の版を作ります。候補がカタログでの答え合わせで使用中の版より境目を多く当て、答え合わせの量が足りていれば自動で切り替わります。手動で選択した版を使っているあいだは切り替えません。'
-
 export const ROUNDS_LEARNING_OFF =
   '学習が無効のため、候補の版は作られず切り替わりません。'
 

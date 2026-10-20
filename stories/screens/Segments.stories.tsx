@@ -166,26 +166,22 @@ const NOT_APPLICABLE_METRICS: [string, string][] = [
 
 const THRESHOLD_ONLY: [string, string][] = [['閾値', '0.70']]
 
-const ROUNDS_EXPLAINED =
-  '学習が有効のあいだ、毎日 3 時以降の空き時間に 1 回学習して候補の版を作ります。候補がカタログでの答え合わせで使用中の版より境目を多く当て、答え合わせの量が足りていれば自動で切り替わります。手動で選択した版を使っているあいだは切り替えません。'
-
 const ROUNDS_LEARNING_OFF =
   '学習が無効のため、候補の版は作られず切り替わりません。'
 
 async function roundsSay(
   canvasElement: HTMLElement,
-  said: [string, string],
+  said: string,
 ): Promise<void> {
   await afterTheArrival(canvasElement)
 
   const rounds = slotted(canvasElement, 'segment-learning-rounds')
-  const lines = [...rounds.querySelectorAll('p')]
   const heading = within(versions(canvasElement)).getByRole('heading', {
     name: 'モデルのバージョンの履歴',
   })
   const table = within(versions(canvasElement)).queryByRole('table')
 
-  await expect(lines.map((line) => line.textContent)).toEqual(said)
+  await expect(rounds.textContent).toBe(said)
   await expect(
     heading.compareDocumentPosition(rounds) & Node.DOCUMENT_POSITION_FOLLOWING,
   ).toBeTruthy()
@@ -246,50 +242,50 @@ export const 評価のある検出: Story = {
 export const 学習の回で境目の一致が上回らない: Story = {
   args: { status: ROUND_NO_BETTER },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りました。境目の一致は 92%で、使用中の版の 93%を上回らなかったため切り替えていません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回がまだ無い: Story = {
   args: { status: ROUND_NONE },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       'まだ学習の回はありません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回で新しいデータが無い: Story = {
   args: { status: ROUND_NOTHING_NEW },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月9日 3:02): 新しいデータが無く、候補を作りませんでした。次の回: 11月10日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回で学習に使えるデータが無い: Story = {
   args: { status: ROUND_NOTHING_TO_LEARN_FROM },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(10月19日 3:01): 学習に使えるデータが無く、候補を作りませんでした。次の回: 10月20日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回で答え合わせが足りない: Story = {
   args: { status: ROUND_EVIDENCE_SHORT },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りました。境目の一致は 94%(使用中の版は 93%)。答え合わせが録画 12 本・境目 56 か所で 100 か所に足りないため、切り替えていません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
     await expect(rowsOf(precision(canvasElement))[2]).toEqual([
       '学習',
       'CM の境目 56 / 100 か所',
@@ -300,20 +296,20 @@ export const 学習の回で答え合わせが足りない: Story = {
 export const 学習の回で使用中の版の答え合わせが無い: Story = {
   args: { status: ROUND_IN_USE_UNCHECKED },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りました。境目の一致は 94%。使用中の版の答え合わせがまだ無いため、切り替えていません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回で切り替えた: Story = {
   args: { status: ROUND_ADOPTED },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作り、境目の一致が 93%から 94%に上がったため切り替えました。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
     await expect(versionRows(canvasElement)[0]).toEqual([
       '第 4 版',
       '11/8(日) 03:00',
@@ -327,60 +323,57 @@ export const 学習の回で切り替えた: Story = {
 export const 学習の回で戻した直後: Story = {
   args: { status: ROUND_HELD_AFTER_ROLLBACK },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りましたが、戻した直後の 7 日間は切り替えません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回で手動で選択した版を使っている: Story = {
   args: { status: ROUND_CHOSEN_BY_HAND },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りました。手動で選択した版を使っているため、切り替えていません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回の途中で使用中の版が替わった: Story = {
   args: { status: ROUND_IN_USE_CHANGED },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月8日 3:00): 候補の第 4 版を作りましたが、学習中に使用中の版が替わったため切り替えていません。次の回: 11月9日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 次の回の時刻を過ぎている: Story = {
   args: { status: ROUND_DUE },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月7日 3:01): 新しいデータが無く、候補を作りませんでした。次の回: 次の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習の回が失敗した: Story = {
   args: { status: ROUND_FAILED },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_EXPLAINED,
+    await roundsSay(
+      canvasElement,
       '直近の回(11月9日 3:04): 途中で失敗しました。次の日の回でやり直します。次の回: 11月10日 3時以降の空き時間。',
-    ])
+    )
   },
 }
 
 export const 学習が切: Story = {
   args: { status: DETECTION_BY_HAND_LEARNING_OFF },
   play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, [
-      ROUNDS_LEARNING_OFF,
-      '直近の回(11月8日 3:00): 候補の第 4 版を作りました。手動で選択した版を使っているため、切り替えていません。',
-    ])
+    await roundsSay(canvasElement, ROUNDS_LEARNING_OFF)
     await rowsAre(canvasElement, 'segment-precision', [
       ['モデルのバージョン', '第 2 版手動で選択'],
       ['採用', '11/3(火) 10:12'],
