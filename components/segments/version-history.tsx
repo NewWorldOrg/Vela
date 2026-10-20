@@ -11,6 +11,7 @@ import {
   versionLabel,
 } from '@/lib/segment-detection'
 import type {
+  SegmentRound,
   SegmentVersion,
   SegmentVersionState,
 } from '@/repository/segment-status'
@@ -45,6 +46,7 @@ import { MarkAxis } from '@/components/vela/icons'
 import { InFull } from '@/components/vela/in-full'
 import { Spinner } from '@/components/vela/progress'
 import { SectionHeading } from '@/components/vela/section-heading'
+import { LearningRounds } from '@/components/segments/learning-rounds'
 
 export const VERSIONS_HEADING = 'モデルのバージョンの履歴'
 
@@ -73,12 +75,16 @@ export function VersionHistory({
   versions,
   byHand,
   learning,
+  lastRound,
+  nextRound,
   onChoose,
   onLeaveToLearning,
 }: {
   versions: SegmentVersion[]
   byHand: boolean
   learning: boolean
+  lastRound?: SegmentRound
+  nextRound: string
   onChoose: ChooseSegmentVersion
   onLeaveToLearning: LeaveSegmentVersionToLearning
 }) {
@@ -129,6 +135,11 @@ export function VersionHistory({
           </InlineAlert>
         )}
       </div>
+      <LearningRounds
+        learning={learning}
+        lastRound={lastRound}
+        nextRound={nextRound}
+      />
       {versions.length > 0 && (
         <Table className="min-w-[calc(640rem/16)]">
           <TableHeader>

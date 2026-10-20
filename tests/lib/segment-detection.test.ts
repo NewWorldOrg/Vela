@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
+import type { SegmentRound } from '@/repository/segment-status'
 import {
+  NO_ROUND_YET,
+  ROUNDS_EXPLAINED,
+  ROUNDS_LEARNING_OFF,
   backToAutomaticRefusalOf,
   boundaryMatchOf,
   evidenceShortOf,
+  lastRoundOf,
+  nextRoundOf,
   recallOf,
   recallRowsOf,
   recordingsOf,
@@ -166,5 +172,148 @@ test('each refusal says why it could not be done', () => {
   assert.equal(
     skipThresholdRefusalOf('notSaved'),
     '保存できませんでした。時間をおいてからもう一度お試しください。',
+  )
+})
+
+const LEARNED: SegmentRound = {
+  takenAt: '10月20日 3:06',
+  outcome: 'kept',
+  candidate: 5,
+  verdict: 'tooLittleEvidence',
+  inUse: { boundaryRecallWithin2s: 0.08, breakRecall: 0.4 },
+  evidence: { ...EVIDENCE, boundaries: 56, enough: false },
+  metrics: { boundaryRecallWithin2s: 0.11, breakRecall: 0.42 },
+}
+
+const LEAD = '直近の回(10月20日 3:06): '
+
+test('the rounds are explained while learning is on, and said not to switch while it is off', () => {
+  assert.match(ROUNDS_EXPLAINED, /毎日 3 時以降の空き時間に 1 回学習/)
+  assert.match(
+    ROUNDS_EXPLAINED,
+    /手動で選択した版を使っているあいだは切り替えません。$/,
+  )
+  assert.equal(
+    ROUNDS_LEARNING_OFF,
+    '学習が無効のため、候補の版は作られず切り替わりません。',
+  )
+  assert.equal(
+    nextRoundOf('10月21日 3時'),
+    '次の回: 10月21日 3時以降の空き時間。',
+  )
+})
+
+test('before any round there is none to tell', () => {
+  assert.equal(lastRoundOf(undefined), NO_ROUND_YET)
+  assert.equal(NO_ROUND_YET, 'まだ学習の回はありません。')
+})
+
+test('a round that made no candidate says why', () => {
+  assert.equal(
+    lastRoundOf({ takenAt: '10月20日 3:06', outcome: 'nothingNew' }),
+    `${LEAD}新しいデータが無く、候補を作りませんでした。`,
+  )
+  assert.equal(
+    lastRoundOf({ takenAt: '10月20日 3:06', outcome: 'nothingToLearnFrom' }),
+    `${LEAD}学習に使えるデータが無く、候補を作りませんでした。`,
+  )
+  assert.equal(
+    lastRoundOf({ takenAt: '10月20日 3:06', outcome: 'failed' }),
+    `${LEAD}途中で失敗しました。次の日の回でやり直します。`,
+  )
+})
+
+test('a candidate kept on too little evidence says its figures beside the version in use, and what fell short', () => {
+  assert.equal(
+    lastRoundOf(LEARNED),
+    `${LEAD}候補の第 5 版を作りました。境目の一致は 11%(使用中の版は 8%)。答え合わせが録画 12 本・境目 56 か所で 100 か所に足りないため、切り替えていません。`,
+  )
+  assert.equal(
+    lastRoundOf({
+      ...LEARNED,
+      evidence: { ...EVIDENCE, recordings: 4, boundaries: 37, enough: false },
+    }),
+    `${LEAD}候補の第 5 版を作りました。境目の一致は 11%(使用中の版は 8%)。答え合わせが録画 4 本・境目 37 か所で 10 本・100 か所に足りないため、切り替えていません。`,
+  )
+  assert.equal(
+    lastRoundOf({ ...LEARNED, inUse: undefined, evidence: EVIDENCE }),
+    `${LEAD}候補の第 5 版を作りました。境目の一致は 11%。使用中の版の答え合わせがまだ無いため、切り替えていません。`,
+  )
+  assert.equal(
+    lastRoundOf({
+      ...LEARNED,
+      metrics: undefined,
+      evidence: { ...EVIDENCE, recordings: 0, boundaries: 0, enough: false },
+    }),
+    `${LEAD}候補の第 5 版を作りました。答え合わせが録画 0 本・境目 0 か所で 10 本・100 か所に足りないため、切り替えていません。`,
+  )
+})
+
+test('a candidate kept for finding no more boundaries says both figures', () => {
+  assert.equal(
+    lastRoundOf({
+      ...LEARNED,
+      verdict: 'noBetterAtBoundaries',
+      inUse: { boundaryRecallWithin2s: 0.14 },
+    }),
+    `${LEAD}候補の第 5 版を作りました。境目の一致は 11%で、使用中の版の 14%を上回らなかったため切り替えていません。`,
+  )
+})
+
+test('a candidate put in use says how far the boundary match rose, and the seconds of adverts when the boundaries tie', () => {
+  const adopted: SegmentRound = {
+    ...LEARNED,
+    outcome: 'adopted',
+    verdict: 'adopted',
+    evidence: EVIDENCE,
+  }
+
+  assert.equal(
+    lastRoundOf(adopted),
+    `${LEAD}候補の第 5 版を作り、境目の一致が 8%から 11%に上がったため切り替えました。`,
+  )
+  assert.equal(
+    lastRoundOf({
+      ...adopted,
+      inUse: { boundaryRecallWithin2s: 0.11, breakRecall: 0.4 },
+    }),
+    `${LEAD}候補の第 5 版を作り、境目の一致は同じ 11%で、CM の再現率が 40%から 42%に上がったため切り替えました。`,
+  )
+  assert.equal(
+    lastRoundOf({
+      ...adopted,
+      inUse: { boundaryRecallWithin2s: 0.109, breakRecall: 0.4 },
+    }),
+    `${LEAD}候補の第 5 版を作り、境目の一致が使用中の版の 11%をわずかに上回ったため切り替えました。`,
+  )
+})
+
+test('a candidate held out says why it did not switch', () => {
+  assert.equal(
+    lastRoundOf({
+      ...LEARNED,
+      outcome: 'heldAfterRollback',
+      verdict: 'heldAfterRollback',
+    }),
+    `${LEAD}候補の第 5 版を作りましたが、戻した直後の 7 日間は切り替えません。`,
+  )
+  assert.equal(
+    lastRoundOf({ ...LEARNED, verdict: 'chosenByHand' }),
+    `${LEAD}候補の第 5 版を作りました。手動で選択した版を使っているため、切り替えていません。`,
+  )
+  assert.equal(
+    lastRoundOf({
+      ...LEARNED,
+      outcome: 'inUseChangedMeanwhile',
+      verdict: 'adopted',
+    }),
+    `${LEAD}候補の第 5 版を作りましたが、学習中に使用中の版が替わったため切り替えていません。`,
+  )
+})
+
+test('a round this build does not know says so', () => {
+  assert.equal(
+    lastRoundOf({ takenAt: '10月20日 3:06', outcome: 'stopped' }),
+    `${LEAD}この版がまだ知らない値です。`,
   )
 })
