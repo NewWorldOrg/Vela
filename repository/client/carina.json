@@ -8598,6 +8598,20 @@
         },
         "additionalProperties": false
       },
+      "AdoptionVerdict": {
+        "enum": [
+          "adopted",
+          "chosenByHand",
+          "tooLittleEvidence",
+          "noBetterAtBoundaries",
+          "heldAfterRollback",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
       "AllocationVerdict": {
         "enum": [
           "secured",
@@ -20193,6 +20207,81 @@
           }
         }
       },
+      "SegmentLearningRoundResponder": {
+        "required": [
+          "day",
+          "takenAt",
+          "outcome",
+          "candidate",
+          "verdict",
+          "inUse",
+          "evidence",
+          "metrics"
+        ],
+        "type": "object",
+        "properties": {
+          "day": {
+            "type": "string",
+            "format": "date"
+          },
+          "takenAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/SegmentTrainingOutcome"
+          },
+          "candidate": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "verdict": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/AdoptionVerdict"
+              }
+            ]
+          },
+          "inUse": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentRoundMetricsResponder"
+              }
+            ]
+          },
+          "evidence": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentEvidenceResponder"
+              }
+            ]
+          },
+          "metrics": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentRoundMetricsResponder"
+              }
+            ]
+          }
+        }
+      },
       "SegmentMetricsResponder": {
         "required": [
           "boundaryRecallWithin2s",
@@ -20310,6 +20399,33 @@
           }
         }
       },
+      "SegmentRoundMetricsResponder": {
+        "required": [
+          "boundaryRecallWithin2s",
+          "breakRecall"
+        ],
+        "type": "object",
+        "properties": {
+          "boundaryRecallWithin2s": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "breakRecall": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "SegmentSettingsResponder": {
         "required": [
           "learning",
@@ -20410,7 +20526,9 @@
           "metrics",
           "stations",
           "versions",
-          "skipThreshold"
+          "skipThreshold",
+          "lastRound",
+          "nextRoundNotBefore"
         ],
         "type": "object",
         "properties": {
@@ -20453,8 +20571,35 @@
           },
           "skipThreshold": {
             "$ref": "#/components/schemas/SkipThresholdResponder"
+          },
+          "lastRound": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/SegmentLearningRoundResponder"
+              }
+            ]
+          },
+          "nextRoundNotBefore": {
+            "type": "string",
+            "format": "date-time"
           }
         }
+      },
+      "SegmentTrainingOutcome": {
+        "enum": [
+          "nothingToLearnFrom",
+          "kept",
+          "adopted",
+          "stopped",
+          "inUseChangedMeanwhile",
+          "nothingNew",
+          "heldAfterRollback",
+          "failed"
+        ],
+        "type": "string"
       },
       "SegmentVersionHistoryResponder": {
         "required": [

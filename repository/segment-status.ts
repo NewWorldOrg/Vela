@@ -1,6 +1,10 @@
 import { unstable_rethrow } from 'next/navigation'
 
-import { formatMoment } from '@/lib/format'
+import {
+  formatMoment,
+  formatSpokenHour,
+  formatSpokenMoment,
+} from '@/lib/format'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import type { StationLogo } from '@/repository/channels'
@@ -16,9 +20,22 @@ type SegmentVersionHistoryResponder =
   components['schemas']['SegmentVersionHistoryResponder']
 type SegmentKindMetricsResponder =
   components['schemas']['SegmentKindMetricsResponder']
+type SegmentEvidenceResponder =
+  components['schemas']['SegmentEvidenceResponder']
+type SegmentLearningRoundResponder =
+  components['schemas']['SegmentLearningRoundResponder']
+type SegmentRoundMetricsResponder =
+  components['schemas']['SegmentRoundMetricsResponder']
 
 export type SegmentVersionState =
   components['schemas']['SegmentModelVersionState']
+
+export type SegmentRoundOutcome =
+  components['schemas']['SegmentTrainingOutcome']
+
+export type SegmentRoundVerdict = NonNullable<
+  components['schemas']['AdoptionVerdict']
+>
 
 export interface LearningData {
   recordings: number
@@ -85,6 +102,21 @@ export interface SkipThreshold {
   current: number
 }
 
+export interface SegmentRoundFigures {
+  boundaryRecallWithin2s?: number
+  breakRecall?: number
+}
+
+export interface SegmentRound {
+  takenAt: string
+  outcome: SegmentRoundOutcome
+  candidate?: number
+  verdict?: SegmentRoundVerdict
+  inUse?: SegmentRoundFigures
+  evidence?: SegmentEvidence
+  metrics?: SegmentRoundFigures
+}
+
 export interface SegmentStatus {
   learning: boolean
   learningData: LearningData
@@ -95,6 +127,8 @@ export interface SegmentStatus {
   stations: SegmentStation[]
   versions: SegmentVersion[]
   skipThreshold: SkipThreshold
+  lastRound?: SegmentRound
+  nextRound?: string
 }
 
 function numberOr(value: null | number | string): number | undefined {
@@ -134,6 +168,43 @@ function stationOf(
   }
 }
 
+function evidenceOf(evidence: SegmentEvidenceResponder): SegmentEvidence {
+  return {
+    recordings: Number(evidence.recordings),
+    boundaries: Number(evidence.boundaries),
+    enough: evidence.enough,
+    recordingsNeeded: Number(evidence.recordingsNeeded),
+    boundariesNeeded: Number(evidence.boundariesNeeded),
+  }
+}
+
+function figuresOf(
+  figures: SegmentRoundMetricsResponder | null,
+): SegmentRoundFigures | undefined {
+  return figures
+    ? {
+        boundaryRecallWithin2s: numberOr(figures.boundaryRecallWithin2s),
+        breakRecall: numberOr(figures.breakRecall),
+      }
+    : undefined
+}
+
+function roundOf(round: SegmentLearningRoundResponder): SegmentRound {
+  return {
+    takenAt: formatSpokenMoment(round.takenAt),
+    outcome: round.outcome,
+    candidate: numberOr(round.candidate),
+    verdict: round.verdict ?? undefined,
+    inUse: figuresOf(round.inUse),
+    evidence: round.evidence ? evidenceOf(round.evidence) : undefined,
+    metrics: figuresOf(round.metrics),
+  }
+}
+
+function upcomingOf(notBefore: string, now: number): string | undefined {
+  return Date.parse(notBefore) > now ? formatSpokenHour(notBefore) : undefined
+}
+
 function versionOf(version: SegmentVersionHistoryResponder): SegmentVersion {
   return {
     number: Number(version.number),
@@ -149,6 +220,7 @@ function versionOf(version: SegmentVersionHistoryResponder): SegmentVersion {
 function statusOf(
   status: SegmentStatusResponder,
   known: GuideChannel[],
+  now: number,
 ): SegmentStatus {
   const { learningData, catalog, version, evidence, metrics, skipThreshold } =
     status
@@ -172,13 +244,7 @@ function statusOf(
         ? formatMoment(version.adoptedAt)
         : undefined,
     },
-    evidence: {
-      recordings: Number(evidence.recordings),
-      boundaries: Number(evidence.boundaries),
-      enough: evidence.enough,
-      recordingsNeeded: Number(evidence.recordingsNeeded),
-      boundariesNeeded: Number(evidence.boundariesNeeded),
-    },
+    evidence: evidenceOf(evidence),
     metrics: metrics
       ? {
           boundaryRecallWithin2s: numberOr(metrics.boundaryRecallWithin2s),
@@ -190,6 +256,8 @@ function statusOf(
     stations: status.stations.map((one) => stationOf(one, known)),
     versions: status.versions.map(versionOf),
     skipThreshold: { current: Number(skipThreshold.current) },
+    lastRound: status.lastRound ? roundOf(status.lastRound) : undefined,
+    nextRound: upcomingOf(status.nextRoundNotBefore, now),
   }
 }
 
@@ -220,7 +288,7 @@ export async function getSegmentStatus(): Promise<Reading<SegmentStatus>> {
       return { state: 'unavailable' }
     }
 
-    return { state: 'ok', value: statusOf(status, known) }
+    return { state: 'ok', value: statusOf(status, known, Date.now()) }
   } catch (error) {
     unstable_rethrow(error)
 

@@ -132,6 +132,23 @@ const STATUS = {
     },
   ],
   skipThreshold: { current: 0.7 },
+  lastRound: {
+    day: '2026-11-02',
+    takenAt: '2026-11-01T18:06:00Z',
+    outcome: 'kept',
+    candidate: 4,
+    verdict: 'tooLittleEvidence',
+    inUse: { boundaryRecallWithin2s: 0.93, breakRecall: null },
+    evidence: {
+      recordings: 12,
+      boundaries: 56,
+      enough: false,
+      recordingsNeeded: 10,
+      boundariesNeeded: 100,
+    },
+    metrics: { boundaryRecallWithin2s: 0.94, breakRecall: 0.95 },
+  },
+  nextRoundNotBefore: '2026-11-02T18:00:00Z',
 }
 
 const LOGO = { declaration: 'inTheCommonDataTable', href: '/logo/1-101' }
@@ -290,6 +307,73 @@ test('the history keeps when each version was made and when one was put back', a
       metrics: undefined,
     },
   ])
+})
+
+test('the latest round is read with when it was taken said in a sentence, and the next one by the hour', async () => {
+  mock.timers.enable({
+    apis: ['Date'],
+    now: Date.parse('2026-11-02T12:00:00Z'),
+  })
+
+  const { lastRound, nextRound } = await readValue().finally(() =>
+    mock.timers.reset(),
+  )
+
+  assert.deepEqual(lastRound, {
+    takenAt: '11月2日 3:06',
+    outcome: 'kept',
+    candidate: 4,
+    verdict: 'tooLittleEvidence',
+    inUse: { boundaryRecallWithin2s: 0.93, breakRecall: undefined },
+    evidence: {
+      recordings: 12,
+      boundaries: 56,
+      enough: false,
+      recordingsNeeded: 10,
+      boundariesNeeded: 100,
+    },
+    metrics: { boundaryRecallWithin2s: 0.94, breakRecall: 0.95 },
+  })
+  assert.equal(nextRound, '11月3日 3時')
+})
+
+test('a next round whose start has come is read as none to wait for', async () => {
+  for (const now of ['2026-11-02T18:00:00Z', '2026-11-02T19:30:00Z']) {
+    mock.timers.enable({ apis: ['Date'], now: Date.parse(now) })
+
+    const { nextRound } = await readValue().finally(() => mock.timers.reset())
+
+    assert.equal(nextRound, undefined)
+  }
+})
+
+test('a round that made no candidate is read without one, and no round as none', async () => {
+  store.status = {
+    ...STATUS,
+    lastRound: {
+      ...STATUS.lastRound,
+      outcome: 'nothingNew',
+      candidate: null,
+      verdict: null,
+      inUse: null,
+      evidence: null,
+      metrics: null,
+    },
+  }
+
+  assert.deepEqual((await readValue()).lastRound, {
+    takenAt: '11月2日 3:06',
+    outcome: 'nothingNew',
+    candidate: undefined,
+    verdict: undefined,
+    inUse: undefined,
+    evidence: undefined,
+    metrics: undefined,
+  })
+
+  store.status = { ...STATUS, lastRound: null }
+
+  assert.equal((await readValue()).lastRound, undefined)
 })
 
 test('what is not there yet is read as not there', async () => {

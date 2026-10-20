@@ -1,8 +1,11 @@
+import { NOT_YET_IN_THIS_BUILD_SAYING } from '@/lib/not-yet-in-this-build'
 import { signedOut } from '@/lib/signed-out'
 import { couldNot } from '@/lib/try-again'
 import type {
   RecalledKind,
   SegmentKindRecall,
+  SegmentRound,
+  SegmentRoundFigures,
 } from '@/repository/segment-status'
 import type {
   SkipThresholdRefusal,
@@ -158,4 +161,136 @@ export function skipThresholdRefusalOf(refusal: SkipThresholdRefusal): string {
   return refusal === 'unauthenticated'
     ? signedOut('保存')
     : couldNot('保存できませんでした')
+}
+
+export const ROUNDS_LEARNING_OFF =
+  '学習が無効のため、候補の版は作られず切り替わりません。'
+
+export const NO_ROUND_YET = 'まだ学習の回はありません。'
+
+const NOT_SWITCHED = '切り替えていません。'
+
+export function nextRoundOf(nextRound: string | undefined): string {
+  return nextRound === undefined
+    ? '次の回: 次の空き時間。'
+    : `次の回: ${nextRound}以降の空き時間。`
+}
+
+function candidateOf(round: SegmentRound): string {
+  return round.candidate === undefined
+    ? '候補の版'
+    : `候補の${versionLabel(round.candidate)}`
+}
+
+function boundaryOf(figures: SegmentRoundFigures | undefined) {
+  return figures?.boundaryRecallWithin2s
+}
+
+function figuresSaid(round: SegmentRound): string {
+  const found = boundaryOf(round.metrics)
+  const inUse = boundaryOf(round.inUse)
+
+  if (found === undefined) {
+    return ''
+  }
+
+  return inUse === undefined
+    ? `境目の一致は ${shareOf(found)}。`
+    : `境目の一致は ${shareOf(found)}(使用中の版は ${shareOf(inUse)})。`
+}
+
+function tooLittleSaid(round: SegmentRound): string {
+  const { evidence } = round
+
+  if (!evidence) {
+    return `答え合わせの量が足りないため、${NOT_SWITCHED}`
+  }
+
+  if (evidence.enough) {
+    return `使用中の版の答え合わせがまだ無いため、${NOT_SWITCHED}`
+  }
+
+  const short = [
+    evidence.recordings < evidence.recordingsNeeded
+      ? `${evidence.recordingsNeeded} 本`
+      : undefined,
+    evidence.boundaries < evidence.boundariesNeeded
+      ? `${evidence.boundariesNeeded} か所`
+      : undefined,
+  ].filter((one): one is string => one !== undefined)
+
+  return `答え合わせが録画 ${evidence.recordings} 本・境目 ${evidence.boundaries} か所で ${short.join('・')}に足りないため、${NOT_SWITCHED}`
+}
+
+function noBetterSaid(round: SegmentRound): string {
+  const found = boundaryOf(round.metrics)
+  const inUse = boundaryOf(round.inUse)
+
+  if (found === undefined || inUse === undefined) {
+    return `境目の一致が使用中の版を上回らなかったため${NOT_SWITCHED}`
+  }
+
+  return `境目の一致は ${shareOf(found)}で、使用中の版の ${shareOf(inUse)}を上回らなかったため${NOT_SWITCHED}`
+}
+
+function keptSaid(round: SegmentRound): string {
+  const made = `${candidateOf(round)}を作りました。`
+
+  switch (round.verdict) {
+    case 'tooLittleEvidence':
+      return `${made}${figuresSaid(round)}${tooLittleSaid(round)}`
+    case 'noBetterAtBoundaries':
+      return `${made}${noBetterSaid(round)}`
+    case 'chosenByHand':
+      return `${made}手動で選択した版を使っているため、${NOT_SWITCHED}`
+    default:
+      return `${made}${NOT_SWITCHED}`
+  }
+}
+
+function adoptedSaid(round: SegmentRound): string {
+  const made = `${candidateOf(round)}を作り、`
+  const found = boundaryOf(round.metrics)
+  const inUse = boundaryOf(round.inUse)
+  const foundCm = round.metrics?.breakRecall
+  const inUseCm = round.inUse?.breakRecall
+
+  if (found === undefined || inUse === undefined) {
+    return `${made}使用中の版より境目を多く当てたため切り替えました。`
+  }
+
+  if (found === inUse && foundCm !== undefined && inUseCm !== undefined) {
+    return `${made}境目の一致は同じ ${shareOf(found)}で、CM の再現率が ${shareOf(inUseCm)}から ${shareOf(foundCm)}に上がったため切り替えました。`
+  }
+
+  return shareOf(found) === shareOf(inUse)
+    ? `${made}境目の一致が使用中の版の ${shareOf(inUse)}をわずかに上回ったため切り替えました。`
+    : `${made}境目の一致が ${shareOf(inUse)}から ${shareOf(found)}に上がったため切り替えました。`
+}
+
+function whatBecameOf(round: SegmentRound): string {
+  switch (round.outcome) {
+    case 'nothingNew':
+      return '新しいデータが無く、候補を作りませんでした。'
+    case 'nothingToLearnFrom':
+      return '学習に使えるデータが無く、候補を作りませんでした。'
+    case 'failed':
+      return '途中で失敗しました。次の日の回でやり直します。'
+    case 'kept':
+      return keptSaid(round)
+    case 'adopted':
+      return adoptedSaid(round)
+    case 'heldAfterRollback':
+      return `${candidateOf(round)}を作りましたが、戻した直後の 7 日間は切り替えません。`
+    case 'inUseChangedMeanwhile':
+      return `${candidateOf(round)}を作りましたが、学習中に使用中の版が替わったため${NOT_SWITCHED}`
+    default:
+      return NOT_YET_IN_THIS_BUILD_SAYING
+  }
+}
+
+export function lastRoundOf(round: SegmentRound | undefined): string {
+  return round
+    ? `直近の回(${round.takenAt}): ${whatBecameOf(round)}`
+    : NO_ROUND_YET
 }

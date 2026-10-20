@@ -1,7 +1,9 @@
 import { LOGO_FULL_COLOUR } from '@/repository/logos.fixtures'
 import type {
   LearningData,
+  SegmentEvidence,
   SegmentMetrics,
+  SegmentRound,
   SegmentStatus,
   SegmentVersion,
 } from '@/repository/segment-status'
@@ -12,7 +14,7 @@ const VERSIONS: SegmentVersion[] = [
     number: 4,
     state: 'candidate',
     trainedAt: '11/8(日) 03:00',
-    metrics: { boundaryRecallWithin2s: 0.94 },
+    metrics: { boundaryRecallWithin2s: 0.92 },
   },
   {
     number: 3,
@@ -41,6 +43,26 @@ const METRICS: SegmentMetrics = {
   returnedAfterSkipping: 0.03,
 }
 
+const ENOUGH: SegmentEvidence = {
+  recordings: 12,
+  boundaries: 148,
+  enough: true,
+  recordingsNeeded: 10,
+  boundariesNeeded: 100,
+}
+
+const IN_USE = { boundaryRecallWithin2s: 0.93, breakRecall: 0.95 }
+
+const NO_BETTER: SegmentRound = {
+  takenAt: '11月8日 3:00',
+  outcome: 'kept',
+  candidate: 4,
+  verdict: 'noBetterAtBoundaries',
+  inUse: IN_USE,
+  evidence: ENOUGH,
+  metrics: { boundaryRecallWithin2s: 0.92, breakRecall: 0.96 },
+}
+
 const STATUS: SegmentStatus = {
   learning: true,
   learningData: {
@@ -51,13 +73,7 @@ const STATUS: SegmentStatus = {
   },
   catalog: { cm: 820, programmeFixture: 40 },
   version: { number: 3, byHand: false, adoptedAt: '11/1(日) 03:05' },
-  evidence: {
-    recordings: 12,
-    boundaries: 148,
-    enough: true,
-    recordingsNeeded: 10,
-    boundariesNeeded: 100,
-  },
+  evidence: ENOUGH,
   metrics: METRICS,
   stations: [
     {
@@ -85,6 +101,8 @@ const STATUS: SegmentStatus = {
   ],
   versions: VERSIONS,
   skipThreshold: { current: 0.7 },
+  lastRound: NO_BETTER,
+  nextRound: '11月9日 3時',
 }
 
 function read(value: SegmentStatus): Reading<SegmentStatus> {
@@ -102,6 +120,7 @@ export const DETECTION_LEARNING_OFF = read({ ...STATUS, learning: false })
 const BY_HAND: SegmentStatus = {
   ...STATUS,
   version: { number: 2, byHand: true, adoptedAt: '11/3(火) 10:12' },
+  lastRound: { ...NO_BETTER, verdict: 'chosenByHand' },
   versions: [
     VERSIONS[0],
     { ...VERSIONS[1], state: 'retired' },
@@ -123,6 +142,7 @@ const NOTHING_CHECKED: SegmentStatus = {
   metrics: undefined,
   stations: [],
   versions: FIRST_VERSION,
+  lastRound: undefined,
 }
 
 export const DETECTION_BY_HAND = read(BY_HAND)
@@ -145,6 +165,7 @@ export const DETECTION_NOT_YET_EVALUATED = read({
   metrics: undefined,
   stations: [],
   versions: FIRST_VERSION,
+  lastRound: undefined,
 })
 
 export const DETECTION_BOUNDARIES_SHORT = read({
@@ -183,6 +204,104 @@ export const LEARNING_DATA = DETECTION_STATUS
 export const LEARNING_DATA_WAITING = withLearningData({
   ...STATUS.learningData,
   waiting: 12,
+})
+
+function afterRound(
+  round: SegmentRound,
+  base: SegmentStatus = STATUS,
+): Reading<SegmentStatus> {
+  const found = round.metrics?.boundaryRecallWithin2s
+
+  return read({
+    ...base,
+    evidence: round.evidence ?? base.evidence,
+    lastRound: round,
+    versions: base.versions.map((one) =>
+      one.number === round.candidate && found !== undefined
+        ? { ...one, metrics: { boundaryRecallWithin2s: found } }
+        : one,
+    ),
+  })
+}
+
+const LEARNED = {
+  takenAt: '11月8日 3:00',
+  candidate: 4,
+  inUse: IN_USE,
+  evidence: ENOUGH,
+  metrics: { boundaryRecallWithin2s: 0.94, breakRecall: 0.95 },
+}
+
+export const ROUND_NONE = read(NOTHING_CHECKED)
+
+export const ROUND_NOTHING_NEW = read({
+  ...STATUS,
+  lastRound: { takenAt: '11月9日 3:02', outcome: 'nothingNew' },
+  nextRound: '11月10日 3時',
+})
+
+export const ROUND_NOTHING_TO_LEARN_FROM = read({
+  ...NOTHING_CHECKED,
+  lastRound: { takenAt: '10月19日 3:01', outcome: 'nothingToLearnFrom' },
+  nextRound: '10月20日 3時',
+})
+
+export const ROUND_EVIDENCE_SHORT = afterRound({
+  ...LEARNED,
+  outcome: 'kept',
+  verdict: 'tooLittleEvidence',
+  evidence: { ...ENOUGH, boundaries: 56, enough: false },
+})
+
+export const ROUND_IN_USE_UNCHECKED = afterRound({
+  ...LEARNED,
+  outcome: 'kept',
+  verdict: 'tooLittleEvidence',
+  inUse: undefined,
+})
+
+export const ROUND_NO_BETTER = DETECTION_STATUS
+
+export const ROUND_ADOPTED = afterRound(
+  { ...LEARNED, outcome: 'adopted', verdict: 'adopted' },
+  {
+    ...STATUS,
+    version: { number: 4, byHand: false, adoptedAt: '11/8(日) 03:06' },
+    versions: [
+      { ...VERSIONS[0], state: 'active' },
+      { ...VERSIONS[1], state: 'retired' },
+      VERSIONS[2],
+      VERSIONS[3],
+    ],
+  },
+)
+
+export const ROUND_HELD_AFTER_ROLLBACK = afterRound({
+  ...LEARNED,
+  outcome: 'heldAfterRollback',
+  verdict: 'heldAfterRollback',
+})
+
+export const ROUND_CHOSEN_BY_HAND = afterRound(
+  { ...LEARNED, outcome: 'kept', verdict: 'chosenByHand' },
+  BY_HAND,
+)
+
+export const ROUND_IN_USE_CHANGED = afterRound(
+  { ...LEARNED, outcome: 'inUseChangedMeanwhile', verdict: 'adopted' },
+  BY_HAND,
+)
+
+export const ROUND_DUE = read({
+  ...STATUS,
+  lastRound: { takenAt: '11月7日 3:01', outcome: 'nothingNew' },
+  nextRound: undefined,
+})
+
+export const ROUND_FAILED = read({
+  ...STATUS,
+  lastRound: { takenAt: '11月9日 3:04', outcome: 'failed' },
+  nextRound: '11月10日 3時',
 })
 
 export const SEGMENT_STATUS_UNREAD: Reading<SegmentStatus> = {
