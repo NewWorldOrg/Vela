@@ -7,8 +7,10 @@ import {
   isSkippableKind,
   nextBoundaryAfter,
   skippableChapterAt,
+  SKIP_THEM_TOGETHER,
   skippableRunAt,
   skipWords,
+  skipWordsInTheRow,
 } from '@/lib/player-chapters'
 import type { PlaybackChapter } from '@/repository/videos'
 
@@ -294,4 +296,24 @@ test('the skip button names one kind alone, and more than one joined in the orde
     skipWords(['opening', 'break', 'ending']),
     'OP と CM と ED を飛ばす',
   )
+})
+
+test('in the control row, the kinds are named while they fit, and more than one kind that does not fit is skipped together', () => {
+  assert.equal(
+    skipWordsInTheRow(['opening', 'break'], true),
+    'OP と CM を飛ばす',
+  )
+  assert.equal(
+    skipWordsInTheRow(['opening', 'break'], false),
+    SKIP_THEM_TOGETHER,
+  )
+  assert.equal(
+    skipWordsInTheRow(['opening', 'break', 'ending'], false),
+    'まとめて飛ばす',
+  )
+})
+
+test('in the control row, one kind keeps its words even where they do not fit', () => {
+  assert.equal(skipWordsInTheRow(['break'], false), 'CM を飛ばす')
+  assert.equal(skipWordsInTheRow(['ending'], true), 'ED を飛ばす')
 })

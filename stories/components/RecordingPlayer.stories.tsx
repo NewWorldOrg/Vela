@@ -215,6 +215,17 @@ const OPENING_THEN_A_HELD_BACK_BREAK: PlaybackPlan = {
   ],
 }
 
+const OPENING_BREAK_AND_ENDING: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 90, kind: 'programme', skippable: false },
+    { startsAtSec: 90, endsAtSec: 180, kind: 'opening', skippable: true },
+    { startsAtSec: 180, endsAtSec: 240, kind: 'break', skippable: true },
+    { startsAtSec: 240, endsAtSec: 330, kind: 'ending', skippable: true },
+    { startsAtSec: 330, endsAtSec: 15158, kind: 'programme', skippable: false },
+  ],
+}
+
 const BREAKS_BACK_TO_BACK: PlaybackPlan = {
   ...HANDED_OVER,
   chapters: [
@@ -247,6 +258,8 @@ const SKIP_THE_OPENING = 'OP を飛ばす'
 const SKIP_THE_ENDING = 'ED を飛ばす'
 
 const SKIP_THE_OPENING_AND_THE_BREAK = 'OP と CM を飛ばす'
+
+const SKIP_THEM_TOGETHER = 'まとめて飛ばす'
 
 const ANY_SKIP = /^(CM|OP|ED)( と (CM|OP|ED))* を飛ばす$/
 
@@ -3805,6 +3818,191 @@ export const 飛ばせないCMの手前のOPはOPだけを飛ばす: Story = {
       expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
     )
     await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+  },
+}
+
+function skipSeat(canvasElement: HTMLElement): HTMLElement {
+  const seat = canvasElement.querySelector('[data-slot="player-skip"]')
+
+  if (!(seat instanceof HTMLElement)) {
+    throw new Error('the skip is not on the screen')
+  }
+
+  return seat
+}
+
+async function sitsAtTheRightOfTheLastLine(canvasElement: HTMLElement) {
+  const seat = skipSeat(canvasElement).getBoundingClientRect()
+  const full = within(canvasElement)
+    .getByRole('button', { name: '全画面' })
+    .getBoundingClientRect()
+  const controls = canvasElement
+    .querySelector('[data-slot="player-controls"]')
+    ?.getBoundingClientRect()
+
+  await expect(skipSeat(canvasElement)).toHaveAttribute('data-place', 'row')
+  await expect(Math.round(seat.top)).toBe(Math.round(full.top))
+  await expect(seat.left).toBeGreaterThan(full.right)
+  await expect(Math.round(controls?.right ?? 0) - Math.round(seat.right)).toBe(
+    12,
+  )
+}
+
+const NARROW = { width: 375, height: 740 }
+
+export const 幅375ではバーの最下段の右端に出す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 120,
+    pictureHref: keeping,
+  },
+  parameters: { screen: NARROW },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING }),
+    )
+    await waitFor(() =>
+      expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+  },
+}
+
+export const 幅375で入らないときはバーが出ているあいだ出さない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: NARROW },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const seek = canvas.getByRole('slider', { name: '再生位置' })
+    const face = canvasElement.querySelector('[data-slot="player-face"]')
+
+    await waitFor(() => expect(skipSeat(canvasElement)).not.toBeVisible())
+    await expect(
+      canvas.queryByRole('button', { name: SKIP_THE_OPENING_AND_THE_BREAK }),
+    ).toBeNull()
+    await expect(seek.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      face?.getBoundingClientRect().top ?? Infinity,
+    )
+  },
+}
+
+export const 幅375でバーが隠れると映像の右下に戻る: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: NARROW },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await waitFor(
+      () => expect(skipSeat(canvasElement)).not.toHaveAttribute('data-place'),
+      { timeout: 4500 },
+    )
+    await expect(skipSeat(canvasElement)).not.toHaveAttribute('data-raised')
+    await expect(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING_AND_THE_BREAK }),
+    ).toBeVisible()
+
+    board(canvasElement).dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true }),
+    )
+    await waitFor(() =>
+      expect(skipSeat(canvasElement)).toHaveAttribute('data-place', 'row'),
+    )
+  },
+}
+
+export const 幅393で2種類が入らないときはまとめて飛ばす: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 393, height: 740 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THEM_TOGETHER }),
+    )
+    await waitFor(() =>
+      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+    )
+  },
+}
+
+export const 幅414では2種類の語のままバーの最下段に出す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 414, height: 740 } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await expect(
+      within(canvasElement).getByRole('button', {
+        name: SKIP_THE_OPENING_AND_THE_BREAK,
+      }),
+    ).toBeVisible()
+  },
+}
+
+export const 幅414で3種類が続くとまとめて飛ばす: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_BREAK_AND_ENDING,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 414, height: 740 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THEM_TOGETHER }),
+    )
+    await waitFor(() =>
+      expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
+    )
+  },
+}
+
+export const 幅430では今までどおり映像の上に出す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 430, height: 740 } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(skipSeat(canvasElement)).toHaveAttribute('data-raised', 'true'),
+    )
+    await expect(skipSeat(canvasElement)).not.toHaveAttribute('data-place')
+    await expect(
+      within(canvasElement).getByRole('button', {
+        name: SKIP_THE_OPENING_AND_THE_BREAK,
+      }),
+    ).toBeVisible()
   },
 }
 
