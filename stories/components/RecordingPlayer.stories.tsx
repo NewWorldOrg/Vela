@@ -3884,7 +3884,13 @@ export const 幅375で2種類は飛ばすに縮める: Story = {
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
+
+    const skip = canvas.getByRole('button', {
+      name: SKIP_THE_OPENING_AND_THE_BREAK,
+    })
+
+    await expect(skip.textContent).toBe(SKIP_ONLY)
+    await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
     )
@@ -3903,7 +3909,11 @@ export const 幅375で3種類は飛ばすに縮める: Story = {
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
+
+    const skip = canvas.getByRole('button', { name: 'OP と CM と ED を飛ばす' })
+
+    await expect(skip.textContent).toBe(SKIP_ONLY)
+    await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
     )
@@ -3952,7 +3962,13 @@ export const 幅393で2種類が入らないときは飛ばすに縮める: Stor
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
+
+    const skip = canvas.getByRole('button', {
+      name: SKIP_THE_OPENING_AND_THE_BREAK,
+    })
+
+    await expect(skip.textContent).toBe(SKIP_ONLY)
+    await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
     )
@@ -3971,9 +3987,13 @@ export const 幅414では2種類をプラスでつないで出す: Story = {
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'OP+CM を飛ばす' }),
-    )
+
+    const skip = canvas.getByRole('button', {
+      name: SKIP_THE_OPENING_AND_THE_BREAK,
+    })
+
+    await expect(skip.textContent).toBe('OP+CM を飛ばす')
+    await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
     )
@@ -3992,7 +4012,11 @@ export const 幅414で3種類が入らないときは飛ばすに縮める: Stor
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
+
+    const skip = canvas.getByRole('button', { name: 'OP と CM と ED を飛ばす' })
+
+    await expect(skip.textContent).toBe(SKIP_ONLY)
+    await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
     )

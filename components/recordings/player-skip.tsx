@@ -160,6 +160,7 @@ export function PlayerSkipInTheRow({
     >
       <button
         type="button"
+        aria-label={skipWords(kinds)}
         onClick={() => onSkip(to)}
         className={PLAYER_BUTTON}
       >
