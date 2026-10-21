@@ -15,6 +15,12 @@ const OPENING: Stretch = { startsAtSec: 95, endsAtSec: 185, kind: 'opening' }
 
 const ENDING: Stretch = { startsAtSec: 1650, endsAtSec: 1740, kind: 'ending' }
 
+const BREAK_AFTER_THE_OPENING: Stretch = {
+  startsAtSec: 185,
+  endsAtSec: 245,
+  kind: 'break',
+}
+
 function kept(offsetSec: number | undefined, modelVersion?: number) {
   const sent: SkipEvent[] = []
   const clock = { now: 1_000_000 }
@@ -38,7 +44,7 @@ function watchFor(events: SkipEvents, from: number, seconds: number) {
 test('pressing the skip button says where it was pressed and where it landed', () => {
   const { events, sent } = kept(0, 3)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
 
   assert.deepEqual(sent, [
     {
@@ -70,8 +76,8 @@ test('closing the skip button says where it was closed and where the break ends'
 test('skipping an opening or an ending says which of the two it was', () => {
   const { events, sent } = kept(0, 3)
 
-  events.skippedTheStretch(100, OPENING)
-  events.skippedTheStretch(1660, ENDING)
+  events.skippedTheRun(100, [OPENING])
+  events.skippedTheRun(1660, [ENDING])
 
   assert.deepEqual(sent, [
     {
@@ -109,10 +115,10 @@ test('closing the button over an opening or an ending says which of the two it w
 test('going back into a skipped opening names the opening, not the break skipped before it', () => {
   const { events, sent, clock } = kept(0, 3)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += 40_000
   events.sought(600, 100)
-  events.skippedTheStretch(100, OPENING)
+  events.skippedTheRun(100, [OPENING])
   clock.now += 4_000
   events.sought(189, 120)
   watchFor(events, 120, WATCHED_FOR_SEC)
@@ -130,7 +136,7 @@ test('going back into a skipped opening names the opening, not the break skipped
 test('a recording no model found the stretches of names no version of the model', () => {
   const { events, sent } = kept(0)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
 
   assert.equal(sent[0].modelVersion, undefined)
 })
@@ -139,7 +145,7 @@ test('a version that comes to the page later is the one sent', () => {
   const { events, sent } = kept(0, 3)
 
   events.standsWith(4)
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   events.standsWith(undefined)
   events.leftTheStretch(1180, {
     startsAtSec: 1175.6,
@@ -156,7 +162,7 @@ test('a version that comes to the page later is the one sent', () => {
 test('seeking back into the skipped break within 30 seconds and watching 10 there is going back to it', () => {
   const { events, sent, clock } = kept(0, 3)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += 12_000
   events.sought(514.2, 430)
   watchFor(events, 430, WATCHED_FOR_SEC)
@@ -174,7 +180,7 @@ test('seeking back into the skipped break within 30 seconds and watching 10 ther
 test('watching under 10 seconds after going back says nothing', () => {
   const { events, sent, clock } = kept(0)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += 5_000
   events.sought(505, 430)
   watchFor(events, 430, WATCHED_FOR_SEC - 0.5)
@@ -188,7 +194,7 @@ test('watching under 10 seconds after going back says nothing', () => {
 test('going back after 30 seconds is not going back to the skip', () => {
   const { events, sent, clock } = kept(0)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += RETURNS_WITHIN_MS + 1
   events.sought(540, 430)
   watchFor(events, 430, WATCHED_FOR_SEC + 5)
@@ -202,7 +208,7 @@ test('going back after 30 seconds is not going back to the skip', () => {
 test('a seek that lands outside the skipped break is not going back to it', () => {
   const { events, sent, clock } = kept(0)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += 3_000
   events.sought(505, 300)
   watchFor(events, 300, WATCHED_FOR_SEC + 5)
@@ -218,7 +224,7 @@ test('a seek that lands outside the skipped break is not going back to it', () =
 test('seeking away again before 10 seconds are watched takes the going back away', () => {
   const { events, sent, clock } = kept(0)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += 3_000
   events.sought(505, 430)
   watchFor(events, 430, 4)
@@ -234,7 +240,7 @@ test('seeking away again before 10 seconds are watched takes the going back away
 test('going back is said once for one skip', () => {
   const { events, sent, clock } = kept(0)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   clock.now += 3_000
   events.sought(505, 430)
   watchFor(events, 430, WATCHED_FOR_SEC + 1)
@@ -250,11 +256,9 @@ test('going back is said once for one skip', () => {
 test('what is sent is in the recording’s own time, the head an artefact left out added back', () => {
   const { events, sent, clock } = kept(14.5, 2)
 
-  events.skippedTheStretch(400, {
-    startsAtSec: 397.8,
-    endsAtSec: 487.8,
-    kind: 'break',
-  })
+  events.skippedTheRun(400, [
+    { startsAtSec: 397.8, endsAtSec: 487.8, kind: 'break' },
+  ])
   clock.now += 2_000
   events.sought(490, 410)
   watchFor(events, 410, WATCHED_FOR_SEC)
@@ -271,7 +275,7 @@ test('what is sent is in the recording’s own time, the head an artefact left o
 test('while no time in the recording can be placed on the file, nothing done with the button is sent', () => {
   const { events, sent } = kept(undefined, 3)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   events.leftTheStretch(420, BREAK)
 
   assert.deepEqual(sent, [])
@@ -280,7 +284,7 @@ test('while no time in the recording can be placed on the file, nothing done wit
 test('while no time in the recording can be placed on the file, going back to a skipped break is not sent either', () => {
   const { events, sent, clock } = kept(0, 3)
 
-  events.skippedTheStretch(415, BREAK)
+  events.skippedTheRun(415, [BREAK])
   events.runsBehindBy(undefined)
   clock.now += 3_000
   events.sought(505, 430)
@@ -289,5 +293,113 @@ test('while no time in the recording can be placed on the file, going back to a 
   assert.deepEqual(
     sent.map((one) => one.event),
     ['skipped'],
+  )
+})
+
+test('skipping an opening and the break after it in one press says each of the two', () => {
+  const { events, sent } = kept(0, 3)
+
+  events.skippedTheRun(100, [OPENING, BREAK_AFTER_THE_OPENING])
+
+  assert.deepEqual(sent, [
+    {
+      event: 'skipped',
+      kind: 'opening',
+      fromSec: 100,
+      toSec: 185,
+      modelVersion: 3,
+    },
+    {
+      event: 'skipped',
+      kind: 'break',
+      fromSec: 185,
+      toSec: 245,
+      modelVersion: 3,
+    },
+  ])
+})
+
+test('each stretch skipped in one press is sent in the recording’s own time', () => {
+  const { events, sent } = kept(14.5)
+
+  events.skippedTheRun(100, [OPENING, BREAK_AFTER_THE_OPENING])
+
+  assert.deepEqual(
+    sent.map((one) => [one.kind, one.fromSec, one.toSec]),
+    [
+      ['opening', 114.5, 199.5],
+      ['break', 199.5, 259.5],
+    ],
+  )
+})
+
+test('going back into the break of a skipped opening and break names the break', () => {
+  const { events, sent, clock } = kept(0, 3)
+
+  events.skippedTheRun(100, [OPENING, BREAK_AFTER_THE_OPENING])
+  clock.now += 6_000
+  events.sought(251, 200)
+  watchFor(events, 200, WATCHED_FOR_SEC)
+
+  assert.deepEqual(sent.at(-1), {
+    event: 'returned',
+    kind: 'break',
+    fromSec: 251,
+    toSec: 200,
+    modelVersion: 3,
+  })
+  assert.equal(sent.length, 3)
+})
+
+test('going back into the opening of a skipped opening and break names the opening', () => {
+  const { events, sent, clock } = kept(0, 3)
+
+  events.skippedTheRun(100, [OPENING, BREAK_AFTER_THE_OPENING])
+  clock.now += 6_000
+  events.sought(251, 120)
+  watchFor(events, 120, WATCHED_FOR_SEC)
+
+  assert.deepEqual(
+    sent.map((one) => [one.event, one.kind]),
+    [
+      ['skipped', 'opening'],
+      ['skipped', 'break'],
+      ['returned', 'opening'],
+    ],
+  )
+})
+
+test('a seek that lands past everything one press skipped is not going back to it', () => {
+  const { events, sent, clock } = kept(0)
+
+  events.skippedTheRun(100, [OPENING, BREAK_AFTER_THE_OPENING])
+  clock.now += 3_000
+  events.sought(251, BREAK_AFTER_THE_OPENING.endsAtSec)
+  watchFor(events, BREAK_AFTER_THE_OPENING.endsAtSec, WATCHED_FOR_SEC + 5)
+
+  assert.deepEqual(
+    sent.map((one) => one.event),
+    ['skipped', 'skipped'],
+  )
+})
+
+test('going back to a second no stretch of the press holds names the first stretch', () => {
+  const { events, sent, clock } = kept(0)
+
+  events.skippedTheRun(100, [
+    OPENING,
+    { startsAtSec: 190, endsAtSec: 250, kind: 'break' },
+  ])
+  clock.now += 3_000
+  events.sought(255, 187)
+  watchFor(events, 187, WATCHED_FOR_SEC)
+
+  assert.deepEqual(
+    sent.map((one) => [one.event, one.kind]),
+    [
+      ['skipped', 'opening'],
+      ['skipped', 'break'],
+      ['returned', 'opening'],
+    ],
   )
 })

@@ -204,6 +204,32 @@ const OPENING_THEN_A_BREAK: PlaybackPlan = {
   ],
 }
 
+const OPENING_THEN_A_HELD_BACK_BREAK: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 90, kind: 'programme', skippable: false },
+    { startsAtSec: 90, endsAtSec: 180, kind: 'opening', skippable: true },
+    { startsAtSec: 180, endsAtSec: 240, kind: 'break', skippable: false },
+    { startsAtSec: 240, endsAtSec: 300, kind: 'break', skippable: true },
+    { startsAtSec: 300, endsAtSec: 15158, kind: 'programme', skippable: false },
+  ],
+}
+
+const BREAKS_BACK_TO_BACK: PlaybackPlan = {
+  ...HANDED_OVER,
+  chapters: [
+    { startsAtSec: 0, endsAtSec: 1200, kind: 'programme', skippable: false },
+    { startsAtSec: 1200, endsAtSec: 1230, kind: 'break', skippable: true },
+    { startsAtSec: 1230, endsAtSec: 1290, kind: 'break', skippable: true },
+    {
+      startsAtSec: 1290,
+      endsAtSec: 15158,
+      kind: 'programme',
+      skippable: false,
+    },
+  ],
+}
+
 const ENDS_IN_AN_ENDING: PlaybackPlan = {
   ...HANDED_OVER,
   chapters: [
@@ -220,7 +246,9 @@ const SKIP_THE_OPENING = 'OP を飛ばす'
 
 const SKIP_THE_ENDING = 'ED を飛ばす'
 
-const ANY_SKIP = /^(CM|OP|ED) を飛ばす$/
+const SKIP_THE_OPENING_AND_THE_BREAK = 'OP と CM を飛ばす'
+
+const ANY_SKIP = /^(CM|OP|ED)( と (CM|OP|ED))* を飛ばす$/
 
 function marksOn(canvasElement: HTMLElement, named: string) {
   return canvasElement.querySelectorAll(`[title="${named}"]`).length
@@ -3684,7 +3712,7 @@ export const 閉じたED区間では出さない: Story = {
   },
 }
 
-export const OPのすぐ後のCMは続けて飛ばせる: Story = {
+export const OPのすぐ後のCMはまとめて飛ばす: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
@@ -3698,25 +3726,102 @@ export const OPのすぐ後のCMは続けて飛ばせる: Story = {
       canvas.getAllByRole('button', { name: ANY_SKIP }),
     ).toHaveLength(1)
     await userEvent.click(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING_AND_THE_BREAK }),
+    )
+
+    await waitFor(() =>
+      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+    await expect(document.activeElement).toBe(board(canvasElement))
+  },
+}
+
+export const OPのすぐ後のCMの中ではCMだけを飛ばす: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 200,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
+
+    await waitFor(() =>
+      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+    )
+  },
+}
+
+export const OPを閉じるとすぐ後のCMで改めて出す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
+    await waitFor(() =>
+      expect(canvas.getByText('1:50 / 4:12:38')).toBeVisible(),
+    )
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+
+    await userEvent.click(canvas.getByRole('button', { name: NEXT_CHAPTER }))
+    await waitFor(() =>
+      expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
+    )
+    await expect(
+      await canvas.findByRole('button', { name: SKIP_THE_BREAK }),
+    ).toBeVisible()
+    await expect(
+      canvas.getAllByRole('button', { name: ANY_SKIP }),
+    ).toHaveLength(1)
+  },
+}
+
+export const 飛ばせないCMの手前のOPはOPだけを飛ばす: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_THEN_A_HELD_BACK_BREAK,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
       canvas.getByRole('button', { name: SKIP_THE_OPENING }),
     )
 
     await waitFor(() =>
       expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible(),
     )
-    await waitFor(() =>
-      expect(
-        canvas.getByRole('button', { name: SKIP_THE_BREAK }),
-      ).toBeVisible(),
-    )
-    await expect(
-      canvas.getAllByRole('button', { name: ANY_SKIP }),
-    ).toHaveLength(1)
+    await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+  },
+}
+
+export const 続いたCMは1回でまとめて飛ばす: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: BREAKS_BACK_TO_BACK,
+    startAt: 1210,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
 
     await userEvent.click(canvas.getByRole('button', { name: SKIP_THE_BREAK }))
 
     await waitFor(() =>
-      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+      expect(canvas.getByText('21:30 / 4:12:38')).toBeVisible(),
     )
     await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
   },

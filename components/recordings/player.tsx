@@ -25,7 +25,7 @@ import { formatPlayerTime } from '@/lib/format'
 import {
   chaptersToDraw,
   nextBoundaryAfter,
-  skippableChapterAt,
+  skippableRunAt,
 } from '@/lib/player-chapters'
 import {
   SECOND_TAP_WITHIN,
@@ -384,7 +384,7 @@ export function Player({
   const drops = d.qualitySpots?.map((spot) => spot.second)
   const chapters = chaptersToDraw(plan.chapters)
   const nextChapterAt = nextBoundaryAfter(position, chapters)
-  const skipHere = skippableChapterAt(position, chapters)
+  const runHere = skippableRunAt(position, chapters)
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -770,23 +770,25 @@ export function Player({
     step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS, at)
   }
 
-  const skipTheStretch = (to: number) => {
+  const skipTheRun = (to: number) => {
     const from = position
 
     shell?.focus({ preventScroll: true })
     choose(to)
 
-    if (skipHere) {
-      skipEvents?.skippedTheStretch(from, skipHere)
+    if (runHere) {
+      skipEvents?.skippedTheRun(from, runHere.chapters)
     }
   }
 
-  const leaveTheStretch = (to: number) => {
+  const leaveTheStretch = () => {
     shell?.focus({ preventScroll: true })
-    setStretchesLeftAlone((were) => [...were, to])
 
-    if (skipHere) {
-      skipEvents?.leftTheStretch(position, skipHere)
+    if (runHere) {
+      const [playing] = runHere.chapters
+
+      setStretchesLeftAlone((were) => [...were, playing.endsAtSec])
+      skipEvents?.leftTheStretch(position, playing)
     }
   }
 
@@ -799,8 +801,8 @@ export function Player({
   }, [skipEvents, position])
 
   const offersTheSkip =
-    skipHere !== undefined &&
-    !stretchesLeftAlone.includes(skipHere.endsAtSec) &&
+    runHere !== undefined &&
+    !stretchesLeftAlone.includes(runHere.chapters[0].endsAtSec) &&
     (phase === 'playing' || phase === 'paused' || phase === 'waiting') &&
     !pip.out
 
@@ -1313,11 +1315,11 @@ export function Player({
           <PlayerSeekFlash flash={flash ?? undefined} />
           {offersTheSkip && (
             <PlayerSkip
-              key={skipHere.endsAtSec}
-              kind={skipHere.kind}
-              to={skipHere.endsAtSec}
+              key={runHere.chapters[0].endsAtSec}
+              kinds={runHere.kinds}
+              to={runHere.endsAtSec}
               raised={chromeUp && !underTheBox}
-              onSkip={skipTheStretch}
+              onSkip={skipTheRun}
               onDismiss={leaveTheStretch}
               container={shell}
             />

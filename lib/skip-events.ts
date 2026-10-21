@@ -13,13 +13,24 @@ export interface Stretch {
   kind: SkippableKind
 }
 
-interface LastSkip extends Stretch {
+interface LastSkip {
+  stretches: readonly [Stretch, ...Stretch[]]
+  startsAtSec: number
+  endsAtSec: number
   at: number
   back?: { fromSec: number; toSec: number }
 }
 
 function hundredths(second: number): number {
   return Math.round(second * 100) / 100
+}
+
+function kindAt(second: number, skip: LastSkip): SkippableKind {
+  const landed = skip.stretches.find(
+    (one) => one.startsAtSec <= second && second < one.endsAtSec,
+  )
+
+  return (landed ?? skip.stretches[0]).kind
 }
 
 /**
@@ -68,17 +79,28 @@ export class SkipEvents {
     }
 
     this.lastSkip = undefined
-    this.send('returned', skip.kind, back.fromSec, back.toSec)
+    this.send('returned', kindAt(back.toSec, skip), back.fromSec, back.toSec)
   }
 
-  skippedTheStretch(fromSec: number, skipped: Stretch): void {
+  /** One press that skipped stretches following one another, each sent on its own. */
+  skippedTheRun(
+    fromSec: number,
+    skipped: readonly [Stretch, ...Stretch[]],
+  ): void {
     this.lastSkip = {
-      startsAtSec: skipped.startsAtSec,
-      endsAtSec: skipped.endsAtSec,
-      kind: skipped.kind,
+      stretches: skipped,
+      startsAtSec: skipped[0].startsAtSec,
+      endsAtSec: skipped[skipped.length - 1].endsAtSec,
       at: this.now(),
     }
-    this.send('skipped', skipped.kind, fromSec, skipped.endsAtSec)
+    skipped.forEach((one, index) => {
+      this.send(
+        'skipped',
+        one.kind,
+        index === 0 ? fromSec : one.startsAtSec,
+        one.endsAtSec,
+      )
+    })
   }
 
   leftTheStretch(atSec: number, left: Stretch): void {

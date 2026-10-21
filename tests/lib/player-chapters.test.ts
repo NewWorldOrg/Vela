@@ -7,6 +7,8 @@ import {
   isSkippableKind,
   nextBoundaryAfter,
   skippableChapterAt,
+  skippableRunAt,
+  skipWords,
 } from '@/lib/player-chapters'
 import type { PlaybackChapter } from '@/repository/videos'
 
@@ -177,4 +179,119 @@ test('a break whose seconds cannot be read is not offered', () => {
 
   assert.equal(skippableChapterAt(320, unread), undefined)
   assert.equal(skippableChapterAt(420, unread), undefined)
+})
+
+const OPENING_THEN_A_BREAK: PlaybackChapter[] = [
+  { startsAtSec: 0, endsAtSec: 95, kind: 'programme', skippable: false },
+  { startsAtSec: 95, endsAtSec: 185, kind: 'opening', skippable: true },
+  { startsAtSec: 185, endsAtSec: 245, kind: 'break', skippable: true },
+  { startsAtSec: 245, endsAtSec: 1800, kind: 'programme', skippable: false },
+]
+
+test('inside an opening with a break right after it, one skip goes past the break too', () => {
+  const run = skippableRunAt(100, OPENING_THEN_A_BREAK)
+
+  assert.deepEqual(run?.chapters, OPENING_THEN_A_BREAK.slice(1, 3))
+  assert.equal(run?.endsAtSec, 245)
+  assert.deepEqual(run?.kinds, ['opening', 'break'])
+})
+
+test('inside the break that follows the opening, the skip starts from the break', () => {
+  const run = skippableRunAt(200, OPENING_THEN_A_BREAK)
+
+  assert.deepEqual(run?.chapters, [OPENING_THEN_A_BREAK[2]])
+  assert.equal(run?.endsAtSec, 245)
+  assert.deepEqual(run?.kinds, ['break'])
+})
+
+test('outside anything that may be skipped there is no run to skip', () => {
+  assert.equal(skippableRunAt(50, OPENING_THEN_A_BREAK), undefined)
+  assert.equal(skippableRunAt(245, OPENING_THEN_A_BREAK), undefined)
+  assert.equal(skippableRunAt(100, []), undefined)
+})
+
+test('the run stops at a chapter the backend did not let be skipped', () => {
+  const heldBack: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 95, kind: 'programme', skippable: false },
+    { startsAtSec: 95, endsAtSec: 185, kind: 'opening', skippable: true },
+    { startsAtSec: 185, endsAtSec: 245, kind: 'break', skippable: false },
+    { startsAtSec: 245, endsAtSec: 305, kind: 'break', skippable: true },
+    { startsAtSec: 305, endsAtSec: 1800, kind: 'programme', skippable: false },
+  ]
+  const run = skippableRunAt(100, heldBack)
+
+  assert.equal(run?.endsAtSec, 185)
+  assert.deepEqual(run?.kinds, ['opening'])
+})
+
+test('the run stops at the programme', () => {
+  const run = skippableRunAt(1700, THEMED)
+
+  assert.deepEqual(run?.chapters, [THEMED[4]])
+  assert.equal(run?.endsAtSec, 1740)
+})
+
+test('the run stops where a chapter this build cannot place stands, drawn or not', () => {
+  const unknown: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 95, kind: 'programme', skippable: false },
+    { startsAtSec: 95, endsAtSec: 185, kind: 'opening', skippable: true },
+    { startsAtSec: 185, endsAtSec: 245, kind: 'unknown', skippable: true },
+    { startsAtSec: 245, endsAtSec: 305, kind: 'break', skippable: true },
+    { startsAtSec: 305, endsAtSec: 1800, kind: 'programme', skippable: false },
+  ]
+
+  assert.equal(skippableRunAt(100, unknown)?.endsAtSec, 185)
+  assert.equal(skippableRunAt(100, chaptersToDraw(unknown))?.endsAtSec, 185)
+})
+
+test('breaks that follow one another are one run of one kind', () => {
+  const backToBack: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 600, kind: 'programme', skippable: false },
+    { startsAtSec: 600, endsAtSec: 630, kind: 'break', skippable: true },
+    { startsAtSec: 630, endsAtSec: 690, kind: 'break', skippable: true },
+    { startsAtSec: 690, endsAtSec: 1200, kind: 'programme', skippable: false },
+  ]
+  const run = skippableRunAt(605, backToBack)
+
+  assert.equal(run?.chapters.length, 2)
+  assert.equal(run?.endsAtSec, 690)
+  assert.deepEqual(run?.kinds, ['break'])
+})
+
+test('a kind that comes back later in the run is named once, where it first came', () => {
+  const around: PlaybackChapter[] = [
+    { startsAtSec: 0, endsAtSec: 1500, kind: 'programme', skippable: false },
+    { startsAtSec: 1500, endsAtSec: 1560, kind: 'break', skippable: true },
+    { startsAtSec: 1560, endsAtSec: 1650, kind: 'ending', skippable: true },
+    { startsAtSec: 1650, endsAtSec: 1710, kind: 'break', skippable: true },
+    { startsAtSec: 1710, endsAtSec: 1800, kind: 'programme', skippable: false },
+  ]
+  const run = skippableRunAt(1510, around)
+
+  assert.equal(run?.chapters.length, 3)
+  assert.equal(run?.endsAtSec, 1710)
+  assert.deepEqual(run?.kinds, ['break', 'ending'])
+})
+
+test('a run with a chapter of no length in it does not go round in circles', () => {
+  const still: PlaybackChapter[] = [
+    { startsAtSec: 95, endsAtSec: 185, kind: 'opening', skippable: true },
+    { startsAtSec: 185, endsAtSec: 185, kind: 'break', skippable: true },
+    { startsAtSec: 185, endsAtSec: 245, kind: 'break', skippable: true },
+    { startsAtSec: 245, endsAtSec: 1800, kind: 'programme', skippable: false },
+  ]
+
+  assert.equal(skippableRunAt(100, still)?.endsAtSec, 245)
+})
+
+test('the skip button names one kind alone, and more than one joined in the order they are played', () => {
+  assert.equal(skipWords(['break']), 'CM を飛ばす')
+  assert.equal(skipWords(['opening']), 'OP を飛ばす')
+  assert.equal(skipWords(['ending']), 'ED を飛ばす')
+  assert.equal(skipWords(['opening', 'break']), 'OP と CM を飛ばす')
+  assert.equal(skipWords(['break', 'ending']), 'CM と ED を飛ばす')
+  assert.equal(
+    skipWords(['opening', 'break', 'ending']),
+    'OP と CM と ED を飛ばす',
+  )
 })

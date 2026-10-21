@@ -4,30 +4,31 @@ import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 import { PlayerTip } from '@/components/recordings/player-tip'
+import { skipWords } from '@/lib/player-chapters'
 import type { SkippableKind } from '@/repository/videos'
 
 export const SKIP_THE: Record<SkippableKind, string> = {
-  break: 'CM を飛ばす',
-  opening: 'OP を飛ばす',
-  ending: 'ED を飛ばす',
+  break: skipWords(['break']),
+  opening: skipWords(['opening']),
+  ending: skipWords(['ending']),
 }
 
 const ON_THE_PICTURE =
   'tap-target flex items-center justify-center rounded-full border border-white/25 bg-black/80 text-(--pl-ink) transition-[translate,background-color,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-black/90 hover:text-white active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none still:transition-none'
 
 export function PlayerSkip({
-  kind,
+  kinds,
   to,
   raised,
   onSkip,
   onDismiss,
   container,
 }: {
-  kind: SkippableKind
+  kinds: readonly SkippableKind[]
   to: number
   raised: boolean
   onSkip: (to: number) => void
-  onDismiss: (to: number) => void
+  onDismiss: () => void
   container: HTMLElement | null
 }) {
   return (
@@ -48,13 +49,13 @@ export function PlayerSkip({
           pressable,
         )}
       >
-        {SKIP_THE[kind]}
+        {skipWords(kinds)}
       </button>
       <PlayerTip name="閉じる" container={container}>
         <button
           type="button"
           aria-label="閉じる"
-          onClick={() => onDismiss(to)}
+          onClick={onDismiss}
           className={cn(ON_THE_PICTURE, 'size-9 [&_svg]:size-4', pressable)}
         >
           <CloseIcon />
