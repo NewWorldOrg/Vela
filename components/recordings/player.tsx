@@ -25,7 +25,7 @@ import { formatPlayerTime } from '@/lib/format'
 import {
   chaptersToDraw,
   nextBoundaryAfter,
-  skippableChapterAt,
+  skippableRunAt,
 } from '@/lib/player-chapters'
 import {
   SECOND_TAP_WITHIN,
@@ -122,7 +122,10 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
-import { PlayerSkip } from '@/components/recordings/player-skip'
+import {
+  PlayerSkip,
+  PlayerSkipInTheRow,
+} from '@/components/recordings/player-skip'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
@@ -133,6 +136,7 @@ import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
 import { useWideWindow } from '@/hooks/useWideWindow'
+import { useNarrowWindow } from '@/hooks/useNarrowWindow'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
@@ -281,6 +285,7 @@ export function Player({
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
   const wide = useWideWindow()
+  const narrow = useNarrowWindow()
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
@@ -384,7 +389,7 @@ export function Player({
   const drops = d.qualitySpots?.map((spot) => spot.second)
   const chapters = chaptersToDraw(plan.chapters)
   const nextChapterAt = nextBoundaryAfter(position, chapters)
-  const skipHere = skippableChapterAt(position, chapters)
+  const runHere = skippableRunAt(position, chapters)
   const framed = phase === 'playing' || phase === 'paused'
   const chromeUp =
     phase !== 'playing' ||
@@ -770,23 +775,25 @@ export function Player({
     step(said.answer === 'back' ? -SEEK_STEP_SECONDS : SEEK_STEP_SECONDS, at)
   }
 
-  const skipTheStretch = (to: number) => {
+  const skipTheRun = (to: number) => {
     const from = position
 
     shell?.focus({ preventScroll: true })
     choose(to)
 
-    if (skipHere) {
-      skipEvents?.skippedTheStretch(from, skipHere)
+    if (runHere) {
+      skipEvents?.skippedTheRun(from, runHere.chapters)
     }
   }
 
-  const leaveTheStretch = (to: number) => {
+  const leaveTheStretch = () => {
     shell?.focus({ preventScroll: true })
-    setStretchesLeftAlone((were) => [...were, to])
 
-    if (skipHere) {
-      skipEvents?.leftTheStretch(position, skipHere)
+    if (runHere) {
+      const [playing] = runHere.chapters
+
+      setStretchesLeftAlone((were) => [...were, playing.endsAtSec])
+      skipEvents?.leftTheStretch(position, playing)
     }
   }
 
@@ -798,11 +805,13 @@ export function Player({
     skipEvents?.tell(position)
   }, [skipEvents, position])
 
-  const offersTheSkip =
-    skipHere !== undefined &&
-    !stretchesLeftAlone.includes(skipHere.endsAtSec) &&
+  const offered =
+    runHere !== undefined &&
+    !stretchesLeftAlone.includes(runHere.chapters[0].endsAtSec) &&
     (phase === 'playing' || phase === 'paused' || phase === 'waiting') &&
     !pip.out
+      ? runHere
+      : undefined
 
   const chooseProfile = (next: string) => {
     const quality = next as PlaybackProfile
@@ -1110,6 +1119,8 @@ export function Player({
   const faceShown = broadcast.view.open
   const place = bandPlace(full, wide)
   const underTheBox = faceShown && place !== 'over'
+  const skipInTheRow =
+    offered !== undefined && narrow && !full && chromeUp && !underTheBox
   const bandUnderTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
   const overThePicture = faceShown && place === 'over'
@@ -1311,13 +1322,13 @@ export function Player({
             bezel={bezel ?? undefined}
           />
           <PlayerSeekFlash flash={flash ?? undefined} />
-          {offersTheSkip && (
+          {offered && !skipInTheRow && (
             <PlayerSkip
-              key={skipHere.endsAtSec}
-              kind={skipHere.kind}
-              to={skipHere.endsAtSec}
+              key={offered.chapters[0].endsAtSec}
+              kinds={offered.kinds}
+              to={offered.endsAtSec}
               raised={chromeUp && !underTheBox}
-              onSkip={skipTheStretch}
+              onSkip={skipTheRun}
               onDismiss={leaveTheStretch}
               container={shell}
             />
@@ -1496,7 +1507,12 @@ export function Player({
                   次のチャプターへ
                 </button>
               )}
-              <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
+              <div
+                className={cn(
+                  'ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0',
+                  skipInTheRow && 'grow',
+                )}
+              >
                 {airPlayCanBeHanded(plan) && (
                   <PlayerTip name="AirPlay" container={shell}>
                     <AirPlayButton
@@ -1595,6 +1611,16 @@ export function Player({
                     <FullscreenIcon leaving={full} />
                   </button>
                 </PlayerTip>
+                {skipInTheRow && (
+                  <PlayerSkipInTheRow
+                    key={offered.chapters[0].endsAtSec}
+                    kinds={offered.kinds}
+                    to={offered.endsAtSec}
+                    onSkip={skipTheRun}
+                    onDismiss={leaveTheStretch}
+                    container={shell}
+                  />
+                )}
               </div>
             </div>
           </div>

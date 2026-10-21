@@ -16,6 +16,7 @@ import { ENCODE_CHOICES } from '@/repository/encode.fixtures'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import type { FeedRecording } from '@/components/recordings/recording-feed'
 import { SKIP_THE } from '@/components/recordings/player-skip'
+import { skipWords } from '@/lib/player-chapters'
 import { skipNoted, skips } from '@/stories/noted-skips'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame } from '@/stories/fixtures/frames'
@@ -39,6 +40,13 @@ const THEMED_STRETCHES: Omit<PlaybackChapter, 'skippable'>[] = [
   { startsAtSec: 502.3, endsAtSec: 1650, kind: 'programme' },
   { startsAtSec: 1650, endsAtSec: 1740, kind: 'ending' },
   { startsAtSec: 1740, endsAtSec: LENGTH, kind: 'programme' },
+]
+
+const OPENING_THEN_A_BREAK: Omit<PlaybackChapter, 'skippable'>[] = [
+  { startsAtSec: 0, endsAtSec: 60, kind: 'programme' },
+  { startsAtSec: 60, endsAtSec: 150, kind: 'opening' },
+  { startsAtSec: 150, endsAtSec: 210, kind: 'break' },
+  { startsAtSec: 210, endsAtSec: LENGTH, kind: 'programme' },
 ]
 
 const HEAD_SKIP = 14.5
@@ -385,6 +393,59 @@ export const エンコード済みの再生でもOPとEDを録画の中の時刻
         kind: 'ending',
         fromSec: 1650,
         toSec: 1740,
+        modelVersion: 3,
+      },
+    ])
+  },
+}
+
+const OPENING_AND_BREAK = chaptersOf(0, OPENING_THEN_A_BREAK)
+
+export const OPとCMをまとめて飛ばすと区間ごとに送る: Story = {
+  args: { playback: planned({ chapters: OPENING_AND_BREAK }), startAt: 100 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: skipWords(['opening', 'break']) }),
+    )
+
+    await waitFor(() => expect(canvas.getByText('3:30 / 30:04')).toBeVisible())
+    await expect(skips).toEqual([
+      {
+        event: 'skipped',
+        kind: 'opening',
+        fromSec: 100,
+        toSec: 150,
+        modelVersion: 3,
+      },
+      {
+        event: 'skipped',
+        kind: 'break',
+        fromSec: 150,
+        toSec: 210,
+        modelVersion: 3,
+      },
+    ])
+  },
+}
+
+export const OPとCMを飛ばすを閉じるとOPだけを送る: Story = {
+  args: { playback: planned({ chapters: OPENING_AND_BREAK }), startAt: 100 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: '閉じる' }))
+
+    await expect(
+      canvas.queryByRole('button', { name: skipWords(['opening', 'break']) }),
+    ).toBeNull()
+    await expect(skips).toEqual([
+      {
+        event: 'dismissed',
+        kind: 'opening',
+        fromSec: 100,
+        toSec: 150,
         modelVersion: 3,
       },
     ])
