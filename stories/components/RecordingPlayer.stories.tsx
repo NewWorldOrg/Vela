@@ -259,7 +259,7 @@ const SKIP_THE_ENDING = 'ED を飛ばす'
 
 const SKIP_THE_OPENING_AND_THE_BREAK = 'OP と CM を飛ばす'
 
-const SKIP_THEM_TOGETHER = 'まとめて飛ばす'
+const SKIP_ONLY = '飛ばす'
 
 const ANY_SKIP = /^(CM|OP|ED)( と (CM|OP|ED))* を飛ばす$/
 
@@ -3872,25 +3872,40 @@ export const 幅375ではバーの最下段の右端に出す: Story = {
   },
 }
 
-export const 幅375で入らないときはバーが出ているあいだ出さない: Story = {
+export const 幅375で2種類は飛ばすに縮める: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
     startAt: 100,
     pictureHref: keeping,
   },
-  parameters: { screen: NARROW },
+  parameters: { screen: { width: 375, height: 740 } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const seek = canvas.getByRole('slider', { name: '再生位置' })
-    const face = canvasElement.querySelector('[data-slot="player-face"]')
 
-    await waitFor(() => expect(skipSeat(canvasElement)).not.toBeVisible())
-    await expect(
-      canvas.queryByRole('button', { name: SKIP_THE_OPENING_AND_THE_BREAK }),
-    ).toBeNull()
-    await expect(seek.getBoundingClientRect().top).toBeGreaterThanOrEqual(
-      face?.getBoundingClientRect().top ?? Infinity,
+    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
+    await waitFor(() =>
+      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+    )
+  },
+}
+
+export const 幅375で3種類は飛ばすに縮める: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: OPENING_BREAK_AND_ENDING,
+    startAt: 100,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 375, height: 740 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
+    await waitFor(() =>
+      expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
     )
   },
 }
@@ -3925,7 +3940,7 @@ export const 幅375でバーが隠れると映像の右下に戻る: Story = {
   },
 }
 
-export const 幅393で2種類が入らないときはまとめて飛ばす: Story = {
+export const 幅393で2種類が入らないときは飛ばすに縮める: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
@@ -3937,16 +3952,14 @@ export const 幅393で2種類が入らないときはまとめて飛ばす: Stor
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(
-      canvas.getByRole('button', { name: SKIP_THEM_TOGETHER }),
-    )
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
     )
   },
 }
 
-export const 幅414では2種類の語のままバーの最下段に出す: Story = {
+export const 幅414では2種類をプラスでつないで出す: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
@@ -3955,16 +3968,19 @@ export const 幅414では2種類の語のままバーの最下段に出す: Stor
   },
   parameters: { screen: { width: 414, height: 740 } },
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await expect(
-      within(canvasElement).getByRole('button', {
-        name: SKIP_THE_OPENING_AND_THE_BREAK,
-      }),
-    ).toBeVisible()
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'OP+CM を飛ばす' }),
+    )
+    await waitFor(() =>
+      expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
+    )
   },
 }
 
-export const 幅414で3種類が続くとまとめて飛ばす: Story = {
+export const 幅414で3種類が入らないときは飛ばすに縮める: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_BREAK_AND_ENDING,
@@ -3976,9 +3992,7 @@ export const 幅414で3種類が続くとまとめて飛ばす: Story = {
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
-    await userEvent.click(
-      canvas.getByRole('button', { name: SKIP_THEM_TOGETHER }),
-    )
+    await userEvent.click(canvas.getByRole('button', { name: SKIP_ONLY }))
     await waitFor(() =>
       expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
     )

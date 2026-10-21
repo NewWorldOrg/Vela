@@ -127,12 +127,11 @@ export function skipWords(kinds: readonly SkippableKind[]): string {
   return `${kinds.map((kind) => SHORT_NAME[kind]).join(' と ')} を飛ばす`
 }
 
-export const SKIP_THEM_TOGETHER = 'まとめて飛ばす'
+export const SKIP_ONLY = '飛ばす'
 
-/** The words on the skip button in the control row: the kinds when they fit there, and for more than one kind that does not, words that name none of them. */
-export function skipWordsInTheRow(
-  kinds: readonly SkippableKind[],
-  fits: boolean,
-): string {
-  return fits || kinds.length < 2 ? skipWords(kinds) : SKIP_THEM_TOGETHER
+/** The words on the skip button in the control row: one kind as anywhere else, and several kinds joined with a plus. */
+export function skipWordsInTheRow(kinds: readonly SkippableKind[]): string {
+  return kinds.length < 2
+    ? skipWords(kinds)
+    : `${kinds.map((kind) => SHORT_NAME[kind]).join('+')} を飛ばす`
 }

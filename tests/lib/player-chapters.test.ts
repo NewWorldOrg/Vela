@@ -7,7 +7,7 @@ import {
   isSkippableKind,
   nextBoundaryAfter,
   skippableChapterAt,
-  SKIP_THEM_TOGETHER,
+  SKIP_ONLY,
   skippableRunAt,
   skipWords,
   skipWordsInTheRow,
@@ -298,22 +298,13 @@ test('the skip button names one kind alone, and more than one joined in the orde
   )
 })
 
-test('in the control row, the kinds are named while they fit, and more than one kind that does not fit is skipped together', () => {
+test('in the control row, several kinds are joined with a plus, and one kind keeps its words', () => {
+  assert.equal(skipWordsInTheRow(['opening', 'break']), 'OP+CM を飛ばす')
+  assert.equal(skipWordsInTheRow(['break', 'ending']), 'CM+ED を飛ばす')
   assert.equal(
-    skipWordsInTheRow(['opening', 'break'], true),
-    'OP と CM を飛ばす',
+    skipWordsInTheRow(['opening', 'break', 'ending']),
+    'OP+CM+ED を飛ばす',
   )
-  assert.equal(
-    skipWordsInTheRow(['opening', 'break'], false),
-    SKIP_THEM_TOGETHER,
-  )
-  assert.equal(
-    skipWordsInTheRow(['opening', 'break', 'ending'], false),
-    'まとめて飛ばす',
-  )
-})
-
-test('in the control row, one kind keeps its words even where they do not fit', () => {
-  assert.equal(skipWordsInTheRow(['break'], false), 'CM を飛ばす')
-  assert.equal(skipWordsInTheRow(['ending'], true), 'ED を飛ばす')
+  assert.equal(skipWordsInTheRow(['opening']), 'OP を飛ばす')
+  assert.equal(SKIP_ONLY, '飛ばす')
 })

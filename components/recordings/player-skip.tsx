@@ -10,11 +10,7 @@ import {
   PLAYER_BUTTON,
   PLAYER_GLYPH_BUTTON,
 } from '@/components/recordings/player-palette'
-import {
-  SKIP_THEM_TOGETHER,
-  skipWords,
-  skipWordsInTheRow,
-} from '@/lib/player-chapters'
+import { SKIP_ONLY, skipWords, skipWordsInTheRow } from '@/lib/player-chapters'
 import type { SkippableKind } from '@/repository/videos'
 
 export const SKIP_THE: Record<SkippableKind, string> = {
@@ -79,28 +75,16 @@ function nothingToFollow(): () => void {
   return () => undefined
 }
 
-/** How much of the skip fits on the line it sits on: its whole words, only the shorter words, or nothing. */
-type Fit = 'whole' | 'shorter' | 'none'
-
-function wholeOnTheServer(): Fit {
-  return 'whole'
+function fitsOnTheServer(): boolean {
+  return true
 }
 
-function widthOf(element: Element | null): number {
-  return element?.getBoundingClientRect().width ?? 0
-}
-
-interface Measured {
-  seat: HTMLElement | null
-  whole: HTMLElement | null
-  shorter: HTMLElement | null
-}
-
-function fitOf({ seat, whole, shorter }: Measured): Fit {
+/** Whether the skip with the given words stands beside what comes before it on the line of the row it sits in. */
+function fitsBeside(seat: HTMLElement | null, unseen: HTMLElement | null) {
   const row = seat?.parentElement
 
-  if (!seat || !row || !whole) {
-    return 'whole'
+  if (!seat || !row || !unseen) {
+    return true
   }
 
   const line = row.getBoundingClientRect()
@@ -108,15 +92,13 @@ function fitOf({ seat, whole, shorter }: Measured): Fit {
   const gap = parseFloat(getComputedStyle(row).columnGap) || 0
   const room = before === undefined ? line.width : line.right - before - gap
 
-  if (widthOf(whole) <= room) {
-    return 'whole'
-  }
-
-  return shorter && widthOf(shorter) <= room ? 'shorter' : 'none'
+  return unseen.getBoundingClientRect().width <= room
 }
 
-function useFit(measured: Measured): Fit {
-  const { seat, whole, shorter } = measured
+function useFitsBeside(
+  seat: HTMLElement | null,
+  unseen: HTMLElement | null,
+): boolean {
   const follow = useCallback(
     (notify: () => void) => {
       const row = seat?.parentElement
@@ -127,7 +109,7 @@ function useFit(measured: Measured): Fit {
 
       const resizing = new ResizeObserver(notify)
 
-      for (const one of [row, seat.previousElementSibling, whole, shorter]) {
+      for (const one of [row, seat.previousElementSibling, unseen]) {
         if (one) {
           resizing.observe(one)
         }
@@ -135,37 +117,21 @@ function useFit(measured: Measured): Fit {
 
       return () => resizing.disconnect()
     },
-    [seat, whole, shorter],
+    [seat, unseen],
   )
 
-  return useSyncExternalStore(follow, () => fitOf(measured), wholeOnTheServer)
+  return useSyncExternalStore(
+    follow,
+    () => fitsBeside(seat, unseen),
+    fitsOnTheServer,
+  )
 }
 
 const SKIP_IN_THE_ROW = 'flex items-center gap-x-1'
 
-/** The skip drawn out of sight with the given words, to learn how wide it would stand. */
-function Unseen({
-  words,
-  onWidth,
-}: {
-  words: string
-  onWidth: (span: HTMLSpanElement | null) => void
-}) {
-  return (
-    <span
-      ref={onWidth}
-      aria-hidden="true"
-      className={cn(SKIP_IN_THE_ROW, 'pointer-events-none invisible absolute')}
-    >
-      <span className={PLAYER_BUTTON}>{words}</span>
-      <span className="size-10 shrink-0" />
-    </span>
-  )
-}
-
 /**
  * The skip button and its close button at the right end of the last line of the control row, where the row folds over a
- * narrow picture. Several kinds that do not fit say the shorter words; when nothing fits, the skip waits for the row to go.
+ * narrow picture; words that do not fit there give way to the shortest ones.
  */
 export function PlayerSkipInTheRow({
   kinds,
@@ -181,46 +147,45 @@ export function PlayerSkipInTheRow({
   container: HTMLElement | null
 }) {
   const [seat, setSeat] = useState<HTMLDivElement | null>(null)
-  const [whole, setWhole] = useState<HTMLSpanElement | null>(null)
-  const [shorter, setShorter] = useState<HTMLSpanElement | null>(null)
-  const fit = useFit({ seat, whole, shorter })
+  const [unseen, setUnseen] = useState<HTMLSpanElement | null>(null)
+  const words = skipWordsInTheRow(kinds)
+  const fits = useFitsBeside(seat, unseen)
 
   return (
     <div
       ref={setSeat}
       data-slot="player-skip"
       data-place="row"
-      className={cn(
-        'relative ml-auto',
-        SKIP_IN_THE_ROW,
-        fit === 'none' && 'invisible absolute right-0',
-      )}
+      className={cn('relative ml-auto', SKIP_IN_THE_ROW)}
     >
-      {fit !== 'none' && (
-        <>
-          <button
-            type="button"
-            onClick={() => onSkip(to)}
-            className={PLAYER_BUTTON}
-          >
-            {skipWordsInTheRow(kinds, fit === 'whole')}
-          </button>
-          <PlayerTip name="閉じる" container={container}>
-            <button
-              type="button"
-              aria-label="閉じる"
-              onClick={onDismiss}
-              className={PLAYER_GLYPH_BUTTON}
-            >
-              <CloseIcon />
-            </button>
-          </PlayerTip>
-        </>
-      )}
-      <Unseen words={skipWords(kinds)} onWidth={setWhole} />
-      {kinds.length > 1 && (
-        <Unseen words={SKIP_THEM_TOGETHER} onWidth={setShorter} />
-      )}
+      <button
+        type="button"
+        onClick={() => onSkip(to)}
+        className={PLAYER_BUTTON}
+      >
+        {fits ? words : SKIP_ONLY}
+      </button>
+      <PlayerTip name="閉じる" container={container}>
+        <button
+          type="button"
+          aria-label="閉じる"
+          onClick={onDismiss}
+          className={PLAYER_GLYPH_BUTTON}
+        >
+          <CloseIcon />
+        </button>
+      </PlayerTip>
+      <span
+        ref={setUnseen}
+        aria-hidden="true"
+        className={cn(
+          SKIP_IN_THE_ROW,
+          'pointer-events-none invisible absolute',
+        )}
+      >
+        <span className={PLAYER_BUTTON}>{words}</span>
+        <span className="size-10 shrink-0" />
+      </span>
     </div>
   )
 }
