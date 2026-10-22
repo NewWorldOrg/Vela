@@ -6331,15 +6331,6 @@ export interface operations {
           'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
         }
       }
-      /** @description Conflict */
-      409: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          'application/json': components['schemas']['BaseResponderOfSegmentVersionResponder']
-        }
-      }
       /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
       500: {
         headers: {

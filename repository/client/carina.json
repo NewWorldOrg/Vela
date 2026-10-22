@@ -1972,16 +1972,6 @@
               }
             }
           },
-          "409": {
-            "description": "Conflict",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BaseResponderOfSegmentVersionResponder"
-                }
-              }
-            }
-          },
           "401": {
             "description": "Unauthenticated. The default-deny middleware answers with an empty body."
           },
