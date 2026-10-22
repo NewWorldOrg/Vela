@@ -127,21 +127,14 @@ test('choosing a version names its number, and leaving it to learning says only 
   ])
 })
 
-test('a version change refused while learning is off says so, apart from the rest', async () => {
-  store.status = 409
-
-  assert.deepEqual(await chooseSegmentVersion(2), { state: 'learningOff' })
-  assert.deepEqual(await leaveSegmentVersionToLearning(), {
-    state: 'learningOff',
-  })
-
+test('a version change refused without a session says so, apart from the rest', async () => {
   store.status = 401
 
   assert.deepEqual(await chooseSegmentVersion(2), {
     state: 'unauthenticated',
   })
 
-  for (const status of [400, 404, 500]) {
+  for (const status of [400, 404, 409, 500]) {
     store.status = status
 
     assert.deepEqual(await chooseSegmentVersion(9), { state: 'notSaved' })

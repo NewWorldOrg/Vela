@@ -14790,12 +14790,6 @@
       "PatchSegmentSettingsRequest": {
         "type": "object",
         "properties": {
-          "learning": {
-            "type": [
-              "null",
-              "boolean"
-            ]
-          },
           "skipThreshold": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
@@ -20428,23 +20422,11 @@
       },
       "SegmentSettingsResponder": {
         "required": [
-          "learning",
-          "learningChangedAt",
           "skipThreshold",
           "skipThresholdChangedAt"
         ],
         "type": "object",
         "properties": {
-          "learning": {
-            "type": "boolean"
-          },
-          "learningChangedAt": {
-            "type": [
-              "null",
-              "string"
-            ],
-            "format": "date-time"
-          },
           "skipThreshold": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
             "type": [
@@ -20518,7 +20500,6 @@
       },
       "SegmentStatusResponder": {
         "required": [
-          "learning",
           "learningData",
           "catalog",
           "version",
@@ -20532,9 +20513,6 @@
         ],
         "type": "object",
         "properties": {
-          "learning": {
-            "type": "boolean"
-          },
           "learningData": {
             "$ref": "#/components/schemas/LearningDataResponder"
           },

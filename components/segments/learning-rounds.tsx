@@ -1,18 +1,12 @@
-import {
-  ROUNDS_LEARNING_OFF,
-  lastRoundOf,
-  nextRoundOf,
-} from '@/lib/segment-detection'
+import { lastRoundOf, nextRoundOf } from '@/lib/segment-detection'
 import type { SegmentRound } from '@/repository/segment-status'
 
 export const LEARNING_ROUNDS_SLOT = 'segment-learning-rounds'
 
 export function LearningRounds({
-  learning,
   lastRound,
   nextRound,
 }: {
-  learning: boolean
   lastRound?: SegmentRound
   nextRound?: string
 }) {
@@ -21,9 +15,7 @@ export function LearningRounds({
       data-slot={LEARNING_ROUNDS_SLOT}
       className="mb-3 text-note leading-[1.7] text-ink-2"
     >
-      {learning
-        ? `${lastRoundOf(lastRound)}${nextRoundOf(nextRound)}`
-        : ROUNDS_LEARNING_OFF}
+      {`${lastRoundOf(lastRound)}${nextRoundOf(nextRound)}`}
     </p>
   )
 }

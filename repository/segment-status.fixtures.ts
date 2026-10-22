@@ -64,7 +64,6 @@ const NO_BETTER: SegmentRound = {
 }
 
 const STATUS: SegmentStatus = {
-  learning: true,
   learningData: {
     recordings: 312,
     seconds: 674_100,
@@ -115,8 +114,6 @@ function withLearningData(data: LearningData): Reading<SegmentStatus> {
 
 export const DETECTION_STATUS = read(STATUS)
 
-export const DETECTION_LEARNING_OFF = read({ ...STATUS, learning: false })
-
 const BY_HAND: SegmentStatus = {
   ...STATUS,
   version: { number: 2, byHand: true, adoptedAt: '11/3(火) 10:12' },
@@ -146,11 +143,6 @@ const NOTHING_CHECKED: SegmentStatus = {
 }
 
 export const DETECTION_BY_HAND = read(BY_HAND)
-
-export const DETECTION_BY_HAND_LEARNING_OFF = read({
-  ...BY_HAND,
-  learning: false,
-})
 
 export const DETECTION_NOT_YET_EVALUATED = read({
   ...STATUS,

@@ -3004,7 +3004,6 @@ export interface components {
       longestLength: number | string
     }
     PatchSegmentSettingsRequest: {
-      learning?: null | boolean
       /** Format: double */
       skipThreshold?: null | number | string
     }
@@ -4395,9 +4394,6 @@ export interface components {
       breakRecall: null | number | string
     }
     SegmentSettingsResponder: {
-      learning: boolean
-      /** Format: date-time */
-      learningChangedAt: null | string
       /** Format: double */
       skipThreshold: number | string
       /** Format: date-time */
@@ -4417,7 +4413,6 @@ export interface components {
       metrics: components['schemas']['SegmentMetricsSummaryResponder']
     }
     SegmentStatusResponder: {
-      learning: boolean
       learningData: components['schemas']['LearningDataResponder']
       catalog: components['schemas']['CatalogResponder']
       version: components['schemas']['SegmentVersionResponder']

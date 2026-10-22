@@ -49,7 +49,6 @@ const LEARNING_DATA = {
 const SUMMARY = { boundaryRecallWithin2s: 0.96 }
 
 const STATUS = {
-  learning: true,
   learningData: LEARNING_DATA,
   catalog: {
     cm: 820,
@@ -229,7 +228,6 @@ async function readValue() {
 test('the status is read as the API answers it', async () => {
   const status = await readValue()
 
-  assert.equal(status.learning, true)
   assert.deepEqual(status.learningData, LEARNING_DATA)
   assert.deepEqual(status.catalog, { cm: 820, programmeFixture: 40 })
   assert.deepEqual(status.version, {

@@ -7,8 +7,7 @@ export type SkipThresholdRefusal = 'outOfRange' | 'unauthenticated' | 'notSaved'
 export type SkipThresholdWrite =
   { state: 'ok' } | { state: SkipThresholdRefusal }
 
-export type SegmentVersionRefusal =
-  'learningOff' | 'unauthenticated' | 'notSaved'
+export type SegmentVersionRefusal = 'unauthenticated' | 'notSaved'
 
 export type SegmentVersionWrite =
   { state: 'ok' } | { state: SegmentVersionRefusal }
@@ -44,7 +43,6 @@ export async function settleSkipThreshold(
 
 const VERSION_REFUSALS: Partial<Record<number, SegmentVersionRefusal>> = {
   401: 'unauthenticated',
-  409: 'learningOff',
 }
 
 async function changeVersion(

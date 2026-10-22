@@ -83,7 +83,6 @@ function Read({
         <VersionHistory
           versions={status.versions}
           byHand={status.version.byHand}
-          learning={status.learning}
           lastRound={status.lastRound}
           nextRound={status.nextRound}
           onChoose={actions.onChooseVersion}
