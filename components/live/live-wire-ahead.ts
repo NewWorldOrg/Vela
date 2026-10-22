@@ -87,7 +87,7 @@ class KeptWire implements LiveSocket {
     this.handOn()
   }
 
-  send(data: ArrayBuffer | ArrayBufferView): void {
+  send(data: ArrayBuffer | ArrayBufferView<ArrayBuffer>): void {
     this.socket.send(data)
   }
 
