@@ -60,7 +60,6 @@ file has one written there from the license its `package.json` states.
 | `@radix-ui/react-use-effect-event` | MIT |
 | `@radix-ui/react-use-is-hydrated` | MIT |
 | `@radix-ui/react-use-layout-effect` | MIT |
-| `@radix-ui/react-use-previous` | MIT |
 | `@radix-ui/react-use-size` | MIT |
 | `@radix-ui/react-visually-hidden` | MIT |
 | `@swc/helpers` | Apache-2.0 |
