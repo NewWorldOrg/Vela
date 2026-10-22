@@ -74,7 +74,6 @@ export type LeaveSegmentVersionToLearning = () => Promise<SegmentVersionWrite>
 export function VersionHistory({
   versions,
   byHand,
-  learning,
   lastRound,
   nextRound,
   onChoose,
@@ -82,7 +81,6 @@ export function VersionHistory({
 }: {
   versions: SegmentVersion[]
   byHand: boolean
-  learning: boolean
   lastRound?: SegmentRound
   nextRound?: string
   onChoose: ChooseSegmentVersion
@@ -90,8 +88,7 @@ export function VersionHistory({
 }) {
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
-  const choosable =
-    learning && versions.some((version) => version.state !== 'active')
+  const choosable = versions.some((version) => version.state !== 'active')
 
   const leave = () => {
     if (pending) {
@@ -115,7 +112,7 @@ export function VersionHistory({
         <SectionHeading mark={MarkAxis} className="mb-0 min-w-0 flex-1">
           {VERSIONS_HEADING}
         </SectionHeading>
-        {learning && byHand && (
+        {byHand && (
           <Button
             type="button"
             variant="halt"
@@ -135,11 +132,7 @@ export function VersionHistory({
           </InlineAlert>
         )}
       </div>
-      <LearningRounds
-        learning={learning}
-        lastRound={lastRound}
-        nextRound={nextRound}
-      />
+      <LearningRounds lastRound={lastRound} nextRound={nextRound} />
       {versions.length > 0 && (
         <Table className="min-w-[calc(640rem/16)]">
           <TableHeader>

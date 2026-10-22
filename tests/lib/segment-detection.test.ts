@@ -4,7 +4,6 @@ import { test } from 'node:test'
 import type { SegmentRound } from '@/repository/segment-status'
 import {
   NO_ROUND_YET,
-  ROUNDS_LEARNING_OFF,
   backToAutomaticRefusalOf,
   boundaryMatchOf,
   evidenceShortOf,
@@ -145,10 +144,6 @@ test('a threshold is sent to the hundredth', () => {
 
 test('each refusal says why it could not be done', () => {
   assert.equal(
-    switchRefusalOf('learningOff'),
-    '学習が無効のため、切り替えできませんでした。',
-  )
-  assert.equal(
     switchRefusalOf('unauthenticated'),
     'サインインが切れているため、切り替えできませんでした。',
   )
@@ -157,8 +152,12 @@ test('each refusal says why it could not be done', () => {
     '切り替えできませんでした。時間をおいてからもう一度お試しください。',
   )
   assert.equal(
-    backToAutomaticRefusalOf('learningOff'),
-    '学習が無効のため、変更できませんでした。',
+    backToAutomaticRefusalOf('unauthenticated'),
+    'サインインが切れているため、変更できませんでした。',
+  )
+  assert.equal(
+    backToAutomaticRefusalOf('notSaved'),
+    '変更できませんでした。時間をおいてからもう一度お試しください。',
   )
   assert.equal(
     skipThresholdRefusalOf('outOfRange'),
@@ -186,11 +185,7 @@ const LEARNED: SegmentRound = {
 
 const LEAD = '直近の回(10月20日 3:06): '
 
-test('the next round is said by the hour it may begin, or as the next free time once that has come, and learning off says nothing switches', () => {
-  assert.equal(
-    ROUNDS_LEARNING_OFF,
-    '学習が無効のため、候補の版は作られず切り替わりません。',
-  )
+test('the next round is said by the hour it may begin, or as the next free time once that has come', () => {
   assert.equal(nextRoundOf(undefined), '次の回: 次の空き時間。')
   assert.equal(
     nextRoundOf('10月21日 3時'),

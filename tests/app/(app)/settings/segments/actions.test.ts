@@ -79,10 +79,12 @@ test('a change the API took reads the page again', async () => {
 })
 
 test('a change that was refused leaves the page as it was drawn', async () => {
-  store.status = 409
+  store.status = 401
 
-  assert.deepEqual(await chooseTheVersion(2), { state: 'learningOff' })
-  assert.deepEqual(await leaveTheVersionToLearning(), { state: 'learningOff' })
+  assert.deepEqual(await chooseTheVersion(2), { state: 'unauthenticated' })
+  assert.deepEqual(await leaveTheVersionToLearning(), {
+    state: 'unauthenticated',
+  })
 
   store.status = 400
 

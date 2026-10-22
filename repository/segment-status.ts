@@ -118,7 +118,6 @@ export interface SegmentRound {
 }
 
 export interface SegmentStatus {
-  learning: boolean
   learningData: LearningData
   catalog: SegmentCatalog
   version: SegmentVersionInUse
@@ -226,7 +225,6 @@ function statusOf(
     status
 
   return {
-    learning: status.learning,
     learningData: {
       recordings: Number(learningData.recordings),
       seconds: Number(learningData.seconds),
