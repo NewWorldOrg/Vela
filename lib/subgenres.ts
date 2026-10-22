@@ -1,5 +1,3 @@
-import { genreLabelOfKind } from '@/lib/search-condition'
-
 export interface Subgenre {
   value: string
   kind: number
@@ -129,10 +127,4 @@ function subgenreOf(kind: number, sort: number, label: string): Subgenre {
 
 export function subgenreOfValue(value: string): Subgenre | undefined {
   return SUBGENRE_OPTIONS.find((option) => option.value === value)
-}
-
-export function subgenreLabelOf(value: string): string {
-  const found = subgenreOfValue(value)
-
-  return found ? `${found.label}(${genreLabelOfKind(found.kind)})` : value
 }

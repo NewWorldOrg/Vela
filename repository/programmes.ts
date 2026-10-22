@@ -4,7 +4,7 @@ import {
   revalidatingCarinaClient,
 } from '@/repository/client/carina'
 import type { components, paths } from '@/repository/client/schema'
-import type { SearchField } from '@/lib/search-condition'
+import type { SearchDay, SearchField } from '@/lib/search-condition'
 import type { ChannelKind } from '@/repository/channels'
 import type { AudioMode, VideoMode } from '@/repository/announced'
 import { whatItSaid } from '@/repository/said'
@@ -27,6 +27,8 @@ export type ProgrammeSort = NonNullable<SearchParams['sort']>
 
 export type SearchSystem = NonNullable<SearchParams['type']>
 
+export type ProgrammeDay = NonNullable<SearchParams['day']>[number]
+
 export const SEARCH_FIELDS_OF: Record<SearchField, ProgrammeField[]> = {
   'title,description': ['Title', 'Description'],
   title: ['Title'],
@@ -37,6 +39,16 @@ export const SEARCH_SYSTEM_OF_KIND: Record<ChannelKind, SearchSystem> = {
   terrestrial: 'IsdbT',
   bs: 'IsdbSBs',
   cs110: 'IsdbSCs110',
+}
+
+export const SEARCH_DAY_OF: Record<SearchDay, ProgrammeDay> = {
+  monday: 'Monday',
+  tuesday: 'Tuesday',
+  wednesday: 'Wednesday',
+  thursday: 'Thursday',
+  friday: 'Friday',
+  saturday: 'Saturday',
+  sunday: 'Sunday',
 }
 
 export interface ProgrammeGenre {
@@ -100,8 +112,10 @@ export interface SearchQuery {
   exclude?: string
   fields?: ProgrammeField[]
   genres?: number[]
+  subgenres?: string[]
   system?: SearchSystem
   channels?: string[]
+  days?: ProgrammeDay[]
   from?: Date
   to?: Date
   sort?: ProgrammeSort
@@ -163,6 +177,8 @@ export async function searchProgrammes(
           exclude: query.exclude,
           fields: query.fields?.length ? query.fields : undefined,
           genre: query.genres?.length ? query.genres : undefined,
+          subgenre: query.subgenres?.length ? query.subgenres : undefined,
+          day: query.days?.length ? query.days : undefined,
           type: query.system,
           channel: query.channels?.length ? query.channels : undefined,
           from: query.from?.toISOString(),

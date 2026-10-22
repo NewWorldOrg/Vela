@@ -17,7 +17,6 @@ import {
 } from '@/lib/reservations'
 import {
   NEW_RULE,
-  RULE_DAY_OPTIONS,
   RULE_DEFAULT_PRIORITY,
   RULE_MARK_OPTIONS,
   RULE_NAME_LONGEST,
@@ -25,8 +24,6 @@ import {
   RULE_PERIOD_LONGEST_DAYS,
   RULE_TAKES_SHOWN,
   ruleConditionParts,
-  ruleDayLabelOf,
-  ruleDaysInOrder,
   ruleMarkLabelOf,
   ruleMarksInOrder,
   ruleApplicationFellShort,
@@ -36,9 +33,7 @@ import {
   withinRulePeriod,
   exclusionPartsOf,
 } from '@/lib/rules'
-import type { RuleDay, RuleMark } from '@/lib/rules'
-import { genreKindsOf, genreLabelOfKind } from '@/lib/search-condition'
-import { SUBGENRE_OPTIONS, subgenreLabelOf } from '@/lib/subgenres'
+import type { RuleMark } from '@/lib/rules'
 import { cn } from '@/lib/utils'
 import type { GuideChannel } from '@/repository/programs'
 import type {
@@ -93,9 +88,7 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
-  SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -110,7 +103,6 @@ import {
   RequiredMark,
 } from '@/components/vela/field'
 import {
-  CloseIcon,
   FilterIcon,
   ListIcon,
   PlusIcon,
@@ -123,6 +115,11 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import {
+  DayPicks,
+  Pick,
+  SubgenrePicks,
+} from '@/components/search/condition-picks'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 export type RuleEditing =
@@ -493,25 +490,10 @@ function RuleEditor({
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !entry.genres.includes(option.value),
   )
-  const namedGenres = genreKindsOf(entry.genres)
-  const unusedSubgenres = SEARCH_GENRE_OPTIONS.filter(
-    (genre) => !namedGenres.includes(genre.kind),
-  )
-    .map((genre) => ({
-      genre,
-      under: SUBGENRE_OPTIONS.filter(
-        (option) =>
-          option.kind === genre.kind && !entry.subgenres.includes(option.value),
-      ),
-    }))
-    .filter((group) => group.under.length > 0)
   const unusedChannels = channels.filter(
     (channel) =>
       (!entry.kind || channel.kind === entry.kind) &&
       !entry.channels.includes(channel.id),
-  )
-  const unusedDays = RULE_DAY_OPTIONS.filter(
-    (option) => !entry.days.includes(option.value),
   )
   const unnamedMarks = RULE_MARK_OPTIONS.filter(
     (option) =>
@@ -907,48 +889,11 @@ function RuleEditor({
         <Field>
           <FieldLabel>サブジャンル</FieldLabel>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
-            {entry.subgenres.map((subgenre) => (
-              <Pick
-                key={subgenre}
-                label={subgenreLabelOf(subgenre)}
-                spoken={`サブジャンル ${subgenreLabelOf(subgenre)} を外す`}
-                onRemove={() =>
-                  amend({
-                    subgenres: entry.subgenres.filter(
-                      (one) => one !== subgenre,
-                    ),
-                  })
-                }
-              />
-            ))}
-            {unusedSubgenres.length > 0 && (
-              <Select
-                value=""
-                onValueChange={(value) =>
-                  amend({ subgenres: [...entry.subgenres, value] })
-                }
-              >
-                <SelectTrigger
-                  size="sm"
-                  aria-label="サブジャンルを追加"
-                  className="w-fit rounded-full text-ink-3"
-                >
-                  ＋ サブジャンルを追加
-                </SelectTrigger>
-                <SelectContent>
-                  {unusedSubgenres.map(({ genre, under }) => (
-                    <SelectGroup key={genre.kind}>
-                      <SelectLabel>{genreLabelOfKind(genre.kind)}</SelectLabel>
-                      {under.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectGroup>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <SubgenrePicks
+              genres={entry.genres}
+              subgenres={entry.subgenres}
+              onChange={(subgenres) => amend({ subgenres })}
+            />
           </span>
         </Field>
 
@@ -1002,41 +947,7 @@ function RuleEditor({
         <Field>
           <FieldLabel>曜日</FieldLabel>
           <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
-            {entry.days.map((day) => (
-              <Pick
-                key={day}
-                label={ruleDayLabelOf(day)}
-                spoken={`曜日 ${ruleDayLabelOf(day)} を外す`}
-                onRemove={() =>
-                  amend({ days: entry.days.filter((one) => one !== day) })
-                }
-              />
-            ))}
-            {unusedDays.length > 0 && (
-              <Select
-                value=""
-                onValueChange={(value) =>
-                  amend({
-                    days: ruleDaysInOrder([...entry.days, value as RuleDay]),
-                  })
-                }
-              >
-                <SelectTrigger
-                  size="sm"
-                  aria-label="曜日を追加"
-                  className="w-fit rounded-full text-ink-3"
-                >
-                  ＋ 曜日を追加
-                </SelectTrigger>
-                <SelectContent>
-                  {unusedDays.map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            )}
+            <DayPicks days={entry.days} onChange={(days) => amend({ days })} />
           </span>
         </Field>
 
@@ -1556,29 +1467,5 @@ function MarkField({
         )}
       </span>
     </Field>
-  )
-}
-
-function Pick({
-  label,
-  spoken,
-  onRemove,
-}: {
-  label: string
-  spoken: string
-  onRemove: () => void
-}) {
-  return (
-    <span className="inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
-      {label}
-      <button
-        type="button"
-        aria-label={spoken}
-        onClick={onRemove}
-        className="tap-target flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
-      >
-        <CloseIcon />
-      </button>
-    </span>
   )
 }

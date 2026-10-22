@@ -26,6 +26,7 @@ import {
   SEARCH_PER_PAGE_OPTIONS,
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
+  namesSomeDays,
   searchQueryOf,
   searchTermsOf,
   searchTermsQueryOf,
@@ -62,7 +63,6 @@ import { Pager } from '@/components/vela/pager'
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
-  CloseIcon,
   FilterIcon,
   LinkIcon,
   ListIcon,
@@ -71,6 +71,11 @@ import {
 } from '@/components/vela/icons'
 import { ADMIN_LIST_HEIGHT_CAP, ScreenMain } from '@/components/vela/app-shell'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import {
+  DayPicks,
+  Pick,
+  SubgenrePicks,
+} from '@/components/search/condition-picks'
 import { SPAN_DASH } from '@/lib/format'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
@@ -174,8 +179,10 @@ function SearchScreen({ result }: { result: SearchResult }) {
     Boolean(terms.q),
     Boolean(terms.exclude),
     terms.genres.length > 0,
+    terms.subgenres.length > 0,
     Boolean(terms.kind),
     terms.channels.length > 0,
+    namesSomeDays(terms.days),
     Boolean(terms.from || terms.to),
   ].filter((asked) => asked).length
   const found = outcome.state === 'searched' ? outcome.found : undefined
@@ -286,6 +293,37 @@ function SearchScreen({ result }: { result: SearchResult }) {
             </Select>
           </ConditionRow>
 
+          <ConditionRow label="種別">
+            <Select
+              value={draft.kind ?? EVERY_KIND}
+              onValueChange={(value) =>
+                amend({
+                  kind:
+                    value === EVERY_KIND ? undefined : (value as SearchKind),
+                  channels: [],
+                })
+              }
+            >
+              <SelectTrigger
+                size="sm"
+                aria-label="種別"
+                className="w-fit rounded-full"
+              >
+                {SEARCH_KIND_OPTIONS.find(
+                  (option) => option.value === draft.kind,
+                )?.label ?? 'すべて'}
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={EVERY_KIND}>すべて</SelectItem>
+                {SEARCH_KIND_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </ConditionRow>
+
           <ConditionRow label="ジャンル">
             {draft.genres.map((genre) => (
               <Pick
@@ -324,35 +362,12 @@ function SearchScreen({ result }: { result: SearchResult }) {
             )}
           </ConditionRow>
 
-          <ConditionRow label="種別">
-            <Select
-              value={draft.kind ?? EVERY_KIND}
-              onValueChange={(value) =>
-                amend({
-                  kind:
-                    value === EVERY_KIND ? undefined : (value as SearchKind),
-                  channels: [],
-                })
-              }
-            >
-              <SelectTrigger
-                size="sm"
-                aria-label="種別"
-                className="w-fit rounded-full"
-              >
-                {SEARCH_KIND_OPTIONS.find(
-                  (option) => option.value === draft.kind,
-                )?.label ?? 'すべて'}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={EVERY_KIND}>すべて</SelectItem>
-                {SEARCH_KIND_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <ConditionRow label="サブジャンル">
+            <SubgenrePicks
+              genres={draft.genres}
+              subgenres={draft.subgenres}
+              onChange={(subgenres) => amend({ subgenres })}
+            />
           </ConditionRow>
 
           <ConditionRow label="チャンネル">
@@ -397,6 +412,10 @@ function SearchScreen({ result }: { result: SearchResult }) {
                 チャンネルは {SEARCH_MOST_CHANNELS} 局まで指定できます
               </Hint>
             )}
+          </ConditionRow>
+
+          <ConditionRow label="曜日">
+            <DayPicks days={draft.days} onChange={(days) => amend({ days })} />
           </ConditionRow>
 
           <ConditionRow label="期間">
@@ -482,7 +501,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             <Button
               size="sm"
               disabled
-              title="キーワード・除外キーワード・ジャンル・種別・チャンネル・期間のどれも指定していないため、ルールを作成できません。"
+              title="キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間のどれも指定していないため、ルールを作成できません。"
             >
               <PlusIcon />
               この条件でルールを作成
@@ -736,28 +755,4 @@ function ConditionRow({
 
 function Hint({ children }: { children: ReactNode }) {
   return <span className="text-note text-ink-3">{children}</span>
-}
-
-function Pick({
-  label,
-  spoken,
-  onRemove,
-}: {
-  label: string
-  spoken: string
-  onRemove: () => void
-}) {
-  return (
-    <span className="inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
-      {label}
-      <button
-        type="button"
-        aria-label={spoken}
-        onClick={onRemove}
-        className="tap-target flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
-      >
-        <CloseIcon />
-      </button>
-    </span>
-  )
 }

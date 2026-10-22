@@ -1,5 +1,6 @@
 export {
   EMPTY_SEARCH_CONDITION,
+  SEARCH_DAY_OPTIONS,
   SEARCH_DEFAULT_FIELDS,
   SEARCH_DEFAULT_PER_PAGE,
   SEARCH_DEFAULT_SORT,
@@ -11,6 +12,7 @@ export {
   SEARCH_QUERY_KEYS,
   SEARCH_SORT_OPTIONS,
   genreLabelOf,
+  namesSomeDays,
   narrowsAnything,
   searchConditionOfQuery,
   searchQueryOf,
@@ -21,6 +23,7 @@ export {
 
 export type {
   SearchCondition,
+  SearchDay,
   SearchField,
   SearchGenre,
   SearchKind,

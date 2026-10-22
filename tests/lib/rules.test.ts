@@ -2,12 +2,15 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import type { SearchTerms } from '@/lib/search-condition'
-import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
+import {
+  SEARCH_DAY_OPTIONS,
+  searchConditionOfQuery,
+  searchTermsOf,
+} from '@/lib/search-condition'
 import type { RuleTerms } from '@/lib/rules'
 import {
   NEW_RULE,
   exclusionPartsOf,
-  RULE_DAY_OPTIONS,
   RULE_MARK_OPTIONS,
   RULE_NAME_LONGEST,
   RULE_PARAM,
@@ -15,8 +18,6 @@ import {
   ruleApplicationFellShort,
   ruleApplicationPartsOf,
   ruleConditionParts,
-  ruleDayLabelOf,
-  ruleDaysInOrder,
   ruleMarkLabelOf,
   ruleMarksInOrder,
   ruleNarrowsAnything,
@@ -83,7 +84,7 @@ test('naming where to look narrows nothing, and neither does every day of the we
   assert.equal(
     ruleNarrowsAnything({
       ...NOTHING,
-      days: RULE_DAY_OPTIONS.map((option) => option.value),
+      days: SEARCH_DAY_OPTIONS.map((option) => option.value),
     }),
     false,
   )
@@ -92,8 +93,6 @@ test('naming where to look narrows nothing, and neither does every day of the we
 test('what a search hands over becomes a rule with nothing added to it', () => {
   assert.deepEqual(ruleTermsOfSearch(A_SERIES), {
     ...A_SERIES,
-    subgenres: [],
-    days: [],
     marks: [],
     excludedMarks: [],
     beyond: [],
@@ -197,15 +196,6 @@ test('a span runs forward and is no longer than the API takes', () => {
   assert.equal(withinRulePeriod('2026-08-09', '2026-08-08'), false)
 })
 
-test('days are kept in the order of the week, whatever order they were picked in', () => {
-  assert.deepEqual(ruleDaysInOrder(['sunday', 'wednesday', 'monday']), [
-    'monday',
-    'wednesday',
-    'sunday',
-  ])
-  assert.equal(ruleDayLabelOf('wednesday'), '水曜')
-})
-
 test('an unanswered condition takes no room in the summary', () => {
   assert.deepEqual(ruleConditionParts({ ...NOTHING, q: '新番組' }, named), [
     '「新番組」',
@@ -233,8 +223,10 @@ test('a series is asked for by the main title on the channel it came from', () =
     exclude: undefined,
     fields: 'title',
     genres: [],
+    subgenres: [],
     kind: undefined,
     channels: ['4-101'],
+    days: [],
   })
 })
 
@@ -267,6 +259,27 @@ test('the draft the rules screen reads back is the one that was handed over', ()
     from: undefined,
     to: undefined,
   })
+})
+
+test('a search hands its subgenres and days of the week over to the rule it starts', () => {
+  const asked: SearchTerms = {
+    ...A_SERIES,
+    subgenres: ['7-0'],
+    days: ['saturday', 'sunday'],
+  }
+  const query = newRuleHref(asked).split('?')[1]
+
+  assert.deepEqual(
+    ruleTermsOfSearch(searchTermsOf(searchConditionOfQuery(query))),
+    {
+      ...asked,
+      from: undefined,
+      to: undefined,
+      marks: [],
+      excludedMarks: [],
+      beyond: [],
+    },
+  )
 })
 
 test('a draft that narrows nothing still opens the rules screen', () => {

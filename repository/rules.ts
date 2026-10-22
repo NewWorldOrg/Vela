@@ -1,27 +1,23 @@
 import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import { formatMoment, formatMomentSpan, formatMomentUntil } from '@/lib/format'
 import { broadcastDateOf, windowStartOf } from '@/lib/guide'
-import type {
-  RuleConditionBeyond,
-  RuleDay,
-  RuleMark,
-  RuleTerms,
-} from '@/lib/rules'
+import type { RuleConditionBeyond, RuleMark, RuleTerms } from '@/lib/rules'
 import {
-  RULE_DAY_OPTIONS,
   RULE_MARK_OPTIONS,
   RULE_TAKES_SHOWN,
-  ruleDaysInOrder,
   ruleMarksInOrder,
 } from '@/lib/rules'
 import {
+  SEARCH_DAY_OPTIONS,
   SEARCH_DEFAULT_FIELDS,
   SEARCH_GENRE_OPTIONS,
   SEARCH_KIND_OPTIONS,
   namesAChannel,
   readSearchCondition,
+  searchDaysInOrder,
   searchTermsOf,
 } from '@/lib/search-condition'
+import type { SearchDay } from '@/lib/search-condition'
 import { subgenreOfValue } from '@/lib/subgenres'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
@@ -280,7 +276,7 @@ export function ruleTermsOf(query: string): RuleTerms {
       }),
     ),
     subgenres: [...new Set(every(SUBGENRE, subgenreOf))],
-    days: ruleDaysInOrder(every(DAY, dayOf)),
+    days: searchDaysInOrder(every(DAY, dayOf)),
     marks: ruleMarksInOrder(every(MARK, markOf)),
     excludedMarks: ruleMarksInOrder(every(EXCLUDE_MARK, markOf)),
     beyond,
@@ -358,8 +354,8 @@ function subgenreOf(named: string): string | undefined {
   return subgenreOfValue(`${Number(kind)}-${Number(sort)}`)?.value
 }
 
-function dayOf(named: string): RuleDay | undefined {
-  return RULE_DAY_OPTIONS.find(
+function dayOf(named: string): SearchDay | undefined {
+  return SEARCH_DAY_OPTIONS.find(
     (option) => option.value === named.trim().toLowerCase(),
   )?.value
 }
