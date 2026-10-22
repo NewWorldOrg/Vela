@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   EMPTY_SEARCH_CONDITION,
+  SEARCH_DAY_OPTIONS,
   SEARCH_DEFAULT_FIELDS,
   SEARCH_DEFAULT_PER_PAGE,
   SEARCH_DEFAULT_SORT,
@@ -12,13 +13,17 @@ import {
   genreKindsOf,
   genreLabelOfKind,
   narrowsAnything,
+  offeredSubgenres,
   rawSearchConditionOf,
   readSearchCondition,
   searchConditionOfQuery,
+  searchDayLabelOf,
+  searchDaysInOrder,
   searchQueryOf,
   searchTermsOf,
   searchTermsQueryOf,
   searchViewingOf,
+  subgenreLabelOf,
 } from '@/lib/search-condition'
 import type { SearchCondition } from '@/lib/search-condition'
 
@@ -29,8 +34,10 @@ test('an empty address asks for nothing but the defaults', () => {
   assert.equal(condition.exclude, undefined)
   assert.equal(condition.fields, SEARCH_DEFAULT_FIELDS)
   assert.deepEqual(condition.genres, [])
+  assert.deepEqual(condition.subgenres, [])
   assert.equal(condition.kind, undefined)
   assert.deepEqual(condition.channels, [])
+  assert.deepEqual(condition.days, [])
   assert.equal(condition.sort, SEARCH_DEFAULT_SORT)
   assert.equal(condition.perPage, SEARCH_DEFAULT_PER_PAGE)
   assert.equal(condition.page, 1)
@@ -93,6 +100,44 @@ test('the same genre twice is still one genre', () => {
   assert.deepEqual(readSearchCondition({ genre: ['movie', 'movie'] }).genres, [
     'movie',
   ])
+})
+
+test('subgenres arrive as their own key repeated, in the order they were picked', () => {
+  assert.deepEqual(
+    readSearchCondition({ subgenre: ['7-0', '3-1'] }).subgenres,
+    ['7-0', '3-1'],
+  )
+  assert.deepEqual(readSearchCondition({ subgenre: '7-0' }).subgenres, ['7-0'])
+})
+
+test('a subgenre outside the table is dropped rather than passed on', () => {
+  assert.deepEqual(
+    readSearchCondition({ subgenre: ['7-0', '3-9', '12-0', 'anime'] })
+      .subgenres,
+    ['7-0'],
+  )
+})
+
+test('the same subgenre twice is still one subgenre', () => {
+  assert.deepEqual(
+    readSearchCondition({ subgenre: ['7-0', '7-0'] }).subgenres,
+    ['7-0'],
+  )
+})
+
+test('days arrive as their own key repeated and are kept in the order of the week', () => {
+  assert.deepEqual(
+    readSearchCondition({ day: ['sunday', 'wednesday', 'monday'] }).days,
+    ['monday', 'wednesday', 'sunday'],
+  )
+  assert.deepEqual(readSearchCondition({ day: 'friday' }).days, ['friday'])
+})
+
+test('a day that is not a day of the week is dropped, and a day twice is one day', () => {
+  assert.deepEqual(
+    readSearchCondition({ day: ['monday', 'Monday', '1', 'monday'] }).days,
+    ['monday'],
+  )
 })
 
 test('a broadcast type is read from the three there are', () => {
@@ -179,8 +224,10 @@ test('every condition comes back from the address it was written to', () => {
     exclude: '再放送',
     fields: 'title' as const,
     genre: ['documentary', 'movie'],
+    subgenre: ['7-0'],
     type: 'terrestrial',
     channel: '4-1024,4-1032',
+    day: ['saturday', 'sunday'],
     from: '2026-08-09',
     to: '2026-08-15',
     sort: 'name.asc',
@@ -193,8 +240,10 @@ test('every condition comes back from the address it was written to', () => {
     exclude: '再放送',
     fields: 'title',
     genres: ['documentary', 'movie'],
+    subgenres: ['7-0'],
     kind: 'terrestrial',
     channels: ['4-1024', '4-1032'],
+    days: ['saturday', 'sunday'],
     from: '2026-08-09',
     to: '2026-08-15',
     sort: 'name.asc',
@@ -233,6 +282,22 @@ test('a channel on its own narrows', () => {
   )
 })
 
+test('a subgenre on its own narrows', () => {
+  assert.equal(narrowsAnything(readSearchCondition({ subgenre: '7-0' })), true)
+})
+
+test('a day of the week on its own narrows, but every day of the week does not', () => {
+  assert.equal(narrowsAnything(readSearchCondition({ day: 'monday' })), true)
+  assert.equal(
+    narrowsAnything(
+      readSearchCondition({
+        day: SEARCH_DAY_OPTIONS.map((option) => option.value),
+      }),
+    ),
+    false,
+  )
+})
+
 test('either end of a period on its own narrows', () => {
   assert.equal(
     narrowsAnything(readSearchCondition({ from: '2026-08-09' })),
@@ -259,6 +324,8 @@ test('a condition the address spelled wrongly narrows nothing', () => {
     narrowsAnything(
       readSearchCondition({
         genre: 'wireless',
+        subgenre: '3-9',
+        day: 'someday',
         type: 'GR',
         channel: 'not-a-channel',
         from: 'tomorrow',
@@ -275,8 +342,10 @@ test('the keys the screen clears cover every key it reads', () => {
     exclude: '再放送',
     fields: 'title',
     genre: ['movie'],
+    subgenre: ['7-0'],
     type: 'bs',
     channel: '4-1024',
+    day: ['monday'],
     from: '2026-08-09',
     to: '2026-08-15',
     sort: 'name.asc',
@@ -297,8 +366,10 @@ const everyCondition: SearchCondition = {
   exclude: '再放送',
   fields: 'title',
   genres: ['news', 'documentary'],
+  subgenres: ['7-0', '3-1'],
   kind: 'terrestrial',
   channels: ['32736-1024', '32737-1032'],
+  days: ['monday', 'saturday'],
   from: '2026-08-21',
   to: '2026-08-27',
   sort: 'name.asc',
@@ -442,7 +513,18 @@ test('the address of the conditions alone leaves out how the answer is shown', (
 
   assert.deepEqual(
     [...new Set(written.keys())].sort(),
-    ['q', 'exclude', 'fields', 'genre', 'type', 'channel', 'from', 'to'].sort(),
+    [
+      'q',
+      'exclude',
+      'fields',
+      'genre',
+      'subgenre',
+      'type',
+      'channel',
+      'day',
+      'from',
+      'to',
+    ].sort(),
   )
 })
 
@@ -475,8 +557,10 @@ test('each condition on its own reaches the address of the conditions', () => {
     [{ exclude: '再放送' }, 'exclude'],
     [{ fields: 'title' }, 'fields'],
     [{ genres: ['movie'] }, 'genre'],
+    [{ subgenres: ['7-0'] }, 'subgenre'],
     [{ kind: 'bs' }, 'type'],
     [{ channels: ['4-1024'] }, 'channel'],
+    [{ days: ['monday'] }, 'day'],
     [{ from: '2026-08-21' }, 'from'],
     [{ to: '2026-08-27' }, 'to'],
   ]
@@ -505,6 +589,51 @@ test('a genre kind nothing in this build names falls back to その他', () => {
   assert.equal(genreLabelOfKind(13), 'その他')
 })
 
+test('a subgenre says which genre it sits under, since every genre has a rest', () => {
+  assert.equal(subgenreLabelOf('7-0'), '国内アニメ(アニメ/特撮)')
+  assert.equal(subgenreLabelOf('3-15'), 'その他(ドラマ)')
+  assert.equal(subgenreLabelOf('15-15'), 'その他(その他)')
+})
+
+test('a pair outside the table is shown as it was spelled', () => {
+  assert.equal(subgenreLabelOf('3-9'), '3-9')
+})
+
+test('the subgenres of a genre already named are not offered, since the genre takes them all', () => {
+  const offered = offeredSubgenres(['anime'], [])
+
+  assert.equal(
+    offered.some((group) => group.kind === 7),
+    false,
+  )
+  assert.deepEqual(
+    offered.map((group) => group.label),
+    SEARCH_GENRE_OPTIONS.filter((genre) => genre.value !== 'anime').map(
+      (genre) => genre.label,
+    ),
+  )
+})
+
+test('a subgenre already picked is not offered again, and a genre with none left drops out', () => {
+  const drama = (picked: string[]) =>
+    offeredSubgenres([], picked).find((group) => group.kind === 3)
+
+  assert.deepEqual(
+    drama(['3-1'])?.under.map((option) => option.value),
+    ['3-0', '3-2', '3-15'],
+  )
+  assert.equal(drama(['3-0', '3-1', '3-2', '3-15']), undefined)
+})
+
+test('days are kept in the order of the week, whatever order they were picked in', () => {
+  assert.deepEqual(searchDaysInOrder(['sunday', 'wednesday', 'monday']), [
+    'monday',
+    'wednesday',
+    'sunday',
+  ])
+  assert.equal(searchDayLabelOf('wednesday'), '水曜')
+})
+
 test('the address is taken key by key as it arrived, before anything is read out of it', () => {
   assert.deepEqual(
     rawSearchConditionOf({
@@ -512,8 +641,10 @@ test('the address is taken key by key as it arrived, before anything is read out
       exclude: '再放送',
       fields: 'title',
       genre: 'drama',
+      subgenre: '3-0',
       type: 'isdbT',
       channel: '32701-101,32701-102',
+      day: 'Monday',
       from: '2026-10-01',
       to: '2026-10-07',
       sort: 'startAsc',
@@ -525,8 +656,10 @@ test('the address is taken key by key as it arrived, before anything is read out
       exclude: '再放送',
       fields: 'title',
       genre: 'drama',
+      subgenre: '3-0',
       type: 'isdbT',
       channel: '32701-101,32701-102',
+      day: 'Monday',
       from: '2026-10-01',
       to: '2026-10-07',
       sort: 'startAsc',
@@ -541,6 +674,16 @@ test('genres repeated in the address arrive as the list they were', () => {
     'drama',
     'anime',
   ])
+})
+
+test('subgenres and days repeated in the address arrive as the lists they were', () => {
+  const raw = rawSearchConditionOf({
+    subgenre: ['3-0', '7-0'],
+    day: ['monday', 'friday'],
+  })
+
+  assert.deepEqual(raw.subgenre, ['3-0', '7-0'])
+  assert.deepEqual(raw.day, ['monday', 'friday'])
 })
 
 test('any other key repeated in the address is not guessed between', () => {

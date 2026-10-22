@@ -1,6 +1,7 @@
 import { windowStartOf } from '@/lib/guide'
 import {
   genreKindsOf,
+  namesSomeDays,
   narrowsAnything,
   readSearchCondition,
 } from '@/lib/search-condition'
@@ -10,6 +11,7 @@ import type {
 } from '@/lib/search-condition'
 import type { Programme, SearchQuery } from '@/repository/programmes'
 import {
+  SEARCH_DAY_OF,
   SEARCH_FIELDS_OF,
   SEARCH_SYSTEM_OF_KIND,
   searchProgrammes,
@@ -119,10 +121,14 @@ export async function searchPrograms(
           ? undefined
           : SEARCH_FIELDS_OF[condition.fields],
       genres: genreKindsOf(condition.genres),
+      subgenres: condition.subgenres,
       system: condition.kind
         ? SEARCH_SYSTEM_OF_KIND[condition.kind]
         : undefined,
       channels: condition.channels,
+      days: namesSomeDays(condition.days)
+        ? condition.days.map((day) => SEARCH_DAY_OF[day])
+        : undefined,
       from: condition.from ? windowStartOf(condition.from) : undefined,
       to: condition.to ? dayEndOf(condition.to) : undefined,
       sort: condition.sort === 'name.asc' ? 'Name' : 'StartsAt',

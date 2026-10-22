@@ -5,22 +5,15 @@ import type { Moment } from '@/lib/format'
 import { mainTitleOf } from '@/lib/program-title'
 import type { SearchTerms } from '@/lib/search-condition'
 import {
+  SEARCH_DAY_OPTIONS,
   SEARCH_DEFAULT_FIELDS,
   SEARCH_FIELD_OPTIONS,
   SEARCH_KIND_OPTIONS,
   genreLabelOf,
+  narrowsAnything,
   searchTermsQueryOf,
+  subgenreLabelOf,
 } from '@/lib/search-condition'
-import { subgenreLabelOf } from '@/lib/subgenres'
-
-export type RuleDay =
-  | 'monday'
-  | 'tuesday'
-  | 'wednesday'
-  | 'thursday'
-  | 'friday'
-  | 'saturday'
-  | 'sunday'
 
 export type RuleMark =
   | 'New'
@@ -60,8 +53,6 @@ export type RuleMark =
 export type RuleConditionBeyond = [name: string, value: string]
 
 export interface RuleTerms extends SearchTerms {
-  subgenres: string[]
-  days: RuleDay[]
   marks: RuleMark[]
   excludedMarks: RuleMark[]
   beyond: RuleConditionBeyond[]
@@ -76,20 +67,6 @@ export const NEW_RULE = 'new'
 export const RULE_DEFAULT_PRIORITY = 10
 
 export const RULE_TAKES_SHOWN = 20
-
-export const RULE_DAY_OPTIONS: {
-  value: RuleDay
-  label: string
-  short: string
-}[] = [
-  { value: 'monday', label: '月曜', short: '月' },
-  { value: 'tuesday', label: '火曜', short: '火' },
-  { value: 'wednesday', label: '水曜', short: '水' },
-  { value: 'thursday', label: '木曜', short: '木' },
-  { value: 'friday', label: '金曜', short: '金' },
-  { value: 'saturday', label: '土曜', short: '土' },
-  { value: 'sunday', label: '日曜', short: '日' },
-]
 
 export const RULE_MARK_OPTIONS: { value: RuleMark; label: string }[] = [
   { value: 'New', label: '新番組' },
@@ -157,16 +134,16 @@ export function seriesTermsOf(
     exclude: undefined,
     fields: 'title',
     genres: [],
+    subgenres: [],
     kind: undefined,
     channels: [channelId],
+    days: [],
   }
 }
 
 export function ruleTermsOfSearch(terms: SearchTerms): RuleTerms {
   return {
     ...terms,
-    subgenres: [],
-    days: [],
     marks: [],
     excludedMarks: [],
     beyond: [],
@@ -180,34 +157,12 @@ export function withinRuleName(value: string): boolean {
 }
 
 export function ruleNarrowsAnything(terms: RuleTerms): boolean {
-  return Boolean(
-    terms.q ||
-    terms.exclude ||
-    terms.genres.length ||
-    terms.subgenres.length ||
-    terms.kind ||
-    terms.channels.length ||
-    namesSomeDays(terms.days) ||
-    terms.marks.length ||
-    terms.excludedMarks.length ||
-    terms.from ||
-    terms.to ||
-    terms.beyond.length,
+  return (
+    narrowsAnything(terms) ||
+    Boolean(
+      terms.marks.length || terms.excludedMarks.length || terms.beyond.length,
+    )
   )
-}
-
-function namesSomeDays(days: RuleDay[]): boolean {
-  return days.length > 0 && days.length < RULE_DAY_OPTIONS.length
-}
-
-export function ruleDaysInOrder(days: RuleDay[]): RuleDay[] {
-  return RULE_DAY_OPTIONS.map((option) => option.value).filter((day) =>
-    days.includes(day),
-  )
-}
-
-export function ruleDayLabelOf(day: RuleDay): string {
-  return RULE_DAY_OPTIONS.find((option) => option.value === day)?.label ?? day
 }
 
 export function ruleMarksInOrder(marks: RuleMark[]): RuleMark[] {
@@ -296,7 +251,7 @@ export function ruleConditionParts(
   }
 
   if (terms.days.length > 0) {
-    const days = RULE_DAY_OPTIONS.filter((option) =>
+    const days = SEARCH_DAY_OPTIONS.filter((option) =>
       terms.days.includes(option.value),
     ).map((option) => option.short)
 
