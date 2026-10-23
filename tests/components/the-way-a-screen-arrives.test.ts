@@ -324,11 +324,13 @@ test('every movement is switched off where less of it is asked for', async () =>
   assert.ok(asked, 'the machine asking for less movement stops nothing')
   assert.ok(switched, 'the switch in the settings stops nothing')
 
+  const stopped: [string, string][] = [
+    ['the machine asks for less movement', asked[1]],
+    ['the reader switched movement off', switched[1]],
+  ]
+
   for (const token of THE_MOVEMENTS_THAT_STOP) {
-    for (const [what, block] of [
-      ['the machine asks for less movement', asked[1]],
-      ['the reader switched movement off', switched[1]],
-    ] as const) {
+    for (const [what, block] of stopped) {
       assert.ok(
         block.includes(`--animate-${token}: none;`),
         `${token} keeps running when ${what}`,
