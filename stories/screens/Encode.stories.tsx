@@ -16,6 +16,8 @@ import {
   MORE_JOBS_THAN_FIT,
   PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
   QUEUED_JOB,
+  REMADE_JOB,
+  REMAKING_JOB,
   REPLACED_JOB,
   RETIRED_DEFINITIONS,
   RUNNING_JOB,
@@ -24,6 +26,7 @@ import {
   SPELLS_NONE,
   SPELLS_TOO_FEW,
   STALLED_JOB,
+  STILL_LARGER_JOB,
   SHELF_DESTINATION,
   jobsPage,
   screenWith,
@@ -428,6 +431,56 @@ export const 置き換え済み: Story = {
 
     await expect(said).toHaveTextContent(/^置き換え済み/)
     await expect(said).toHaveTextContent('置き換え 08/08(土) 20:19')
+  },
+}
+
+export const 作り直し中: Story = {
+  args: { screen: screenWith(REMAKING_JOB) },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const running = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="running-job"]',
+    )
+
+    if (!running) {
+      throw new Error('the running job is not on the screen')
+    }
+
+    await expect(
+      within(running).getByText('元より大きいため作り直し'),
+    ).toBeVisible()
+    await expect(within(running).getByText('18%')).toBeVisible()
+  },
+}
+
+export const 作り直した: Story = {
+  args: {
+    screen: {
+      ...screenWith(REMADE_JOB),
+      jobs: jobsPage([REMADE_JOB, STILL_LARGER_JOB, COMPLETED_JOB]),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const [remade, stillLarger, once] = rowsOfTheTableHeaded(
+      canvasElement,
+      '番組',
+    )
+
+    await expect(
+      within(cellOf(remade, JOB_STATE_COLUMN)).getByText('完了'),
+    ).toBeVisible()
+    await expect(
+      await tipIn(cellOf(remade, JOB_STATE_COLUMN)),
+    ).toHaveTextContent('元より大きいため作り直し')
+    await expect(
+      await tipIn(cellOf(stillLarger, JOB_STATE_COLUMN)),
+    ).toHaveTextContent('作り直しても元より大きい')
+    await expect(
+      within(cellOf(once, JOB_STATE_COLUMN)).getByText('完了'),
+    ).toBeVisible()
   },
 }
 

@@ -8,6 +8,7 @@ export type EncodeResolution = components['schemas']['EncodeResolution']
 export type Deinterlace = components['schemas']['Deinterlace']
 export type EncodeEncoder = components['schemas']['EncodeEncoder']
 export type EncodeSwerve = NonNullable<components['schemas']['EncodeSwerve']>
+export type EncodeRemake = NonNullable<components['schemas']['EncodeRemake']>
 export type EncodeFailure = components['schemas']['EncodeFailure']
 export type EncodeRemoved = components['schemas']['EncodeRemoval']
 export type EncodeSubject = NonNullable<
@@ -71,6 +72,12 @@ export const SWERVE_LABEL: Record<EncodeSwerve, string> = {
   theCardIsOutOfReach: 'GPU に到達できない',
   theCardCannotDoThisCodec: 'GPU がこのコーデックに非対応',
   theProcessorCannotDoThisCodec: 'CPU がこのコーデックに非対応',
+}
+
+export const REMAKE_LABEL: Record<EncodeRemake, string> = {
+  largerThanTheSource: '元より大きいため作り直し',
+  stillLargerThanTheSource: '作り直しても元より大きい',
+  noSmallerTheSecondTime: '作り直しても元より大きい',
 }
 
 export const FAILURE_LABEL: Record<EncodeFailure, string> = {

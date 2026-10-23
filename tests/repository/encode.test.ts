@@ -462,6 +462,21 @@ test('the values kept here are the ones Carina starts a profile from, at H.264',
   })
 })
 
+test('a job that made its artefact again says why and what it kept, and one that made it once says nothing', async () => {
+  store.jobs = [
+    { ...RUNNING, remade: 'largerThanTheSource' },
+    { ...COMPLETED, remade: 'noSmallerTheSecondTime' },
+    { ...COMPLETED, id: '7b6a5948-3726-4154-a3b2-c1d0e9f8a7b6', remade: null },
+  ]
+
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.deepEqual(
+    screen.jobs.items.map((one) => one.remade),
+    ['largerThanTheSource', 'noSmallerTheSecondTime', undefined],
+  )
+})
+
 test('a completed job whose artefact a newer one replaced says when, and the standing one says nothing', async () => {
   store.jobs = [
     COMPLETED,
