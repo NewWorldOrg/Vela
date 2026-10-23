@@ -51,7 +51,7 @@ export function frameOf(
   channel: LiveChannelName,
   pts: number,
   payload: Uint8Array,
-): Uint8Array {
+): Uint8Array<ArrayBuffer> {
   const bytes = new Uint8Array(HEADER_LENGTH + payload.length)
   const view = new DataView(bytes.buffer)
 
@@ -165,7 +165,9 @@ const CONTROL_BYTE = { ping: 0x01, pong: 0x02, leaving: 0x03 } as const
 
 export type LiveControl = keyof typeof CONTROL_BYTE
 
-export function controlFrame(said: 'pong' | 'leaving'): Uint8Array {
+export function controlFrame(
+  said: 'pong' | 'leaving',
+): Uint8Array<ArrayBuffer> {
   return frameOf('control', 0, new Uint8Array([CONTROL_BYTE[said]]))
 }
 

@@ -33,7 +33,7 @@ export interface LiveSocket {
   onmessage: ((event: MessageEvent) => void) | null
   onclose: ((event: CloseEvent) => void) | null
   onerror: ((event: Event) => void) | null
-  send(data: ArrayBuffer | ArrayBufferView): void
+  send(data: ArrayBuffer | ArrayBufferView<ArrayBuffer>): void
   close(code?: number, reason?: string): void
 }
 
