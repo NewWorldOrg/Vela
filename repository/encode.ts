@@ -1,3 +1,5 @@
+import { unstable_rethrow } from 'next/navigation'
+
 import { couldNot } from '@/lib/try-again'
 import { formatMoment } from '@/lib/format'
 import {
@@ -638,7 +640,9 @@ async function fetchProfileDefaults(): Promise<EncodeProfileDefaults> {
     return error || !data?.data
       ? PROFILE_DRAFT_DEFAULTS
       : toProfileDefaults(data.data)
-  } catch {
+  } catch (error) {
+    unstable_rethrow(error)
+
     return PROFILE_DRAFT_DEFAULTS
   }
 }

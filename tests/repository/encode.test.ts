@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict'
+import { registerHooks } from 'node:module'
 import { beforeEach, mock, test } from 'node:test'
 import { formatMoment, formatMomentSpan } from '@/lib/format'
 
@@ -8,6 +9,20 @@ interface Sent {
   query?: Record<string, unknown>
   body?: Record<string, unknown>
 }
+
+const NAVIGATION = 'next/navigation'
+
+const STOOD_IN = `data:text/javascript,${encodeURIComponent(
+  "export const unstable_rethrow = (error) => { if (error && typeof error === 'object' && 'digest' in error) throw error }",
+)}`
+
+registerHooks({
+  resolve(specifier, context, next) {
+    return specifier === NAVIGATION
+      ? { url: STOOD_IN, shortCircuit: true }
+      : next(specifier, context)
+  },
+})
 
 const sent: Sent[] = []
 
@@ -20,7 +35,7 @@ const store: {
   durations: unknown
   autoRun: unknown
   profileDefaults: unknown
-  defaultsStatus: number | 'unreachable'
+  defaultsStatus: number | 'unreachable' | 'rendering'
   readStatus: number
   readMessage: string
   writeStatus: number
@@ -206,6 +221,12 @@ const client = () => ({
       case '/api/encoding/profiles/defaults':
         if (store.defaultsStatus === 'unreachable') {
           throw new TypeError('fetch failed')
+        }
+
+        if (store.defaultsStatus === 'rendering') {
+          throw Object.assign(new Error('Dynamic server usage'), {
+            digest: 'DYNAMIC_SERVER_USAGE',
+          })
         }
 
         return store.defaultsStatus >= 400
@@ -450,6 +471,14 @@ test('a new profile starts from the values kept here when Carina does not say, a
   assert.deepEqual(unreached.profileDefaults, PROFILE_DRAFT_DEFAULTS)
   assert.equal(refused.profiles.length, 1)
   assert.equal(unreached.jobs.total, 2)
+})
+
+test('what Next.js throws to steer the rendering is thrown on, never taken for Carina not saying', async () => {
+  store.defaultsStatus = 'rendering'
+
+  await assert.rejects(getEncodeScreen({}, NOW), {
+    digest: 'DYNAMIC_SERVER_USAGE',
+  })
 })
 
 test('the values kept here are the ones Carina starts a profile from, at H.264', () => {
