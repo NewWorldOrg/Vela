@@ -1,8 +1,18 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { useCallback } from 'react'
+import { useCallback, useState, type ComponentProps } from 'react'
 import { hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
+
+import { NO_RESIDENCE, type Residence } from '@/lib/bml/receiver-info'
+import {
+  NOT_REGISTERED,
+  POSTAL_CODE_LABEL,
+  POSTAL_CODE_PROBLEM,
+  PREFECTURE_LABEL,
+  RESIDENCE_HEADING,
+} from '@/lib/residence'
+import type { ResidenceWrite } from '@/repository/data-broadcast-settings'
 
 import {
   AUTO_OPEN_LABEL,
@@ -36,6 +46,12 @@ const meta = {
     layout: 'fullscreen',
   },
   decorators: [inTheSettings],
+  args: {
+    residence: { state: 'ok', value: NO_RESIDENCE },
+    onSettleResidence: fn(async (): Promise<ResidenceWrite> => ({
+      state: 'ok',
+    })),
+  },
   beforeEach: () => {
     forgetTheSettings()
 
@@ -230,7 +246,13 @@ function FromTheServer() {
     }
 
     const settings = viewingSettingsOf((key) => cookieIn(document.cookie, key))
-    const page = <ViewingView {...settings} />
+    const page = (
+      <ViewingView
+        {...settings}
+        residence={{ state: 'ok', value: NO_RESIDENCE }}
+        onSettleResidence={async () => ({ state: 'ok' })}
+      />
+    )
 
     node.innerHTML = renderToString(page)
     const root = hydrateRoot(node, page, {
@@ -338,5 +360,190 @@ export const サーバの絵から組み上がる_通信が切: Story = {
 
     await expect(receiverIdSwitch).toBeDisabled()
     await expect(hybridcastSwitch).toBeDisabled()
+  },
+}
+
+const REGISTERED: Residence = { postalCode: '0000000', prefecture: 13 }
+
+function residenceRows(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+  const panel = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="residence"]',
+  )
+
+  if (!panel) {
+    throw new Error('the residence is not on the page')
+  }
+
+  return { canvas, panel: within(panel) }
+}
+
+export const 設置場所_未登録: Story = {
+  args: {},
+  play: async ({ canvasElement }) => {
+    const { canvas, panel } = residenceRows(canvasElement)
+
+    await expect(
+      canvas.getByRole('heading', { name: RESIDENCE_HEADING }),
+    ).toBeVisible()
+    await expect(panel.getByText(POSTAL_CODE_LABEL)).toBeVisible()
+    await expect(panel.getByText(PREFECTURE_LABEL)).toBeVisible()
+    await expect(panel.getAllByText(NOT_REGISTERED)).toHaveLength(2)
+    await expect(panel.getByRole('button', { name: '変更' })).toBeVisible()
+  },
+}
+
+export const 設置場所_登録済み: Story = {
+  args: { residence: { state: 'ok', value: REGISTERED } },
+  play: async ({ canvasElement }) => {
+    const { panel } = residenceRows(canvasElement)
+
+    await expect(panel.getByText('000-0000')).toBeVisible()
+    await expect(panel.getByText('東京都(島部を除く)')).toBeVisible()
+  },
+}
+
+/** The page as the app holds it: what was saved is what the page draws next, as the page is drawn again from Carina after a save. */
+function Saving(props: ComponentProps<typeof ViewingView>) {
+  const [residence, setResidence] = useState(props.residence)
+
+  return (
+    <ViewingView
+      {...props}
+      residence={residence}
+      onSettleResidence={async (next) => {
+        const result = await props.onSettleResidence(next)
+
+        if (result.state === 'ok') {
+          setResidence({ state: 'ok', value: next })
+        }
+
+        return result
+      }}
+    />
+  )
+}
+
+export const 設置場所を登録する: Story = {
+  args: {},
+  render: (args) => <Saving {...args} />,
+  play: async ({ args, canvasElement }) => {
+    const { panel } = residenceRows(canvasElement)
+
+    await userEvent.click(panel.getByRole('button', { name: '変更' }))
+
+    const postalCode = panel.getByRole('textbox', { name: POSTAL_CODE_LABEL })
+
+    await expect(postalCode).toHaveFocus()
+    await expect(postalCode).toHaveValue('')
+    await userEvent.type(postalCode, '０００－００００')
+    await userEvent.click(
+      panel.getByRole('combobox', { name: PREFECTURE_LABEL }),
+    )
+    await userEvent.click(
+      await within(document.body).findByRole('option', {
+        name: '東京都島部(伊豆・小笠原諸島)',
+      }),
+    )
+    await userEvent.click(panel.getByRole('button', { name: '保存する' }))
+
+    await expect(args.onSettleResidence).toHaveBeenCalledWith({
+      postalCode: '0000000',
+      prefecture: 48,
+    })
+    await waitFor(() => expect(panel.getByText('000-0000')).toBeVisible())
+    await expect(panel.getByText('東京都島部(伊豆・小笠原諸島)')).toBeVisible()
+    await expect(panel.getByRole('button', { name: '変更' })).toHaveFocus()
+  },
+}
+
+export const 設置場所の登録を消す: Story = {
+  args: { residence: { state: 'ok', value: REGISTERED } },
+  render: (args) => <Saving {...args} />,
+  play: async ({ args, canvasElement }) => {
+    const { panel } = residenceRows(canvasElement)
+
+    await userEvent.click(panel.getByRole('button', { name: '変更' }))
+
+    const postalCode = panel.getByRole('textbox', { name: POSTAL_CODE_LABEL })
+
+    await expect(postalCode).toHaveValue('000-0000')
+    await userEvent.clear(postalCode)
+    await userEvent.click(
+      panel.getByRole('combobox', { name: PREFECTURE_LABEL }),
+    )
+    await userEvent.click(
+      await within(document.body).findByRole('option', {
+        name: NOT_REGISTERED,
+      }),
+    )
+    await userEvent.click(panel.getByRole('button', { name: '保存する' }))
+
+    await expect(args.onSettleResidence).toHaveBeenCalledWith(NO_RESIDENCE)
+    await waitFor(() =>
+      expect(panel.getAllByText(NOT_REGISTERED)).toHaveLength(2),
+    )
+  },
+}
+
+export const 設置場所_郵便番号の誤り: Story = {
+  args: {},
+  play: async ({ args, canvasElement }) => {
+    const { panel } = residenceRows(canvasElement)
+
+    await userEvent.click(panel.getByRole('button', { name: '変更' }))
+
+    const postalCode = panel.getByRole('textbox', { name: POSTAL_CODE_LABEL })
+
+    await userEvent.type(postalCode, '000-000')
+    await userEvent.click(panel.getByRole('button', { name: '保存する' }))
+
+    await expect(panel.getByText(POSTAL_CODE_PROBLEM)).toBeVisible()
+    await expect(postalCode).toHaveAttribute('aria-invalid', 'true')
+    await expect(args.onSettleResidence).not.toHaveBeenCalled()
+
+    await userEvent.click(panel.getByRole('button', { name: 'キャンセル' }))
+
+    await expect(panel.getAllByText(NOT_REGISTERED)).toHaveLength(2)
+  },
+}
+
+export const 設置場所_保存できない: Story = {
+  args: {
+    onSettleResidence: fn(async (): Promise<ResidenceWrite> => ({
+      state: 'notSaved',
+    })),
+  },
+  play: async ({ canvasElement }) => {
+    const { panel } = residenceRows(canvasElement)
+
+    await userEvent.click(panel.getByRole('button', { name: '変更' }))
+    await userEvent.type(
+      panel.getByRole('textbox', { name: POSTAL_CODE_LABEL }),
+      '0000000',
+    )
+    await userEvent.click(panel.getByRole('button', { name: '保存する' }))
+
+    await expect(
+      await panel.findByText(
+        '保存できませんでした。時間をおいてからもう一度お試しください。',
+      ),
+    ).toBeVisible()
+    await expect(
+      panel.getByRole('textbox', { name: POSTAL_CODE_LABEL }),
+    ).toHaveValue('0000000')
+  },
+}
+
+export const 設置場所_読めない: Story = {
+  args: { residence: { state: 'unavailable' } },
+  play: async ({ canvasElement }) => {
+    const { canvas, panel } = residenceRows(canvasElement)
+
+    await expect(
+      canvas.getByRole('heading', { name: RESIDENCE_HEADING }),
+    ).toBeVisible()
+    await expect(panel.getByText('状態不明')).toBeVisible()
+    await expect(panel.queryByRole('button', { name: '変更' })).toBeNull()
   },
 }
