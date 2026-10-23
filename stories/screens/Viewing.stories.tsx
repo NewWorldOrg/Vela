@@ -34,6 +34,7 @@ import {
 } from '@/lib/stored-flag'
 import { ViewingView } from '@/components/viewing/viewing-page'
 import { inTheSettings } from '@/stories/frames'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 
 const meta = {
   title: 'Screens/設定・視聴',
@@ -445,6 +446,7 @@ export const 設置場所を登録する: Story = {
         name: '東京都島部(伊豆・小笠原諸島)',
       }),
     )
+    await afterTheArrival(document.body)
     await userEvent.click(panel.getByRole('button', { name: '保存する' }))
 
     await expect(args.onSettleResidence).toHaveBeenCalledWith({
@@ -477,6 +479,7 @@ export const 設置場所の登録を消す: Story = {
         name: NOT_REGISTERED,
       }),
     )
+    await afterTheArrival(document.body)
     await userEvent.click(panel.getByRole('button', { name: '保存する' }))
 
     await expect(args.onSettleResidence).toHaveBeenCalledWith(NO_RESIDENCE)
