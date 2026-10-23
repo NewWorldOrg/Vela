@@ -4,8 +4,6 @@ import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 import {
   DETECTION_BOUNDARIES_SHORT,
   DETECTION_BY_HAND,
-  DETECTION_BY_HAND_LEARNING_OFF,
-  DETECTION_LEARNING_OFF,
   DETECTION_NOTHING_CHECKED,
   DETECTION_NOT_YET_EVALUATED,
   DETECTION_STATUS,
@@ -165,9 +163,6 @@ const NOT_APPLICABLE_METRICS: [string, string][] = [
 ]
 
 const THRESHOLD_ONLY: [string, string][] = [['閾値', '0.70']]
-
-const ROUNDS_LEARNING_OFF =
-  '学習が無効のため、候補の版は作られず切り替わりません。'
 
 async function roundsSay(
   canvasElement: HTMLElement,
@@ -370,52 +365,6 @@ export const 学習の回が失敗した: Story = {
   },
 }
 
-export const 学習が切: Story = {
-  args: { status: DETECTION_BY_HAND_LEARNING_OFF },
-  play: async ({ canvasElement }) => {
-    await roundsSay(canvasElement, ROUNDS_LEARNING_OFF)
-    await rowsAre(canvasElement, 'segment-precision', [
-      ['モデルのバージョン', '第 2 版手動で選択'],
-      ['採用', '11/3(火) 10:12'],
-      ['学習', '無効'],
-      ...FULL_PRECISION.slice(2),
-    ])
-
-    const history = within(versions(canvasElement))
-
-    await expect(history.queryAllByRole('button', { name: A_SWITCH })).toEqual(
-      [],
-    )
-    await expect(
-      history.queryByRole('button', { name: BACK_TO_AUTOMATIC }),
-    ).toBeNull()
-    await expect(history.queryByText('操作')).toBeNull()
-    await expect(history.getAllByRole('columnheader')).toHaveLength(4)
-    await expect(
-      within(thresholdPanel(canvasElement)).getByRole('button', {
-        name: '変更',
-      }),
-    ).toBeVisible()
-  },
-}
-
-export const 学習が切で人が選んでいない版: Story = {
-  args: { status: DETECTION_LEARNING_OFF },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-    await expect(rowsOf(precision(canvasElement)).slice(0, 3)).toEqual([
-      ['モデルのバージョン', '第 3 版自動'],
-      ['採用', '11/1(日) 03:05'],
-      ['学習', '無効'],
-    ])
-    await expect(
-      within(versions(canvasElement)).queryAllByRole('button', {
-        name: A_SWITCH,
-      }),
-    ).toEqual([])
-  },
-}
-
 export const 人が選んだ版: Story = {
   args: { status: DETECTION_BY_HAND },
   play: async ({ canvasElement }) => {
@@ -476,7 +425,7 @@ export const 自動に戻すのを断られる: Story = {
     status: DETECTION_BY_HAND,
     actions: {
       ...ACTIONS,
-      onLeaveVersionToLearning: async () => ({ state: 'learningOff' }) as const,
+      onLeaveVersionToLearning: async () => ({ state: 'notSaved' }) as const,
     },
   },
   play: async ({ canvasElement }) => {
@@ -489,7 +438,9 @@ export const 自動に戻すのを断られる: Story = {
     )
 
     await expect(
-      await history.findByText('学習が無効のため、変更できませんでした。'),
+      await history.findByText(
+        '変更できませんでした。時間をおいてからもう一度お試しください。',
+      ),
     ).toBeVisible()
   },
 }
@@ -550,7 +501,7 @@ export const 版の切り替えを断られる: Story = {
   args: {
     actions: {
       ...ACTIONS,
-      onChooseVersion: async () => ({ state: 'learningOff' }) as const,
+      onChooseVersion: async () => ({ state: 'unauthenticated' }) as const,
     },
   },
   play: async ({ canvasElement }) => {
@@ -569,7 +520,7 @@ export const 版の切り替えを断られる: Story = {
 
     await expect(
       await within(dialog).findByText(
-        '学習が無効のため、切り替えできませんでした。',
+        'サインインが切れているため、切り替えできませんでした。',
       ),
     ).toBeVisible()
     await expect(screen.getByRole('alertdialog')).toBeVisible()

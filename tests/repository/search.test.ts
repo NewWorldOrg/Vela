@@ -227,6 +227,69 @@ test('the type that was asked for still reaches the store', async () => {
   assert.equal(askedTheStore()?.query.type, 'IsdbSBs')
 })
 
+test('the subgenres and the days of the week asked for reach the store as it names them', async () => {
+  standing()
+
+  await searchPrograms({
+    q: '観測所',
+    subgenre: ['7-0', '3-1'],
+    day: ['sunday', 'monday'],
+  })
+
+  assert.deepEqual(askedTheStore()?.query.subgenre, ['7-0', '3-1'])
+  assert.deepEqual(askedTheStore()?.query.day, ['Monday', 'Sunday'])
+})
+
+test('a subgenre or a day of the week on its own is enough to reach the store', async () => {
+  standing()
+
+  await searchPrograms({ subgenre: '7-0' })
+
+  assert.deepEqual(askedTheStore()?.query.subgenre, ['7-0'])
+
+  standing()
+
+  await searchPrograms({ day: 'friday' })
+
+  assert.deepEqual(askedTheStore()?.query.day, ['Friday'])
+})
+
+test('every day of the week is the same as none, and is not sent', async () => {
+  standing()
+
+  await searchPrograms({
+    q: '観測所',
+    day: [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ],
+  })
+
+  assert.equal(askedTheStore()?.query.day, undefined)
+
+  standing()
+
+  const result = await searchPrograms({
+    day: [
+      'monday',
+      'tuesday',
+      'wednesday',
+      'thursday',
+      'friday',
+      'saturday',
+      'sunday',
+    ],
+  })
+
+  assert.equal(result.outcome.state, 'idle')
+  assert.equal(askedTheStore(), undefined)
+})
+
 test('a condition that narrows nothing never reaches the store', async () => {
   standing()
 

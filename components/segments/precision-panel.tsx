@@ -1,6 +1,5 @@
 import {
   CHECKED_RECORDINGS,
-  LEARNING_OFF,
   NOT_APPLICABLE,
   boundaryMatchOf,
   evidenceShortOf,
@@ -33,10 +32,6 @@ const STATION_COLUMNS = ['局', CHECKED_RECORDINGS, '境目の一致']
 
 const NUMBERS = 'font-code tabular-nums text-ink-2'
 
-function learningSays(status: SegmentStatus): string | undefined {
-  return status.learning ? evidenceShortOf(status.evidence) : LEARNING_OFF
-}
-
 function said<T>(
   metrics: SegmentMetrics | undefined,
   say: (metrics: SegmentMetrics) => T,
@@ -46,7 +41,7 @@ function said<T>(
 
 export function PrecisionPanel({ status }: { status: SegmentStatus }) {
   const { version, evidence, metrics } = status
-  const learning = learningSays(status)
+  const short = evidenceShortOf(evidence)
 
   return (
     <>
@@ -61,7 +56,7 @@ export function PrecisionPanel({ status }: { status: SegmentStatus }) {
             </span>
           </ValueRow>
           <ValueRow name="採用">{version.adoptedAt ?? NOT_APPLICABLE}</ValueRow>
-          {learning && <ValueRow name="学習">{learning}</ValueRow>}
+          {short && <ValueRow name="学習">{short}</ValueRow>}
           <ValueRow name={CHECKED_RECORDINGS}>
             {recordingsOf(evidence.recordings)}
           </ValueRow>

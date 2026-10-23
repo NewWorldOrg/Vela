@@ -2,6 +2,8 @@ import {
   BROADCAST_KIND_LABEL,
   BROADCAST_KIND_ORDER,
 } from '@/lib/broadcast-terms'
+import { SUBGENRE_OPTIONS, subgenreOfValue } from '@/lib/subgenres'
+import type { Subgenre } from '@/lib/subgenres'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 export type SearchSort = 'start_at.asc' | 'start_at.desc' | 'name.asc'
@@ -24,6 +26,15 @@ export type SearchGenre =
   | 'other'
 
 export type SearchKind = 'terrestrial' | 'bs' | 'cs110'
+
+export type SearchDay =
+  | 'monday'
+  | 'tuesday'
+  | 'wednesday'
+  | 'thursday'
+  | 'friday'
+  | 'saturday'
+  | 'sunday'
 
 export const SEARCH_SORT_OPTIONS: { value: SearchSort; label: string }[] = [
   { value: 'start_at.asc', label: `${WHEN_LABELS.broadcast}が早い順` },
@@ -63,6 +74,20 @@ export const SEARCH_KIND_OPTIONS: { value: SearchKind; label: string }[] =
     label: BROADCAST_KIND_LABEL[value],
   }))
 
+export const SEARCH_DAY_OPTIONS: {
+  value: SearchDay
+  label: string
+  short: string
+}[] = [
+  { value: 'monday', label: '月曜', short: '月' },
+  { value: 'tuesday', label: '火曜', short: '火' },
+  { value: 'wednesday', label: '水曜', short: '水' },
+  { value: 'thursday', label: '木曜', short: '木' },
+  { value: 'friday', label: '金曜', short: '金' },
+  { value: 'saturday', label: '土曜', short: '土' },
+  { value: 'sunday', label: '日曜', short: '日' },
+]
+
 export const SEARCH_PER_PAGE_OPTIONS = [20, 50, 100]
 
 export const SEARCH_DEFAULT_SORT: SearchSort = 'start_at.asc'
@@ -78,8 +103,10 @@ export const SEARCH_QUERY_KEYS = [
   'exclude',
   'fields',
   'genre',
+  'subgenre',
   'type',
   'channel',
+  'day',
   'from',
   'to',
   'sort',
@@ -92,8 +119,10 @@ export interface RawSearchCondition {
   exclude?: string
   fields?: string
   genre?: string | string[]
+  subgenre?: string | string[]
   type?: string
   channel?: string
+  day?: string | string[]
   from?: string
   to?: string
   sort?: string
@@ -106,8 +135,10 @@ export interface SearchTerms {
   exclude?: string
   fields: SearchField
   genres: SearchGenre[]
+  subgenres: string[]
   kind?: SearchKind
   channels: string[]
+  days: SearchDay[]
   from?: string
   to?: string
 }
@@ -119,6 +150,12 @@ export interface SearchViewing {
 }
 
 export interface SearchCondition extends SearchTerms, SearchViewing {}
+
+export interface SubgenreGroup {
+  kind: number
+  label: string
+  under: Subgenre[]
+}
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/
 
@@ -146,8 +183,12 @@ function calendarDate(value: string | undefined): string | undefined {
   return value
 }
 
+function listed(asked: string | string[] | undefined): string[] {
+  return asked === undefined ? [] : [asked].flat()
+}
+
 function genres(asked: string | string[] | undefined): SearchGenre[] {
-  const named = asked === undefined ? [] : [asked].flat()
+  const named = listed(asked)
   const kept: SearchGenre[] = []
 
   for (const one of named) {
@@ -159,6 +200,28 @@ function genres(asked: string | string[] | undefined): SearchGenre[] {
   }
 
   return kept
+}
+
+function subgenres(asked: string | string[] | undefined): string[] {
+  const kept: string[] = []
+
+  for (const one of listed(asked)) {
+    const offered = subgenreOfValue(one)
+
+    if (offered && !kept.includes(offered.value)) {
+      kept.push(offered.value)
+    }
+  }
+
+  return kept
+}
+
+function days(asked: string | string[] | undefined): SearchDay[] {
+  const named = listed(asked)
+
+  return SEARCH_DAY_OPTIONS.filter((option) =>
+    named.includes(option.value),
+  ).map((option) => option.value)
 }
 
 export function namesAChannel(value: string): boolean {
@@ -197,8 +260,10 @@ export function rawSearchConditionOf(
     exclude: one('exclude'),
     fields: one('fields'),
     genre: asked.genre,
+    subgenre: asked.subgenre,
     type: one('type'),
     channel: one('channel'),
+    day: asked.day,
     from: one('from'),
     to: one('to'),
     sort: one('sort'),
@@ -215,9 +280,11 @@ export function readSearchCondition(raw: RawSearchCondition): SearchCondition {
       SEARCH_FIELD_OPTIONS.find((option) => option.value === raw.fields)
         ?.value ?? SEARCH_DEFAULT_FIELDS,
     genres: genres(raw.genre),
+    subgenres: subgenres(raw.subgenre),
     kind: SEARCH_KIND_OPTIONS.find((option) => option.value === raw.type)
       ?.value,
     channels: channels(raw.channel),
+    days: days(raw.day),
     from: calendarDate(raw.from),
     to: calendarDate(raw.to),
     sort:
@@ -238,8 +305,10 @@ export function searchTermsOf(condition: SearchCondition): SearchTerms {
     exclude: condition.exclude,
     fields: condition.fields,
     genres: condition.genres,
+    subgenres: condition.subgenres,
     kind: condition.kind,
     channels: condition.channels,
+    days: condition.days,
     from: condition.from,
     to: condition.to,
   }
@@ -270,12 +339,20 @@ function writeTerms(params: URLSearchParams, terms: SearchTerms): void {
     params.append('genre', genre)
   }
 
+  for (const subgenre of terms.subgenres) {
+    params.append('subgenre', subgenre)
+  }
+
   if (terms.kind) {
     params.set('type', terms.kind)
   }
 
   if (terms.channels.length > 0) {
     params.set('channel', terms.channels.join(','))
+  }
+
+  for (const day of terms.days) {
+    params.append('day', day)
   }
 
   if (terms.from) {
@@ -330,16 +407,32 @@ export function searchConditionOfQuery(query: string): SearchCondition {
   return readSearchCondition(rawSearchConditionOf(asked))
 }
 
+export function namesSomeDays(days: SearchDay[]): boolean {
+  return days.length > 0 && days.length < SEARCH_DAY_OPTIONS.length
+}
+
 export function narrowsAnything(terms: SearchTerms): boolean {
   return Boolean(
     terms.q ||
     terms.exclude ||
     terms.genres.length ||
+    terms.subgenres.length ||
     terms.kind ||
     terms.channels.length ||
+    namesSomeDays(terms.days) ||
     terms.from ||
     terms.to,
   )
+}
+
+export function searchDaysInOrder(days: SearchDay[]): SearchDay[] {
+  return SEARCH_DAY_OPTIONS.map((option) => option.value).filter((day) =>
+    days.includes(day),
+  )
+}
+
+export function searchDayLabelOf(day: SearchDay): string {
+  return SEARCH_DAY_OPTIONS.find((option) => option.value === day)?.label ?? day
 }
 
 export function genreLabelOf(genre: SearchGenre): string {
@@ -354,6 +447,30 @@ export function genreLabelOfKind(kind: number): string {
     SEARCH_GENRE_OPTIONS.find((option) => option.kind === kind)?.label ??
     genreLabelOf('other')
   )
+}
+
+export function subgenreLabelOf(value: string): string {
+  const found = subgenreOfValue(value)
+
+  return found ? `${found.label}(${genreLabelOfKind(found.kind)})` : value
+}
+
+export function offeredSubgenres(
+  genres: SearchGenre[],
+  picked: string[],
+): SubgenreGroup[] {
+  const named = genreKindsOf(genres)
+
+  return SEARCH_GENRE_OPTIONS.filter((genre) => !named.includes(genre.kind))
+    .map((genre) => ({
+      kind: genre.kind,
+      label: genre.label,
+      under: SUBGENRE_OPTIONS.filter(
+        (option) =>
+          option.kind === genre.kind && !picked.includes(option.value),
+      ),
+    }))
+    .filter((group) => group.under.length > 0)
 }
 
 export function genreKindsOf(asked: SearchGenre[]): number[] {

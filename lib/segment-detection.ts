@@ -14,8 +14,6 @@ import type {
 
 export const NOT_APPLICABLE = '対象なし'
 
-export const LEARNING_OFF = '無効'
-
 export const SKIP_THRESHOLD_LOWEST = 0.5
 
 export const SKIP_THRESHOLD_HIGHEST = 0.95
@@ -133,14 +131,9 @@ const SWITCH = '切り替え'
 const CHANGE = '変更'
 
 function refusalOf(refusal: SegmentVersionRefusal, action: string): string {
-  switch (refusal) {
-    case 'learningOff':
-      return `学習が無効のため、${action}できませんでした。`
-    case 'unauthenticated':
-      return signedOut(action)
-    default:
-      return couldNot(`${action}できませんでした`)
-  }
+  return refusal === 'unauthenticated'
+    ? signedOut(action)
+    : couldNot(`${action}できませんでした`)
 }
 
 export function switchRefusalOf(refusal: SegmentVersionRefusal): string {
@@ -162,9 +155,6 @@ export function skipThresholdRefusalOf(refusal: SkipThresholdRefusal): string {
     ? signedOut('保存')
     : couldNot('保存できませんでした')
 }
-
-export const ROUNDS_LEARNING_OFF =
-  '学習が無効のため、候補の版は作られず切り替わりません。'
 
 export const NO_ROUND_YET = 'まだ学習の回はありません。'
 

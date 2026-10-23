@@ -473,7 +473,7 @@ export const 曜日とサブジャンルと期間を足す: Story = {
       canvas.getByRole('link', { name: '番組検索へ' }),
     ).toHaveAttribute(
       'href',
-      '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime&from=2026-08-08&to=2026-08-31',
+      '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime&subgenre=3-1&day=monday&day=wednesday&from=2026-08-08&to=2026-08-31',
     )
 
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))

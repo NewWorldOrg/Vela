@@ -31,7 +31,9 @@ import { inTheApp } from '@/stories/frames'
 const emptyCondition: SearchCondition = {
   fields: 'title,description',
   genres: [],
+  subgenres: [],
   channels: [],
+  days: [],
   sort: 'start_at.asc',
   perPage: 20,
   page: 1,
@@ -50,12 +52,14 @@ const everyCondition: SearchCondition = {
   exclude: '再放送',
   fields: 'title',
   genres: ['documentary', 'movie'],
+  subgenres: ['7-0'],
   kind: 'terrestrial',
   channels: [
     SEARCH_CHANNEL_FIXTURES[0].id,
     SEARCH_CHANNEL_FIXTURES[1].id,
     SEARCH_CHANNEL_FIXTURES[2].id,
   ],
+  days: ['saturday', 'sunday'],
 }
 
 const channels = SEARCH_CHANNEL_FIXTURES
@@ -170,6 +174,12 @@ function saysNothingItCannotKeep(
     canvas.queryAllByText(new RegExp(NO_LONGER_KEPT)),
     '放送済みの番組は出ないという約束が画面に戻っている',
   ).toHaveLength(0)
+}
+
+function picked(canvasElement: HTMLElement, kind: string): string[] {
+  return within(canvasElement)
+    .queryAllByRole('button', { name: new RegExp(`^${kind} .+ を外す$`) })
+    .map((one) => one.getAttribute('aria-label') ?? '')
 }
 
 function fillDate(field: HTMLElement, date: string): void {
@@ -799,6 +809,153 @@ export const 数と行き先は押す前から手元の条件を映す: Story = 
   },
 }
 
+export const サブジャンルと曜日を選ぶ: Story = {
+  args: {
+    result: {
+      condition: { ...emptyCondition, genres: ['anime'] },
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  render: (args) => <Live {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const router = getRouter()
+
+    await choose('曜日を追加', '水曜')
+    await choose('曜日を追加', '月曜')
+
+    await waitFor(async () => {
+      await expect(picked(canvasElement, '曜日')).toEqual([
+        '曜日 月曜 を外す',
+        '曜日 水曜 を外す',
+      ])
+    })
+
+    await userEvent.click(
+      canvas.getByRole('combobox', { name: 'サブジャンルを追加' }),
+    )
+    await expect(
+      await screen.findByRole('group', { name: 'ドラマ' }),
+    ).toBeVisible()
+    await expect(
+      screen.queryByRole('group', { name: 'アニメ/特撮' }),
+    ).toBeNull()
+    await userEvent.click(screen.getByRole('option', { name: '海外ドラマ' }))
+    await afterTheArrival(document.body)
+
+    await waitFor(async () => {
+      await expect(picked(canvasElement, 'サブジャンル')).toEqual([
+        'サブジャンル 海外ドラマ(ドラマ) を外す',
+      ])
+    })
+
+    await expect(canvas.getByText('3 件の条件を指定しています')).toBeVisible()
+    await expect(
+      canvas.getByText(
+        '/search?genre=anime&subgenre=3-1&day=monday&day=wednesday',
+      ),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'この条件でルールを作成' }),
+    ).toHaveAttribute(
+      'href',
+      '/reservations/rules?rule=new&genre=anime&subgenre=3-1&day=monday&day=wednesday',
+    )
+    await expect(router.push).not.toHaveBeenCalled()
+
+    await userEvent.click(canvas.getByRole('button', { name: '検索' }))
+
+    await waitFor(async () => {
+      await expect(router.push).toHaveBeenLastCalledWith(
+        '/search?genre=anime&subgenre=3-1&day=monday&day=wednesday',
+        { scroll: false },
+      )
+    })
+    await expect(picked(canvasElement, '曜日')).toEqual([
+      '曜日 月曜 を外す',
+      '曜日 水曜 を外す',
+    ])
+    await expect(picked(canvasElement, 'サブジャンル')).toEqual([
+      'サブジャンル 海外ドラマ(ドラマ) を外す',
+    ])
+  },
+}
+
+export const サブジャンルや曜日だけでもルールを作れる: Story = {
+  args: {
+    result: {
+      condition: emptyCondition,
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  render: (args) => <Live {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await choose('曜日を追加', '金曜')
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('link', { name: 'この条件でルールを作成' }),
+      ).toHaveAttribute('href', '/reservations/rules?rule=new&day=friday')
+    })
+    await expect(canvas.getByText('1 件の条件を指定しています')).toBeVisible()
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: '曜日 金曜 を外す' }),
+    )
+    await choose('サブジャンルを追加', '国内アニメ')
+
+    await waitFor(async () => {
+      await expect(
+        canvas.getByRole('link', { name: 'この条件でルールを作成' }),
+      ).toHaveAttribute('href', '/reservations/rules?rule=new&subgenre=7-0')
+    })
+    await expect(canvas.getByText('1 件の条件を指定しています')).toBeVisible()
+  },
+}
+
+export const 曜日を7つとも選ぶと条件に数えない: Story = {
+  args: {
+    result: {
+      condition: {
+        ...emptyCondition,
+        days: [
+          'monday',
+          'tuesday',
+          'wednesday',
+          'thursday',
+          'friday',
+          'saturday',
+        ],
+      },
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  render: (args) => <Live {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('1 件の条件を指定しています')).toBeVisible()
+
+    await choose('曜日を追加', '日曜')
+
+    await waitFor(async () => {
+      await expect(picked(canvasElement, '曜日')).toHaveLength(7)
+    })
+    await expect(
+      canvas.queryByRole('combobox', { name: '曜日を追加' }),
+    ).toBeNull()
+    await expect(canvas.queryByText(/件の条件を指定しています/)).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: 'この条件でルールを作成' }),
+    ).toBeDisabled()
+  },
+}
+
 export const 開いた住所の条件が欄に入っている: Story = {
   args: {
     result: {
@@ -838,9 +995,16 @@ export const 開いた住所の条件が欄に入っている: Story = {
         .getAllByRole('button', { name: /^ジャンル .+ を外す$/ })
         .map((one) => one.getAttribute('aria-label')),
     ).toEqual(['ジャンル ドキュメンタリー/教養 を外す', 'ジャンル 映画 を外す'])
+    await expect(picked(canvasElement, 'サブジャンル')).toEqual([
+      'サブジャンル 国内アニメ(アニメ/特撮) を外す',
+    ])
     await expect(
       canvas.getAllByRole('button', { name: /^チャンネル .+ を外す$/ }),
     ).toHaveLength(3)
+    await expect(picked(canvasElement, '曜日')).toEqual([
+      '曜日 土曜 を外す',
+      '曜日 日曜 を外す',
+    ])
     await expect(canvas.getByLabelText('期間の開始日')).toHaveValue(
       '2026-08-09',
     )
