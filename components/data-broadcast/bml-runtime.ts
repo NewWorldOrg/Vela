@@ -39,6 +39,7 @@ import {
 } from '@/lib/bml/keys'
 import type { LineState, ReceiverId } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
+import { NO_RESIDENCE, type Residence } from '@/lib/bml/receiver-info'
 import {
   MOST_REGISTER,
   SHARED_REGISTERS,
@@ -252,6 +253,8 @@ export class BmlRuntime {
 
   private receiverId: ReceiverId | null = null
 
+  private residence: Residence = NO_RESIDENCE
+
   private hybridcast = false
 
   private failedStarts: AppStart[] = []
@@ -321,6 +324,9 @@ export class BmlRuntime {
         return
       case 'memory':
         this.memory.take(message.entries)
+        return
+      case 'residence':
+        this.residence = message.residence
         return
       case 'event':
         this.fired(message.event)
@@ -861,6 +867,7 @@ export class BmlRuntime {
         this.leaving = { quit: true }
       },
       memory: this.memory,
+      residence: () => this.residence,
       registers: this.registers,
       startTimer: (code, everyMs, times) =>
         this.startTimer(code, everyMs, times),

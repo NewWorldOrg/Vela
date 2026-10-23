@@ -45,6 +45,7 @@ import {
 } from '@/components/recordings/player-palette'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import { PersistentMemory, readArray } from '@/lib/bml/memory'
+import type { Residence } from '@/lib/bml/receiver-info'
 import type { BmlModule } from '@/lib/bml/resources'
 import {
   CURSOR_PROBE,
@@ -65,6 +66,7 @@ import {
   dataBroadcastModules,
   historyModules,
   howFarModules,
+  residenceModules,
   menuModules,
   rowModules,
   scriptedModules,
@@ -491,7 +493,13 @@ function seenOf(value: string | null): string | null {
   return typeof text === 'string' ? text : null
 }
 
-function RecordedFace({ modules }: { modules: () => BmlModule[] }) {
+function RecordedFace({
+  modules,
+  readResidence,
+}: {
+  modules: () => BmlModule[]
+  readResidence?: () => Promise<Residence>
+}) {
   const [feed] = useState(() => new HeldRecording(modules()))
   const runtime = useRef<SendToRuntime | null>(null)
   const [rect, setRect] = useState<string | null>(null)
@@ -509,6 +517,7 @@ function RecordedFace({ modules }: { modules: () => BmlModule[] }) {
         <DataBroadcastFace
           feed={feed}
           onAir={{ network: null, startsAt: RECORDING_BEGAN }}
+          readResidence={readResidence}
           onRuntime={(send) => {
             runtime.current = send
           }}
@@ -607,6 +616,44 @@ export const 録画のデータ放送の文書は録った日時を見る: Story
 
     await userEvent.click(canvas.getByRole('button', { name: '5 秒へ' }))
     await seenIs(5)
+  },
+}
+
+export const 録画のデータ放送の文書は受信機の地域情報を読む: Story = {
+  render: () => (
+    <RecordedFace
+      modules={residenceModules}
+      readResidence={async () => ({ postalCode: '0000000', prefecture: 48 })}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const face = within(canvasElement).getByRole('group', {
+      name: '録画のデータ放送',
+    })
+
+    await waitFor(
+      () => expect(face).toHaveAttribute('data-seen', '0000000/48/2732/NaN'),
+      { timeout: 5000 },
+    )
+  },
+}
+
+export const 地域情報が未登録なら空と未設定の値を読む: Story = {
+  render: () => (
+    <RecordedFace
+      modules={residenceModules}
+      readResidence={async () => ({ postalCode: null, prefecture: null })}
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const face = within(canvasElement).getByRole('group', {
+      name: '録画のデータ放送',
+    })
+
+    await waitFor(
+      () => expect(face).toHaveAttribute('data-seen', '/255/0/NaN'),
+      { timeout: 5000 },
+    )
   },
 }
 

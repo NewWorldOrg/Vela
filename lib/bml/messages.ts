@@ -27,6 +27,7 @@ import {
 } from '@/lib/bml/memory'
 import { nptReadingOf, type NptReading } from '@/lib/bml/npt'
 import { MOST_URL, addressOf, lineAddressOf } from '@/lib/bml/paths'
+import { residenceOf, type Residence } from '@/lib/bml/receiver-info'
 import { moduleOf, type BmlModule } from '@/lib/bml/resources'
 import { isRomSound } from '@/lib/bml/rom-sound'
 import { FONT_FAMILIES, GRID } from '@/lib/bml/style'
@@ -77,6 +78,7 @@ export type PlayerMessage =
   | { kind: 'clock'; seconds: number }
   | { kind: 'programme'; programme: Programme }
   | { kind: 'memory'; entries: MemoryEntries }
+  | { kind: 'residence'; residence: Residence }
   | { kind: 'event'; event: BroadcastEvent }
   | { kind: 'npt'; reading: NptReading }
   | { kind: 'line'; line: LineState; receiverId: ReceiverId | null }
@@ -496,6 +498,11 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
       const entries = memoryEntriesOfValue(message.entries)
 
       return entries ? { kind: 'memory', entries } : null
+    }
+    case 'residence': {
+      const residence = residenceOf(message.residence)
+
+      return residence ? { kind: 'residence', residence } : null
     }
     case 'event': {
       const event = broadcastEventOf(message.event)

@@ -653,6 +653,34 @@ export function relativeTimeModules(): BmlModule[] {
   return readingModules(KNOWS_HOW_FAR)
 }
 
+const READS_THE_RESIDENCE = `${PROLOGUE}
+<bml>
+<head>
+<link rel="stylesheet" href="sample.css" type="text/css"/>
+<script><![CDATA[
+function show() {
+  var zip = browser.readPersistentArray("nvram://receiverinfo/zipcode", "S:7B");
+  var pref = browser.readPersistentArray("nvram://receiverinfo/prefecture", "U:1B");
+  var region = browser.readPersistentArray("nvram://receiverinfo/regioncode", "U:2B");
+  var wrote = browser.writePersistentArray("nvram://receiverinfo/zipcode", "S:7B", ["0000001"]);
+  var text = zip[0] + "/" + pref[0] + "/" + region[0] + "/" + wrote;
+  document.getElementById("heard").firstChild.data = text;
+  browser.writePersistentArray("seen", "S:19B", [text]);
+}
+]]></script>
+</head>
+<body style="resolution: 960x540; display-aspect-ratio: 16v9; clut: url(sample.clt); background-color-index: 128" onload="show()">
+<object type="video/X-arib-mpeg2" style="left: 480px; top: 120px; width: 440px; height: 248px"/>
+<p class="panel" style="left: 40px; top: 120px; width: 400px; height: 56px">受信機の地域情報</p>
+<p id="heard" class="panel" style="left: 40px; top: 184px; width: 400px; height: 56px">-</p>
+</body>
+</bml>`
+
+/** The module of a self-made data broadcast whose entry document reads the receiver's postal code, prefecture and region code, tries to write the postal code, and prints and keeps under `seen` as `S:19B` the three it read and what the write answered, joined by slashes. */
+export function residenceModules(): BmlModule[] {
+  return readingModules(READS_THE_RESIDENCE)
+}
+
 /** The module of a self-made data broadcast whose entry document prints the date and time it sees, four times a second, and keeps what it printed under `seen` as `S:19B`. */
 export function clockModules(): BmlModule[] {
   return readingModules(SEES_THE_TIME)

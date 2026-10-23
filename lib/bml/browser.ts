@@ -18,7 +18,12 @@ import {
   type ReceiverId,
   type TransmitAnswer,
 } from '@/lib/bml/line'
-import { readArray, writeArray, type PersistentMemory } from '@/lib/bml/memory'
+import type { PersistentMemory } from '@/lib/bml/memory'
+import {
+  readPersistent,
+  writePersistent,
+  type Residence,
+} from '@/lib/bml/receiver-info'
 import { lineAddressOf } from '@/lib/bml/paths'
 import type { Programme } from '@/lib/bml/messages'
 import { romSoundOf } from '@/lib/bml/rom-sound'
@@ -51,6 +56,7 @@ export interface BrowserHost {
   listed(reference: unknown): boolean | null
   quit(): void
   memory: PersistentMemory
+  residence(): Residence
   registers: { Ureg: string[]; Greg: string[] }
   startTimer(code: unknown, everyMs: unknown, times: unknown): number
   stopTimer(id: unknown): boolean
@@ -630,9 +636,9 @@ function supported(host: BrowserHost): Record<string, Answer> {
       return typeof startsAt === 'number' ? new Date(startsAt * 1000) : null
     },
     readPersistentArray: (name: unknown, structure: unknown) =>
-      readArray(host.memory, name, structure),
+      readPersistent(host.memory, host.residence(), name, structure),
     writePersistentArray: (name: unknown, structure: unknown, data: unknown) =>
-      writeArray(host.memory, name, structure, data) ?? FAILED,
+      writePersistent(host.memory, name, structure, data) ?? FAILED,
     lockModuleOnMemory: (reference: unknown) => lockAnswerOf(host, reference),
     lockModuleOnMemoryEx: (reference: unknown) => lockAnswerOf(host, reference),
     unlockModuleOnMemory: (reference: unknown) => {
