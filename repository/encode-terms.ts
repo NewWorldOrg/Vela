@@ -164,10 +164,12 @@ export interface EncodeDestinationDraft {
   defaultProfileId: string
 }
 
-export const PROFILE_DRAFT_DEFAULTS: Omit<EncodeProfileDraft, 'label'> = {
+export type EncodeProfileDefaults = Omit<EncodeProfileDraft, 'label'>
+
+export const PROFILE_DRAFT_DEFAULTS: EncodeProfileDefaults = {
   codec: 'h264',
   resolution: 'asSource',
-  deinterlace: 'everyFrame',
-  rateFactor: 22,
-  quantiser: 24,
+  deinterlace: 'everyField',
+  rateFactor: 20,
+  quantiser: 26,
 }

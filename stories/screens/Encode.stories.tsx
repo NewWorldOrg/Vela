@@ -14,6 +14,7 @@ import {
   ENCODE_SCREEN,
   FAILED_JOB,
   MORE_JOBS_THAN_FIT,
+  PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
   QUEUED_JOB,
   REPLACED_JOB,
   RETIRED_DEFINITIONS,
@@ -27,6 +28,7 @@ import {
   jobsPage,
   screenWith,
 } from '@/repository/encode.fixtures'
+import { PROFILE_DRAFT_DEFAULTS } from '@/repository/encode-terms'
 import type { EncodeActions } from '@/components/encode/encode-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { EncodeView } from '@/components/encode/encode-page'
@@ -43,6 +45,10 @@ import { inTheSettings } from '@/stories/frames'
 const callOff = fn(async () => ({ state: 'ok' }) as const)
 
 const settleAutoRun = fn<EncodeActions['onSettleAutoRun']>(async () => ({
+  state: 'ok',
+}))
+
+const defineProfile = fn<EncodeActions['onDefineProfile']>(async () => ({
   state: 'ok',
 }))
 
@@ -69,7 +75,7 @@ const removeDestination = fn<EncodeActions['onRemoveDestination']>(
 )
 
 const ACTIONS: EncodeActions = {
-  onDefineProfile: async () => ({ state: 'ok' }) as const,
+  onDefineProfile: defineProfile,
   onReviseProfile: reviseProfile,
   onRemoveProfile: removeProfile,
   onDefineDestination: async () => ({ state: 'ok' }) as const,
@@ -567,6 +573,76 @@ export const プロファイルを追加する: Story = {
     await expect(
       within(dialog).getByText('名称を入力してください。'),
     ).toBeVisible()
+  },
+}
+
+export const 新しいプロファイルはこの機械の既定値から始まる: Story = {
+  play: async ({ canvasElement }) => {
+    defineProfile.mockClear()
+
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'プロファイルを追加' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'プロファイルを追加',
+    })
+
+    await afterTheArrival(canvasElement)
+
+    await expect(
+      within(dialog).getByRole('button', { name: 'H.265' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(within(dialog).getByLabelText('解像度')).toHaveTextContent(
+      'ソースのまま',
+    )
+    await expect(
+      within(dialog).getByLabelText('インタレース解除'),
+    ).toHaveTextContent('60p')
+    await expect(within(dialog).getByLabelText('品質(CRF)')).toHaveValue('20')
+    await expect(within(dialog).getByLabelText('品質(QP)')).toHaveValue('26')
+
+    await userEvent.type(within(dialog).getByLabelText(/名称/), '視聴用')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '追加する' }),
+    )
+
+    await waitFor(() =>
+      expect(defineProfile).toHaveBeenCalledWith({
+        label: '視聴用',
+        ...PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
+      }),
+    )
+  },
+}
+
+export const 既定値を読めないときの新しいプロファイル: Story = {
+  args: {
+    screen: { ...ENCODE_SCREEN, profileDefaults: PROFILE_DRAFT_DEFAULTS },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'プロファイルを追加' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'プロファイルを追加',
+    })
+
+    await afterTheArrival(canvasElement)
+
+    await expect(
+      within(dialog).getByRole('button', { name: 'H.264' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      within(dialog).getByLabelText('インタレース解除'),
+    ).toHaveTextContent('60p')
+    await expect(within(dialog).getByLabelText('品質(CRF)')).toHaveValue('20')
+    await expect(within(dialog).getByLabelText('品質(QP)')).toHaveValue('26')
   },
 }
 

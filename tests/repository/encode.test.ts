@@ -19,6 +19,8 @@ const store: {
   jobs: unknown[]
   durations: unknown
   autoRun: unknown
+  profileDefaults: unknown
+  defaultsStatus: number | 'unreachable'
   readStatus: number
   readMessage: string
   writeStatus: number
@@ -32,6 +34,8 @@ const store: {
   jobs: [],
   durations: null,
   autoRun: null,
+  profileDefaults: null,
+  defaultsStatus: 200,
   readStatus: 200,
   readMessage: '',
   writeStatus: 201,
@@ -103,6 +107,14 @@ const AUTO_RUN = {
   stored: false,
   updatedAt: null,
   whereArtefactsGo: 'settled',
+}
+
+const PROFILE_DEFAULTS = {
+  codec: 'h265',
+  resolution: 'asSource',
+  deinterlace: 'everyField',
+  rateFactor: '20',
+  quantiser: 26,
 }
 
 const RECORDING = {
@@ -191,6 +203,14 @@ const client = () => ({
         return envelope(store.durations)
       case '/api/encoding/settings':
         return envelope(store.autoRun)
+      case '/api/encoding/profiles/defaults':
+        if (store.defaultsStatus === 'unreachable') {
+          throw new TypeError('fetch failed')
+        }
+
+        return store.defaultsStatus >= 400
+          ? refusal(store.defaultsStatus, 'Internal Server Error')
+          : envelope(store.profileDefaults)
       case '/api/encoding/jobs': {
         const asked = query?.status as string[] | undefined
         const of = query?.recordingId as string | undefined
@@ -265,6 +285,8 @@ mock.module('@/repository/client/carina', {
   namedExports: { carinaClient: client, revalidatingCarinaClient: client },
 })
 
+const { PROFILE_DRAFT_DEFAULTS } = await import('@/repository/encode-terms')
+
 const {
   WHEN_CALLING_OFF,
   WHEN_CHANGING_A_DESTINATION,
@@ -302,6 +324,8 @@ beforeEach(() => {
   store.jobs = [RUNNING, COMPLETED]
   store.durations = DURATIONS
   store.autoRun = AUTO_RUN
+  store.profileDefaults = PROFILE_DEFAULTS
+  store.defaultsStatus = 200
   store.readStatus = 200
   store.readMessage = ''
   store.writeStatus = 201
@@ -393,6 +417,49 @@ test('the screen reads the ledger into names, values and counts', async () => {
   assert.equal(completed.quietForSeconds, undefined)
   assert.equal(completed.route?.swerved, undefined)
   assert.equal(completed.cancellable, false)
+})
+
+test('a new profile starts from what Carina says this machine starts one from', async () => {
+  const screen = await getEncodeScreen({}, NOW)
+
+  assert.ok(
+    sent.some(
+      (one) =>
+        one.method === 'GET' && one.path === '/api/encoding/profiles/defaults',
+    ),
+  )
+  assert.deepEqual(screen.profileDefaults, {
+    codec: 'h265',
+    resolution: 'asSource',
+    deinterlace: 'everyField',
+    rateFactor: 20,
+    quantiser: 26,
+  })
+})
+
+test('a new profile starts from the values kept here when Carina does not say, and the rest of the screen is read as ever', async () => {
+  store.defaultsStatus = 500
+
+  const refused = await getEncodeScreen({}, NOW)
+
+  store.defaultsStatus = 'unreachable'
+
+  const unreached = await getEncodeScreen({}, NOW)
+
+  assert.deepEqual(refused.profileDefaults, PROFILE_DRAFT_DEFAULTS)
+  assert.deepEqual(unreached.profileDefaults, PROFILE_DRAFT_DEFAULTS)
+  assert.equal(refused.profiles.length, 1)
+  assert.equal(unreached.jobs.total, 2)
+})
+
+test('the values kept here are the ones Carina starts a profile from, at H.264', () => {
+  assert.deepEqual(PROFILE_DRAFT_DEFAULTS, {
+    codec: 'h264',
+    resolution: 'asSource',
+    deinterlace: 'everyField',
+    rateFactor: 20,
+    quantiser: 26,
+  })
 })
 
 test('a completed job whose artefact a newer one replaced says when, and the standing one says nothing', async () => {

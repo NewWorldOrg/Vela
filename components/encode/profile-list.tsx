@@ -10,6 +10,7 @@ import type {
   EncodeWrite,
 } from '@/repository/encode'
 import type {
+  EncodeProfileDefaults,
   EncodeProfileDraft,
   EncodeRemoved,
 } from '@/repository/encode-terms'
@@ -53,11 +54,13 @@ const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
 
 export function ProfileList({
   profiles,
+  defaults,
   onDefine,
   onRevise,
   onRemove,
 }: {
   profiles: EncodeProfile[]
+  defaults: EncodeProfileDefaults
   onDefine: (draft: EncodeProfileDraft) => Promise<EncodeWrite>
   onRevise: (id: string, draft: EncodeProfileDraft) => Promise<EncodeWrite>
   onRemove: (id: string) => Promise<EncodeRemoval>
@@ -71,7 +74,7 @@ export function ProfileList({
     <>
       <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
         <RemovalNotice removed={removed} />
-        <AddProfileDialog size="sm" onDefine={onDefine} />
+        <AddProfileDialog size="sm" defaults={defaults} onDefine={onDefine} />
       </div>
 
       <Table
