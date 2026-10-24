@@ -7321,6 +7321,39 @@
         }
       }
     },
+    "/api/encoding/profiles/defaults": {
+      "get": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "getEncodeProfileDefaults",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileDefaultsResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeProfileDefaultsResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/encoding/settings": {
       "get": {
         "tags": [
@@ -9275,6 +9308,32 @@
               },
               {
                 "$ref": "#/components/schemas/EncodeJobResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeProfileDefaultsResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeProfileDefaultsResponder"
               }
             ]
           }
@@ -12915,7 +12974,8 @@
           "failure",
           "artefactName",
           "replacedAt",
-          "timeline"
+          "timeline",
+          "remade"
         ],
         "type": "object",
         "properties": {
@@ -13033,6 +13093,16 @@
                 "$ref": "#/components/schemas/EncodeTimelineResponder"
               }
             ]
+          },
+          "remade": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeRemake"
+              }
+            ]
           }
         }
       },
@@ -13045,6 +13115,43 @@
           "cancelled"
         ],
         "type": "string"
+      },
+      "EncodeProfileDefaultsResponder": {
+        "required": [
+          "codec",
+          "resolution",
+          "deinterlace",
+          "rateFactor",
+          "quantiser"
+        ],
+        "type": "object",
+        "properties": {
+          "codec": {
+            "$ref": "#/components/schemas/EncodeCodec"
+          },
+          "resolution": {
+            "$ref": "#/components/schemas/EncodeResolution"
+          },
+          "deinterlace": {
+            "$ref": "#/components/schemas/Deinterlace"
+          },
+          "rateFactor": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quantiser": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
       },
       "EncodeProfileListResponder": {
         "required": [
@@ -13118,6 +13225,18 @@
             "format": "date-time"
           }
         }
+      },
+      "EncodeRemake": {
+        "enum": [
+          "largerThanTheSource",
+          "stillLargerThanTheSource",
+          "noSmallerTheSecondTime",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
       },
       "EncodeRemoval": {
         "enum": [

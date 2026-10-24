@@ -8,6 +8,7 @@ import type { EncodeJob, EncodeWrite } from '@/repository/encode'
 import {
   ENCODER_LABEL,
   RECORDING_REMOVED_LABEL,
+  REMAKE_LABEL,
   STALLED_LABEL,
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
@@ -77,6 +78,7 @@ export function RunningJob({
               : wordFor(ENCODER_LABEL, job.route.ran)}
           </span>
         )}
+        {job.remade && <span>{wordFor(REMAKE_LABEL, job.remade)}</span>}
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {job.title !== undefined && (

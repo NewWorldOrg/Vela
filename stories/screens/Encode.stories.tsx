@@ -14,7 +14,10 @@ import {
   ENCODE_SCREEN,
   FAILED_JOB,
   MORE_JOBS_THAN_FIT,
+  PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
   QUEUED_JOB,
+  REMADE_JOB,
+  REMAKING_JOB,
   REPLACED_JOB,
   RETIRED_DEFINITIONS,
   RUNNING_JOB,
@@ -23,10 +26,12 @@ import {
   SPELLS_NONE,
   SPELLS_TOO_FEW,
   STALLED_JOB,
+  STILL_LARGER_JOB,
   SHELF_DESTINATION,
   jobsPage,
   screenWith,
 } from '@/repository/encode.fixtures'
+import { PROFILE_DRAFT_DEFAULTS } from '@/repository/encode-terms'
 import type { EncodeActions } from '@/components/encode/encode-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { EncodeView } from '@/components/encode/encode-page'
@@ -43,6 +48,10 @@ import { inTheSettings } from '@/stories/frames'
 const callOff = fn(async () => ({ state: 'ok' }) as const)
 
 const settleAutoRun = fn<EncodeActions['onSettleAutoRun']>(async () => ({
+  state: 'ok',
+}))
+
+const defineProfile = fn<EncodeActions['onDefineProfile']>(async () => ({
   state: 'ok',
 }))
 
@@ -69,7 +78,7 @@ const removeDestination = fn<EncodeActions['onRemoveDestination']>(
 )
 
 const ACTIONS: EncodeActions = {
-  onDefineProfile: async () => ({ state: 'ok' }) as const,
+  onDefineProfile: defineProfile,
   onReviseProfile: reviseProfile,
   onRemoveProfile: removeProfile,
   onDefineDestination: async () => ({ state: 'ok' }) as const,
@@ -425,6 +434,56 @@ export const 置き換え済み: Story = {
   },
 }
 
+export const 作り直し中: Story = {
+  args: { screen: screenWith(REMAKING_JOB) },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const running = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="running-job"]',
+    )
+
+    if (!running) {
+      throw new Error('the running job is not on the screen')
+    }
+
+    await expect(
+      within(running).getByText('元より大きいため作り直し'),
+    ).toBeVisible()
+    await expect(within(running).getByText('18%')).toBeVisible()
+  },
+}
+
+export const 作り直した: Story = {
+  args: {
+    screen: {
+      ...screenWith(REMADE_JOB),
+      jobs: jobsPage([REMADE_JOB, STILL_LARGER_JOB, COMPLETED_JOB]),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const [remade, stillLarger, once] = rowsOfTheTableHeaded(
+      canvasElement,
+      '番組',
+    )
+
+    await expect(
+      within(cellOf(remade, JOB_STATE_COLUMN)).getByText('完了'),
+    ).toBeVisible()
+    await expect(
+      await tipIn(cellOf(remade, JOB_STATE_COLUMN)),
+    ).toHaveTextContent('元より大きいため作り直し')
+    await expect(
+      await tipIn(cellOf(stillLarger, JOB_STATE_COLUMN)),
+    ).toHaveTextContent('作り直しても元より大きい')
+    await expect(
+      within(cellOf(once, JOB_STATE_COLUMN)).getByText('完了'),
+    ).toBeVisible()
+  },
+}
+
 export const 中止: Story = {
   args: { screen: screenWith(CANCELLED_JOB) },
   play: async ({ canvasElement }) => {
@@ -567,6 +626,76 @@ export const プロファイルを追加する: Story = {
     await expect(
       within(dialog).getByText('名称を入力してください。'),
     ).toBeVisible()
+  },
+}
+
+export const 新しいプロファイルはこの機械の既定値から始まる: Story = {
+  play: async ({ canvasElement }) => {
+    defineProfile.mockClear()
+
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'プロファイルを追加' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'プロファイルを追加',
+    })
+
+    await afterTheArrival(canvasElement)
+
+    await expect(
+      within(dialog).getByRole('button', { name: 'H.265' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(within(dialog).getByLabelText('解像度')).toHaveTextContent(
+      'ソースのまま',
+    )
+    await expect(
+      within(dialog).getByLabelText('インタレース解除'),
+    ).toHaveTextContent('60p')
+    await expect(within(dialog).getByLabelText('品質(CRF)')).toHaveValue('20')
+    await expect(within(dialog).getByLabelText('品質(QP)')).toHaveValue('26')
+
+    await userEvent.type(within(dialog).getByLabelText(/名称/), '視聴用')
+    await userEvent.click(
+      within(dialog).getByRole('button', { name: '追加する' }),
+    )
+
+    await waitFor(() =>
+      expect(defineProfile).toHaveBeenCalledWith({
+        label: '視聴用',
+        ...PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
+      }),
+    )
+  },
+}
+
+export const 既定値を読めないときの新しいプロファイル: Story = {
+  args: {
+    screen: { ...ENCODE_SCREEN, profileDefaults: PROFILE_DRAFT_DEFAULTS },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: 'プロファイルを追加' }),
+    )
+
+    const dialog = await screen.findByRole('dialog', {
+      name: 'プロファイルを追加',
+    })
+
+    await afterTheArrival(canvasElement)
+
+    await expect(
+      within(dialog).getByRole('button', { name: 'H.264' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      within(dialog).getByLabelText('インタレース解除'),
+    ).toHaveTextContent('60p')
+    await expect(within(dialog).getByLabelText('品質(CRF)')).toHaveValue('20')
+    await expect(within(dialog).getByLabelText('品質(QP)')).toHaveValue('26')
   },
 }
 

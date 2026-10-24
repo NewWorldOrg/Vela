@@ -105,6 +105,7 @@ export function EncodeView({
         {profiles.length > 0 ? (
           <ProfileList
             profiles={profiles}
+            defaults={screen.profileDefaults}
             onDefine={actions.onDefineProfile}
             onRevise={actions.onReviseProfile}
             onRemove={actions.onRemoveProfile}
@@ -112,7 +113,12 @@ export function EncodeView({
         ) : (
           <EmptyState
             title="プロファイルがありません"
-            action={<AddProfileDialog onDefine={actions.onDefineProfile} />}
+            action={
+              <AddProfileDialog
+                defaults={screen.profileDefaults}
+                onDefine={actions.onDefineProfile}
+              />
+            }
           />
         )}
       </section>

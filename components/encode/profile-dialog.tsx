@@ -8,6 +8,7 @@ import type { EncodeProfile, EncodeWrite } from '@/repository/encode'
 import type {
   Deinterlace,
   EncodeCodec,
+  EncodeProfileDefaults,
   EncodeProfileDraft,
   EncodeResolution,
 } from '@/repository/encode-terms'
@@ -52,16 +53,18 @@ type ProblemField = 'label' | 'rateFactor' | 'quantiser'
 
 export function ProfileDialog({
   profile,
+  defaults = PROFILE_DRAFT_DEFAULTS,
   open,
   onOpenChange,
   onSave,
 }: {
   profile?: EncodeProfile
+  defaults?: EncodeProfileDefaults
   open: boolean
   onOpenChange: (open: boolean) => void
   onSave: (draft: EncodeProfileDraft) => Promise<EncodeWrite>
 }) {
-  const stands = profile ?? PROFILE_DRAFT_DEFAULTS
+  const stands = profile ?? defaults
   const [label, setLabel] = useState(profile?.label ?? '')
   const [codec, setCodec] = useState<EncodeCodec>(stands.codec)
   const [resolution, setResolution] = useState<EncodeResolution>(

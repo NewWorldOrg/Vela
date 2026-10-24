@@ -1,3 +1,5 @@
+import { unstable_rethrow } from 'next/navigation'
+
 import { couldNot } from '@/lib/try-again'
 import { formatMoment } from '@/lib/format'
 import {
@@ -16,7 +18,9 @@ import type {
   EncodeEncoder,
   EncodeFailure,
   EncodeJobStatus,
+  EncodeProfileDefaults,
   EncodeProfileDraft,
+  EncodeRemake,
   EncodeRemoved,
   EncodeResolution,
   EncodeSubject,
@@ -25,6 +29,7 @@ import type {
 } from '@/repository/encode-terms'
 import {
   LABEL_LONGEST,
+  PROFILE_DRAFT_DEFAULTS,
   RATE_CONTROL_COARSEST,
   RATE_CONTROL_FINEST,
 } from '@/repository/encode-terms'
@@ -37,6 +42,8 @@ import {
 import { whatItSaid } from '@/repository/said'
 
 type ProfileResponder = components['schemas']['EncodeProfileResponder']
+type ProfileDefaultsResponder =
+  components['schemas']['EncodeProfileDefaultsResponder']
 type DestinationResponder = components['schemas']['EncodeDestinationResponder']
 type JobResponder = components['schemas']['EncodeJobResponder']
 type JobPageResponder = components['schemas']['EncodeJobListResponder']
@@ -104,6 +111,7 @@ export interface EncodeJob {
   failure?: EncodeFailureDetail
   artefactName?: string
   replacedAt?: string
+  remade?: EncodeRemake
   cancellable: boolean
 }
 
@@ -136,6 +144,7 @@ export interface EncodeAutoRun {
 
 export interface EncodeScreen {
   profiles: EncodeProfile[]
+  profileDefaults: EncodeProfileDefaults
   destinations: EncodeDestination[]
   roots: string[]
   jobs: EncodeJobsPage
@@ -187,6 +196,7 @@ export async function getEncodeScreen(
   const page = pageIn(query.page)
   const [
     profiles,
+    profileDefaults,
     destinations,
     roots,
     names,
@@ -198,6 +208,7 @@ export async function getEncodeScreen(
     autoRun,
   ] = await Promise.all([
     fetchProfiles(),
+    fetchProfileDefaults(),
     fetchDestinations(),
     fetchRoots(),
     listRecordingNames(),
@@ -220,6 +231,7 @@ export async function getEncodeScreen(
 
   return {
     profiles: profiles.map(toProfile),
+    profileDefaults,
     destinations: destinations.map((one) => toDestination(one, named.profiles)),
     roots: roots.filter((root) => !recordingRoots.has(root)),
     jobs: {
@@ -619,6 +631,22 @@ async function fetchProfiles(): Promise<ProfileResponder[]> {
   return data.data.items
 }
 
+async function fetchProfileDefaults(): Promise<EncodeProfileDefaults> {
+  try {
+    const { data, error } = await carinaClient().GET(
+      '/api/encoding/profiles/defaults',
+    )
+
+    return error || !data?.data
+      ? PROFILE_DRAFT_DEFAULTS
+      : toProfileDefaults(data.data)
+  } catch (error) {
+    unstable_rethrow(error)
+
+    return PROFILE_DRAFT_DEFAULTS
+  }
+}
+
 async function fetchDestinations(): Promise<DestinationResponder[]> {
   const { data, error } = await carinaClient().GET('/api/encoding/destinations')
 
@@ -724,6 +752,18 @@ function toProfile(one: ProfileResponder): EncodeProfile {
   }
 }
 
+function toProfileDefaults(
+  one: ProfileDefaultsResponder,
+): EncodeProfileDefaults {
+  return {
+    codec: one.codec,
+    resolution: one.resolution,
+    deinterlace: one.deinterlace,
+    rateFactor: toInt(one.rateFactor),
+    quantiser: toInt(one.quantiser),
+  }
+}
+
 function toDestination(
   one: DestinationResponder,
   profiles: ReadonlyMap<string, string>,
@@ -798,6 +838,7 @@ export function toEncodeJob(
       : undefined,
     artefactName: one.artefactName ?? undefined,
     replacedAt: one.replacedAt ? formatMoment(one.replacedAt) : undefined,
+    remade: one.remade ?? undefined,
     cancellable: callsOff(one.status),
   }
 }

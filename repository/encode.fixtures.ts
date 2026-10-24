@@ -1,4 +1,7 @@
-import type { EncodeSubject } from '@/repository/encode-terms'
+import type {
+  EncodeProfileDefaults,
+  EncodeSubject,
+} from '@/repository/encode-terms'
 import type {
   EncodeAutoRun,
   EncodeChoices,
@@ -20,6 +23,14 @@ export const VIEWING_PROFILE: EncodeProfile = {
   quantiser: 24,
   definedAt: '2026/08/09 14:30',
   retired: false,
+}
+
+export const PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN: EncodeProfileDefaults = {
+  codec: 'h265',
+  resolution: 'asSource',
+  deinterlace: 'everyField',
+  rateFactor: 20,
+  quantiser: 26,
 }
 
 export const ARCHIVE_PROFILE: EncodeProfile = {
@@ -158,6 +169,25 @@ export const REPLACED_JOB: EncodeJob = {
   replacedAt: '08/08(土) 20:19',
 }
 
+export const REMAKING_JOB: EncodeJob = {
+  ...RUNNING_JOB,
+  id: 'job-a',
+  headway: { percent: 18, leftSeconds: 1104, at: '23:52:16' },
+  remade: 'largerThanTheSource',
+}
+
+export const REMADE_JOB: EncodeJob = {
+  ...COMPLETED_JOB,
+  id: 'job-m',
+  remade: 'largerThanTheSource',
+}
+
+export const STILL_LARGER_JOB: EncodeJob = {
+  ...COMPLETED_JOB,
+  id: 'job-l',
+  remade: 'stillLargerThanTheSource',
+}
+
 export const FAILED_JOB: EncodeJob = {
   ...ROW,
   id: 'job-f',
@@ -283,6 +313,7 @@ export const AUTO_RUN_SETTLED: EncodeAutoRun = {
 
 export const ENCODE_SCREEN: EncodeScreen = {
   profiles: [VIEWING_PROFILE],
+  profileDefaults: PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
   destinations: [SHELF_DESTINATION],
   roots: ['encodes'],
   jobs: jobsPage(EVERY_JOB),
@@ -295,6 +326,7 @@ export const ENCODE_SCREEN: EncodeScreen = {
 
 export const EMPTY_ENCODE_SCREEN: EncodeScreen = {
   profiles: [],
+  profileDefaults: PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
   destinations: [],
   roots: ['encodes'],
   jobs: jobsPage([]),
