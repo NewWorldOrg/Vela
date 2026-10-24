@@ -27,6 +27,7 @@ import {
   type OnAir,
   type RuntimeMessage,
 } from '@/lib/bml/messages'
+import type { Residence } from '@/lib/bml/receiver-info'
 import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import type { BandPlace } from '@/lib/data-broadcast-view'
@@ -37,6 +38,7 @@ import {
   type SendToRuntime,
 } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
+import { residenceFromCarina } from '@/components/data-broadcast/residence'
 import {
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
@@ -134,7 +136,7 @@ function saidOf(relayed: Relayed<TransmitAnswer>): RuntimeMessage | null {
 
 const NO_STARTS: readonly AppStart[] = []
 
-/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the catalog, the modules and the time on air where the feed keeps one when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. Coming back from a Hybridcast application, the runtime is handed the shared registers as the application left them, the starts that failed so that it does not ask for them again, and the start document of the component the application named, if it named one. */
+/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the receiver's residence as `readResidence` reads it, the catalog, the modules and the time on air where the feed keeps one when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. Coming back from a Hybridcast application, the runtime is handed the shared registers as the application left them, the starts that failed so that it does not ask for them again, and the start document of the component the application named, if it named one. */
 export function DataBroadcastFace({
   feed,
   onAir = NOTHING_ON_AIR,
@@ -142,6 +144,7 @@ export function DataBroadcastFace({
   greg = null,
   failedStarts = NO_STARTS,
   startup = null,
+  readResidence = residenceFromCarina,
   onRuntime,
   onMessage,
   says,
@@ -152,6 +155,7 @@ export function DataBroadcastFace({
   greg?: readonly string[] | null
   failedStarts?: readonly AppStart[]
   startup?: string | null
+  readResidence?: () => Promise<Residence>
   onRuntime: (send: SendToRuntime | null) => void
   onMessage: (message: RuntimeMessage) => void
   says: string | null
@@ -309,7 +313,10 @@ export function DataBroadcastFace({
   }, [])
 
   const ready = async (send: SendToRuntime) => {
-    const fonts = await fontsForTheRuntime()
+    const [fonts, residence] = await Promise.all([
+      fontsForTheRuntime(),
+      readResidence(),
+    ])
 
     if (!alive.current) {
       return
@@ -319,6 +326,7 @@ export function DataBroadcastFace({
       { kind: 'font', fonts },
       fonts.map((font) => font.bytes),
     )
+    send({ kind: 'residence', residence })
 
     const catalog = feed.catalog
 

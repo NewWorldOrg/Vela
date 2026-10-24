@@ -15,6 +15,7 @@ import {
 import { CONTROL_CODE, type AitApplication } from '@/lib/bml/ait'
 import { answerOf, type LineState } from '@/lib/bml/line'
 import { PersistentMemory } from '@/lib/bml/memory'
+import { NO_RESIDENCE } from '@/lib/bml/receiver-info'
 import { DocumentLeft, LineAwaited } from '@/lib/bml/scripts'
 
 type Browser = Record<string, (...args: unknown[]) => unknown> & {
@@ -52,6 +53,7 @@ function host(over: Partial<BrowserHost> = {}) {
     listed: (reference) => LISTED[String(reference)] ?? null,
     quit: () => calls.push('quit'),
     memory: new PersistentMemory(),
+    residence: () => NO_RESIDENCE,
     registers: { Ureg: registersOf(), Greg: registersOf() },
     startTimer: (code, everyMs, times) => {
       calls.push(`timer ${String(code)} ${String(everyMs)} ${String(times)}`)
@@ -269,6 +271,36 @@ test('the persistent memory is read and written through the host’s copy, a wri
   assert.deepEqual(browser.readPersistentArray('visits', 'U:2B'), [768])
   assert.equal(browser.readPersistentArray('visits', 'U:8B'), null)
   assert.ok(Number.isNaN(browser.writePersistentArray('visits', 'U:1B', ['x'])))
+})
+
+test('the receiver’s residence is read from the host and never written, while the names around it stay the broadcaster’s memory', () => {
+  const { browser } = host({
+    residence: () => ({ postalCode: '0000000', prefecture: 0 }),
+  })
+
+  assert.deepEqual(
+    browser.readPersistentArray('nvram://receiverinfo/zipcode', 'S:7B'),
+    ['0000000'],
+  )
+  assert.deepEqual(
+    browser.readPersistentArray('nvram://receiverinfo/prefecture', 'U:1B'),
+    [0],
+  )
+  assert.ok(
+    Number.isNaN(
+      browser.writePersistentArray('nvram://receiverinfo/zipcode', 'S:7B', [
+        '0000001',
+      ]),
+    ),
+  )
+  assert.deepEqual(
+    browser.readPersistentArray('nvram://receiverinfo/zipcode', 'S:7B'),
+    ['0000000'],
+  )
+  assert.equal(
+    browser.readPersistentArray('nvram://receiverinfo/address', 'S:7B'),
+    null,
+  )
 })
 
 test('random answers within the count asked, from one', () => {

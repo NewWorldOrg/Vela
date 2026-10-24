@@ -561,3 +561,28 @@ test('the player’s AIT, Hybridcast and registers are taken when they fit, and 
     assert.equal(fromPlayer(data), null, JSON.stringify(data).slice(0, 80))
   }
 })
+
+test('the player’s residence is taken when it fits, and dropped when it does not', () => {
+  const registered = { postalCode: '0000000', prefecture: 48 }
+
+  assert.deepEqual(fromPlayer({ kind: 'residence', residence: registered }), {
+    kind: 'residence',
+    residence: registered,
+  })
+  assert.deepEqual(
+    fromPlayer({
+      kind: 'residence',
+      residence: { postalCode: null, prefecture: null },
+    }),
+    { kind: 'residence', residence: { postalCode: null, prefecture: null } },
+  )
+
+  for (const residence of [
+    undefined,
+    null,
+    { postalCode: '00000', prefecture: 0 },
+    { postalCode: '0000000', prefecture: 255 },
+  ]) {
+    assert.equal(fromPlayer({ kind: 'residence', residence }), null)
+  }
+})

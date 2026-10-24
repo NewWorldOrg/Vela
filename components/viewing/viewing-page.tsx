@@ -31,8 +31,18 @@ import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
 import { FieldHint, FieldLabel } from '@/components/vela/field'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
-import { PageHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
+import { MarkDoubleCircle } from '@/components/vela/icons'
+import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { UnreadSurface } from '@/components/segments/value-rows'
+import {
+  ResidencePanel,
+  RESIDENCE_SLOT,
+  type SettleResidence,
+} from '@/components/viewing/residence-panel'
+import type { Residence } from '@/lib/bml/receiver-info'
+import { RESIDENCE_HEADING } from '@/lib/residence'
+import type { Reading } from '@/repository/system'
 
 const AUTO_OPEN_ID = 'viewing-data-broadcast-auto-open'
 
@@ -76,19 +86,23 @@ function Row({
   )
 }
 
-/** The viewing settings. The card's ID can be handed over, and Hybridcast allowed, only while the line is allowed, so turning the line off turns both off too. The sounds stand apart from the line and start on. */
+/** The viewing settings. The card's ID can be handed over, and Hybridcast allowed, only while the line is allowed, so turning the line off turns both off too. The sounds stand apart from the line and start on. Under them, where the receiver is, which Carina keeps for the household rather than the browser. */
 export function ViewingView({
   autoOpensDataBroadcast = false,
   allowsTheLine = false,
   handsTheReceiverId = false,
   allowsHybridcast = false,
   playsSounds = true,
+  residence,
+  onSettleResidence,
 }: {
   autoOpensDataBroadcast?: boolean
   allowsTheLine?: boolean
   handsTheReceiverId?: boolean
   allowsHybridcast?: boolean
   playsSounds?: boolean
+  residence: Reading<Residence>
+  onSettleResidence: SettleResidence
 }) {
   const [autoOpens, setAutoOpens] = useStoredFlag(
     DATA_BROADCAST_AUTO_OPEN,
@@ -177,6 +191,20 @@ export function ViewingView({
           <Switch id={SOUNDS_ID} checked={sounds} onCheckedChange={setSounds} />
         </Row>
       </Surface>
+
+      <section className="mt-6 max-w-[calc(640rem/16)]">
+        <SectionHeading mark={MarkDoubleCircle}>
+          {RESIDENCE_HEADING}
+        </SectionHeading>
+        {residence.state === 'ok' ? (
+          <ResidencePanel
+            residence={residence.value}
+            onSettle={onSettleResidence}
+          />
+        ) : (
+          <UnreadSurface slot={RESIDENCE_SLOT} reading={residence} />
+        )}
+      </section>
     </>
   )
 }

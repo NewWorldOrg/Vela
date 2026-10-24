@@ -15,9 +15,14 @@ import {
 import { privateDataOf } from '@/lib/bml/events'
 import type { BmlKey } from '@/lib/bml/keys'
 import type { ReceiverId } from '@/lib/bml/line'
-import { PersistentMemory, readArray, writeArray } from '@/lib/bml/memory'
+import { PersistentMemory } from '@/lib/bml/memory'
 import { MOST_REGISTER, SHARED_REGISTERS } from '@/lib/bml/messages'
 import { nptMilliseconds, type NptReading } from '@/lib/bml/npt'
+import {
+  NO_RESIDENCE,
+  readPersistent,
+  writePersistent,
+} from '@/lib/bml/receiver-info'
 import { bitmapAt, permits, type Permission } from '@/lib/hybridcast/boundary'
 import {
   eventInformationAnswer,
@@ -700,7 +705,7 @@ export class HybridcastReceiver {
       Greg: this.registers(),
       readPersistentArray: (name: unknown, structure: unknown) =>
         this.may('persistentMemory', 'readPersistentArray')
-          ? readArray(this.memory, name, structure)
+          ? readPersistent(this.memory, NO_RESIDENCE, name, structure)
           : null,
       writePersistentArray: (
         name: unknown,
@@ -708,7 +713,7 @@ export class HybridcastReceiver {
         data: unknown,
       ) =>
         this.may('persistentMemory', 'writePersistentArray') &&
-        writeArray(this.memory, name, structure, data) !== null
+        writePersistent(this.memory, name, structure, data) !== null
           ? DONE
           : FAILED,
     }

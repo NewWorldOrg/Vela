@@ -321,6 +321,30 @@ test('the memory is the broadcaster’s as the documents keep it, carried on and
   )
 })
 
+test('an application reads the receiver’s residence as not registered, and cannot write it', () => {
+  const { pseudo, said } = receiver(EVERYTHING, { memory: [] })
+
+  assert.deepEqual(
+    pseudo.readPersistentArray('nvram://receiverinfo/zipcode', 'S:7B'),
+    [''],
+  )
+  assert.deepEqual(
+    pseudo.readPersistentArray('nvram://receiverinfo/prefecture', 'U:1B'),
+    [255],
+  )
+  assert.ok(
+    Number.isNaN(
+      pseudo.writePersistentArray('nvram://receiverinfo/zipcode', 'S:7B', [
+        '0000000',
+      ]),
+    ),
+  )
+  assert.equal(
+    said.some((message) => message.kind === 'memory'),
+    false,
+  )
+})
+
 test('the key set says which keys the application takes, and d only once it asks for it', () => {
   const { made, owner, said } = receiver()
   const keySet = owner.keySet as unknown as {

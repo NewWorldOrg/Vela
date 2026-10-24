@@ -1451,6 +1451,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/data-broadcast/settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getDataBroadcastSettings']
+    put: operations['putDataBroadcastSettings']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/auth/password': {
     parameters: {
       query?: never
@@ -1662,6 +1678,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['DataBroadcastReceiverIdResponder']
+    }
+    BaseResponderOfDataBroadcastSettingsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['DataBroadcastSettingsResponder']
     }
     BaseResponderOfDataBroadcastTimelineResponder: {
       status: boolean
@@ -2305,6 +2326,13 @@ export interface components {
       /** Format: int32 */
       caSystemId: number | string
       cardId: string
+    }
+    DataBroadcastSettingsResponder: {
+      postalCode: null | string
+      /** Format: int32 */
+      prefecture: null | number | string
+      /** Format: date-time */
+      changedAt: null | string
     }
     DataBroadcastTimelineResponder: {
       /** Format: int32 */
@@ -3129,6 +3157,11 @@ export interface components {
     }
     /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    PutDataBroadcastSettingsRequest: {
+      postalCode: null | string
+      /** Format: int32 */
+      prefecture: null | number | string
+    }
     PutEncodeSettingsRequest: {
       automatically?: null | boolean
       /** Format: int32 */
@@ -10944,6 +10977,94 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfDriverRestartResponder']
+        }
+      }
+    }
+  }
+  getDataBroadcastSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastSettingsResponder']
+        }
+      }
+    }
+  }
+  putDataBroadcastSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PutDataBroadcastSettingsRequest']
+        'application/*+json':
+          null | components['schemas']['PutDataBroadcastSettingsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastSettingsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfDataBroadcastSettingsResponder']
         }
       }
     }

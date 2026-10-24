@@ -1079,6 +1079,40 @@ test('what a document writes to the persistent memory is handed to the player, w
   })
 })
 
+const READS_THE_RESIDENCE = bml(
+  '<p id="p">p</p>',
+  '<script>' +
+    'var zip = browser.readPersistentArray("nvram://receiverinfo/zipcode", "S:7B");' +
+    'var pref = browser.readPersistentArray("nvram://receiverinfo/prefecture", "U:1B");' +
+    'var region = browser.readPersistentArray("nvram://receiverinfo/regioncode", "U:2B");' +
+    'browser.Ureg[0] = [zip[0], pref[0], region[0]].join(",");' +
+    'browser.Ureg[1] = String(browser.writePersistentArray("nvram://receiverinfo/zipcode", "S:7B", ["0000001"]));' +
+    '</script>',
+)
+
+test('a document reads the residence the player handed as the receiver’s own, not registered until it hands one, and cannot write it', () => {
+  const { runtime, heard, send, forget } = opened(READS_THE_RESIDENCE)
+  const registers = (runtime as unknown as { registers: { Ureg: string[] } })
+    .registers.Ureg
+
+  assert.equal(registers[0], ',255,0')
+  assert.equal(registers[1], 'NaN')
+  assert.deepEqual(
+    heard().filter((message) => message.kind === 'memory'),
+    [],
+  )
+
+  forget()
+  send({ kind: 'close' })
+  send({
+    kind: 'residence',
+    residence: { postalCode: '0000000', prefecture: 13 },
+  })
+  send({ kind: 'open' })
+
+  assert.equal(registers[0], '0000000,13,2732')
+})
+
 const CONNECTING = bml(
   '<p id="p">p</p>',
   '<script>' +
