@@ -67,6 +67,7 @@ import {
 import { wireProfileInUse } from '@/components/live/live-wire-ahead'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
+import type { CaptionStyle } from '@/lib/caption-style'
 
 const HEADING = 'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)]'
 
@@ -108,6 +109,7 @@ export function LiveView({
   subChannelsFolded = false,
   autoOpensDataBroadcast = false,
   lineRelayOf,
+  captionStyle,
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
@@ -121,6 +123,7 @@ export function LiveView({
   autoOpensDataBroadcast?: boolean
   subChannelsFolded?: boolean
   lineRelayOf?: (channel: string) => LineRelay
+  captionStyle?: CaptionStyle
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -338,6 +341,7 @@ export function LiveView({
           startupDeadlineMs={startupDeadlineMs}
           takeCapture={takeCapture}
           autoOpensDataBroadcast={autoOpensDataBroadcast}
+          captionStyle={captionStyle}
           lineRelayOf={lineRelayOf}
           remoteInTheColumn={wide}
           remoteSlot={remoteSlot}

@@ -15,6 +15,7 @@ import {
 import { getRecording } from '@/repository/recordings'
 import { getSegmentModelVersion } from '@/repository/recording-segments'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
+import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
 import {
   AUTO_OPEN_SPELLING,
   DATA_BROADCAST_AUTO_OPEN,
@@ -116,6 +117,7 @@ export default async function Page({
         startAt={secondsIn(at)}
         startsHeld={theHoldAsked(paused)}
         autoOpensDataBroadcast={autoOpensDataBroadcast}
+        captionStyle={captionStyleOf(jar.get(CAPTION_STYLE_COOKIE)?.value)}
         onRemakeThumbnail={redrawThumbnail}
         onDelete={throwRecordingAway}
         onTakeTicket={takeTicket}

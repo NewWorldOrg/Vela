@@ -112,6 +112,10 @@
     --pl-done: #9fd9be;
     --pl-warn: #e5ba6c;
     --pl-err: #ec9a93;
+    --pl-caption-white: #ffffff;
+    --pl-caption-yellow: #ffff00;
+    --pl-caption-cyan: #00ffff;
+    --pl-caption-green: #00ff00;
     --remote-blue: #3a78c8;
     --remote-red: #d8443c;
     --remote-green: #2e9e5b;

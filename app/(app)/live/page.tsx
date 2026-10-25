@@ -9,6 +9,7 @@ import {
   LIVE_SUB_CHANNELS_FOLDED,
   flagOf,
 } from '@/lib/stored-flag'
+import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
 import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
 import { getLiveScreen } from '@/repository/live'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
@@ -48,6 +49,7 @@ export default async function Page({
           jar.get(DATA_BROADCAST_AUTO_OPEN)?.value,
           AUTO_OPEN_SPELLING,
         )}
+        captionStyle={captionStyleOf(jar.get(CAPTION_STYLE_COOKIE)?.value)}
       />
     </>
   )

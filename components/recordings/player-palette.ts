@@ -65,3 +65,9 @@ export const PLAYER_FACE = 'aspect-video w-full'
 export const PLAYER_PICTURE_BOX = 'size-full'
 
 export const PLAYER_PICTURE = cn(PLAYER_PICTURE_BOX, 'object-contain')
+
+/** The element over a caption that takes the pointer to move it: as large as the caption drawn, shown only while one is, and outlined faintly while it is held. */
+export const CAPTION_GRIP = cn(
+  'absolute hidden touch-none rounded-[calc(4rem/16)] data-[shown]:block',
+  'data-[holding]:cursor-move data-[holding]:outline data-[holding]:outline-1 data-[holding]:outline-white/55',
+)
