@@ -408,6 +408,8 @@ export class CaptionSurface implements CaptionDrawing {
       at.width * ratio,
       at.height * ratio,
     )
+    this.canvas.dataset.look =
+      made.key === AS_BROADCAST ? 'as-broadcast' : 'restyled'
     this.state('shown')
     this.board.placed({ image: at, shown, canvas: this.canvas })
   }

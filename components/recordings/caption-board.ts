@@ -183,7 +183,7 @@ export class CaptionBoard {
       return
     }
 
-    const parent = grip.offsetParent
+    const parent = grip.parentElement
 
     if (!placed || !(parent instanceof HTMLElement)) {
       delete grip.dataset.shown
@@ -268,7 +268,20 @@ export class CaptionBoard {
       moving: false,
       kind: event.pointerType,
     }
-    this.grip?.setPointerCapture?.(event.pointerId)
+    this.capture(event.pointerId, true)
+  }
+
+  /** Keeps the pointer on the grip while the caption is held; a pointer already gone is still heard while it stays over the caption. */
+  private capture(pointer: number, on: boolean): void {
+    try {
+      if (on) {
+        this.grip?.setPointerCapture(pointer)
+      } else {
+        this.grip?.releasePointerCapture(pointer)
+      }
+    } catch {
+      return
+    }
   }
 
   private readonly move = (event: PointerEvent): void => {
@@ -320,7 +333,7 @@ export class CaptionBoard {
 
     this.grab = null
     this.dragged = null
-    this.grip?.releasePointerCapture?.(event.pointerId)
+    this.capture(event.pointerId, false)
 
     if (!grab.moving || !shift) {
       return
