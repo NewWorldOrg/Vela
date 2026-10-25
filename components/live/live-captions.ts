@@ -10,6 +10,7 @@ import {
   decodeCaption,
   type DecodedCaption,
 } from '@/components/recordings/caption-surface'
+import type { CaptionBoard } from '@/components/recordings/caption-board'
 
 export type { CaptionState } from '@/components/recordings/caption-surface'
 
@@ -24,9 +25,13 @@ export class CaptionLayer {
 
   private closed = false
 
-  constructor(canvas: HTMLCanvasElement, video: HTMLVideoElement) {
+  constructor(
+    canvas: HTMLCanvasElement,
+    video: HTMLVideoElement,
+    board?: CaptionBoard,
+  ) {
     this.video = video
-    this.surface = new CaptionSurface(canvas, video, () => this.tick())
+    this.surface = new CaptionSurface(canvas, video, () => this.tick(), board)
   }
 
   canvasOf(size: CaptionCanvas): void {

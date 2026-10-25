@@ -30,6 +30,7 @@ const THE_SUITE = [
   'tests/components/nothing-internal-and-one-way-to-wait.test.ts',
   'tests/components/one-shape-for-each-part.test.ts',
   'tests/components/one-way-to-know-fullscreen.test.ts',
+  'tests/components/recordings/caption-surface.test.ts',
   'tests/components/recordings/one-way-to-draw-an-action.test.ts',
   'tests/components/recordings/recording-captions.test.ts',
   'tests/components/recordings/recording-data-broadcast.test.ts',
