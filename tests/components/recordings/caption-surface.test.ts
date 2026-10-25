@@ -228,3 +228,38 @@ test('on screen the caption is lifted clear of the control row, and a capture dr
     [213.333, 528, 853.333, 80],
   )
 })
+
+test('the caption drawn stays until the next is made, even through a repaint, and goes at once for nothing', async (t) => {
+  const { surface, drawn, last } = bench(t, {
+    ...PLAIN_CAPTION_STYLE,
+    background: 'none',
+  })
+  const first = { first: true }
+  const second = { second: true }
+  const made = (image: unknown) => ({
+    image,
+    margin: { left: 0, top: 0, right: 0, bottom: 0 },
+    close: () => {},
+  })
+
+  surface.show(decodeCaption(picture(100)))
+  await settled()
+  asked[0].finish(made(first))
+  await settled()
+
+  surface.show(decodeCaption(picture(200)))
+  surface.repaint()
+
+  assert.equal((last() as unknown[])[0], first)
+
+  asked[1].finish(made(second))
+  await settled()
+
+  assert.equal((last() as unknown[])[0], second)
+
+  const before = drawn.length
+
+  surface.show(null)
+
+  assert.equal(drawn.length, before)
+})

@@ -120,15 +120,18 @@ export class CaptionSurface implements CaptionDrawing {
     return this.standing !== null
   }
 
+  /** Stand a caption: nothing at once for null; otherwise the one drawn now stays until the new one is ready, as the broadcast's own pictures always have. */
   show(caption: DecodedCaption | null): void {
     this.standing = caption
 
-    if (this.made && this.made.of !== caption) {
-      this.made.drawn.close()
-      this.made = null
+    if (caption) {
+      this.make()
+
+      return
     }
 
-    this.make()
+    this.made?.drawn.close()
+    this.made = null
     this.paint()
   }
 
@@ -142,17 +145,17 @@ export class CaptionSurface implements CaptionDrawing {
   }
 
   keptInside(shift: CaptionShift): CaptionShift {
-    const standing = this.standing?.picture
+    const made = this.drawable()
 
-    if (!standing || !this.drawnOn || !this.shown) {
+    if (!made || !this.drawnOn || !this.shown) {
       return shift
     }
 
     return captionPlaced({
       shown: this.shown,
       canvas: this.drawnOn,
-      drawn: standing,
-      margin: this.made?.drawn.margin,
+      drawn: made.of.picture,
+      margin: made.drawn.margin,
       scale: this.scale(),
       shift,
     }).shift
@@ -162,17 +165,16 @@ export class CaptionSurface implements CaptionDrawing {
     context: CanvasRenderingContext2D,
     size: { width: number; height: number },
   ): void {
-    const standing = this.standing?.picture
     const made = this.drawable()
 
-    if (!this.drawn || !standing || !made || !this.drawnOn || this.closed) {
+    if (!this.drawn || !made || !this.drawnOn || this.closed) {
       return
     }
 
     const place = captionPlaced({
       shown: { left: 0, top: 0, ...size },
       canvas: this.drawnOn,
-      drawn: standing,
+      drawn: made.of.picture,
       margin: made.drawn.margin,
       scale: this.scale(),
       shift: this.board.style.shift,
@@ -234,8 +236,9 @@ export class CaptionSurface implements CaptionDrawing {
     return `${lookKey(look)}@${this.stretch().toFixed(2)}@${this.drawnOn?.height ?? 0}`
   }
 
+  /** What is drawn now: the standing caption once it is made, and until then the one before it. */
   private drawable(): Made | null {
-    return this.made && this.made.of === this.standing ? this.made : null
+    return this.standing ? this.made : null
   }
 
   private make(): void {
@@ -373,10 +376,9 @@ export class CaptionSurface implements CaptionDrawing {
       return
     }
 
-    const standing = this.standing?.picture
     const made = this.drawable()
 
-    if (!standing || !made || !this.drawnOn || this.closed) {
+    if (!made || !this.drawnOn || this.closed) {
       this.state('none')
 
       return
@@ -392,7 +394,7 @@ export class CaptionSurface implements CaptionDrawing {
     const place = captionPlaced({
       shown,
       canvas: this.drawnOn,
-      drawn: standing,
+      drawn: made.of.picture,
       margin: made.drawn.margin,
       scale: this.scale(),
       shift: this.board.style.shift,
