@@ -265,7 +265,7 @@ export function EditReservationDialog({
               checked={encode}
               onCheckedChange={setEncode}
             />
-            <FieldLabel htmlFor="reservation-encode">エンコード</FieldLabel>
+            <FieldLabel htmlFor="reservation-encode">自動エンコード</FieldLabel>
           </div>
 
           <span aria-live="polite">
