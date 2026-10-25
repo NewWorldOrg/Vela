@@ -1,4 +1,4 @@
-import { crc32 } from '@/lib/bml/crc32'
+import { INDEXED, chunksOf, pngChunk } from '@/lib/png-chunks'
 
 export const PALETTE_SIZE = 256
 
@@ -153,52 +153,6 @@ export function colourOf(palette: Palette, index: number): string | null {
     : `rgb(${r} ${g} ${b} / ${Number((a / 255).toFixed(3))})`
 }
 
-const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
-
-const INDEXED = 3
-
-function chunk(type: string, data: Uint8Array): Uint8Array {
-  const bytes = new Uint8Array(12 + data.length)
-  const view = new DataView(bytes.buffer)
-
-  view.setUint32(0, data.length)
-  bytes.set(
-    Array.from(type, (letter) => letter.charCodeAt(0)),
-    4,
-  )
-  bytes.set(data, 8)
-  view.setUint32(8 + data.length, crc32(bytes.subarray(4, 8 + data.length)))
-
-  return bytes
-}
-
-interface PngChunk {
-  type: string
-  at: number
-}
-
-function chunksOf(png: Uint8Array): PngChunk[] | null {
-  if (
-    png.length < 8 ||
-    PNG_SIGNATURE.some((byte, index) => png[index] !== byte)
-  ) {
-    return null
-  }
-
-  const view = new DataView(png.buffer, png.byteOffset, png.byteLength)
-  const chunks: PngChunk[] = []
-  let at = 8
-
-  while (at + 12 <= png.length) {
-    const type = String.fromCharCode(...png.subarray(at + 4, at + 8))
-
-    chunks.push({ type, at })
-    at += 12 + view.getUint32(at)
-  }
-
-  return at === png.length ? chunks : null
-}
-
 /** A PNG the way a browser can draw it: an indexed PNG that leaves its palette to the document is given the document's. */
 export function withPalette(png: Uint8Array, palette: Palette): Uint8Array {
   const chunks = chunksOf(png)
@@ -235,8 +189,8 @@ export function withPalette(png: Uint8Array, palette: Palette): Uint8Array {
   }
 
   const inserted = [
-    chunk('PLTE', rgb),
-    ...(before.type === 'tRNS' ? [] : [chunk('tRNS', alpha)]),
+    pngChunk('PLTE', rgb),
+    ...(before.type === 'tRNS' ? [] : [pngChunk('tRNS', alpha)]),
   ]
   const added = inserted.reduce((sum, each) => sum + each.length, 0)
   const drawn = new Uint8Array(png.length + added)
