@@ -388,7 +388,9 @@ export const 予約済みの編集で競合になった予約を示す: Story = 
     await userEvent.click(canvas.getByRole('button', { name: '予約を変更' }))
     const dialog = within(await screen.findByRole('dialog'))
 
-    await userEvent.click(dialog.getByRole('switch', { name: 'エンコード' }))
+    await userEvent.click(
+      dialog.getByRole('switch', { name: '自動エンコード' }),
+    )
     await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
 
     await expect(

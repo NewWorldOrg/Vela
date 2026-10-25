@@ -1119,7 +1119,7 @@ function RuleEditor({
               checked={entry.encodeWhenRecorded}
               onCheckedChange={(next) => amend({ encodeWhenRecorded: next })}
             />
-            <FieldLabel htmlFor="rule-encode">エンコード</FieldLabel>
+            <FieldLabel htmlFor="rule-encode">自動エンコード</FieldLabel>
           </div>
         </div>
       </FormSection>
