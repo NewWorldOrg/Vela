@@ -251,7 +251,9 @@ export const 編集で競合になった予約を示す: Story = {
     await userEvent.click(canvas.getAllByRole('button', { name: '変更' })[0])
     const dialog = within(await screen.findByRole('dialog'))
 
-    await userEvent.click(dialog.getByRole('switch', { name: 'エンコード' }))
+    await userEvent.click(
+      dialog.getByRole('switch', { name: '自動エンコード' }),
+    )
     await userEvent.click(dialog.getByRole('button', { name: '保存する' }))
 
     await expect(
@@ -727,7 +729,7 @@ export const 予約ごとにエンコードを切り替える: Story = {
     await afterTheArrival(canvasElement)
 
     await expect(
-      first.getByRole('switch', { name: 'エンコード' }),
+      first.getByRole('switch', { name: '自動エンコード' }),
     ).toBeChecked()
 
     await userEvent.click(first.getByRole('button', { name: 'キャンセル' }))
@@ -743,7 +745,7 @@ export const 予約ごとにエンコードを切り替える: Story = {
     const dialog = within(await screen.findByRole('dialog'))
 
     await afterTheArrival(canvasElement)
-    const encode = dialog.getByRole('switch', { name: 'エンコード' })
+    const encode = dialog.getByRole('switch', { name: '自動エンコード' })
 
     await expect(encode).not.toBeChecked()
 

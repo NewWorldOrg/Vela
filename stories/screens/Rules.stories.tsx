@@ -299,7 +299,7 @@ export const ルールを編集: Story = {
     await expect(canvas.getByLabelText('除外キーワード')).toHaveValue('再放送')
     await expect(canvas.getByLabelText(/優先度/)).toHaveValue('20')
     await expect(
-      canvas.getByRole('switch', { name: 'エンコード' }),
+      canvas.getByRole('switch', { name: '自動エンコード' }),
     ).toBeChecked()
 
     await expect(
@@ -963,7 +963,7 @@ export const エンコードしないルール: Story = {
 
     encodeSaved.length = 0
 
-    const encode = canvas.getByRole('switch', { name: 'エンコード' })
+    const encode = canvas.getByRole('switch', { name: '自動エンコード' })
 
     await expect(encode).not.toBeChecked()
 
