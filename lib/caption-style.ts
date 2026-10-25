@@ -113,6 +113,13 @@ const COLOUR_SPELLING: Record<string, CaptionColour> = {
   g: 'green',
 }
 
+function spelledIn<T extends string>(
+  table: Record<string, T>,
+  value: string,
+): T | undefined {
+  return Object.hasOwn(table, value) ? table[value] : undefined
+}
+
 function spellingOf<T extends string>(
   table: Record<string, T>,
   value: T,
@@ -139,12 +146,12 @@ type Reading = (style: CaptionStyle, value: string) => CaptionStyle
 const READINGS: Record<string, Reading> = {
   b: (style, value) => ({
     ...style,
-    background: BACKGROUND_SPELLING[value] ?? style.background,
+    background: spelledIn(BACKGROUND_SPELLING, value) ?? style.background,
   }),
   s: (style, value) => ({ ...style, scale: scaleOf(value) ?? style.scale }),
   c: (style, value) => ({
     ...style,
-    colour: COLOUR_SPELLING[value] ?? style.colour,
+    colour: spelledIn(COLOUR_SPELLING, value) ?? style.colour,
   }),
   a: (style, value) => ({ ...style, allOneColour: value === '1' }),
   e: (style, value) => ({

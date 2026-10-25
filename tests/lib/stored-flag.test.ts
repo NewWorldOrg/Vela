@@ -55,3 +55,15 @@ test('a flag is kept for every page and for a year, and forgetting it drops it',
     'vela-live-channels-folded=;path=/;max-age=0;SameSite=Lax',
   )
 })
+
+test('a cookie whose escape is broken is read as it stands, not thrown on', () => {
+  assert.equal(
+    cookieIn('a=1; vela-caption-style=bn%E0%A4%A', 'vela-caption-style'),
+    'bn%E0%A4%A',
+  )
+  assert.equal(cookieIn('vela-caption-style=%', 'vela-caption-style'), '%')
+  assert.equal(
+    cookieIn('vela-caption-style=s125%2Ey-85', 'vela-caption-style'),
+    's125.y-85',
+  )
+})

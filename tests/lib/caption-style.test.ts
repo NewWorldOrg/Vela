@@ -13,6 +13,7 @@ import {
   looksAsBroadcast,
   type CaptionStyle,
 } from '@/lib/caption-style'
+import { cookieIn } from '@/lib/stored-flag'
 
 const EVERYTHING_CHANGED: CaptionStyle = {
   background: 'solid',
@@ -97,5 +98,18 @@ test('the size and the shift do not change the picture, and one colour for all m
       lookOf({ ...PLAIN_CAPTION_STYLE, colour: 'white', allOneColour: true }),
     ),
     lookKey(lookOf({ ...PLAIN_CAPTION_STYLE, colour: 'white' })),
+  )
+})
+
+test('names an object inherits are not values, and a broken escape in the cookie leaves the rest standing', () => {
+  assert.deepEqual(
+    captionStyleOf('bconstructor.c__proto__.ctoString.bhasOwnProperty'),
+    PLAIN_CAPTION_STYLE,
+  )
+  assert.deepEqual(
+    captionStyleOf(
+      cookieIn('vela-caption-style=s125.%E0%A4%A.bn', CAPTION_STYLE_COOKIE),
+    ),
+    { ...PLAIN_CAPTION_STYLE, scale: '125', background: 'none' },
   )
 })
