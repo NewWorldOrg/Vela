@@ -284,7 +284,7 @@ function letterRecoloured(
   return [...rgb.map((channel) => clampByte(share * channel)), entries[at + 3]]
 }
 
-/** The palette's entries redrawn for a look (BR-CS-002, BR-CS-004): a half see-through black takes the band chosen; a letter is its share of its colour, the chosen one for white letters, laid again over that band; opaque black and clear entries stand. With the broadcast's band, a letter keeps its opacity and only changes colour. */
+/** The palette's entries redrawn for a look: a half see-through black takes the band chosen; a letter is its share of its colour, the chosen one for white letters, laid again over that band; opaque black and clear entries stand. With the broadcast's band, a letter keeps its opacity and only changes colour. */
 export function restyledEntries(
   entries: Uint8Array,
   palette: CaptionPalette,
@@ -319,7 +319,7 @@ export function restyledEntries(
   return out
 }
 
-/** Entries that draw only the letters, as black, each as opaque as its share: the shape an added edge is made from (BR-CS-005). */
+/** Entries that draw only the letters, as black, each as opaque as its share: the shape an added edge is made from. */
 export function letterShapeEntries(palette: CaptionPalette): Uint8Array {
   const out = new Uint8Array(palette.roles.length * CHANNELS)
 

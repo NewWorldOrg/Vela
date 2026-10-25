@@ -106,7 +106,7 @@ function borderPixels(width: number, height: number): number[] {
   return border
 }
 
-/** The pixels of a solid band (BR-CS-002), from a mask of the opaque black pixels: the regions of them that reach the picture's border and are shaped like a band, wide, tall and mostly filled. A picture cut to its opaque pixels has its band on its border, while the black edges of letters only touch it here and there. Null when there is no such region. */
+/** The pixels of a solid band, from a mask of the opaque black pixels: the regions of them that reach the picture's border and are shaped like a band, wide, tall and mostly filled. A picture cut to its opaque pixels has its band on its border, while the black edges of letters only touch it here and there. Null when there is no such region. */
 export function solidBandOf(
   dark: Uint8Array,
   width: number,
@@ -203,7 +203,7 @@ function stretchesOf(
   return stretches
 }
 
-/** The bands to lay behind a caption that has none (BR-CS-002): one rectangle for each stretch of each line, from a mask of the pixels that show. Lines are the runs of rows with anything in them; within a line, stretches further apart than one and a half times the line's height become rectangles of their own, so nothing is painted between two places far apart. `stretch` is how much wider a pixel is drawn than it is tall, so the margins look even once drawn. */
+/** The bands to lay behind a caption that has none: one rectangle for each stretch of each line, from a mask of the pixels that show. Lines are the runs of rows with anything in them; within a line, stretches further apart than one and a half times the line's height become rectangles of their own, so nothing is painted between two places far apart. `stretch` is how much wider a pixel is drawn than it is tall, so the margins look even once drawn. */
 export function rowBandsOf(
   shown: Uint8Array,
   width: number,

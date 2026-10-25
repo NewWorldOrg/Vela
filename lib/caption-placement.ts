@@ -114,7 +114,7 @@ function fittingScale(asked: number, image: Rect, shown: Rect): number {
   return asked <= fits + NEAR_ONE ? asked : fits
 }
 
-/** Where a caption is drawn once it is sized and moved (BR-CS-003). It grows about the middle of its bottom when it stands in the picture's lower half, and of its top when in the upper half; it stops growing where it would leave the picture; the move is added; and what comes out is kept inside the picture. With nothing chosen it lands where the broadcast put it. */
+/** Where a caption is drawn once it is sized and moved. It grows about the middle of its bottom when it stands in the picture's lower half, and of its top when in the upper half; it stops growing where it would leave the picture; the move is added; and what comes out is kept inside the picture. With nothing chosen it lands where the broadcast put it. */
 export function captionPlaced({
   shown,
   canvas,
@@ -182,7 +182,7 @@ function overlapsAcross(one: Rect, image: Rect): boolean {
   )
 }
 
-/** How far a caption is lifted to clear what lies over the picture's bottom (D-4): enough for its bottom to stand the gap above the top of everything it would overlap, across and once lifted, but never past the picture's top. */
+/** How far a caption is lifted to clear what lies over the picture's bottom: enough for its bottom to stand the gap above the top of everything it would overlap, across and once lifted, but never past the picture's top. */
 export function liftClearOf(
   image: Rect,
   shown: Rect,

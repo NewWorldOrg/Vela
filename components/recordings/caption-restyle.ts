@@ -181,7 +181,7 @@ export async function broadcastCaption(
   }
 }
 
-/** A caption's picture in the look chosen (BR-CS-001〜005), or null when its PNG is not a shape this can rewrite, or anything goes wrong on the way: then the broadcast's own is drawn. The palette is rewritten, and pixels are read only to find a solid band, to lay bands behind a caption that has none, and to make the shape an added edge is drawn from. `stretch` is how much wider than tall the canvas's pixel is drawn, and `canvasHeight` the canvas's height, which the edge's thickness follows. */
+/** A caption's picture in the look chosen, or null when its PNG is not a shape this can rewrite, or anything goes wrong on the way: then the broadcast's own is drawn. The palette is rewritten, and pixels are read only to find a solid band, to lay bands behind a caption that has none, and to make the shape an added edge is drawn from. `stretch` is how much wider than tall the canvas's pixel is drawn, and `canvasHeight` the canvas's height, which the edge's thickness follows. */
 export async function restyledCaption(
   picture: CaptionPicture,
   look: CaptionLook,

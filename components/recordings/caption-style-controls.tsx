@@ -115,7 +115,7 @@ export function CaptionStyleEntry({
   )
 }
 
-/** The caption's face of the gear: the background, the size, the colour of the letters, the edge, and putting the move or everything back (SPEC v3.170). */
+/** The caption's face of the gear: the background, the size, the colour of the letters, the edge, and putting the move or everything back. */
 export function CaptionStylePanel({
   style,
   onChange,
