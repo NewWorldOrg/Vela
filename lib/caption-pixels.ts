@@ -1,9 +1,9 @@
 /** What a solid band is held to, against the black edges of letters that also touch the picture's border. */
 const BAND = {
-  /** Its height, as a share of the picture's, at least. */
-  tallShare: 0.3,
+  /** Its height, as a part of the picture's, at least. */
+  ofThePicture: 0.3,
   /** Its height in pixels at least. */
-  tallest: 8,
+  rows: 8,
   /** Its width over its height at least. */
   wide: 0.8,
   /** How much of its own rectangle it fills at least: letters take a share of a band, while an edge is a thin line around them. */
@@ -86,7 +86,7 @@ function isBand(region: Region, height: number): boolean {
   const down = region.bottom - region.top + 1
 
   return (
-    down >= Math.max(BAND.tallest, height * BAND.tallShare) &&
+    down >= Math.max(BAND.rows, height * BAND.ofThePicture) &&
     across >= down * BAND.wide &&
     region.count >= across * down * BAND.fills
   )
