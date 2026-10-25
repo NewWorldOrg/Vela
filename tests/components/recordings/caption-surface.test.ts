@@ -34,10 +34,15 @@ class NoticesNothing {
   disconnect(): void {}
 }
 
+const closed: number[] = []
+
 Object.assign(globalThis, {
   MutationObserver: NoticesNothing,
   createImageBitmap: (blob: Blob) =>
-    Promise.resolve({ decoded: blob.size, close: () => {} }),
+    Promise.resolve({
+      decoded: blob.size,
+      close: () => closed.push(blob.size),
+    }),
   window: { devicePixelRatio: 1 },
 })
 
@@ -59,8 +64,11 @@ function bench(t: TestContext, style = PLAIN_CAPTION_STYLE) {
   mock.timers.enable({ apis: ['setInterval'] })
 
   const drawn: unknown[][] = []
+  const cleared = { times: 0 }
   const context = {
-    clearRect: () => {},
+    clearRect: () => {
+      cleared.times += 1
+    },
     drawImage: (...given: unknown[]) => drawn.push(given),
   }
   const canvas = {
@@ -89,7 +97,14 @@ function bench(t: TestContext, style = PLAIN_CAPTION_STYLE) {
     mock.timers.reset()
   })
 
-  return { surface, board, drawn, last: () => drawn[drawn.length - 1] }
+  return {
+    surface,
+    board,
+    drawn,
+    cleared,
+    canvas,
+    last: () => drawn[drawn.length - 1],
+  }
 }
 
 test('as broadcast, the picture decoded on arrival is drawn where the broadcast put it', async (t) => {
@@ -230,7 +245,7 @@ test('on screen the caption is lifted clear of the control row, and a capture dr
 })
 
 test('the caption drawn stays until the next is made, even through a repaint, and goes at once for nothing', async (t) => {
-  const { surface, drawn, last } = bench(t, {
+  const { surface, drawn, cleared, canvas, last } = bench(t, {
     ...PLAIN_CAPTION_STYLE,
     background: 'none',
   })
@@ -257,9 +272,32 @@ test('the caption drawn stays until the next is made, even through a repaint, an
 
   assert.equal((last() as unknown[])[0], second)
 
-  const before = drawn.length
+  const before = { drawn: drawn.length, cleared: cleared.times }
 
   surface.show(null)
 
-  assert.equal(drawn.length, before)
+  assert.equal(cleared.times, before.cleared + 1)
+  assert.equal(drawn.length, before.drawn)
+  assert.equal(canvas.dataset.caption, 'none')
+})
+
+test('once a restyled caption is drawn, the broadcast’s own picture decoded on arrival is closed', async (t) => {
+  const { surface, last } = bench(t, {
+    ...PLAIN_CAPTION_STYLE,
+    edge: 'added',
+  })
+  const restyled = { restyled: true }
+
+  closed.length = 0
+  surface.show(decodeCaption(picture(777)))
+  await settled()
+  asked[0].finish({
+    image: restyled,
+    margin: { left: 0, top: 0, right: 0, bottom: 0 },
+    close: () => {},
+  })
+  await settled()
+
+  assert.equal((last() as unknown[])[0], restyled)
+  assert.deepEqual(closed, [777])
 })

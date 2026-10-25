@@ -302,7 +302,23 @@ export class CaptionSurface implements CaptionDrawing {
       this.drawnOn?.height ?? caption.picture.height,
     )
 
-    return restyled ?? this.asBroadcast(caption)
+    if (!restyled) {
+      return this.asBroadcast(caption)
+    }
+
+    this.letGoOfTheBroadcast(caption)
+
+    return restyled
+  }
+
+  /** Closes the broadcast's own picture decoded on arrival, once a restyled one is drawn instead. */
+  private letGoOfTheBroadcast(caption: DecodedCaption): void {
+    if (caption.taken) {
+      return
+    }
+
+    caption.taken = true
+    void caption.bitmap.then((bitmap) => bitmap?.close())
   }
 
   private async asBroadcast(
