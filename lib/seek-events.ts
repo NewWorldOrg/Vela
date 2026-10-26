@@ -6,6 +6,17 @@ export const STEPS_JOIN_WITHIN_MS = 3_000
 
 const STEPPING: readonly SeekMeans[] = ['step', 'key']
 
+/**
+ * How far either way of where it was sent a landing made each way may lie, as learning reads it. Coming back to within
+ * that of where a seek forward landed puts right a seek that went a little too far, and is no coming back.
+ */
+export const LANDING_REACH_SEC: Readonly<Record<SeekMeans, number>> = {
+  bar: 8,
+  key: 8,
+  step: 10,
+  chapter: 2,
+}
+
 interface Run {
   means: SeekMeans
   fromSec: number
@@ -24,6 +35,7 @@ const afterAWhile: Later = (run, ms) => {
 }
 
 interface Jump {
+  means: SeekMeans
   fromSec: number
   toSec: number
   at: number
@@ -38,10 +50,11 @@ function hundredths(second: number): number {
  * The seeks a person makes in one recording, sent in the recording's own time. A seek forward is sent as soon as it is
  * made, but steps forward that follow one another within {@link STEPS_JOIN_WITHIN_MS} are held and sent as one, from
  * where the first started to where the last landed, once that long passes after the last, another seek is made or the
- * player goes away. Seeking back into
- * what a seek forward passed moments before counts once the person has watched there for a while, as it does after
- * the skip button. Nothing is sent while the player plays faster than as broadcast, for a jump the skip button made,
- * or while no time in the recording can be placed on the file.
+ * player goes away; when the page is hidden they are sent at once, the way that outlives the page. Seeking back into
+ * what a seek forward passed moments before, short of the reach of where it landed ({@link LANDING_REACH_SEC}), counts
+ * once the person has watched there for a while, as it does after the skip button. Nothing is sent while the player
+ * plays faster than as broadcast, for a jump the skip button made, or while no time in the recording can be placed on
+ * the file.
  */
 export class SeekEvents {
   private run: Run | undefined
@@ -52,14 +65,16 @@ export class SeekEvents {
 
   private rate = 1
 
-  private readonly note: (seek: SeekEvent) => void
+  private readonly note: (seek: SeekEvent, whileLeaving: boolean) => void
 
   private readonly now: () => number
 
   private readonly later: Later
 
+  private leaving = false
+
   constructor(
-    note: (seek: SeekEvent) => void,
+    note: (seek: SeekEvent, whileLeaving: boolean) => void,
     now: () => number = Date.now,
     later: Later = afterAWhile,
   ) {
@@ -119,6 +134,20 @@ export class SeekEvents {
     this.endTheRun()
   }
 
+  /**
+   * The page is hidden or put away, after which it may never run again: the steps still held are sent the way that
+   * outlives the page. A seek back still being watched is kept for when the person comes back to the page.
+   */
+  hides(): void {
+    this.leaving = true
+
+    try {
+      this.endTheRun()
+    } finally {
+      this.leaving = false
+    }
+  }
+
   private stepped(fromSec: number, toSec: number, means: SeekMeans): void {
     const run = this.run
     const now = this.now()
@@ -164,7 +193,7 @@ export class SeekEvents {
     means: SeekMeans,
     at: number,
   ): void {
-    this.lastJump = { fromSec, toSec, at }
+    this.lastJump = { means, fromSec, toSec, at }
     this.send({ event: 'forward', means, fromSec, toSec })
   }
 
@@ -186,7 +215,9 @@ export class SeekEvents {
     }
 
     jump.back =
-      means !== undefined && jump.fromSec <= toSec && toSec < jump.toSec
+      means !== undefined &&
+      jump.fromSec <= toSec &&
+      toSec < jump.toSec - LANDING_REACH_SEC[jump.means]
         ? { means, fromSec, toSec }
         : undefined
   }
@@ -198,10 +229,13 @@ export class SeekEvents {
       return
     }
 
-    this.note({
-      ...seek,
-      fromSec: hundredths(Math.max(0, seek.fromSec + head)),
-      toSec: hundredths(Math.max(0, seek.toSec + head)),
-    })
+    this.note(
+      {
+        ...seek,
+        fromSec: hundredths(Math.max(0, seek.fromSec + head)),
+        toSec: hundredths(Math.max(0, seek.toSec + head)),
+      },
+      this.leaving,
+    )
   }
 }

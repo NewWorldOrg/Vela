@@ -1,16 +1,21 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { SeekEvents, STEPS_JOIN_WITHIN_MS } from '@/lib/seek-events'
+import {
+  LANDING_REACH_SEC,
+  SeekEvents,
+  STEPS_JOIN_WITHIN_MS,
+} from '@/lib/seek-events'
 import { RETURNS_WITHIN_MS, WATCHED_FOR_SEC } from '@/lib/skip-events'
 import type { SeekEvent } from '@/repository/recording-segments'
 
 function kept(offsetSec: number | undefined) {
   const sent: SeekEvent[] = []
+  const leaving: SeekEvent[] = []
   const clock = { now: 1_000_000 }
   const waiting: { run: () => void; at: number }[] = []
   const seeks = new SeekEvents(
-    (seek) => sent.push(seek),
+    (seek, whileLeaving) => (whileLeaving ? leaving : sent).push(seek),
     () => clock.now,
     (run, ms) => {
       const one = { run, at: clock.now + ms }
@@ -32,7 +37,7 @@ function kept(offsetSec: number | undefined) {
 
   seeks.runsBehindBy(offsetSec)
 
-  return { seeks, sent, clock, pass }
+  return { seeks, sent, leaving, clock, pass }
 }
 
 function watchFor(seeks: SeekEvents, from: number, seconds: number) {
@@ -200,4 +205,86 @@ test('nothing is sent while no time in the recording can be placed on the file',
   seeks.sought(595, 681, 'bar')
 
   assert.deepEqual(sent, [])
+})
+
+test('the steps still held are sent the way that outlives the page when the page is hidden, and nothing more when they would have been sent', () => {
+  const { seeks, sent, leaving, pass } = kept(0)
+
+  seeks.sought(100, 110, 'step')
+  seeks.sought(110, 120, 'step')
+  seeks.hides()
+  pass(STEPS_JOIN_WITHIN_MS + 1)
+  seeks.hides()
+
+  assert.deepEqual(sent, [])
+  assert.deepEqual(leaving, [
+    { event: 'forward', means: 'step', fromSec: 100, toSec: 120 },
+  ])
+})
+
+test('a seek back still being watched when the page is hidden is kept, and counts once the person watches on after coming back to the page', () => {
+  const { seeks, sent, leaving } = kept(0)
+
+  seeks.sought(595, 681, 'bar')
+  seeks.sought(690, 640, 'bar')
+  watchFor(seeks, 640, 4)
+  seeks.hides()
+  watchFor(seeks, 644, WATCHED_FOR_SEC)
+
+  assert.deepEqual(leaving, [])
+  assert.deepEqual(sent.at(-1), {
+    event: 'returned',
+    means: 'bar',
+    fromSec: 690,
+    toSec: 640,
+  })
+})
+
+test('steps run past a pod and brought back by one step land within the reach of where they landed, which is no coming back; two steps back are', () => {
+  for (const [backs, returned] of [
+    [1, false],
+    [2, true],
+  ] as const) {
+    const { seeks, sent, pass } = kept(0)
+
+    for (let at = 624; at < 684; at += 10) {
+      seeks.sought(at, at + 10, 'step')
+    }
+
+    pass(STEPS_JOIN_WITHIN_MS + 1)
+
+    for (let back = 0; back < backs; back += 1) {
+      seeks.sought(684 - back * 10, 674 - back * 10, 'key')
+    }
+
+    watchFor(seeks, 684 - backs * 10, WATCHED_FOR_SEC)
+
+    assert.deepEqual(sent[0], {
+      event: 'forward',
+      means: 'step',
+      fromSec: 624,
+      toSec: 684,
+    })
+    assert.equal(
+      sent.some((seek) => seek.event === 'returned'),
+      returned,
+    )
+  }
+})
+
+test('the reach of a landing is that of the way the seek forward was made, as learning reads it', () => {
+  assert.deepEqual(LANDING_REACH_SEC, { bar: 8, key: 8, step: 10, chapter: 2 })
+
+  for (const [landing, returned] of [
+    [673, false],
+    [672.9, true],
+  ] as const) {
+    const { seeks, sent } = kept(0)
+
+    seeks.sought(595, 681, 'bar')
+    seeks.sought(690, landing, 'bar')
+    watchFor(seeks, landing, WATCHED_FOR_SEC)
+
+    assert.equal(sent.length, returned ? 2 : 1)
+  }
 })
