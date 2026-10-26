@@ -71,6 +71,7 @@ import type {
   OpenSocket,
 } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
+import type { OpenPlaylist } from '@/components/live/live-playlist'
 import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { inTheApp } from '@/stories/frames'
@@ -1365,6 +1366,101 @@ export const H264_しか再生できないブラウザに形式の行は無い: 
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
     await screen.findByRole('group', { name: '画質' })
     await expect(screen.queryByRole('group', { name: '形式' })).toBeNull()
+  },
+}
+
+const handedPlaylists: string[] = []
+
+const holdingThePlaylist: OpenPlaylist = (_video, href) => {
+  handedPlaylists.push(href)
+
+  return { leave: () => {} }
+}
+
+const HLS = 'application/vnd.apple.mpegurl'
+
+/** Takes both media sources away for as long as a story is up, with the video answering about HLS as it is told. */
+function withoutAMediaSource(playsHls: CanPlayTypeResult): () => () => void {
+  return () => {
+    const held = window as unknown as Record<string, unknown>
+    const sources = ['MediaSource', 'ManagedMediaSource'].map(
+      (name) => [name, Object.getOwnPropertyDescriptor(window, name)] as const,
+    )
+    const canPlayType = Object.getOwnPropertyDescriptor(
+      HTMLMediaElement.prototype,
+      'canPlayType',
+    )
+
+    handedPlaylists.length = 0
+
+    for (const [name] of sources) {
+      Reflect.deleteProperty(held, name)
+    }
+
+    Object.defineProperty(HTMLMediaElement.prototype, 'canPlayType', {
+      configurable: true,
+      writable: true,
+      value: (type: string) => (type === HLS ? playsHls : ''),
+    })
+
+    return () => {
+      for (const [name, was] of sources) {
+        if (was) {
+          Object.defineProperty(window, name, was)
+        }
+      }
+
+      if (canPlayType) {
+        Object.defineProperty(
+          HTMLMediaElement.prototype,
+          'canPlayType',
+          canPlayType,
+        )
+      }
+    }
+  }
+}
+
+export const MSE_の無いブラウザは_HLS_のプレイリストで開き字幕と形式を置かない: Story =
+  {
+    args: {
+      screen: ON_A_CARD,
+      askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
+      openPlaylist: holdingThePlaylist,
+    },
+    beforeEach: withoutAMediaSource('maybe'),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await canvas.findByText('チャンネルを準備しています')
+      await waitFor(() =>
+        expect(handedPlaylists).toEqual([
+          '/api/live/32736-1024/hls.m3u8?profile=1080p60&sound=main',
+        ]),
+      )
+      await expect(opened).toHaveLength(0)
+      await expect(canvas.queryByRole('button', { name: '字幕' })).toBeNull()
+
+      await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+      await screen.findByRole('group', { name: '画質' })
+      await expect(screen.queryByRole('group', { name: '形式' })).toBeNull()
+      await expect(
+        screen.queryByRole('button', { name: '字幕を変更' }),
+      ).toBeNull()
+    },
+  }
+
+export const MSE_も_HLS_も無いブラウザは再生できないと言う: Story = {
+  args: { openPlaylist: holdingThePlaylist },
+  beforeEach: withoutAMediaSource(''),
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement).findByText(
+        'このブラウザーでは再生できません',
+      ),
+    ).toBeVisible()
+    await expect(handedPlaylists).toHaveLength(0)
+    await expect(opened).toHaveLength(0)
   },
 }
 

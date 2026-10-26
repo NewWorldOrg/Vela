@@ -58,6 +58,18 @@ export function liveChannelOf(networkId: number, serviceId: number): string {
   return `${networkId}-${serviceId}`
 }
 
+/** The playlist a browser without a media source plays a channel from, at a profile and with a sound. */
+export function livePlaylistHref(
+  networkId: number,
+  serviceId: number,
+  profile: string,
+  sound: SoundTrack,
+): string {
+  const asked = new URLSearchParams({ profile, sound })
+
+  return `${LIVE_STREAM_PATH}/${liveChannelOf(networkId, serviceId)}/hls.m3u8?${asked.toString()}`
+}
+
 export function liveStreamHref(networkId: number, serviceId: number): string {
   return `${LIVE_STREAM_PATH}/${liveChannelOf(networkId, serviceId)}/stream`
 }
