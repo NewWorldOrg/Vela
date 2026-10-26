@@ -683,6 +683,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/{id}/seeks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['addSeekEvent']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings/{id}/skips': {
     parameters: {
       query?: never
@@ -1618,6 +1634,16 @@ export interface components {
     AddCandidateChannelRequest: {
       tuning?: null | components['schemas']['TuningParametersRequest']
     }
+    AddSeekEventRequest: {
+      /** @enum {null|string} */
+      event?: 'forward' | 'returned' | null
+      /** @enum {null|string} */
+      means?: 'bar' | 'step' | 'chapter' | 'key' | null
+      /** Format: double */
+      fromSec?: null | number | string
+      /** Format: double */
+      toSec?: null | number | string
+    }
     AddSkipEventRequest: {
       /** @enum {null|string} */
       event?: 'skipped' | 'dismissed' | 'returned' | null
@@ -2089,6 +2115,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['ScanStartedResponder']
+    }
+    BaseResponderOfSeekEventResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['SeekEventResponder']
     }
     BaseResponderOfSegmentSettingsResponder: {
       status: boolean
@@ -4399,6 +4430,20 @@ export interface components {
       /** Format: int32 */
       transportStreamId: null | number | string
     }
+    /** @enum {string} */
+    SeekAction: 'forward' | 'returned'
+    SeekEventResponder: {
+      /** Format: date-time */
+      happenedAt: string
+      event: components['schemas']['SeekAction']
+      means: components['schemas']['SeekMeans']
+      /** Format: double */
+      fromSec: number | string
+      /** Format: double */
+      toSec: number | string
+    }
+    /** @enum {string} */
+    SeekMeans: 'bar' | 'step' | 'chapter' | 'key'
     SegmentEvidenceResponder: {
       /** Format: int32 */
       recordings: number | string
@@ -7823,6 +7868,77 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfReservationSettlementResponder']
+        }
+      }
+    }
+  }
+  addSeekEvent: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': null | components['schemas']['AddSeekEventRequest']
+        'application/*+json':
+          null | components['schemas']['AddSeekEventRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSeekEventResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSeekEventResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSeekEventResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSeekEventResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfSeekEventResponder']
         }
       }
     }

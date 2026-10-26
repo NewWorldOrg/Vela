@@ -1,6 +1,7 @@
 import { unstable_rethrow } from 'next/navigation'
 
 import { carinaClient } from '@/repository/client/carina'
+import { seekBody } from '@/repository/recording-seek-paths'
 import type { Reading } from '@/repository/system'
 import type { SkippableKind } from '@/repository/videos'
 
@@ -13,6 +14,21 @@ export interface SkipEvent {
   fromSec: number
   toSec: number
   modelVersion?: number
+}
+
+export type SeekEventKind = 'forward' | 'returned'
+
+export type SeekMeans = 'bar' | 'step' | 'chapter' | 'key'
+
+/**
+ * A seek a person made in a recording, in the recording's own time: forward past a stretch, the steps made one after
+ * another as one, or back into a stretch a seek forward passed moments before, once they watched on from there.
+ */
+export interface SeekEvent {
+  event: SeekEventKind
+  means: SeekMeans
+  fromSec: number
+  toSec: number
 }
 
 export type SkipWrite =
@@ -71,6 +87,35 @@ export async function noteSkip(
           toSec: skip.toSec,
           modelVersion: skip.modelVersion ?? null,
         },
+      },
+    )
+
+    if (response.status === 401) {
+      return { state: 'unauthenticated' }
+    }
+
+    if (response.status === 429) {
+      return { state: 'tooMany' }
+    }
+
+    return response.ok ? { state: 'ok' } : { state: 'refused' }
+  } catch (error) {
+    unstable_rethrow(error)
+
+    return { state: 'refused' }
+  }
+}
+
+export async function noteSeek(
+  id: string,
+  seek: SeekEvent,
+): Promise<SkipWrite> {
+  try {
+    const { response } = await carinaClient().POST(
+      '/api/recordings/{id}/seeks',
+      {
+        params: { path: { id } },
+        body: seekBody(seek),
       },
     )
 

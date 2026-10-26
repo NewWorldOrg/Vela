@@ -9,8 +9,12 @@ import type { PlaybackSource } from '@/repository/playback-sources'
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 import type { SoundTrack } from '@/repository/sounds'
-import type { SkipEvent, SkipWrite } from '@/repository/recording-segments'
-import { noteSkip } from '@/repository/recording-segments'
+import type {
+  SeekEvent,
+  SkipEvent,
+  SkipWrite,
+} from '@/repository/recording-segments'
+import { noteSeek, noteSkip } from '@/repository/recording-segments'
 import type { TicketWrite } from '@/repository/tickets'
 import type { PlaybackRead, PositionWrite } from '@/repository/videos'
 import {
@@ -87,4 +91,11 @@ export async function noteTheSkip(
   skip: SkipEvent,
 ): Promise<SkipWrite> {
   return noteSkip(id, skip)
+}
+
+export async function noteTheSeek(
+  id: string,
+  seek: SeekEvent,
+): Promise<SkipWrite> {
+  return noteSeek(id, seek)
 }

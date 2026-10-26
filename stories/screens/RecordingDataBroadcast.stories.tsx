@@ -11,6 +11,7 @@ import type { EncodeWrite } from '@/repository/encode'
 import { ENCODE_CHOICES } from '@/repository/encode.fixtures'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { skipNoted } from '@/stories/noted-skips'
+import { seekNoted } from '@/stories/noted-seeks'
 import type { FeedRecording } from '@/components/recordings/recording-feed'
 import {
   BAND_UNDER_THE_BOX,
@@ -118,6 +119,7 @@ const meta = {
     onCallOffEncode: done,
     encodeChoices: ENCODE_CHOICES,
     onNoteSkip: skipNoted,
+    onNoteSeek: seekNoted,
     pictureHref: () => DRAWN_PICTURE,
     frameHref: drawnFrame,
     feedRecording: handedAsItIs,

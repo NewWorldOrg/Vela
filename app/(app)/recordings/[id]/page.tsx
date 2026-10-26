@@ -32,6 +32,7 @@ import {
   askForTheSound,
   askWhichArtefact,
   keepThePosition,
+  noteTheSeek,
   noteTheSkip,
   queueEncoding,
   redrawThumbnail,
@@ -133,6 +134,7 @@ export default async function Page({
           modelVersion.state === 'ok' ? modelVersion.value : undefined
         }
         onNoteSkip={noteTheSkip}
+        onNoteSeek={noteTheSeek}
       />
     </>
   )
