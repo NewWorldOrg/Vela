@@ -100,6 +100,24 @@ test('a spent choice does not come back when a later programme carries two sound
   assert.equal(twoAgain.seat, `1:2:${A_PROFILE}:main`)
 })
 
+test('the format the wire is asked in is part of the seat, and a seat with no format is the one it always was', () => {
+  const plain = liveSeat(1, 2, A_PROFILE, MAIN_SOUND, false)
+
+  assert.equal(liveSeat(1, 2, A_PROFILE, MAIN_SOUND, false, undefined), plain)
+  assert.equal(
+    liveSeat(1, 2, A_PROFILE, MAIN_SOUND, false, 'h265'),
+    `1:2:${A_PROFILE}:main:h265`,
+  )
+  assert.equal(
+    liveSeat(1, 2, A_PROFILE, 'secondary', true, 'av1'),
+    `1:2:${A_PROFILE}:secondary:dualMono:av1`,
+  )
+  assert.notEqual(
+    liveSeat(1, 2, A_PROFILE, MAIN_SOUND, false, 'h264'),
+    liveSeat(1, 2, A_PROFILE, MAIN_SOUND, false, 'av1'),
+  )
+})
+
 test('a retry is what moves the key, not the programme', () => {
   const { seat } = playing(2, ON_THE_SECOND_SOUND)
 

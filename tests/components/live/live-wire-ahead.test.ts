@@ -8,9 +8,11 @@ import {
 } from '@/components/live/live-session'
 import {
   WIRE_KEPT_AHEAD_MS,
+  holdWireFormat,
   holdWireProfile,
   openWireAhead,
   takeWireAhead,
+  wireFormatInUse,
   wireProfileInUse,
 } from '@/components/live/live-wire-ahead'
 import { frameOf, readControl, readFrame } from '@/lib/live-wire'
@@ -268,4 +270,20 @@ test('the profile a player uses is noted until that player lets go of it', () =>
   lettingGoOfTheSecond()
 
   assert.equal(wireProfileInUse(), undefined)
+})
+
+test('the format a player settled on is noted until that player lets go of it', () => {
+  const lettingGoOfTheFirst = holdWireFormat({ settled: true, format: 'h265' })
+
+  assert.deepEqual(wireFormatInUse(), { settled: true, format: 'h265' })
+
+  const lettingGoOfTheSecond = holdWireFormat({ settled: false })
+
+  lettingGoOfTheFirst()
+
+  assert.deepEqual(wireFormatInUse(), { settled: false })
+
+  lettingGoOfTheSecond()
+
+  assert.equal(wireFormatInUse(), undefined)
 })

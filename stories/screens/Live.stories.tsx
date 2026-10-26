@@ -41,9 +41,19 @@ import {
   LIVE_CHANNEL_FIXTURES,
   LIVE_LONG_WORDS_FIXTURE,
   LIVE_NOW_FIXTURE,
+  LIVE_PROFILE_FIXTURES,
+  LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
   LIVE_PROFILE_FIXTURES_SOFTWARE,
   LIVE_SCREEN_FIXTURE,
 } from '@/repository/live.fixtures'
+import { FORMAT_COOKIE } from '@/lib/playback-format'
+import {
+  PLAYS_AV1_IN_SOFTWARE,
+  PLAYS_EVERY_FORMAT_LIGHTLY,
+  PLAYS_ONLY_H264,
+  TAKES_EVERY_TYPE,
+  answeringWhenTold,
+} from '@/stories/fixtures/format-probes'
 import {
   LIVE_CHANNELS_FOLDED,
   LIVE_SUB_CHANNELS_FOLDED,
@@ -553,6 +563,7 @@ const meta = {
     theProbe.answers = undefined
     document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
     document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
+    document.cookie = forgettingCookie(FORMAT_COOKIE)
   },
 } satisfies Meta<typeof LiveView>
 
@@ -899,7 +910,7 @@ export const 切れた線の後始末は選び直したチャンネルに触れ�
 }
 
 const CENTRAL_WIRE =
-  '/api/live/ws?network=32738&service=1040&profile=1080p60&sound=main'
+  '/api/live/ws?network=32738&service=1040&profile=1080p60&sound=main&format=h264'
 
 async function theAnswerArrives(canvasElement: HTMLElement) {
   const answer = within(canvasElement).getByRole('button', {
@@ -1112,7 +1123,7 @@ export const 起動中: Story = {
     )
 
     await expect(opened[0].href).toBe(
-      '/api/live/ws?network=32736&service=1024&profile=1080p60&sound=main',
+      '/api/live/ws?network=32736&service=1024&profile=1080p60&sound=main&format=h264',
     )
 
     await expect(canvas.getByRole('button', { name: '再生' })).toBeDisabled()
@@ -1214,6 +1225,173 @@ export const 画質が一つも無ければ開かない: Story = {
     await expect(livePlayer(canvasElement)).toBeVisible()
     await expect(opened).toHaveLength(0)
     await expect(canvas.queryByRole('button', { name: '設定' })).toBeNull()
+  },
+}
+
+const ON_A_CARD: LiveScreen = {
+  ...CHOSEN,
+  profiles: LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
+}
+
+async function theFormats(canvasElement: HTMLElement): Promise<HTMLElement> {
+  const canvas = within(canvasElement)
+
+  await canvas.findByText('チャンネルを準備しています')
+  await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+  return screen.findByRole('group', { name: '形式' })
+}
+
+function namesIn(group: HTMLElement): (string | null)[] {
+  return within(group)
+    .getAllByRole('button')
+    .map((one) => one.textContent)
+}
+
+export const 形式は_Carina_が出せてブラウザが再生できるものから選ぶ: Story = {
+  args: { screen: ON_A_CARD, askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY },
+  play: async ({ canvasElement }) => {
+    const formats = await theFormats(canvasElement)
+
+    await expect(namesIn(formats)).toEqual(['自動', 'H.264', 'H.265', 'AV1'])
+    await expect(
+      within(formats).getByRole('button', { name: '自動' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await waitFor(() =>
+      expect(opened[0]?.href).toContain(
+        'profile=1080p60&sound=main&format=av1',
+      ),
+    )
+
+    const gear = await screen.findByRole('dialog', { name: '設定' })
+    const rows = within(gear)
+      .getAllByRole('group')
+      .map((one) => one.getAttribute('aria-label'))
+
+    await expect(rows.slice(0, 2)).toEqual(['画質', '形式'])
+  },
+}
+
+export const 自動はハードウェアで再生できない_AV1_を選ばない: Story = {
+  args: { screen: ON_A_CARD, askBrowser: PLAYS_AV1_IN_SOFTWARE },
+  play: async ({ canvasElement }) => {
+    const formats = await theFormats(canvasElement)
+
+    await waitFor(() => expect(opened[0]?.href).toContain('format=h265'))
+    await expect(namesIn(formats)).toEqual(['自動', 'H.264', 'H.265', 'AV1'])
+  },
+}
+
+export const 聞く手立ての無いブラウザは_AV1_を自動で選ばない: Story = {
+  args: { screen: ON_A_CARD, askBrowser: TAKES_EVERY_TYPE },
+  play: async ({ canvasElement }) => {
+    const formats = await theFormats(canvasElement)
+
+    await waitFor(() => expect(opened[0]?.href).toContain('format=h265'))
+    await expect(namesIn(formats)).toEqual(['自動', 'H.264', 'H.265', 'AV1'])
+  },
+}
+
+export const 形式を選び直すと線を張り直してブラウザが覚える: Story = {
+  args: { screen: ON_A_CARD, askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY },
+  play: async ({ canvasElement }) => {
+    const formats = await theFormats(canvasElement)
+
+    await waitFor(() => expect(opened[0]?.readyState).toBe(1))
+    await userEvent.click(
+      within(formats).getByRole('button', { name: 'H.264' }),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await expect(opened[0].readyState).toBe(3)
+    await expect(opened[1].href).toContain('format=h264')
+    await expect(
+      within(formats).getByRole('button', { name: 'H.264' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(cookieIn(document.cookie, FORMAT_COOKIE)).toBe('h264')
+
+    await userEvent.click(within(formats).getByRole('button', { name: '自動' }))
+
+    await waitFor(() => expect(opened).toHaveLength(3))
+    await expect(opened[2].href).toContain('format=av1')
+    await expect(cookieIn(document.cookie, FORMAT_COOKIE)).toBe('auto')
+  },
+}
+
+export const 覚えた形式が使えなくなっていたら黙って自動で開く: Story = {
+  args: {
+    screen: {
+      ...CHOSEN,
+      profiles: LIVE_PROFILE_FIXTURES.map((one) => ({
+        ...one,
+        formats: ['h264', 'h265'],
+      })),
+    },
+    askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
+    formatChoice: 'av1',
+  },
+  play: async ({ canvasElement }) => {
+    const formats = await theFormats(canvasElement)
+
+    await waitFor(() => expect(opened[0]?.href).toContain('format=h265'))
+    await expect(namesIn(formats)).toEqual(['自動', 'H.264', 'H.265'])
+    await expect(
+      within(formats).getByRole('button', { name: '自動' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(cookieIn(document.cookie, FORMAT_COOKIE)).toBeUndefined()
+  },
+}
+
+export const H264_しか出せない機械に形式の行は無い: Story = {
+  args: { askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY, formatChoice: 'h265' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await waitFor(() => expect(opened[0]?.href).toContain('format=h264'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await screen.findByRole('group', { name: '画質' })
+    await expect(screen.queryByRole('group', { name: '形式' })).toBeNull()
+  },
+}
+
+export const H264_しか再生できないブラウザに形式の行は無い: Story = {
+  args: { screen: ON_A_CARD, askBrowser: PLAYS_ONLY_H264 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await canvas.findByText('チャンネルを準備しています')
+    await waitFor(() => expect(opened[0]?.href).toContain('format=h264'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await screen.findByRole('group', { name: '画質' })
+    await expect(screen.queryByRole('group', { name: '形式' })).toBeNull()
+  },
+}
+
+const theBrowser: { answer?: () => void } = {}
+
+function AskedAnew(args: ComponentProps<typeof LiveView>) {
+  const [asked] = useState(answeringWhenTold)
+
+  useEffect(() => {
+    theBrowser.answer = asked.answer
+  }, [asked])
+
+  return <LiveView {...args} askBrowser={asked.probe} />
+}
+
+export const 形式はブラウザが答えてから線を開く: Story = {
+  args: { screen: ON_A_CARD },
+  render: (args) => <AskedAnew {...args} />,
+  play: async ({ canvasElement }) => {
+    await expect(livePlayer(canvasElement)).toBeVisible()
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    await expect(opened).toHaveLength(0)
+
+    theBrowser.answer?.()
+
+    await waitFor(() => expect(opened).toHaveLength(1))
+    await waitFor(() => expect(opened[0]?.href).toContain('format=av1'))
   },
 }
 

@@ -45,6 +45,18 @@ import {
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { unaskedIn } from '@/lib/live-profiles'
 import {
+  FORMAT_COOKIE,
+  choiceShown,
+  formatChoices,
+  formatToPlay,
+  type FormatChoice,
+  type FormatProbe,
+  type PlaybackFormat,
+} from '@/lib/playback-format'
+import { useFormatAnswers } from '@/hooks/useFormatAnswers'
+import { storeText } from '@/hooks/useStoredText'
+import { browserProbe } from '@/components/vela/format-answers'
+import {
   CATCH_UP_RATE,
   delayOf,
   holdOf,
@@ -124,11 +136,17 @@ import {
   type OpenSocket,
 } from '@/components/live/live-session'
 import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
-import { holdWireProfile } from '@/components/live/live-wire-ahead'
+import {
+  holdWireFormat,
+  holdWireProfile,
+} from '@/components/live/live-wire-ahead'
 import { LiveSettings } from '@/components/live/live-settings'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
 const RESTS = 3000
+
+/** What the seat says of the format while the browser has not answered: a seat of its own, on which nothing is opened. */
+const FORMAT_BEING_ASKED = 'asking'
 
 const TICK_MS = 250
 
@@ -192,6 +210,8 @@ export function LivePlayer({
   remoteSlot = null,
   onDataBroadcastOpen,
   captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
+  formatChoice: storedFormat = 'auto',
+  askBrowser,
 }: {
   channel?: LiveChannel
   profiles: LiveProfile[]
@@ -204,6 +224,7 @@ export function LivePlayer({
     serviceId: number,
     profile: string,
     sound: SoundTrack,
+    format?: PlaybackFormat,
   ) => string
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
@@ -215,6 +236,10 @@ export function LivePlayer({
   remoteSlot?: HTMLElement | null
   onDataBroadcastOpen?: (open: boolean) => void
   captionStyle?: CaptionStyle
+  /** The format this browser was left on, as its cookie says. */
+  formatChoice?: FormatChoice
+  /** What is asked whether a format plays here, in place of this browser. */
+  askBrowser?: FormatProbe
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -233,6 +258,25 @@ export function LivePlayer({
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
 
   useEffect(() => holdWireProfile(profile), [profile])
+  const [formatChoice, setFormatChoice] = useState(storedFormat)
+  const answersOf = useFormatAnswers(
+    askBrowser ?? browserProbe('plainFirst'),
+    profiles,
+  )
+  const picture = profiles.find((one) => one.name === profile)
+  const formatAnswers = picture && answersOf(picture)
+  const settled = formatToPlay(formatChoice, picture?.formats, formatAnswers)
+  const formatSettled = settled.settled
+  const format = settled.settled ? settled.format : undefined
+  const formatsToChoose = formatChoices(picture?.formats, formatAnswers)
+
+  useEffect(
+    () =>
+      holdWireFormat(
+        formatSettled ? { settled: true, format } : { settled: false },
+      ),
+    [formatSettled, format],
+  )
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
@@ -268,7 +312,14 @@ export function LivePlayer({
   }
 
   const sound = soundBeingHeard(standing)
-  const seat = liveSeat(networkId, serviceId, profile, sound, split)
+  const seat = liveSeat(
+    networkId,
+    serviceId,
+    profile,
+    sound,
+    split,
+    formatSettled ? format : FORMAT_BEING_ASKED,
+  )
   const retried = retries && retries.of === seat ? retries : null
   const attempt = retried?.count ?? 0
   const key = wireKey(seat, attempt)
@@ -344,6 +395,7 @@ export function LivePlayer({
       networkId === undefined ||
       serviceId === undefined ||
       profile === undefined ||
+      !formatSettled ||
       !element
     ) {
       return
@@ -386,7 +438,7 @@ export function LivePlayer({
     let quickenedSince: number | null = null
     let gapWhenQuickened = 0
     const openedAt = performance.now()
-    const seated = { networkId, serviceId, profile, sound }
+    const seated = { networkId, serviceId, profile, format, sound }
     let askedAt = -BACKLOG_EVERY_MS
     let asking = false
 
@@ -425,7 +477,7 @@ export function LivePlayer({
     broadcastFeed.reset()
 
     const session = openLiveSession(
-      wireHref(networkId, serviceId, profile, sound),
+      wireHref(networkId, serviceId, profile, sound, format),
       {
         onHeader: (init) => {
           feed.header(init)
@@ -607,6 +659,8 @@ export function LivePlayer({
     serviceId,
     profile,
     sound,
+    formatSettled,
+    format,
     openSocket,
     askSignedOut,
     askBacklog,
@@ -1240,6 +1294,14 @@ export function LivePlayer({
                     profiles={profiles}
                     profile={profile}
                     onChooseProfile={setProfile}
+                    format={{
+                      choices: formatsToChoose,
+                      chosen: choiceShown(formatChoice, formatsToChoose),
+                      onChoose: (next) => {
+                        storeText(FORMAT_COOKIE, next)
+                        setFormatChoice(next)
+                      },
+                    }}
                     sounds={sounds}
                     sound={sound}
                     onChooseSound={(next) => {
