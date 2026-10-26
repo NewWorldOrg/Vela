@@ -24,6 +24,7 @@ import {
 } from '@/lib/stored-flag'
 import { isRecordingId } from '@/lib/recordings'
 import {
+  decodesCarinaTakes,
   getPlaybackPlan,
   getPlaybackProfiles,
   getUnaskedPlaybackProfile,
@@ -96,7 +97,9 @@ export default async function Page({
     modelVersion,
   ] = await Promise.all([
     getRecording(id),
-    getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
+    decodesCarinaTakes(decodes).then((told) =>
+      getPlaybackPlan(id, undefined, theSourceAsked(source), told),
+    ),
     getUnaskedPlaybackProfile(),
     getPlaybackProfiles(),
     listEncodeChoices(),

@@ -119,6 +119,7 @@ mock.module('@/repository/client/carina', {
 })
 
 const {
+  decodesCarinaTakes,
   getPlaybackPlan,
   getPlaybackProfiles,
   getUnaskedPlaybackProfile,
@@ -875,6 +876,37 @@ test('a list of profiles that cannot be read is no profiles, and no formats', as
   store.profiles = []
 
   assert.deepEqual(await getPlaybackProfiles(), [])
+})
+
+test('a Carina that names no formats is not told of AV1, which it refuses, and still hears of H.265', async () => {
+  store.profilesStatus = 200
+  store.profiles = [{ ...profile('1080p30', true), formats: undefined }]
+
+  assert.deepEqual(await decodesCarinaTakes(['h265', 'av1']), ['h265'])
+  assert.deepEqual(await decodesCarinaTakes(['av1']), [])
+})
+
+test('a Carina whose list cannot be read, or that transcodes in H.264 alone, is not told of AV1 either', async () => {
+  store.profilesStatus = 503
+  store.profiles = []
+
+  assert.deepEqual(await decodesCarinaTakes(['h265', 'av1']), ['h265'])
+
+  store.profilesStatus = 200
+  store.profiles = [{ ...profile('1080p30', true), formats: ['h264'] }]
+
+  assert.deepEqual(await decodesCarinaTakes(['h265', 'av1']), ['h265'])
+})
+
+test('a Carina that transcodes in H.265 or AV1 is told of every coding the browser plays as it is', async () => {
+  store.profilesStatus = 200
+  store.profiles = [{ ...profile('1080p30', true), formats: ['h264', 'av1'] }]
+
+  assert.deepEqual(await decodesCarinaTakes(['h265', 'av1']), ['h265', 'av1'])
+
+  store.profiles = [profile('1080p30', true)]
+
+  assert.deepEqual(await decodesCarinaTakes(['av1']), ['av1'])
 })
 
 test('a name the play endpoint would refuse is not asked for', async () => {
