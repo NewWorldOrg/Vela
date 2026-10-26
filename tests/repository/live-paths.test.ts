@@ -2,7 +2,11 @@ import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
 import { test } from 'node:test'
 
-import { liveStreamHref, liveWireHref } from '@/repository/live-paths'
+import {
+  livePlaylistHref,
+  liveStreamHref,
+  liveWireHref,
+} from '@/repository/live-paths'
 
 const document: {
   info: { description: string }
@@ -52,5 +56,12 @@ test('the document says the wire is asked for in a format, H.264 where none is n
   assert.match(
     document.info.description,
     /by `format` \(`h264`, `h265` or `av1`, `h264` when none is named\)/,
+  )
+})
+
+test('the playlist of a channel is asked for at the profile and with the sound the player holds', () => {
+  assert.equal(
+    livePlaylistHref(32736, 1024, '720p', 'secondary'),
+    '/api/live/32736-1024/hls.m3u8?profile=720p&sound=secondary',
   )
 })

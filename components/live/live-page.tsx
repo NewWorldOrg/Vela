@@ -66,6 +66,8 @@ import {
 } from '@/components/live/remote-column'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 import { LivePlayer } from '@/components/live/live-player'
+import { LiveFeed } from '@/components/live/live-feed'
+import type { OpenPlaylist } from '@/components/live/live-playlist'
 import {
   openTheWireAhead,
   type AskBacklog,
@@ -111,6 +113,7 @@ export function LiveView({
   onTakeTicket,
   clockHeldAt,
   openSocket,
+  openPlaylist,
   askSignedOut,
   askBacklog,
   startupDeadlineMs,
@@ -127,6 +130,7 @@ export function LiveView({
   onTakeTicket: TakeLiveTicket
   clockHeldAt?: Date
   openSocket?: OpenSocket
+  openPlaylist?: OpenPlaylist
   askSignedOut?: () => Promise<boolean>
   askBacklog?: AskBacklog
   startupDeadlineMs?: number
@@ -270,7 +274,13 @@ export function LiveView({
         picture && answersOf(picture),
       )
 
-    if (chosen && profile && format.settled && id !== watching?.channel.id) {
+    if (
+      chosen &&
+      profile &&
+      format.settled &&
+      id !== watching?.channel.id &&
+      LiveFeed.supported()
+    ) {
       openTheWireAhead(
         liveWireHref(
           chosen.networkId,
@@ -368,6 +378,7 @@ export function LiveView({
             ch: watching.channel.id,
           })}
           openSocket={openSocket}
+          openPlaylist={openPlaylist}
           askSignedOut={askSignedOut}
           askBacklog={askBacklog}
           startupDeadlineMs={startupDeadlineMs}

@@ -18,7 +18,11 @@ import {
   wireKey,
   type SoundChoice,
 } from '@/lib/live-seat'
-import { liveChannelOf, liveWireHref } from '@/repository/live-paths'
+import {
+  liveChannelOf,
+  livePlaylistHref,
+  liveWireHref,
+} from '@/repository/live-paths'
 import {
   KEY_CAP,
   aimsAtThePlayer,
@@ -127,6 +131,11 @@ import { CAPTION_GRIP } from '@/components/recordings/player-palette'
 import { useCaptionBoard } from '@/hooks/useCaptionBoard'
 import { PLAIN_CAPTION_STYLE, type CaptionStyle } from '@/lib/caption-style'
 import { LiveFeed } from '@/components/live/live-feed'
+import {
+  openPlaylist as openThePlaylist,
+  type OpenPlaylist,
+} from '@/components/live/live-playlist'
+import { useLiveCarriage } from '@/hooks/useLiveCarriage'
 import { LiveStart } from '@/components/live/live-start'
 import {
   askLiveBacklog,
@@ -202,6 +211,8 @@ export function LivePlayer({
   askSignedOut = askWhetherSignedOut,
   askBacklog = askLiveBacklog,
   wireHref = liveWireHref,
+  openPlaylist = openThePlaylist,
+  playlistHref = livePlaylistHref,
   startupDeadlineMs = STARTUP_DEADLINE_MS,
   takeCapture = takeItNow,
   autoOpensDataBroadcast = false,
@@ -225,6 +236,13 @@ export function LivePlayer({
     profile: string,
     sound: SoundTrack,
     format?: PlaybackFormat,
+  ) => string
+  openPlaylist?: OpenPlaylist
+  playlistHref?: (
+    networkId: number,
+    serviceId: number,
+    profile: string,
+    sound: SoundTrack,
   ) => string
   startupDeadlineMs?: number
   takeCapture?: TakeCapture
@@ -256,6 +274,8 @@ export function LivePlayer({
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
+  const carriage = useLiveCarriage()
+  const playlist = carriage === 'playlist'
 
   useEffect(() => holdWireProfile(profile), [profile])
   const [formatChoice, setFormatChoice] = useState(storedFormat)
@@ -312,13 +332,15 @@ export function LivePlayer({
   }
 
   const sound = soundBeingHeard(standing)
+  const ready = playlist || formatSettled
+  const formatAsked = playlist ? undefined : format
   const seat = liveSeat(
     networkId,
     serviceId,
     profile,
     sound,
     split,
-    formatSettled ? format : FORMAT_BEING_ASKED,
+    ready ? formatAsked : FORMAT_BEING_ASKED,
   )
   const retried = retries && retries.of === seat ? retries : null
   const attempt = retried?.count ?? 0
@@ -395,7 +417,8 @@ export function LivePlayer({
       networkId === undefined ||
       serviceId === undefined ||
       profile === undefined ||
-      !formatSettled ||
+      carriage === undefined ||
+      !ready ||
       !element
     ) {
       return
@@ -426,19 +449,15 @@ export function LivePlayer({
       element.pause()
     }
 
-    if (!LiveFeed.supported()) {
+    if (carriage === 'none') {
       const saying = setTimeout(() => fail({ kind: 'unsupported' }), 0)
 
       return () => clearTimeout(saying)
     }
 
     let pictured = false
-    let edge = -1
-    let edgeMovedAt = performance.now()
-    let quickenedSince: number | null = null
-    let gapWhenQuickened = 0
     const openedAt = performance.now()
-    const seated = { networkId, serviceId, profile, format, sound }
+    const seated = { networkId, serviceId, profile, format: formatAsked, sound }
     let askedAt = -BACKLOG_EVERY_MS
     let asking = false
 
@@ -451,6 +470,112 @@ export function LivePlayer({
           : was,
       )
     }
+
+    const pictureCame = () => {
+      if (pictured) {
+        return
+      }
+
+      pictured = true
+      mark('firstPicture')
+      change((was) =>
+        was.phase === 'starting' ? { ...was, phase: 'buffering' } : was,
+      )
+    }
+
+    const droppedOrSignedOut = () => {
+      void askSignedOut().then((signedOut) =>
+        fail(signedOut ? { kind: 'signedOut' } : { kind: 'dropped' }),
+      )
+    }
+
+    const askTheBacklog = (elapsedMs: number) => {
+      if (asking || elapsedMs - askedAt < BACKLOG_EVERY_MS) {
+        return
+      }
+
+      asking = true
+      askedAt = elapsedMs
+
+      void askBacklog(seated).then((read) => {
+        asking = false
+
+        if (settled || !read) {
+          return
+        }
+
+        change((was) =>
+          was.dropped === read.dropped &&
+          was.droppedByThoseStillWatching ===
+            read.droppedByThoseStillWatching &&
+          was.lostOnTheWayIn === read.lostOnTheWayIn
+            ? was
+            : {
+                ...was,
+                dropped: read.dropped,
+                droppedByThoseStillWatching: read.droppedByThoseStillWatching,
+                lostOnTheWayIn: read.lostOnTheWayIn,
+              },
+        )
+      })
+    }
+
+    const startedInTime = (elapsedMs: number, leave: () => void) => {
+      if (pictured || elapsedMs < startupDeadlineMs) {
+        return true
+      }
+
+      leave()
+      fail({ kind: 'tookTooLong' })
+
+      return false
+    }
+
+    if (carriage === 'playlist') {
+      const played = openPlaylist(
+        element,
+        playlistHref(networkId, serviceId, profile, sound),
+        {
+          onPicture: pictureCame,
+          onRefusedToPlay: () => change((was) => ({ ...was, phase: 'paused' })),
+          onFault: (why) => {
+            if (why === 'unsupported') {
+              fail({ kind: 'unsupported' })
+
+              return
+            }
+
+            droppedOrSignedOut()
+          },
+        },
+      )
+
+      const waiting = setInterval(() => {
+        const elapsedMs = performance.now() - openedAt
+
+        if (settled || !startedInTime(elapsedMs, played.leave)) {
+          clearInterval(waiting)
+
+          return
+        }
+
+        change((was) =>
+          was.phase === 'starting' ? { ...was, elapsedMs } : was,
+        )
+        askTheBacklog(elapsedMs)
+      }, TICK_MS)
+
+      return () => {
+        gone = true
+        clearInterval(waiting)
+        played.leave()
+      }
+    }
+
+    let edge = -1
+    let edgeMovedAt = performance.now()
+    let quickenedSince: number | null = null
+    let gapWhenQuickened = 0
 
     const feed = new LiveFeed(
       element,
@@ -485,14 +610,7 @@ export function LivePlayer({
         },
         onPicture: (bytes) => {
           feed.append(bytes)
-
-          if (!pictured) {
-            pictured = true
-            mark('firstPicture')
-            change((was) =>
-              was.phase === 'starting' ? { ...was, phase: 'buffering' } : was,
-            )
-          }
+          pictureCame()
         },
         onCaptionCanvas: (canvas) => layer?.canvasOf(canvas),
         onCaption: (picture, pts) => layer?.offer(picture, pts),
@@ -508,11 +626,7 @@ export function LivePlayer({
         onRefusal: (refusal, over) =>
           fail({ kind: 'refused', refusal, ...over }),
         onEnding: (why) => fail({ kind: 'ended', why }),
-        onDropped: () => {
-          void askSignedOut().then((signedOut) =>
-            fail(signedOut ? { kind: 'signedOut' } : { kind: 'dropped' }),
-          )
-        },
+        onDropped: droppedOrSignedOut,
       },
       openSocket,
     )
@@ -532,42 +646,14 @@ export function LivePlayer({
       const now = performance.now()
       const elapsedMs = now - openedAt
 
-      if (!pictured && elapsedMs >= startupDeadlineMs) {
+      if (!startedInTime(elapsedMs, session.leave)) {
         clearInterval(ticking)
-        session.leave()
-        fail({ kind: 'tookTooLong' })
 
         return
       }
 
       change((was) => (was.phase === 'starting' ? { ...was, elapsedMs } : was))
-
-      if (!asking && elapsedMs - askedAt >= BACKLOG_EVERY_MS) {
-        asking = true
-        askedAt = elapsedMs
-
-        void askBacklog(seated).then((read) => {
-          asking = false
-
-          if (settled || !read) {
-            return
-          }
-
-          change((was) =>
-            was.dropped === read.dropped &&
-            was.droppedByThoseStillWatching ===
-              read.droppedByThoseStillWatching &&
-            was.lostOnTheWayIn === read.lostOnTheWayIn
-              ? was
-              : {
-                  ...was,
-                  dropped: read.dropped,
-                  droppedByThoseStillWatching: read.droppedByThoseStillWatching,
-                  lostOnTheWayIn: read.lostOnTheWayIn,
-                },
-          )
-        })
-      }
+      askTheBacklog(elapsedMs)
 
       const runs = feed.runs()
       const end = feed.end()
@@ -659,12 +745,16 @@ export function LivePlayer({
     serviceId,
     profile,
     sound,
-    formatSettled,
+    carriage,
+    ready,
     format,
+    formatAsked,
     openSocket,
     askSignedOut,
     askBacklog,
     wireHref,
+    openPlaylist,
+    playlistHref,
     startupDeadlineMs,
   ])
 
@@ -677,7 +767,9 @@ export function LivePlayer({
   }
 
   const pip = usePictureInPicture(video)
-  const captionsDrawn = captioned && !pip.out && phase !== 'faulted'
+  const captionsDrawn =
+    captioned && !playlist && !pip.out && phase !== 'faulted'
+  const broadcastOffered = broadcast.offered && !playlist
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
   const chromeUp =
@@ -834,8 +926,8 @@ export function LivePlayer({
       event,
       {
         seeks: false,
-        captions: true,
-        dataBroadcast: broadcast.offered,
+        captions: !playlist,
+        dataBroadcast: broadcastOffered,
         aimed: aimed.current,
       },
       broadcast.view.open
@@ -1061,7 +1153,7 @@ export function LivePlayer({
               data-up={chromeUp ? 'true' : undefined}
               className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
             >
-              {!opened && (
+              {!opened && !playlist && (
                 <div
                   ref={captionGrip}
                   aria-hidden="true"
@@ -1262,25 +1354,27 @@ export function LivePlayer({
                 </span>
               )}
               <div className="ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0">
-                <PlayerTip
-                  name="字幕"
-                  keys={[KEY_CAP.captions]}
-                  container={shell}
-                >
-                  <button
-                    type="button"
-                    aria-label="字幕"
-                    aria-pressed={captioned}
-                    onClick={toggleCaptions}
-                    className={cn(
-                      PLAYER_GLYPH_BUTTON,
-                      captioned && PLAYER_GLYPH_BUTTON_ON,
-                    )}
+                {!playlist && (
+                  <PlayerTip
+                    name="字幕"
+                    keys={[KEY_CAP.captions]}
+                    container={shell}
                   >
-                    <CaptionsGlyph />
-                  </button>
-                </PlayerTip>
-                {broadcast.offered && (
+                    <button
+                      type="button"
+                      aria-label="字幕"
+                      aria-pressed={captioned}
+                      onClick={toggleCaptions}
+                      className={cn(
+                        PLAYER_GLYPH_BUTTON,
+                        captioned && PLAYER_GLYPH_BUTTON_ON,
+                      )}
+                    >
+                      <CaptionsGlyph />
+                    </button>
+                  </PlayerTip>
+                )}
+                {broadcastOffered && (
                   <DataBroadcastToggle
                     open={opened}
                     onToggle={toggleBroadcast}
@@ -1294,14 +1388,18 @@ export function LivePlayer({
                     profiles={profiles}
                     profile={profile}
                     onChooseProfile={setProfile}
-                    format={{
-                      choices: formatsToChoose,
-                      chosen: choiceShown(formatChoice, formatsToChoose),
-                      onChoose: (next) => {
-                        storeText(FORMAT_COOKIE, next)
-                        setFormatChoice(next)
-                      },
-                    }}
+                    format={
+                      playlist
+                        ? undefined
+                        : {
+                            choices: formatsToChoose,
+                            chosen: choiceShown(formatChoice, formatsToChoose),
+                            onChoose: (next) => {
+                              storeText(FORMAT_COOKIE, next)
+                              setFormatChoice(next)
+                            },
+                          }
+                    }
                     sounds={sounds}
                     sound={sound}
                     onChooseSound={(next) => {
@@ -1314,7 +1412,7 @@ export function LivePlayer({
                       running?.droppedByThoseStillWatching
                     }
                     lostOnTheWayIn={running?.lostOnTheWayIn}
-                    captionStyle={captionStyle}
+                    captionStyle={playlist ? undefined : captionStyle}
                     onCaptionStyle={setCaptionStyle}
                   />
                 </PlayerTip>
