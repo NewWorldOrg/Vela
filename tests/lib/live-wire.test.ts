@@ -271,24 +271,23 @@ function box(type: string, ...payload: (Uint8Array | number[])[]): Uint8Array {
   return bytes
 }
 
-function header(withSound: boolean): Uint8Array {
-  const avcC = box('avcC', [1, 0x64, 0x00, 0x1f, 0xff])
-  const avc1 = box('avc1', new Uint8Array(78), avcC)
-  const mp4a = box('mp4a', new Uint8Array(28), box('esds', [0, 0, 0, 0]))
-  const video = box(
+function stsd(entry: Uint8Array): Uint8Array {
+  return box(
     'trak',
     box(
       'mdia',
-      box('minf', box('stbl', box('stsd', [0, 0, 0, 0, 0, 0, 0, 1], avc1))),
+      box('minf', box('stbl', box('stsd', [0, 0, 0, 0, 0, 0, 0, 1], entry))),
     ),
   )
-  const sound = box(
-    'trak',
-    box(
-      'mdia',
-      box('minf', box('stbl', box('stsd', [0, 0, 0, 0, 0, 0, 0, 1], mp4a))),
-    ),
-  )
+}
+
+function header(
+  picture: Uint8Array,
+  withSound: boolean,
+  entry = 'avc1',
+): Uint8Array {
+  const video = stsd(box(entry, new Uint8Array(78), picture))
+  const sound = stsd(box('mp4a', new Uint8Array(28), box('esds', [0, 0, 0, 0])))
   const moov = withSound ? box('moov', video, sound) : box('moov', video)
   const ftyp = box('ftyp', [0x69, 0x73, 0x6f, 0x35])
 
@@ -299,14 +298,114 @@ function header(withSound: boolean): Uint8Array {
   return bytes
 }
 
+function bytesOf(hex: string): Uint8Array {
+  return new Uint8Array(
+    hex.match(/../g)?.map((pair) => Number.parseInt(pair, 16)) ?? [],
+  )
+}
+
+/** What libx264 wrote for High, level 4.1, 1280x720 at 30 frames. */
+const AVC_HIGH_41 = bytesOf(
+  '01640029ffe1001a67640029acd9405005bb0110000003001000000303c0f183196001000668ebe3cb22c0fdf8f800',
+)
+
+/** What libx265 wrote for Main, Main tier, level 4.1, 1920x1080 at 60 frames. */
+const HEVC_MAIN_41 = bytesOf(
+  '0101600000009000000000007bf000fcfdf8f800000f03a00001001840010c01ffff01600000030090000003000003007b959809a10001002a42010101600000030090000003000003007ba003c08010e596566924caf0168080000003008000001e04a2000100074401c172b42240',
+)
+
+/** What libx265 wrote for Main, High tier, level 4.1, 1280x720 at 30 frames. */
+const HEVC_MAIN_HIGH_TIER_41 = bytesOf(
+  '0121600000009000000000007bf000fcfdf8f800000f03a00001001840010c01ffff21600000030090000003000003007b959809a10001002b42010121600000030090000003000003007ba00280802d165959a4932bc05a020000030002000003003c10a2000100074401c172b42240',
+)
+
+/** What libx265 wrote for Main 10, Main tier, level 3.1, 1280x720 at 30 frames. */
+const HEVC_MAIN10_31 = bytesOf(
+  '0102200000009000000000005df000fcfdfafa00000f03a00001001840010c01ffff02200000030090000003000003005d959809a10001002b42010102200000030090000003000003005da00280802d1365959a4932bc05a020000003002000000303c1a2000100074401c172b42240',
+)
+
+/** What SVT-AV1 wrote for Main, level 4.1, 8 bits, 1920x1080 at 60 frames. */
+const AV1_MAIN_41_8BIT = bytesOf('81090c000a0b0000004aabbfc3700be001')
+
+/** What SVT-AV1 wrote for Main, level 3.1, 10 bits, 1280x720 at 30 frames. */
+const AV1_MAIN_31_10BIT = bytesOf('81054c000a0b0000002d4cffb3c02f8404')
+
 test('the codecs are read off the header: the H.264 profile and level, and the sound when there is one', () => {
-  assert.equal(codecsOf(header(true)), 'avc1.64001f, mp4a.40.2')
-  assert.equal(codecsOf(header(false)), 'avc1.64001f')
+  assert.equal(
+    codecsOf(header(box('avcC', AVC_HIGH_41), true)),
+    'avc1.640029, mp4a.40.2',
+  )
+  assert.equal(codecsOf(header(box('avcC', AVC_HIGH_41), false)), 'avc1.640029')
 })
 
-test('a header with no H.264 in it answers nothing', () => {
+test('H.265 is named by its sample entry, profile, compatibility, tier and level, and the constraints up to the last that is set', () => {
+  assert.equal(
+    codecsOf(header(box('hvcC', HEVC_MAIN_41), true, 'hvc1')),
+    'hvc1.1.6.L123.90, mp4a.40.2',
+  )
+  assert.equal(
+    codecsOf(header(box('hvcC', HEVC_MAIN_HIGH_TIER_41), false, 'hvc1')),
+    'hvc1.1.6.H123.90',
+  )
+  assert.equal(
+    codecsOf(header(box('hvcC', HEVC_MAIN10_31), false, 'hvc1')),
+    'hvc1.2.4.L93.90',
+  )
+  assert.equal(
+    codecsOf(header(box('hvcC', HEVC_MAIN_41), false, 'hev1')),
+    'hev1.1.6.L123.90',
+  )
+})
+
+test('an H.265 profile space is a letter, and constraints that are all unset are left out', () => {
+  const spaced = HEVC_MAIN_41.slice()
+
+  spaced[1] = 0b0100_0001
+  spaced.fill(0, 6, 12)
+
+  assert.equal(
+    codecsOf(header(box('hvcC', spaced), false, 'hvc1')),
+    'hvc1.A1.6.L123',
+  )
+
+  spaced[6] = 0xb0
+  spaced[8] = 0x01
+
+  assert.equal(
+    codecsOf(header(box('hvcC', spaced), false, 'hvc1')),
+    'hvc1.A1.6.L123.B0.00.01',
+  )
+})
+
+test('AV1 is named by its profile, level, tier and bit depth', () => {
+  assert.equal(
+    codecsOf(header(box('av1C', AV1_MAIN_41_8BIT), true, 'av01')),
+    'av01.0.09M.08, mp4a.40.2',
+  )
+  assert.equal(
+    codecsOf(header(box('av1C', AV1_MAIN_31_10BIT), false, 'av01')),
+    'av01.0.05M.10',
+  )
+})
+
+test('an AV1 high tier and a Professional twelve bits are read from their flags', () => {
+  assert.equal(
+    codecsOf(header(box('av1C', [0x81, 0x4d, 0xe0, 0x00]), false, 'av01')),
+    'av01.2.13H.12',
+  )
+})
+
+test('a header with no picture codec it can name answers nothing', () => {
   assert.equal(codecsOf(box('moov', box('trak'))), null)
   assert.equal(codecsOf(new Uint8Array([0, 0, 0])), null)
+  assert.equal(
+    codecsOf(header(box('hvcC', HEVC_MAIN_41.slice(0, 12)), false, 'hvc1')),
+    null,
+  )
+  assert.equal(
+    codecsOf(header(box('av1C', [0x01, 0x09, 0x0c, 0x00]), false, 'av01')),
+    null,
+  )
 })
 
 test('a caption header is the canvas, two big-endian bytes a side', () => {
