@@ -109,7 +109,7 @@ mock.module('@/repository/client/carina', {
   namedExports: { carinaClient: client, revalidatingCarinaClient: client },
 })
 
-const { getSegmentModelVersion, noteSkip } =
+const { getSegmentModelVersion, noteSeek, noteSkip } =
   await import('@/repository/recording-segments')
 
 const ID = '0123456789abcdef0123456789abcdef'
@@ -239,4 +239,43 @@ test('a skip turned away for too many is told apart from one refused', async () 
 
   store.throwing = true
   assert.deepEqual(await noteSkip(ID, skip), { state: 'refused' })
+})
+
+test('a seek is sent in the recording’s own time with how it was made, beside the skips', async () => {
+  assert.deepEqual(
+    await noteSeek(ID, {
+      event: 'forward',
+      means: 'step',
+      fromSec: 600,
+      toSec: 690,
+    }),
+    { state: 'ok' },
+  )
+  assert.deepEqual(sent.at(-1), {
+    method: 'POST',
+    path: '/api/recordings/{id}/seeks',
+    id: ID,
+    body: { event: 'forward', means: 'step', fromSec: 600, toSec: 690 },
+  })
+})
+
+test('a seek turned away for too many is told apart from one refused', async () => {
+  const seek = {
+    event: 'returned' as const,
+    means: 'bar' as const,
+    fromSec: 700,
+    toSec: 612.5,
+  }
+
+  store.status = 429
+  assert.deepEqual(await noteSeek(ID, seek), { state: 'tooMany' })
+
+  store.status = 400
+  assert.deepEqual(await noteSeek(ID, seek), { state: 'refused' })
+
+  store.status = 401
+  assert.deepEqual(await noteSeek(ID, seek), { state: 'unauthenticated' })
+
+  store.throwing = true
+  assert.deepEqual(await noteSeek(ID, seek), { state: 'refused' })
 })
