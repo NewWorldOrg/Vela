@@ -1,3 +1,4 @@
+import { formatOf, type PlaybackFormat } from '@/lib/playback-format'
 import type { components } from '@/repository/client/schema'
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 
@@ -6,10 +7,13 @@ type LiveViewerResponder = components['schemas']['LiveViewerResponder']
 type LiveSessionsAnswer =
   components['schemas']['BaseResponderOfIReadOnlyListOfLiveSessionResponder']
 
+const H264: PlaybackFormat = 'h264'
+
 export interface LiveSessionReading {
   networkId: number
   serviceId: number
   profile: string
+  format: PlaybackFormat
   sound: SoundTrack
   viewers: number
   dropped: number
@@ -29,6 +33,8 @@ export interface LiveSeat {
   networkId: number
   serviceId: number
   profile: string
+  /** The format the wire asked for; none asks for H.264. */
+  format?: PlaybackFormat
   sound: SoundTrack
 }
 
@@ -88,6 +94,7 @@ function toReading(session: LiveSessionResponder): LiveSessionReading {
     networkId: count(session.networkId),
     serviceId: count(session.serviceId),
     profile: session.profile,
+    format: formatOf(session.format) ?? H264,
     sound: session.sound ?? MAIN_SOUND,
     viewers: count(session.viewers),
     dropped: count(session.dropped),
@@ -120,6 +127,7 @@ export function backlogOf(
       session.networkId === seat.networkId &&
       session.serviceId === seat.serviceId &&
       session.profile === seat.profile &&
+      session.format === (seat.format ?? H264) &&
       session.sound === seat.sound,
   )
 

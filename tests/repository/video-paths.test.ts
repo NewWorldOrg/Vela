@@ -115,6 +115,32 @@ test('the picture is asked for with what the browser told the plan it decodes', 
   )
 })
 
+test('a picture transcoded as it plays names the format it is encoded in, after what the plan was told', () => {
+  assert.equal(
+    videoPictureHref(
+      '1266',
+      90,
+      '1080p60',
+      'main',
+      'recording',
+      ['h265', 'av1'],
+      'av1',
+    ),
+    '/api/videos/1266/play?from=90&profile=1080p60&sound=main&source=recording&decodes=h265&decodes=av1&format=av1',
+  )
+})
+
+test('the formats asked for are the ones the endpoint takes, H.264 where none is named', () => {
+  const format = parameterOfPlay('format')
+  const decodes = parameterOfPlay('decodes') as unknown as {
+    schema: { items: { enum: string[] } }
+  }
+
+  assert.deepEqual(format.schema.enum, ['h264', 'h265', 'av1'])
+  assert.equal(format.schema.default, 'h264')
+  assert.deepEqual(decodes.schema.items.enum, ['h264', 'h265', 'av1'])
+})
+
 test('an artefact handed over as it is carries the sound too, with no profile', () => {
   assert.equal(
     videoPictureHref('1266', 0, undefined, 'main'),

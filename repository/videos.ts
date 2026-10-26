@@ -9,7 +9,7 @@ import {
   type EncodeCodec,
 } from '@/repository/encode-terms'
 import type { components } from '@/repository/client/schema'
-import { fetchLiveProfiles } from '@/repository/live'
+import { fetchLiveProfiles, type LiveProfile } from '@/repository/live'
 import {
   BOTH_SOURCES,
   sourceThisBuildKnows,
@@ -183,15 +183,20 @@ export const getPlaybackPlan = cache(
   },
 )
 
+/** The profiles a recording is transcoded at as it plays, and the formats each is transcoded in: the live list, which answers the same for a recording. */
+export const getPlaybackProfiles = cache(async (): Promise<LiveProfile[]> => {
+  try {
+    return await fetchLiveProfiles()
+  } catch {
+    return []
+  }
+})
+
 export const getUnaskedPlaybackProfile = cache(
   async (): Promise<PlaybackProfile | undefined> => {
-    try {
-      const named = unaskedIn(await fetchLiveProfiles())
+    const named = unaskedIn(await getPlaybackProfiles())
 
-      return PLAYBACK_PROFILES.find((one) => one === named)
-    } catch {
-      return undefined
-    }
+    return PLAYBACK_PROFILES.find((one) => one === named)
   },
 )
 
