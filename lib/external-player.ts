@@ -85,6 +85,8 @@ const TRANSPORT_STREAM = 'ts'
 
 const AN_MP4 = 'mp4'
 
+const A_PLAYLIST = 'm3u8'
+
 function extensionOf(source: PlaybackSource | undefined): string {
   return source === THE_ARTEFACT ? AN_MP4 : TRANSPORT_STREAM
 }
@@ -171,11 +173,7 @@ export function liveHandover(
   channel = '',
   programme = '',
 ): Handover {
-  const fileName = fileNameOf(
-    `${channel} ${programme}`,
-    TRANSPORT_STREAM,
-    ON_AIR,
-  )
+  const fileName = fileNameOf(`${channel} ${programme}`, A_PLAYLIST, ON_AIR)
 
   return {
     path: liveStreamHref(networkId, serviceId),

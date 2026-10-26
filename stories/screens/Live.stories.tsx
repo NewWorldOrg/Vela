@@ -3353,7 +3353,7 @@ const THE_CHANNEL_BY_TICKET = new RegExp(
 const THE_CHANNEL_NAMED_BY_WHAT_IS_ON = namedWithTheTicket(
   '/api/live/32736-1024',
   A_TICKET,
-  `${CHOSEN.watching?.channel.name} ${CHOSEN.watching?.channel.now?.title}.ts`,
+  `${CHOSEN.watching?.channel.name} ${CHOSEN.watching?.channel.now?.title}.m3u8`,
 )
 
 export const 外部プレイヤーへ渡す: Story = {

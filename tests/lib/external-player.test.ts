@@ -372,14 +372,14 @@ test('every choice offered for a recording carries its title in the name', () =>
   )
 })
 
-test('a live channel is named for Infuse by the channel and what is on', () => {
+test('a live channel is handed to Infuse as a playlist named by the channel and what is on', () => {
   assert.equal(
     namedHref(
       liveHandover(32736, 1024, issued, 'チャンネル', '番組'),
       WATCHING,
       TICKET,
     ),
-    `https://vela.example/api/live/32736-1024/with-ticket/${TICKET}/${encodeURIComponent('チャンネル 番組.ts')}`,
+    `https://vela.example/api/live/32736-1024/with-ticket/${TICKET}/${encodeURIComponent('チャンネル 番組.m3u8')}`,
   )
 })
 
@@ -388,7 +388,7 @@ test('a live channel with nothing known to be on is named by the channel alone',
     namedHref(liveHandover(32736, 1024, issued, 'チャンネル'), WATCHING, TICKET)
       .split('/')
       .at(-1),
-    encodeURIComponent('チャンネル.ts'),
+    encodeURIComponent('チャンネル.m3u8'),
   )
 })
 
