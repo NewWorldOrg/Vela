@@ -1,91 +1,24 @@
 'use client'
 
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback } from 'react'
 
-import {
-  type FlagSpelling,
-  cookieIn,
-  flagOf,
-  storingCookie,
-} from '@/lib/stored-flag'
-
-const CHANGED = 'vela-stored-flag-changed'
-
-const ACROSS_TABS = 'vela-stored-flag'
-
-const unstored = new Map<string, boolean>()
-
-function tellTheOtherTabs(key: string): void {
-  if (typeof BroadcastChannel !== 'function') {
-    return
-  }
-
-  const channel = new BroadcastChannel(ACROSS_TABS)
-
-  channel.postMessage(key)
-  channel.close()
-}
+import { type FlagSpelling, flagOf } from '@/lib/stored-flag'
+import { useStoredText } from '@/hooks/useStoredText'
 
 export function useStoredFlag(
   key: string,
   spelling: FlagSpelling,
   stored: boolean,
 ): [boolean, (next: boolean) => void] {
-  const subscribe = useCallback(
-    (onChange: () => void) => {
-      const otherTabs =
-        typeof BroadcastChannel === 'function'
-          ? new BroadcastChannel(ACROSS_TABS)
-          : null
-
-      function fromAnotherTab(event: MessageEvent) {
-        if (event.data === key) {
-          onChange()
-        }
-      }
-
-      window.addEventListener(CHANGED, onChange)
-      otherTabs?.addEventListener('message', fromAnotherTab)
-
-      return () => {
-        window.removeEventListener(CHANGED, onChange)
-        otherTabs?.close()
-      }
-    },
-    [key],
+  const [said, setSaid] = useStoredText(
+    key,
+    stored ? spelling.yes : spelling.no,
   )
-
-  const read = useCallback(
-    () =>
-      flagOf(
-        cookieIn(document.cookie, key),
-        spelling,
-        unstored.get(key) ?? stored,
-      ),
-    [key, spelling, stored],
-  )
-
-  const readOnTheServer = useCallback(() => stored, [stored])
-
-  const on = useSyncExternalStore(subscribe, read, readOnTheServer)
 
   const set = useCallback(
-    (next: boolean) => {
-      const value = next ? spelling.yes : spelling.no
-
-      document.cookie = storingCookie(key, value)
-
-      if (cookieIn(document.cookie, key) !== value) {
-        console.warn(`[useStoredFlag] the cookie was not kept for ${key}`)
-
-        unstored.set(key, next)
-      }
-
-      window.dispatchEvent(new Event(CHANGED))
-      tellTheOtherTabs(key)
-    },
-    [key, spelling.yes, spelling.no],
+    (next: boolean) => setSaid(next ? spelling.yes : spelling.no),
+    [setSaid, spelling.yes, spelling.no],
   )
 
-  return [on, set]
+  return [flagOf(said, spelling, stored), set]
 }

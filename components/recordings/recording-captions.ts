@@ -11,6 +11,7 @@ import {
   CaptionSurface,
   decodeCaption,
 } from '@/components/recordings/caption-surface'
+import type { CaptionBoard } from '@/components/recordings/caption-board'
 
 export type CaptionClock = () => number | null
 
@@ -52,10 +53,11 @@ export class RecordingCaptions {
     video: HTMLVideoElement,
     clock: CaptionClock,
     read: ReadCaptionWindow,
+    board?: CaptionBoard,
   ) {
     this.clock = clock
     this.read = read
-    this.surface = new CaptionSurface(canvas, video, () => this.tick())
+    this.surface = new CaptionSurface(canvas, video, () => this.tick(), board)
     this.tick()
   }
 

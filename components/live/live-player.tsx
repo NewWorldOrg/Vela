@@ -110,6 +110,10 @@ import { liveLineRelay } from '@/components/data-broadcast/line-relay'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 
 import { CaptionLayer } from '@/components/live/live-captions'
+import { clearanceOf } from '@/components/recordings/caption-clearance'
+import { CAPTION_GRIP } from '@/components/recordings/player-palette'
+import { useCaptionBoard } from '@/hooks/useCaptionBoard'
+import { PLAIN_CAPTION_STYLE, type CaptionStyle } from '@/lib/caption-style'
 import { LiveFeed } from '@/components/live/live-feed'
 import { LiveStart } from '@/components/live/live-start'
 import {
@@ -187,6 +191,7 @@ export function LivePlayer({
   remoteInTheColumn = false,
   remoteSlot = null,
   onDataBroadcastOpen,
+  captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
 }: {
   channel?: LiveChannel
   profiles: LiveProfile[]
@@ -209,11 +214,18 @@ export function LivePlayer({
   /** Where in the column the remote is drawn; none while the column is folded or shows the channels. */
   remoteSlot?: HTMLElement | null
   onDataBroadcastOpen?: (open: boolean) => void
+  captionStyle?: CaptionStyle
 }) {
   const video = useRef<HTMLVideoElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
   const captions = useRef<CaptionLayer | null>(null)
   const [captioned, setCaptioned] = useState(true)
+  const {
+    board: captionBoard,
+    style: captionStyle,
+    setStyle: setCaptionStyle,
+    grip: captionGrip,
+  } = useCaptionBoard(storedCaptionStyle)
   const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
@@ -406,7 +418,7 @@ export function LivePlayer({
     )
 
     const layer = overlay.current
-      ? new CaptionLayer(overlay.current, element)
+      ? new CaptionLayer(overlay.current, element, captionBoard)
       : null
 
     captions.current = layer
@@ -589,6 +601,7 @@ export function LivePlayer({
     }
   }, [
     broadcastFeed,
+    captionBoard,
     key,
     networkId,
     serviceId,
@@ -838,6 +851,15 @@ export function LivePlayer({
   const underTheBox = opened && place !== 'over'
   const bandUnderTheBox = opened && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
+  const clearsTheRow =
+    captionsDrawn && chromeUp && !underTheBox && !broadcast.view.rect
+  const clearance = useMemo(
+    () => (clearsTheRow ? () => clearanceOf(chrome, shell) : null),
+    [clearsTheRow, chrome, shell],
+  )
+
+  useEffect(() => captionBoard.clearOf(clearance), [captionBoard, clearance])
+
   const overThePicture = opened && place === 'over'
   const barSaid = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' as const }
@@ -984,7 +1006,16 @@ export function LivePlayer({
               onDoubleClick={toggleFullscreen}
               data-up={chromeUp ? 'true' : undefined}
               className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
-            />
+            >
+              {!opened && (
+                <div
+                  ref={captionGrip}
+                  aria-hidden="true"
+                  data-slot="player-caption-grip"
+                  className={CAPTION_GRIP}
+                />
+              )}
+            </div>
           )}
           {hasPicture && (
             <PlayerCenter
@@ -1221,6 +1252,8 @@ export function LivePlayer({
                       running?.droppedByThoseStillWatching
                     }
                     lostOnTheWayIn={running?.lostOnTheWayIn}
+                    captionStyle={captionStyle}
+                    onCaptionStyle={setCaptionStyle}
                   />
                 </PlayerTip>
                 <PlayerTip name="キャプチャ" container={shell}>

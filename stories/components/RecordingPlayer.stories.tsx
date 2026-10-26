@@ -25,6 +25,14 @@ import {
 import { Player } from '@/components/recordings/player'
 import type { ReadCaptions } from '@/components/recordings/read-captions'
 import type { CaptionWindow } from '@/lib/recording-captions'
+import type { CaptionPicture } from '@/lib/live-wire'
+import { containedIn, placedOn } from '@/lib/caption-placement'
+import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'
+import { cookieIn } from '@/lib/stored-flag'
+import {
+  whiteOnASolidBand,
+  whiteWithNoBand,
+} from '@/stories/fixtures/caption-pictures'
 import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
@@ -4650,5 +4658,531 @@ export const データ放送の起動文書がまだ無い時刻では操作子�
     await expect(
       canvas.queryByRole('button', { name: 'データ放送' }),
     ).toBeNull()
+  },
+}
+
+function forgettingTheCaptionStyle() {
+  const forget = () => {
+    document.cookie = `${CAPTION_STYLE_COOKIE}=;path=/;max-age=0`
+  }
+
+  forget()
+
+  return forget
+}
+
+function captionStyleKept(): string | undefined {
+  return cookieIn(document.cookie, CAPTION_STYLE_COOKIE)
+}
+
+function readingOne(picture: CaptionPicture): ReadCaptions {
+  return async () => ({
+    state: 'read',
+    window: {
+      canvas: CAPTION_CANVAS_FIXTURE,
+      untilSec: 600,
+      cues: [{ atSec: 0, picture }],
+    },
+  })
+}
+
+function gripOf(canvasElement: HTMLElement): HTMLElement {
+  const grip = canvasElement.querySelector('[data-slot="player-caption-grip"]')
+
+  if (!(grip instanceof HTMLElement)) {
+    throw new Error('nothing over the caption takes the pointer')
+  }
+
+  return grip
+}
+
+async function gripShown(canvasElement: HTMLElement) {
+  await waitFor(
+    () => expect(gripOf(canvasElement)).toHaveAttribute('data-shown', 'true'),
+    { timeout: 10000 },
+  )
+
+  return gripOf(canvasElement)
+}
+
+function middleOf(element: HTMLElement) {
+  const box = element.getBoundingClientRect()
+
+  return {
+    clientX: box.left + box.width / 2,
+    clientY: box.top + box.height / 2,
+  }
+}
+
+async function dragged(
+  grip: HTMLElement,
+  across: number,
+  down: number,
+  pointer: 'mouse' | 'touch' = 'mouse',
+) {
+  const from = middleOf(grip)
+  const to = { clientX: from.clientX + across, clientY: from.clientY + down }
+  const [hold, letGo] =
+    pointer === 'touch'
+      ? ['[TouchA>]', '[/TouchA]']
+      : ['[MouseLeft>]', '[/MouseLeft]']
+  const pointerName = pointer === 'touch' ? 'TouchA' : 'mouse'
+  const user = userEvent.setup()
+
+  await user.pointer([
+    { keys: hold, target: grip, coords: from },
+    {
+      pointerName,
+      target: grip,
+      coords: {
+        clientX: from.clientX + across / 2,
+        clientY: from.clientY + down / 2,
+      },
+    },
+    { pointerName, target: grip, coords: to },
+  ])
+  await expect(grip).toHaveAttribute('data-holding', 'true')
+  await user.pointer({ keys: letGo, target: grip, coords: to })
+}
+
+async function toTheCaptionFace(canvasElement: HTMLElement) {
+  await userEvent.click(
+    within(canvasElement).getByRole('button', { name: '設定' }),
+  )
+  await userEvent.click(
+    await screen.findByRole('button', { name: '字幕を変更' }),
+  )
+
+  return screen.findByRole('group', { name: '背景' })
+}
+
+function choose(group: string, name: string) {
+  return userEvent.click(
+    within(screen.getByRole('group', { name: group })).getByRole('button', {
+      name,
+    }),
+  )
+}
+
+async function looks(canvasElement: HTMLElement, look: string) {
+  await waitFor(
+    () =>
+      expect(captionLayer(canvasElement)).toHaveAttribute('data-look', look),
+    { timeout: 10000 },
+  )
+}
+
+const STYLED_CAPTIONS = {
+  ...CAPTIONS_PLAYING,
+  readCaptions: readingOne(CAPTION_PICTURE_FIXTURE),
+}
+
+const HIGH_IN_THE_PICTURE: CaptionPicture = {
+  ...CAPTION_PICTURE_FIXTURE,
+  top: 60,
+}
+
+export const 字幕の見た目は既定なら放送の絵のまま: Story = {
+  args: { ...CAPTIONS_PLAYING, readCaptions: readingOne(HIGH_IN_THE_PICTURE) },
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await looks(canvasElement, 'as-broadcast')
+
+    const layer = captionLayer(canvasElement) as HTMLCanvasElement
+    const video = canvasElement.querySelector('video') as HTMLVideoElement
+    const box = { width: layer.clientWidth, height: layer.clientHeight }
+    const shown =
+      video.videoWidth > 0
+        ? containedIn(box, {
+            width: video.videoWidth,
+            height: video.videoHeight,
+          })
+        : { left: 0, top: 0, ...box }
+    const place = placedOn(shown, CAPTION_CANVAS_FIXTURE, HIGH_IN_THE_PICTURE)
+    const ratio = window.devicePixelRatio || 1
+    const expected = document.createElement('canvas')
+
+    expected.width = layer.width
+    expected.height = layer.height
+
+    const bitmap = await createImageBitmap(
+      new Blob([CAPTION_PICTURE_FIXTURE.png.slice()], { type: 'image/png' }),
+    )
+
+    expected
+      .getContext('2d')
+      ?.drawImage(
+        bitmap,
+        place.left * ratio,
+        place.top * ratio,
+        place.width * ratio,
+        place.height * ratio,
+      )
+
+    const read = (on: HTMLCanvasElement) =>
+      on.getContext('2d')?.getImageData(0, 0, on.width, on.height).data
+
+    const drawn = read(layer)
+    const wanted = read(expected)
+    let apart = 0
+
+    for (let at = 0; drawn && wanted && at < drawn.length; at += 1) {
+      apart += drawn[at] === wanted[at] ? 0 : 1
+    }
+
+    await expect(drawn?.length).toBe(wanted?.length)
+    await expect(apart).toBe(0)
+  },
+}
+
+export const 歯車の字幕の面で見た目を変える: Story = {
+  args: STYLED_CAPTIONS,
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await gripShown(canvasElement)
+    await toTheCaptionFace(canvasElement)
+    await new Promise((rest) => setTimeout(rest, 400))
+
+    const before = gripOf(canvasElement).getBoundingClientRect()
+
+    await expect(screen.getByRole('button', { name: '戻る' })).toHaveFocus()
+    await expect(
+      screen.getByRole('button', { name: '位置を戻す' }),
+    ).toBeDisabled()
+    await expect(
+      screen.getByRole('button', { name: '元に戻す' }),
+    ).toBeDisabled()
+    await expect(
+      screen.getByRole('button', { name: '全部同じ色' }),
+    ).toBeDisabled()
+
+    await choose('背景', 'なし')
+    await looks(canvasElement, 'restyled')
+    await expect(captionStyleKept()).toBe('bn')
+
+    await choose('大きさ', '150%')
+    await waitFor(() =>
+      expect(
+        gripOf(canvasElement).getBoundingClientRect().height,
+      ).toBeGreaterThan(before.height * 1.3),
+    )
+    await expect(
+      Math.abs(
+        gripOf(canvasElement).getBoundingClientRect().bottom - before.bottom,
+      ),
+    ).toBeLessThan(1.5)
+
+    await choose('文字色', '黄')
+    await expect(
+      screen.getByRole('button', { name: '全部同じ色' }),
+    ).toBeEnabled()
+    await userEvent.click(screen.getByRole('button', { name: '全部同じ色' }))
+    await choose('縁取り', '足す')
+    await expect(captionStyleKept()).toBe('bn.s150.cy.a1.ea')
+
+    await userEvent.click(screen.getByRole('button', { name: '元に戻す' }))
+    await looks(canvasElement, 'as-broadcast')
+    await expect(captionStyleKept()).toBeUndefined()
+
+    await userEvent.click(screen.getByRole('button', { name: '戻る' }))
+    await expect(
+      await screen.findByRole('button', { name: '字幕を変更' }),
+    ).toHaveFocus()
+  },
+}
+
+export const 字幕の無い録画の歯車に字幕の行は無い: Story = {
+  args: { ...CAPTIONS_PLAYING, plan: ON_THE_FLY },
+  play: async ({ canvasElement }) => {
+    await showing(canvasElement)
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '設定' }),
+    )
+    await screen.findByRole('group', { name: '画質' })
+    await expect(
+      screen.queryByRole('button', { name: '字幕を変更' }),
+    ).toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-slot="player-caption-grip"]'),
+    ).toBeNull()
+  },
+}
+
+export const 読み込み直しても字幕の見た目は残る: Story = {
+  args: STYLED_CAPTIONS,
+  beforeEach: () => {
+    const forget = forgettingTheCaptionStyle()
+
+    document.cookie = `${CAPTION_STYLE_COOKIE}=bs.s125;path=/`
+
+    return forget
+  },
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await looks(canvasElement, 'restyled')
+    await toTheCaptionFace(canvasElement)
+    await expect(
+      within(screen.getByRole('group', { name: '背景' })).getByRole('button', {
+        name: '不透明',
+      }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      within(screen.getByRole('group', { name: '大きさ' })).getByRole(
+        'button',
+        {
+          name: '125%',
+        },
+      ),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 字幕をつまんで動かす: Story = {
+  args: STYLED_CAPTIONS,
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+    const before = grip.getBoundingClientRect()
+
+    await dragged(grip, -60, -40)
+    await expect(grip).not.toHaveAttribute('data-holding')
+    await waitFor(() =>
+      expect(grip.getBoundingClientRect().left).toBeLessThan(before.left - 50),
+    )
+    await expect(captionStyleKept()).toMatch(/^x-\d+\.y-\d+$/)
+
+    await new Promise((rest) => setTimeout(rest, 400))
+    await expect(bezelOn(canvasElement)).toBeNull()
+
+    await toTheCaptionFace(canvasElement)
+    await userEvent.click(screen.getByRole('button', { name: '位置を戻す' }))
+    await expect(captionStyleKept()).toBeUndefined()
+    await expect(
+      screen.getByRole('button', { name: '位置を戻す' }),
+    ).toBeDisabled()
+  },
+}
+
+export const 字幕は映像の枠の外へは動かない: Story = {
+  args: STYLED_CAPTIONS,
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+    const face = captionLayer(canvasElement).getBoundingClientRect()
+
+    await dragged(grip, 4000, 4000)
+    await waitFor(() =>
+      expect(
+        Math.abs(grip.getBoundingClientRect().right - face.right),
+      ).toBeLessThan(1.5),
+    )
+    await expect(grip.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      face.bottom + 1,
+    )
+  },
+}
+
+export const 指でも字幕をつまんで動かせる: Story = {
+  args: STYLED_CAPTIONS,
+  parameters: { coarse: true },
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+
+    await expect(getComputedStyle(grip).touchAction).toBe('none')
+    await dragged(grip, 0, -50, 'touch')
+    await expect(captionStyleKept()).toMatch(/^y-\d+$/)
+  },
+}
+
+export const 字幕を動かさずに離すとプレイヤーの押下になる: Story = {
+  args: STYLED_CAPTIONS,
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+    const from = middleOf(grip)
+
+    await userEvent.setup().pointer([
+      { keys: '[MouseLeft>]', target: grip, coords: from },
+      {
+        target: grip,
+        coords: { clientX: from.clientX + 3, clientY: from.clientY },
+      },
+      { keys: '[/MouseLeft]', target: grip, coords: from },
+    ])
+    await waitFor(() => expect(bezelOn(canvasElement)).not.toBeNull())
+    await expect(grip).not.toHaveAttribute('data-holding')
+    await expect(captionStyleKept()).toBeUndefined()
+  },
+}
+
+export const 字幕の外を押しても字幕は動かない: Story = {
+  args: STYLED_CAPTIONS,
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+    const before = grip.getBoundingClientRect()
+    const area = pressArea(canvasElement)
+    const box = area.getBoundingClientRect()
+    const away = { clientX: box.left + box.width / 2, clientY: box.top + 24 }
+
+    await userEvent.setup().pointer([
+      { keys: '[MouseLeft>]', target: area, coords: away },
+      {
+        target: area,
+        coords: { clientX: away.clientX - 80, clientY: away.clientY + 60 },
+      },
+      { keys: '[/MouseLeft]', target: area, coords: away },
+    ])
+    await expect(captionStyleKept()).toBeUndefined()
+    await expect(grip.getBoundingClientRect().left).toBe(before.left)
+  },
+}
+
+function seekTopOf(canvasElement: HTMLElement): number {
+  const controls = canvasElement.querySelector(
+    '[data-slot="player-controls"]',
+  ) as HTMLElement
+
+  return (
+    controls.getBoundingClientRect().top +
+    parseFloat(getComputedStyle(controls).paddingTop)
+  )
+}
+
+export const 操作列が出ているあいだ下の字幕は操作列の上へ逃げる: Story = {
+  args: { ...STYLED_CAPTIONS, holdsAtOnce: true },
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+
+    await expect(board(canvasElement)).toHaveAttribute('data-up', 'true')
+    await waitFor(() =>
+      expect(grip.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        seekTopOf(canvasElement) - 5,
+      ),
+    )
+  },
+}
+
+export const 動きを止めていると字幕は操作列の上へ置き換わる: Story = {
+  args: { ...STYLED_CAPTIONS, holdsAtOnce: true },
+  parameters: { lessMotion: true },
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const grip = await gripShown(canvasElement)
+
+    await expect(grip.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      seekTopOf(canvasElement) - 5,
+    )
+  },
+}
+
+export const 狭い窓でも歯車の字幕の面は崩れない: Story = {
+  args: STYLED_CAPTIONS,
+  parameters: { screen: { width: 375, height: 740 } },
+  beforeEach: forgettingTheCaptionStyle,
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+
+    const face = await toTheCaptionFace(canvasElement)
+    const panel = face.closest('[data-slot="caption-style"]') as HTMLElement
+    const box = panel.getBoundingClientRect()
+
+    await expect(box.left).toBeGreaterThanOrEqual(0)
+    await expect(box.right).toBeLessThanOrEqual(375)
+
+    for (const group of panel.querySelectorAll('[role="group"]')) {
+      const each = group.getBoundingClientRect()
+
+      await expect(each.right).toBeLessThanOrEqual(box.right + 0.5)
+    }
+
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '設定' }),
+    )
+    await waitFor(() => expect(panel).not.toBeInTheDocument())
+  },
+}
+
+function alphaAt(
+  canvasElement: HTMLElement,
+  picture: CaptionPicture,
+  x: number,
+  y: number,
+): number {
+  const layer = captionLayer(canvasElement) as HTMLCanvasElement
+  const video = canvasElement.querySelector('video') as HTMLVideoElement
+  const box = { width: layer.clientWidth, height: layer.clientHeight }
+  const shown =
+    video.videoWidth > 0
+      ? containedIn(box, { width: video.videoWidth, height: video.videoHeight })
+      : { left: 0, top: 0, ...box }
+  const place = placedOn(shown, CAPTION_CANVAS_FIXTURE, picture)
+  const ratio = window.devicePixelRatio || 1
+  const at = {
+    x: Math.round((place.left + (x / picture.width) * place.width) * ratio),
+    y: Math.round((place.top + (y / picture.height) * place.height) * ratio),
+  }
+
+  return layer.getContext('2d')?.getImageData(at.x, at.y, 1, 1).data[3] ?? -1
+}
+
+function keepingTheCaptionStyle(said: string) {
+  return () => {
+    const forget = forgettingTheCaptionStyle()
+
+    document.cookie = `${CAPTION_STYLE_COOKIE}=${said};path=/`
+
+    return forget
+  }
+}
+
+const NO_BAND = { ...whiteWithNoBand(), top: 100 }
+
+const SOLID_BAND = whiteOnASolidBand()
+
+export const 帯の無い字幕には行ごとに帯を敷く: Story = {
+  args: { ...CAPTIONS_PLAYING, readCaptions: readingOne(NO_BAND) },
+  beforeEach: keepingTheCaptionStyle('bh'),
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await looks(canvasElement, 'restyled')
+    await waitFor(() =>
+      expect(alphaAt(canvasElement, NO_BAND, 66, 34)).toBeGreaterThan(100),
+    )
+    await expect(alphaAt(canvasElement, NO_BAND, 66, 34)).toBeLessThan(160)
+    await expect(alphaAt(canvasElement, NO_BAND, 480, 114)).toBe(0)
+  },
+}
+
+export const 不透明の帯の放送も背景なしで帯が消える: Story = {
+  args: { ...CAPTIONS_PLAYING, readCaptions: readingOne(SOLID_BAND) },
+  beforeEach: keepingTheCaptionStyle('bn'),
+  play: async ({ canvasElement }) => {
+    await captionSays(canvasElement, 'shown')
+    await looks(canvasElement, 'restyled')
+    await waitFor(() =>
+      expect(alphaAt(canvasElement, SOLID_BAND, 8, 8)).toBe(0),
+    )
+    await expect(alphaAt(canvasElement, SOLID_BAND, 34, 46)).toBeGreaterThan(
+      200,
+    )
   },
 }

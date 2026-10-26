@@ -61,6 +61,7 @@ import type {
   OpenSocket,
 } from '@/components/live/live-session'
 import { LiveView } from '@/components/live/live-page'
+import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { inTheApp } from '@/stories/frames'
 import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
@@ -1921,6 +1922,54 @@ export const 字幕あり: Story = {
     await expect(canvas.getByRole('button', { name: '字幕' })).toHaveAttribute(
       'aria-pressed',
       'true',
+    )
+  },
+}
+
+export const ライブの歯車でも字幕の見た目を変える: Story = {
+  args: { openSocket: captioned },
+  beforeEach: () => {
+    const forget = () => {
+      document.cookie = `${CAPTION_STYLE_COOKIE}=;path=/;max-age=0`
+    }
+
+    forget()
+
+    return forget
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+    await expect(captionLayer(canvasElement)).toHaveAttribute(
+      'data-look',
+      'as-broadcast',
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await userEvent.click(
+      await screen.findByRole('button', { name: '字幕を変更' }),
+    )
+    await userEvent.click(
+      within(screen.getByRole('group', { name: '背景' })).getByRole('button', {
+        name: 'なし',
+      }),
+    )
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-look',
+        'restyled',
+      ),
+    )
+    await expect(cookieIn(document.cookie, CAPTION_STYLE_COOKIE)).toBe('bn')
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await waitFor(() =>
+      expect(screen.queryByRole('group', { name: '背景' })).toBeNull(),
     )
   },
 }

@@ -53,6 +53,7 @@ import {
   type NoteSkip,
 } from '@/components/recordings/skip-events-seat'
 import { ScreenMain } from '@/components/vela/app-shell'
+import type { CaptionStyle } from '@/lib/caption-style'
 
 const GUTTER = 'px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5'
 
@@ -176,6 +177,7 @@ export function RecordingDetailView({
   startAt,
   startsHeld = false,
   autoOpensDataBroadcast = false,
+  captionStyle,
   modelVersion,
   onNoteSkip,
   ...standIns
@@ -202,6 +204,7 @@ export function RecordingDetailView({
   startAt?: number
   startsHeld?: boolean
   autoOpensDataBroadcast?: boolean
+  captionStyle?: CaptionStyle
   modelVersion?: number
   onNoteSkip: NoteSkip
 }) {
@@ -311,6 +314,7 @@ export function RecordingDetailView({
               playsAtOnce={opens.playing}
               holdsAtOnce={opens.held}
               autoOpensDataBroadcast={autoOpensDataBroadcast}
+              captionStyle={captionStyle}
               {...standIns}
             />
           </SkipEventsSeat>

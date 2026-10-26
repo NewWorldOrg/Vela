@@ -45,12 +45,21 @@ export function flagOf(
   return said === undefined ? unsaid : said === spelling.yes
 }
 
+/** A cookie's value with its escapes undone, or as it stands when an escape is broken. */
+function decoded(value: string): string {
+  try {
+    return decodeURIComponent(value)
+  } catch {
+    return value
+  }
+}
+
 export function cookieIn(jar: string, key: string): string | undefined {
   for (const pair of jar.split(';')) {
     const at = pair.indexOf('=')
 
     if (at !== -1 && pair.slice(0, at).trim() === key) {
-      return decodeURIComponent(pair.slice(at + 1).trim())
+      return decoded(pair.slice(at + 1).trim())
     }
   }
 

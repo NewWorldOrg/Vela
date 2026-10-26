@@ -3,6 +3,7 @@
 import {
   useEffect,
   useEffectEvent,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent,
@@ -122,6 +123,7 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
+import { CAPTION_GRIP } from '@/components/recordings/player-palette'
 import {
   PlayerSkip,
   PlayerSkipInTheRow,
@@ -148,6 +150,9 @@ import {
 } from '@/components/recordings/playback-fault'
 import { still } from '@/components/vela/tactile'
 import { RecordingCaptions } from '@/components/recordings/recording-captions'
+import { clearanceOf } from '@/components/recordings/caption-clearance'
+import { useCaptionBoard } from '@/hooks/useCaptionBoard'
+import { PLAIN_CAPTION_STYLE, type CaptionStyle } from '@/lib/caption-style'
 import {
   readCaptions as readTheCaptions,
   type ReadCaptions,
@@ -209,6 +214,7 @@ export function Player({
   readDataBroadcast = readTheDataBroadcast,
   readDataBroadcastModule = readTheModule,
   autoOpensDataBroadcast = false,
+  captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
 }: {
   detail: RecordingDetail
   plan: PlaybackPlan
@@ -244,6 +250,7 @@ export function Player({
   readDataBroadcast?: ReadDataBroadcast
   readDataBroadcastModule?: ReadDataBroadcastModule
   autoOpensDataBroadcast?: boolean
+  captionStyle?: CaptionStyle
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -255,6 +262,12 @@ export function Player({
   const captions = useRef<RecordingCaptions | null>(null)
   const [captioned, setCaptioned] = useState(true)
   const captioning = opened.captions === 'ready'
+  const {
+    board: captionBoard,
+    style: captionStyle,
+    setStyle: setCaptionStyle,
+    grip: captionGrip,
+  } = useCaptionBoard(storedCaptionStyle)
   const [broadcastFeed] = useState(
     () =>
       new RecordingDataBroadcast(
@@ -507,8 +520,13 @@ export function Player({
       return
     }
 
-    const layer = new RecordingCaptions(plate, element, seenAt, (at, signal) =>
-      readCaptions(d.id, at, opened.source, signal, opened.decodes),
+    const layer = new RecordingCaptions(
+      plate,
+      element,
+      seenAt,
+      (at, signal) =>
+        readCaptions(d.id, at, opened.source, signal, opened.decodes),
+      captionBoard,
     )
 
     captions.current = layer
@@ -517,7 +535,15 @@ export function Player({
       layer.close()
       captions.current = null
     }
-  }, [captioning, faceUp, d.id, opened.source, opened.decodes, readCaptions])
+  }, [
+    captioning,
+    faceUp,
+    d.id,
+    opened.source,
+    opened.decodes,
+    readCaptions,
+    captionBoard,
+  ])
 
   const aimed = useRef(false)
 
@@ -1123,6 +1149,15 @@ export function Player({
     offered !== undefined && narrow && !full && chromeUp && !underTheBox
   const bandUnderTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
+  const clearsTheRow =
+    captioning && chromeUp && !underTheBox && !broadcast.view.rect && !pip.out
+  const clearance = useMemo(
+    () => (clearsTheRow ? () => clearanceOf(chrome, shell) : null),
+    [clearsTheRow, chrome, shell],
+  )
+
+  useEffect(() => captionBoard.clearOf(clearance), [captionBoard, clearance])
+
   const overThePicture = faceShown && place === 'over'
   const beside = faceShown && place === 'column'
   const widest = widestColumn(place, underTheBox, rowHeight)
@@ -1307,7 +1342,16 @@ export function Player({
               }}
               data-up={chromeUp ? 'true' : undefined}
               className="absolute inset-0 cursor-none touch-manipulation select-none data-[up]:cursor-pointer"
-            />
+            >
+              {captioning && !faceShown && (
+                <div
+                  ref={captionGrip}
+                  aria-hidden="true"
+                  data-slot="player-caption-grip"
+                  className={CAPTION_GRIP}
+                />
+              )}
+            </div>
           )}
           <PlayerCenter
             standing={
@@ -1566,6 +1610,8 @@ export function Player({
                     source={plan.source}
                     alternative={plan.alternative}
                     onChooseSource={chooseSource}
+                    captionStyle={captioning ? captionStyle : undefined}
+                    onCaptionStyle={setCaptionStyle}
                   />
                 </PlayerTip>
                 <PlayerTip name="キャプチャ" container={shell}>
