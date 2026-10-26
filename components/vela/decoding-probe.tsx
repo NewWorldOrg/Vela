@@ -3,8 +3,8 @@
 import { useEffect } from 'react'
 
 import {
+  browserDecodes,
   decodesCookie,
-  decodesH265,
   type DecodingProbe as Probe,
 } from '@/lib/browser-decodes'
 
@@ -20,11 +20,11 @@ function thisBrowser(): Probe {
   }
 }
 
-/** Asks the browser whether it plays an H.265 artefact, and keeps the answer in a cookie for the server. */
+/** Asks the browser which artefacts it plays as they are, and keeps the answer in a cookie for the server. */
 export function DecodingProbe() {
   useEffect(() => {
-    void decodesH265(thisBrowser()).then((h265) => {
-      document.cookie = decodesCookie(h265)
+    void browserDecodes(thisBrowser()).then((decodes) => {
+      document.cookie = decodesCookie(decodes)
     })
   }, [])
 
