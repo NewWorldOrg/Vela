@@ -51,7 +51,7 @@ export const PLAYER_BUTTON_ON =
   'border-(--pl-accent)/55 bg-(--pl-accent)/22 text-(--pl-accent-ink)'
 
 export const PLAYER_COLUMN =
-  'mx-auto w-full max-w-[calc((100dvh_-_210px)*16/9)]'
+  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)]'
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,

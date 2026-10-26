@@ -399,7 +399,7 @@ export function LiveView({
         aria-label="チャンネル"
         className={cn(
           PLAYER_SIDE_COLUMN,
-          'max-[1180px]:static max-[1180px]:max-h-[60dvh] max-[1180px]:w-full',
+          'max-[1180px]:static max-[1180px]:max-h-[60svh] max-[1180px]:w-full',
           foldColumn(folded, motion),
         )}
       >

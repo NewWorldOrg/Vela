@@ -400,16 +400,16 @@ export const BAND_UNDER_THE_BOX = 160
 
 /** The widest the player's column may be while its control row, `row` pixels high as laid out, is under its box and the remote is in the page's column: the window holds the picture, the 210px around it and the row. */
 export function columnOverTheRow(row: number): string {
-  return `calc((100dvh - ${210 + row}px) * 16 / 9)`
+  return `calc((100svh - ${210 + row}px) * 16 / 9)`
 }
 
 /** The widest the player's column may be while its control row, `row` pixels high as laid out, and the band are under its box: the window holds the picture, the 210px around it, the row and the band. The band is 160px up to the mock's width, grows with the column up to one and a half times the mock, and stays there; each stretch gives its own bound and the column takes the one its width falls in. */
 export function columnOverTheBand(row: number): string {
   const around = 210 + row
   const widest = BAND_MOCK_WIDTH * BAND_MAX_SCALE
-  const narrow = `calc((100dvh - ${around + BAND_UNDER_THE_BOX}px) * 16 / 9)`
-  const wide = `calc((100dvh - ${around + BAND_UNDER_THE_BOX * BAND_MAX_SCALE}px) * 16 / 9)`
-  const growing = `calc((100dvh - ${around}px) / (9 / 16 + ${BAND_UNDER_THE_BOX} / ${BAND_MOCK_WIDTH}))`
+  const narrow = `calc((100svh - ${around + BAND_UNDER_THE_BOX}px) * 16 / 9)`
+  const wide = `calc((100svh - ${around + BAND_UNDER_THE_BOX * BAND_MAX_SCALE}px) * 16 / 9)`
+  const growing = `calc((100svh - ${around}px) / (9 / 16 + ${BAND_UNDER_THE_BOX} / ${BAND_MOCK_WIDTH}))`
 
   return `min(${narrow}, max(${wide}, clamp(${BAND_MOCK_WIDTH}px, ${growing}, ${widest}px)))`
 }
