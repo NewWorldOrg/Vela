@@ -50,6 +50,7 @@ import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
 import {
   SkipEventsSeat,
+  type NoteSeek,
   type NoteSkip,
 } from '@/components/recordings/skip-events-seat'
 import { ScreenMain } from '@/components/vela/app-shell'
@@ -180,6 +181,7 @@ export function RecordingDetailView({
   captionStyle,
   modelVersion,
   onNoteSkip,
+  onNoteSeek,
   ...standIns
 }: PlayerStandIns & {
   detail: RecordingDetail
@@ -207,6 +209,7 @@ export function RecordingDetailView({
   captionStyle?: CaptionStyle
   modelVersion?: number
   onNoteSkip: NoteSkip
+  onNoteSeek: NoteSeek
 }) {
   const plays =
     !d.fileMissing &&
@@ -294,6 +297,7 @@ export function RecordingDetailView({
             recordingId={d.id}
             modelVersion={modelVersion}
             onNoteSkip={onNoteSkip}
+            onNoteSeek={onNoteSeek}
           >
             <PlayerSeat
               key={whatOpensThePlayerAnew(

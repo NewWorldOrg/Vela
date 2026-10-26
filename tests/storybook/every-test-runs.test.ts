@@ -139,6 +139,7 @@ const THE_SUITE = [
   'tests/lib/residence.test.ts',
   'tests/lib/rules.test.ts',
   'tests/lib/search-condition.test.ts',
+  'tests/lib/seek-events.test.ts',
   'tests/lib/segment-detection.test.ts',
   'tests/lib/signed-out.test.ts',
   'tests/lib/skip-events.test.ts',

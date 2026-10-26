@@ -18,6 +18,7 @@ import type { FeedRecording } from '@/components/recordings/recording-feed'
 import { SKIP_THE } from '@/components/recordings/player-skip'
 import { skipWords } from '@/lib/player-chapters'
 import { skipNoted, skips } from '@/stories/noted-skips'
+import { seekNoted } from '@/stories/noted-seeks'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame } from '@/stories/fixtures/frames'
 import { inTheApp } from '@/stories/frames'
@@ -163,6 +164,7 @@ const meta = {
     onCallOffEncode: done,
     encodeChoices: ENCODE_CHOICES,
     onNoteSkip: skipNoted,
+    onNoteSeek: seekNoted,
     pictureHref: stalling,
     frameHref: drawnFrame,
     feedRecording: handedAsItIs,

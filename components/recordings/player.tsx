@@ -51,6 +51,7 @@ import {
   whereThatSourceOpens,
 } from '@/lib/playback-source'
 import { listenForEncodeJobs } from '@/lib/app-signals'
+import type { SeekMeans } from '@/repository/recording-segments'
 import type { RecordingDetail } from '@/repository/recordings'
 import type {
   PlaybackPlan,
@@ -176,7 +177,10 @@ import {
   widestColumn,
 } from '@/components/data-broadcast/data-broadcast-player'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
-import { useSkipEvents } from '@/components/recordings/skip-events-seat'
+import {
+  useSeekEvents,
+  useSkipEvents,
+} from '@/components/recordings/skip-events-seat'
 
 const RESTS = 3000
 
@@ -256,6 +260,7 @@ export function Player({
   const pathname = usePathname()
   const inTheAddress = useSearchParams()
   const skipEvents = useSkipEvents()
+  const seekEvents = useSeekEvents()
   const video = useRef<HTMLVideoElement>(null)
   const holder = useRef<HTMLCanvasElement>(null)
   const overlay = useRef<HTMLCanvasElement>(null)
@@ -735,10 +740,12 @@ export function Player({
     element.pause()
   }
 
-  const choose = (second: number) => {
+  const choose = (second: number, means?: SeekMeans) => {
     const at = Math.min(duration, Math.max(0, second))
+    const from = wanted.current ?? position
 
-    skipEvents?.sought(wanted.current ?? position, at)
+    skipEvents?.sought(from, at)
+    seekEvents?.sought(from, at, means)
     wanted.current = at
     setPosition(at)
     standsAs({ position: at })
@@ -757,9 +764,9 @@ export function Player({
     asking.current = setTimeout(() => play(at), SETTLES_BEFORE_SEEK)
   }
 
-  const step = (by: number, at: number) => {
+  const step = (by: number, at: number, means: SeekMeans = 'step') => {
     answerSeek(by < 0 ? 'back' : 'forward', at)
-    choose((wanted.current ?? position) + by)
+    choose((wanted.current ?? position) + by, means)
   }
 
   const zoneOf = (event: MouseEvent<HTMLElement>): TapZone => {
@@ -825,11 +832,17 @@ export function Player({
 
   useEffect(() => {
     skipEvents?.runsBehindBy(plan.recordingOffsetSec)
-  }, [skipEvents, plan.recordingOffsetSec])
+    seekEvents?.runsBehindBy(plan.recordingOffsetSec)
+  }, [skipEvents, seekEvents, plan.recordingOffsetSec])
 
   useEffect(() => {
     skipEvents?.tell(position)
-  }, [skipEvents, position])
+    seekEvents?.tell(position)
+  }, [skipEvents, seekEvents, position])
+
+  useEffect(() => {
+    seekEvents?.runsAt(Number(speed))
+  }, [seekEvents, speed])
 
   const offered =
     runHere !== undefined &&
@@ -1116,10 +1129,10 @@ export function Player({
         toggle()
         break
       case 'back':
-        step(-SEEK_STEP_SECONDS, event.timeStamp)
+        step(-SEEK_STEP_SECONDS, event.timeStamp, 'key')
         break
       case 'forward':
-        step(SEEK_STEP_SECONDS, event.timeStamp)
+        step(SEEK_STEP_SECONDS, event.timeStamp, 'key')
         break
       case 'louder':
         stepVolume(VOLUME_STEP_PERCENT)
@@ -1442,7 +1455,7 @@ export function Player({
                 buffered={buffered}
                 drops={drops}
                 chapters={chapters}
-                onChoose={choose}
+                onChoose={(second) => choose(second, 'bar')}
                 onScrubbing={setScrubbingAt}
                 frameHref={frameHref}
               />
@@ -1544,7 +1557,8 @@ export function Player({
                   type="button"
                   disabled={nextChapterAt === undefined}
                   onClick={() =>
-                    nextChapterAt !== undefined && choose(nextChapterAt)
+                    nextChapterAt !== undefined &&
+                    choose(nextChapterAt, 'chapter')
                   }
                   className={cn(PLAYER_BUTTON, 'ml-2')}
                 >

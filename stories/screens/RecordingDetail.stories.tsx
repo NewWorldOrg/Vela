@@ -26,6 +26,7 @@ import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { skipNoted } from '@/stories/noted-skips'
+import { seekNoted } from '@/stories/noted-seeks'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import {
   AN_IPAD,
@@ -185,6 +186,7 @@ const meta = {
     encodeChoices: ENCODE_CHOICES,
     playback: planned(),
     onNoteSkip: skipNoted,
+    onNoteSeek: seekNoted,
     unaskedProfile: '1080p60',
   },
   decorators: [inTheApp],
