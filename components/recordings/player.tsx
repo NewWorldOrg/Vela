@@ -1455,7 +1455,7 @@ export function Player({
                 buffered={buffered}
                 drops={drops}
                 chapters={chapters}
-                onChoose={(second) => choose(second, 'bar')}
+                onChoose={choose}
                 onScrubbing={setScrubbingAt}
                 frameHref={frameHref}
               />

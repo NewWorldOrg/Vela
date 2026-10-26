@@ -8,6 +8,7 @@ import {
   PLAYER_BREAK_BAND,
   PLAYER_THEME_BAND,
 } from '@/components/recordings/player-palette'
+import type { SeekMeans } from '@/repository/recording-segments'
 import { videoFrameHref } from '@/repository/video-paths'
 import type { PlaybackChapter, SkippableKind } from '@/repository/videos'
 
@@ -46,7 +47,7 @@ export function PlayerSeek({
   buffered?: number
   drops?: number[]
   chapters?: PlaybackChapter[]
-  onChoose: (second: number) => void
+  onChoose: (second: number, means: SeekMeans) => void
   onScrubbing?: (at: number | null) => void
   frameHref?: (id: string, at: number) => string
 }) {
@@ -105,8 +106,8 @@ export function PlayerSeek({
     setFrameAt(null)
   }
 
-  const choose = (second: number) => {
-    onChoose(Math.min(duration, Math.max(0, second)))
+  const choose = (second: number, means: SeekMeans) => {
+    onChoose(Math.min(duration, Math.max(0, second)), means)
   }
 
   const take = (event: PointerEvent<HTMLDivElement>) => {
@@ -154,7 +155,7 @@ export function PlayerSeek({
 
     event.currentTarget.releasePointerCapture?.(event.pointerId)
     held.current = null
-    choose(at)
+    choose(at, 'bar')
     setDragging(null)
     onScrubbing?.(null)
   }
@@ -171,21 +172,21 @@ export function PlayerSeek({
 
     if (event.key in moves) {
       event.preventDefault()
-      choose(position + moves[event.key])
+      choose(position + moves[event.key], 'key')
 
       return
     }
 
     if (event.key === 'Home') {
       event.preventDefault()
-      choose(0)
+      choose(0, 'key')
 
       return
     }
 
     if (event.key === 'End') {
       event.preventDefault()
-      choose(duration)
+      choose(duration, 'key')
     }
   }
 
