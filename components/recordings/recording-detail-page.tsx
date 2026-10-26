@@ -4,6 +4,8 @@ import type { ComponentProps, ReactNode } from 'react'
 import type { Route } from 'next'
 
 import type { BrowserDecoding } from '@/lib/browser-decodes'
+import type { FormatChoice } from '@/lib/playback-format'
+import type { LiveProfile } from '@/repository/live'
 import { cn } from '@/lib/utils'
 import { formatLength } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
@@ -155,6 +157,7 @@ type PlayerStandIns = Pick<
   | 'feedRecording'
   | 'readDataBroadcast'
   | 'readDataBroadcastModule'
+  | 'askBrowser'
 >
 
 function Dot() {
@@ -165,6 +168,8 @@ export function RecordingDetailView({
   detail: d,
   playback,
   unaskedProfile,
+  profiles,
+  formatChoice,
   onRemakeThumbnail,
   onDelete,
   onTakeTicket,
@@ -189,6 +194,8 @@ export function RecordingDetailView({
   detail: RecordingDetail
   playback: PlaybackRead
   unaskedProfile?: PlaybackProfile
+  profiles?: readonly LiveProfile[]
+  formatChoice?: FormatChoice
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onTakeTicket: (id: string) => Promise<TicketWrite>
@@ -313,6 +320,8 @@ export function RecordingDetailView({
               detail={d}
               plan={playback.plan}
               unaskedProfile={unaskedProfile}
+              profiles={profiles}
+              formatChoice={formatChoice}
               onTakeTicket={onTakeTicket}
               onAskForTheSound={onAskForTheSound}
               onKeepPosition={onKeepPosition}

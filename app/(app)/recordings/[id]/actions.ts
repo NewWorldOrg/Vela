@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { H265, type BrowserDecoding } from '@/lib/browser-decodes'
+import { BROWSER_DECODINGS, type BrowserDecoding } from '@/lib/browser-decodes'
 import type { EncodeWrite } from '@/repository/encode'
 import { getStandingArtefact, queueEncode } from '@/repository/encode'
 import type { PlaybackSource } from '@/repository/playback-sources'
@@ -61,7 +61,7 @@ export async function askForTheSound(
     id,
     sound,
     source,
-    decodes.filter((one) => one === H265),
+    BROWSER_DECODINGS.filter((one) => decodes.includes(one)),
   )
 }
 

@@ -401,13 +401,28 @@ export function endingPayload(why: LiveSupplyEnd): Uint8Array {
 
 const CONTAINERS = new Set(['moov', 'trak', 'mdia', 'minf', 'stbl'])
 
+const VISUAL_ENTRY_HEAD = 78
+
 const SAMPLE_ENTRY_HEAD: Record<string, number> = {
-  avc1: 78,
-  avc3: 78,
+  avc1: VISUAL_ENTRY_HEAD,
+  avc3: VISUAL_ENTRY_HEAD,
+  hvc1: VISUAL_ENTRY_HEAD,
+  hev1: VISUAL_ENTRY_HEAD,
+  av01: VISUAL_ENTRY_HEAD,
   mp4a: 28,
 }
 
 const SOUND_CODEC = 'mp4a.40.2'
+
+const HEVC_ENTRIES = new Set(['hvc1', 'hev1'])
+
+const HEVC_PROFILE_SPACES = ['', 'A', 'B', 'C']
+
+const HEVC_CONFIGURATION_HEAD = 13
+
+const AV1_CONFIGURATION_HEAD = 3
+
+const AV1_MARKER = 0x80
 
 interface Box {
   type: string
@@ -462,15 +477,108 @@ function* everyBox(
   }
 }
 
+function hex(byte: number): string {
+  return byte.toString(16).padStart(2, '0')
+}
+
+function twoDigits(value: number): string {
+  return String(value).padStart(2, '0')
+}
+
+function avcCodec(config: Uint8Array): string | null {
+  if (config.length < 4) {
+    return null
+  }
+
+  return `avc1.${hex(config[1])}${hex(config[2])}${hex(config[3])}`
+}
+
+function reversedBits(word: number): number {
+  let reversed = 0
+
+  for (let bit = 0; bit < 32; bit += 1) {
+    reversed = reversed * 2 + ((word >>> bit) & 1)
+  }
+
+  return reversed
+}
+
+/** ISO/IEC 14496-15 annex E: the sample entry, profile, compatibility flags, tier and level, and the constraint bytes up to the last one set. */
+function hevcCodec(entry: string, config: Uint8Array): string | null {
+  if (config.length < HEVC_CONFIGURATION_HEAD) {
+    return null
+  }
+
+  const view = new DataView(config.buffer, config.byteOffset, config.byteLength)
+  const space = HEVC_PROFILE_SPACES[config[1] >> 6]
+  const tier = config[1] & 0x20 ? 'H' : 'L'
+  const profile = config[1] & 0x1f
+  const compatible = reversedBits(view.getUint32(2)).toString(16).toUpperCase()
+  const constraints = [...config.subarray(6, 12)]
+
+  while (constraints.length > 0 && constraints.at(-1) === 0) {
+    constraints.pop()
+  }
+
+  return [
+    entry,
+    `${space}${profile}`,
+    compatible,
+    `${tier}${config[12]}`,
+    ...constraints.map((byte) => hex(byte).toUpperCase()),
+  ].join('.')
+}
+
+/** The AV1 codecs parameter: profile, level, tier and bit depth; the optional fields after them are left to their defaults. */
+function av1Codec(config: Uint8Array): string | null {
+  if (
+    config.length < AV1_CONFIGURATION_HEAD ||
+    (config[0] & AV1_MARKER) === 0
+  ) {
+    return null
+  }
+
+  const profile = config[1] >> 5
+  const level = config[1] & 0x1f
+  const tier = config[2] & 0x80 ? 'H' : 'M'
+  const high = (config[2] & 0x40) !== 0
+  const twelve = (config[2] & 0x20) !== 0
+  const depth = profile === 2 && high && twelve ? 12 : high ? 10 : 8
+
+  return `av01.${profile}.${twoDigits(level)}${tier}.${twoDigits(depth)}`
+}
+
+function pictureCodec(
+  entry: string,
+  box: Box,
+  config: Uint8Array,
+): string | null | undefined {
+  switch (box.type) {
+    case 'avcC':
+      return avcCodec(config)
+    case 'hvcC':
+      return hevcCodec(HEVC_ENTRIES.has(entry) ? entry : 'hvc1', config)
+    case 'av1C':
+      return av1Codec(config)
+    default:
+      return undefined
+  }
+}
+
 export function codecsOf(init: Uint8Array): string | null {
   let picture: string | null = null
   let sound = false
+  let entry = ''
 
   for (const box of everyBox(init, 0, init.length)) {
-    if (box.type === 'avcC' && box.end - box.start >= 4) {
-      const hex = (byte: number) => byte.toString(16).padStart(2, '0')
+    if (box.type in SAMPLE_ENTRY_HEAD) {
+      entry = box.type
+    }
 
-      picture = `avc1.${hex(init[box.start + 1])}${hex(init[box.start + 2])}${hex(init[box.start + 3])}`
+    const named = pictureCodec(entry, box, init.subarray(box.start, box.end))
+
+    if (named !== undefined) {
+      picture = named
     }
 
     if (box.type === 'mp4a') {

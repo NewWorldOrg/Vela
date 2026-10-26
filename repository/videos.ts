@@ -9,7 +9,7 @@ import {
   type EncodeCodec,
 } from '@/repository/encode-terms'
 import type { components } from '@/repository/client/schema'
-import { fetchLiveProfiles } from '@/repository/live'
+import { fetchLiveProfiles, type LiveProfile } from '@/repository/live'
 import {
   BOTH_SOURCES,
   sourceThisBuildKnows,
@@ -183,15 +183,37 @@ export const getPlaybackPlan = cache(
   },
 )
 
+/** The profiles a recording is transcoded at as it plays, and the formats each is transcoded in: the live list, which answers the same for a recording. */
+export const getPlaybackProfiles = cache(async (): Promise<LiveProfile[]> => {
+  try {
+    return await fetchLiveProfiles()
+  } catch {
+    return []
+  }
+})
+
+/** The codings a Carina from before it named its formats takes, refusing any other. */
+const TAKEN_BY_EVERY_CARINA: readonly BrowserDecoding[] = ['h265']
+
+/** What the browser plays as it is, cut to what this Carina takes: AV1 only where it names a format beyond H.264, since one from before refuses it. */
+export async function decodesCarinaTakes(
+  decodes: readonly BrowserDecoding[],
+): Promise<BrowserDecoding[]> {
+  const profiles = await getPlaybackProfiles()
+  const namesMore = profiles.some((one) =>
+    one.formats?.some((format) => format !== 'h264'),
+  )
+
+  return decodes.filter(
+    (one) => namesMore || TAKEN_BY_EVERY_CARINA.includes(one),
+  )
+}
+
 export const getUnaskedPlaybackProfile = cache(
   async (): Promise<PlaybackProfile | undefined> => {
-    try {
-      const named = unaskedIn(await fetchLiveProfiles())
+    const named = unaskedIn(await getPlaybackProfiles())
 
-      return PLAYBACK_PROFILES.find((one) => one === named)
-    } catch {
-      return undefined
-    }
+    return PLAYBACK_PROFILES.find((one) => one === named)
   },
 )
 

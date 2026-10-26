@@ -33,6 +33,7 @@ export function liveSeat(
   profile: string | undefined,
   sound: SoundTrack,
   splitsDualMono: boolean,
+  format?: string,
 ): string | null {
   if (
     networkId === undefined ||
@@ -43,8 +44,9 @@ export function liveSeat(
   }
 
   const seat = `${networkId}:${serviceId}:${profile}:${sound}`
+  const split = splitsDualMono ? `${seat}:${SPLIT_DUAL_MONO}` : seat
 
-  return splitsDualMono ? `${seat}:${SPLIT_DUAL_MONO}` : seat
+  return format === undefined ? split : `${split}:${format}`
 }
 
 export function wireKey(seat: string | null, attempt: number): string | null {

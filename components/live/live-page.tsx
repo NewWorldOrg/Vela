@@ -34,6 +34,13 @@ import type { LiveScreen, TakeLiveTicket } from '@/repository/live'
 import { liveWireHref } from '@/repository/live-paths'
 import { MAIN_SOUND } from '@/repository/sounds'
 import { unaskedIn } from '@/lib/live-profiles'
+import {
+  formatToPlay,
+  type FormatChoice,
+  type FormatProbe,
+} from '@/lib/playback-format'
+import { useFormatAnswers } from '@/hooks/useFormatAnswers'
+import { browserProbe } from '@/components/vela/format-answers'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { LiveIcon } from '@/components/vela/icons'
@@ -64,7 +71,10 @@ import {
   type AskBacklog,
   type OpenSocket,
 } from '@/components/live/live-session'
-import { wireProfileInUse } from '@/components/live/live-wire-ahead'
+import {
+  wireFormatInUse,
+  wireProfileInUse,
+} from '@/components/live/live-wire-ahead'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 import type { CaptionStyle } from '@/lib/caption-style'
@@ -110,6 +120,8 @@ export function LiveView({
   autoOpensDataBroadcast = false,
   lineRelayOf,
   captionStyle,
+  formatChoice = 'auto',
+  askBrowser,
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
@@ -124,6 +136,8 @@ export function LiveView({
   subChannelsFolded?: boolean
   lineRelayOf?: (channel: string) => LineRelay
   captionStyle?: CaptionStyle
+  formatChoice?: FormatChoice
+  askBrowser?: FormatProbe
 }) {
   const router = useRouter()
   const [, startTransition] = useTransition()
@@ -141,6 +155,10 @@ export function LiveView({
 
   const viewers = useLiveViewers(clockHeldAt ? undefined : COUNT_EVERY_MS)
   const screen = clock ? screenAsOf(given, clock, viewers) : given
+  const answersOf = useFormatAnswers(
+    askBrowser ?? browserProbe('plainFirst'),
+    given.profiles,
+  )
 
   const pathname = usePathname()
   const searchParams = useSearchParams()
@@ -243,10 +261,24 @@ export function LiveView({
   const choose = (id: string) => {
     const chosen = screen.channels.find((channel) => channel.id === id)
     const profile = wireProfileInUse() ?? unaskedIn(screen.profiles)
+    const picture = screen.profiles.find((one) => one.name === profile)
+    const format =
+      wireFormatInUse() ??
+      formatToPlay(
+        formatChoice,
+        picture?.formats,
+        picture && answersOf(picture),
+      )
 
-    if (chosen && profile && id !== watching?.channel.id) {
+    if (chosen && profile && format.settled && id !== watching?.channel.id) {
       openTheWireAhead(
-        liveWireHref(chosen.networkId, chosen.serviceId, profile, MAIN_SOUND),
+        liveWireHref(
+          chosen.networkId,
+          chosen.serviceId,
+          profile,
+          MAIN_SOUND,
+          format.format,
+        ),
         openSocket,
       )
     }
@@ -342,6 +374,8 @@ export function LiveView({
           takeCapture={takeCapture}
           autoOpensDataBroadcast={autoOpensDataBroadcast}
           captionStyle={captionStyle}
+          formatChoice={formatChoice}
+          askBrowser={askBrowser}
           lineRelayOf={lineRelayOf}
           remoteInTheColumn={wide}
           remoteSlot={remoteSlot}

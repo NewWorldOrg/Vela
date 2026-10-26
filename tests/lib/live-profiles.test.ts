@@ -11,6 +11,7 @@ function profile(name: string, unasked: boolean): LiveProfile {
     name,
     width: Number(height) === 1080 ? 1920 : 1280,
     height: Number(height),
+    framerate: Number(frames),
     unasked,
   }
 }

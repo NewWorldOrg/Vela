@@ -91,6 +91,11 @@ export class MediaFeed {
     return kindFor(order) !== undefined
   }
 
+  /** Whether the media source a feed in this order is fed through takes the type. */
+  static takes(order: SourceOrder, type: string): boolean {
+    return kindFor(order)?.isTypeSupported(type) ?? false
+  }
+
   header(init: Uint8Array, mime: string | null): void {
     if (this.closed || this.mime) {
       return

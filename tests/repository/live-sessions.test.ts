@@ -18,6 +18,7 @@ const ANSWER = {
       networkId: 32736,
       serviceId: 1024,
       profile: '1080p60',
+      format: 'h264',
       sound: 'main',
       viewers: 2,
       dropped: '18',
@@ -53,6 +54,19 @@ const ANSWER = {
       watching: [{ droppedSinceTheyJoined: 4, queued: 1 }],
       startup: { inProgress: false, marks: [] },
     },
+    {
+      networkId: 32736,
+      serviceId: 1024,
+      profile: '1080p60',
+      format: 'av1',
+      sound: 'main',
+      viewers: 1,
+      dropped: 2,
+      queued: 0,
+      chunksDroppedSinceTheSupplyOpened: 1,
+      watching: [{ droppedSinceTheyJoined: 2, queued: 0 }],
+      startup: { inProgress: false, marks: [] },
+    },
   ],
 }
 
@@ -62,6 +76,7 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       networkId: 32736,
       serviceId: 1024,
       profile: '1080p60',
+      format: 'h264',
       sound: 'main',
       viewers: 2,
       dropped: 18,
@@ -73,6 +88,7 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       networkId: 32736,
       serviceId: 1024,
       profile: '720p30',
+      format: 'h264',
       sound: 'main',
       viewers: 1,
       dropped: 0,
@@ -84,12 +100,25 @@ test('the sessions are read with their counts as numbers, however JSON spelled t
       networkId: 32736,
       serviceId: 1024,
       profile: '1080p60',
+      format: 'h264',
       sound: 'secondary',
       viewers: 1,
       dropped: 4,
       queued: 1,
       droppedByThoseStillWatching: 4,
       lostOnTheWayIn: 9,
+    },
+    {
+      networkId: 32736,
+      serviceId: 1024,
+      profile: '1080p60',
+      format: 'av1',
+      sound: 'main',
+      viewers: 1,
+      dropped: 2,
+      queued: 0,
+      droppedByThoseStillWatching: 2,
+      lostOnTheWayIn: 1,
     },
   ])
 })
@@ -142,6 +171,22 @@ test('the same channel in the same profile carrying the other sound is another s
   })
 })
 
+test('the same channel, profile and sound in another format is another session, and a seat that names none is H.264', () => {
+  const sessions = readLiveSessions(ANSWER)!
+
+  assert.deepEqual(backlogOf(sessions, { ...SEAT, format: 'av1' }), {
+    dropped: 2,
+    queued: 0,
+    droppedByThoseStillWatching: 2,
+    lostOnTheWayIn: 1,
+  })
+  assert.deepEqual(
+    backlogOf(sessions, { ...SEAT, format: 'h264' }),
+    backlogOf(sessions, SEAT),
+  )
+  assert.equal(backlogOf(sessions, { ...SEAT, format: 'h265' }), undefined)
+})
+
 test('what the driver never said is not read as none of it', () => {
   const sessions = readLiveSessions({
     status: true,
@@ -162,4 +207,5 @@ test('what the driver never said is not read as none of it', () => {
   assert.equal(sessions[0].lostOnTheWayIn, undefined)
   assert.equal(sessions[0].droppedByThoseStillWatching, undefined)
   assert.equal(sessions[0].sound, 'main')
+  assert.equal(sessions[0].format, 'h264')
 })

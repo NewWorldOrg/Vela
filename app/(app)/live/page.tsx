@@ -10,6 +10,7 @@ import {
   flagOf,
 } from '@/lib/stored-flag'
 import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
+import { FORMAT_COOKIE, formatChoiceOf } from '@/lib/playback-format'
 import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
 import { getLiveScreen } from '@/repository/live'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
@@ -50,6 +51,7 @@ export default async function Page({
           AUTO_OPEN_SPELLING,
         )}
         captionStyle={captionStyleOf(jar.get(CAPTION_STYLE_COOKIE)?.value)}
+        formatChoice={formatChoiceOf(jar.get(FORMAT_COOKIE)?.value)}
       />
     </>
   )

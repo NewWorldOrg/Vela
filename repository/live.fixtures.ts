@@ -1,3 +1,4 @@
+import type { PlaybackFormat } from '@/lib/playback-format'
 import type {
   LiveChannel,
   LiveProfile,
@@ -170,12 +171,48 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
   },
 ]
 
+const ONLY_H264: PlaybackFormat[] = ['h264']
+
+const EVERY_FORMAT: PlaybackFormat[] = ['h264', 'h265', 'av1']
+
 export const LIVE_PROFILE_FIXTURES: LiveProfile[] = [
-  { name: '1080p60', width: 1920, height: 1080, unasked: true },
-  { name: '1080p30', width: 1920, height: 1080, unasked: false },
-  { name: '720p60', width: 1280, height: 720, unasked: false },
-  { name: '720p30', width: 1280, height: 720, unasked: false },
+  {
+    name: '1080p60',
+    width: 1920,
+    height: 1080,
+    framerate: 60000 / 1001,
+    unasked: true,
+    formats: ONLY_H264,
+  },
+  {
+    name: '1080p30',
+    width: 1920,
+    height: 1080,
+    framerate: 30000 / 1001,
+    unasked: false,
+    formats: ONLY_H264,
+  },
+  {
+    name: '720p60',
+    width: 1280,
+    height: 720,
+    framerate: 60000 / 1001,
+    unasked: false,
+    formats: ONLY_H264,
+  },
+  {
+    name: '720p30',
+    width: 1280,
+    height: 720,
+    framerate: 30000 / 1001,
+    unasked: false,
+    formats: ONLY_H264,
+  },
 ]
+
+/** A machine whose card writes H.265 and AV1 as well as H.264. */
+export const LIVE_PROFILE_FIXTURES_EVERY_FORMAT: LiveProfile[] =
+  LIVE_PROFILE_FIXTURES.map((one) => ({ ...one, formats: EVERY_FORMAT }))
 
 export const LIVE_PROFILE_FIXTURES_SOFTWARE: LiveProfile[] =
   LIVE_PROFILE_FIXTURES.map((one) => ({

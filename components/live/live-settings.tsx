@@ -14,6 +14,10 @@ import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-setting'
 import {
+  FormatSetting,
+  type FormatSettingProps,
+} from '@/components/recordings/format-setting'
+import {
   CaptionStyleEntry,
   CaptionStylePanel,
   gearWidth,
@@ -35,6 +39,7 @@ export function LiveSettings({
   profiles,
   profile,
   onChooseProfile,
+  format,
   sounds,
   sound,
   onChooseSound,
@@ -49,6 +54,7 @@ export function LiveSettings({
   profiles: LiveProfile[]
   profile?: string
   onChooseProfile: (next: string) => void
+  format?: FormatSettingProps
   sounds: readonly SoundTrack[]
   sound: SoundTrack
   onChooseSound: (next: SoundTrack) => void
@@ -96,6 +102,7 @@ export function LiveSettings({
                 numeric
               />
             </Setting>
+            {format && <FormatSetting {...format} />}
             {sounds.length > 1 && (
               <Setting label="音声">
                 <PlayerSegmentedControl

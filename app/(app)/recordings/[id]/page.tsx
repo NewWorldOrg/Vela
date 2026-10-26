@@ -16,13 +16,19 @@ import { getRecording } from '@/repository/recordings'
 import { getSegmentModelVersion } from '@/repository/recording-segments'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
 import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
+import { FORMAT_COOKIE, formatChoiceOf } from '@/lib/playback-format'
 import {
   AUTO_OPEN_SPELLING,
   DATA_BROADCAST_AUTO_OPEN,
   flagOf,
 } from '@/lib/stored-flag'
 import { isRecordingId } from '@/lib/recordings'
-import { getPlaybackPlan, getUnaskedPlaybackProfile } from '@/repository/videos'
+import {
+  decodesCarinaTakes,
+  getPlaybackPlan,
+  getPlaybackProfiles,
+  getUnaskedPlaybackProfile,
+} from '@/repository/videos'
 import { theHoldAsked, theSourceAsked } from '@/lib/playback-source'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
@@ -84,14 +90,18 @@ export default async function Page({
     detail,
     playback,
     unaskedProfile,
+    profiles,
     encodeChoices,
     encodeJob,
     artefact,
     modelVersion,
   ] = await Promise.all([
     getRecording(id),
-    getPlaybackPlan(id, undefined, theSourceAsked(source), decodes),
+    decodesCarinaTakes(decodes).then((told) =>
+      getPlaybackPlan(id, undefined, theSourceAsked(source), told),
+    ),
     getUnaskedPlaybackProfile(),
+    getPlaybackProfiles(),
     listEncodeChoices(),
     getLatestEncodeJob(id),
     getStandingArtefact(id).catch((error: unknown) => {
@@ -115,6 +125,8 @@ export default async function Page({
         detail={detail}
         playback={playback}
         unaskedProfile={unaskedProfile}
+        profiles={profiles}
+        formatChoice={formatChoiceOf(jar.get(FORMAT_COOKIE)?.value)}
         startAt={secondsIn(at)}
         startsHeld={theHoldAsked(paused)}
         autoOpensDataBroadcast={autoOpensDataBroadcast}

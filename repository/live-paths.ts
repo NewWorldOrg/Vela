@@ -1,3 +1,4 @@
+import type { PlaybackFormat } from '@/lib/playback-format'
 import type { SoundTrack } from '@/repository/sounds'
 
 const LIVE_WIRE_PATH = '/api/live/ws'
@@ -24,6 +25,7 @@ export function liveWireHref(
   serviceId: number,
   profile: string,
   sound: SoundTrack,
+  format?: PlaybackFormat,
 ): string {
   const asked = new URLSearchParams({
     network: String(networkId),
@@ -31,6 +33,10 @@ export function liveWireHref(
     profile,
     sound,
   })
+
+  if (format) {
+    asked.set('format', format)
+  }
 
   return `${LIVE_WIRE_PATH}?${asked.toString()}`
 }

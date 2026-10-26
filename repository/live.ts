@@ -1,5 +1,6 @@
 import { servicesSettled, type SettledGuide } from '@/lib/guide'
 import { progressOf, watchingOf } from '@/lib/live-clock'
+import { formatOf, type PlaybackFormat } from '@/lib/playback-format'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import {
@@ -21,6 +22,7 @@ import { whyNoTicket, type TicketWrite } from '@/repository/tickets'
 
 type LiveChannelResponder = components['schemas']['LiveChannelResponder']
 type LiveProfileResponder = components['schemas']['LiveProfileResponder']
+type LiveFrameRateResponder = components['schemas']['LiveFrameRateResponder']
 type TuneSystem = components['schemas']['TuneSystem']
 
 const KIND_OF_SYSTEM: Partial<Record<TuneSystem, ChannelKind>> = {
@@ -79,7 +81,10 @@ export interface LiveProfile {
   name: string
   width: number
   height: number
+  framerate: number
   unasked: boolean
+  /** The formats this machine transcodes the picture in; none where Carina does not name them. */
+  formats?: PlaybackFormat[]
 }
 
 export interface LiveWatching {
@@ -227,12 +232,30 @@ function toChannel(listed: LiveChannelResponder): LiveChannel {
   }
 }
 
+function framerateOf(rate: LiveFrameRateResponder | undefined): number {
+  const denominator = rate ? toInt(rate.denominator) : 0
+
+  return rate && denominator > 0 ? toInt(rate.numerator) / denominator : 0
+}
+
+function formatsOf(said: unknown): PlaybackFormat[] | undefined {
+  if (!Array.isArray(said)) {
+    return undefined
+  }
+
+  return said.flatMap((one: unknown) =>
+    typeof one === 'string' ? (formatOf(one) ?? []) : [],
+  )
+}
+
 function toProfile(profile: LiveProfileResponder): LiveProfile {
   return {
     name: profile.name,
     width: toInt(profile.width),
     height: toInt(profile.height),
+    framerate: framerateOf(profile.frameRate),
     unasked: profile.unasked,
+    formats: formatsOf(profile.formats),
   }
 }
 

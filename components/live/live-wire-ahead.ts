@@ -1,4 +1,5 @@
 import { controlFrame } from '@/lib/live-wire'
+import type { FormatSettled } from '@/lib/playback-format'
 
 import type { LiveSocket } from '@/components/live/live-session'
 
@@ -201,4 +202,21 @@ export function holdWireProfile(profile: string | undefined): () => void {
 
 export function wireProfileInUse(): string | undefined {
   return profileInUse
+}
+
+let formatInUse: FormatSettled | undefined
+
+/** Notes the format a player settled on, so that a wire opened ahead for the next channel asks for the same one. */
+export function holdWireFormat(format: FormatSettled): () => void {
+  formatInUse = format
+
+  return () => {
+    if (formatInUse === format) {
+      formatInUse = undefined
+    }
+  }
+}
+
+export function wireFormatInUse(): FormatSettled | undefined {
+  return formatInUse
 }

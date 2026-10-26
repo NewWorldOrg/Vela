@@ -15,6 +15,20 @@ import type { Route } from 'next'
 
 import type { BrowserDecoding } from '@/lib/browser-decodes'
 import {
+  FORMAT_COOKIE,
+  choiceShown,
+  formatChoices,
+  formatToPlay,
+  type FormatChoice,
+  type FormatProbe,
+  type FormatSettled,
+  type PlaybackFormat,
+} from '@/lib/playback-format'
+import type { LiveProfile } from '@/repository/live'
+import { useFormatAnswers } from '@/hooks/useFormatAnswers'
+import { storeText } from '@/hooks/useStoredText'
+import { browserProbe } from '@/components/vela/format-answers'
+import {
   SAID_FAILED,
   bandPlace,
   dataBroadcastSays,
@@ -195,10 +209,25 @@ const WAITING_ON: Partial<Record<Phase, string>> = {
   diagnosing: '再生できませんでした — 理由の確認中',
 }
 
+/** What the picture was last asked for with; the format is settled from the choice once the browser has answered. */
+interface PictureAsked {
+  from: number
+  profile?: PlaybackProfile
+  sound?: SoundTrack
+  source?: PlaybackSource
+  decodes?: readonly BrowserDecoding[]
+  format: FormatChoice
+}
+
+const NO_FORMAT_TO_SETTLE: FormatSettled = { settled: true, format: undefined }
+
 export function Player({
   detail: d,
   plan: opened,
   unaskedProfile,
+  profiles = [],
+  formatChoice: storedFormat = 'auto',
+  askBrowser,
   onTakeTicket,
   onAskForTheSound,
   onKeepPosition,
@@ -223,6 +252,12 @@ export function Player({
   detail: RecordingDetail
   plan: PlaybackPlan
   unaskedProfile?: PlaybackProfile
+  /** The profiles Carina transcodes at, with the formats each is transcoded in. */
+  profiles?: readonly LiveProfile[]
+  /** The format this browser was left on, as its cookie says. */
+  formatChoice?: FormatChoice
+  /** What is asked whether a format plays here, in place of this browser. */
+  askBrowser?: FormatProbe
   onTakeTicket: (id: string) => Promise<TicketWrite>
   onAskForTheSound: (
     id: string,
@@ -246,6 +281,7 @@ export function Player({
     sound?: SoundTrack,
     source?: PlaybackSource,
     decodes?: readonly BrowserDecoding[],
+    format?: PlaybackFormat,
   ) => string
   askWhy?: (href: string, transcodes: boolean) => Promise<PlaybackFault>
   takeCapture?: TakeCapture
@@ -309,6 +345,23 @@ export function Player({
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
     unaskedProfile,
   )
+  const [formatChoice, setFormatChoice] = useState(storedFormat)
+  const answersOf = useFormatAnswers(
+    askBrowser ?? browserProbe('managedFirst'),
+    profiles,
+  )
+  const pictureAt = (quality: PlaybackProfile | undefined) =>
+    profiles.find((one) => one.name === quality)
+  const formatFor = (
+    choice: FormatChoice,
+    quality: PlaybackProfile | undefined,
+  ): FormatSettled => {
+    const picture = pictureAt(quality)
+
+    return quality === undefined
+      ? NO_FORMAT_TO_SETTLE
+      : formatToPlay(choice, picture?.formats, picture && answersOf(picture))
+  }
   const [plan, setPlan] = useState<PlaybackPlan>(opened)
   const [sound, setSound] = useState<SoundTrack>(MAIN_SOUND)
   const opensPlaying = startAt !== undefined && playsAtOnce
@@ -326,17 +379,40 @@ export function Player({
   const [streamed, setStreamed] = useState(opened.transcodes)
   const [openings, setOpenings] = useState(0)
   const cut = useRef(false)
-  const [source, setSource] = useState(() =>
-    opensPlaying
-      ? pictureHref(
-          d.id,
-          opening.from,
-          opened.transcodes ? unaskedProfile : undefined,
-          soundToAsk(opened.sounds, MAIN_SOUND),
-          opened.source,
-          opened.decodes,
-        )
-      : undefined,
+  const [pictureAsked, setPictureAsked] = useState<PictureAsked | undefined>(
+    () =>
+      opensPlaying
+        ? {
+            from: opening.from,
+            profile: opened.transcodes ? unaskedProfile : undefined,
+            sound: soundToAsk(opened.sounds, MAIN_SOUND),
+            source: opened.source,
+            decodes: opened.decodes,
+            format: storedFormat,
+          }
+        : undefined,
+  )
+  const pictureFormat = pictureAsked
+    ? formatFor(pictureAsked.format, pictureAsked.profile)
+    : NO_FORMAT_TO_SETTLE
+  const pictureSettled = pictureFormat.settled
+  const pictureFormatted = pictureFormat.settled
+    ? pictureFormat.format
+    : undefined
+  const source = useMemo(
+    () =>
+      pictureAsked && pictureSettled
+        ? pictureHref(
+            d.id,
+            pictureAsked.from,
+            pictureAsked.profile,
+            pictureAsked.sound,
+            pictureAsked.source,
+            pictureAsked.decodes,
+            pictureFormatted,
+          )
+        : undefined,
+    [d.id, pictureHref, pictureAsked, pictureSettled, pictureFormatted],
   )
 
   const poster =
@@ -591,6 +667,7 @@ export function Player({
     quality: PlaybackProfile | undefined = profile,
     carrying: SoundTrack = sound,
     under: PlaybackPlan = plan,
+    choosing: FormatChoice = formatChoice,
   ) => {
     if (asking.current) {
       clearTimeout(asking.current)
@@ -617,16 +694,14 @@ export function Player({
     setPhase('waiting')
     setStreamed(under.transcodes)
     setOpenings((were) => were + 1)
-    setSource(
-      pictureHref(
-        d.id,
-        starts.from,
-        under.transcodes ? quality : undefined,
-        soundToAsk(under.sounds, carrying),
-        under.source,
-        under.decodes,
-      ),
-    )
+    setPictureAsked({
+      from: starts.from,
+      profile: under.transcodes ? quality : undefined,
+      sound: soundToAsk(under.sounds, carrying),
+      source: under.source,
+      decodes: under.decodes,
+      format: choosing,
+    })
   }
 
   const stumbled = () => {
@@ -864,6 +939,33 @@ export function Player({
 
     play(position, quality)
   }
+
+  const chooseFormat = (next: FormatChoice) => {
+    storeText(FORMAT_COOKIE, next)
+    setFormatChoice(next)
+
+    if (phase === 'idle' || !onTheFly) {
+      return
+    }
+
+    const becomes = formatFor(next, profile)
+
+    if (
+      pictureFormat.settled &&
+      becomes.settled &&
+      pictureFormat.format === becomes.format
+    ) {
+      return
+    }
+
+    play(position, profile, sound, plan, next)
+  }
+
+  const gearPicture = pictureAt(profile)
+  const formatsToChoose = formatChoices(
+    gearPicture?.formats,
+    gearPicture && answersOf(gearPicture),
+  )
 
   const chooseSound = (next: SoundTrack) => {
     if (next === pending.current) {
@@ -1615,6 +1717,11 @@ export function Player({
                     onOpenChange={setSettingsOpen}
                     profile={profile}
                     onChooseProfile={chooseProfile}
+                    format={{
+                      choices: formatsToChoose,
+                      chosen: choiceShown(formatChoice, formatsToChoose),
+                      onChoose: chooseFormat,
+                    }}
                     onTheFly={onTheFly}
                     speed={speed}
                     onChooseSpeed={chooseSpeed}

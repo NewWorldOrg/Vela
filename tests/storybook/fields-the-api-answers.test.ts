@@ -303,7 +303,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'LiveChannelResponder.category',
       'LiveChannelResponder.sessions',
       'LiveProfileResponder.codec',
-      'LiveProfileResponder.frameRate',
       'LiveProfileResponder.softwareKilobitsPerSecond',
       'LiveProfileResponder.vaapiQuantiser',
       'LiveSessionResponder.startup',

@@ -2,7 +2,7 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Carina",
-    "description": "The HTTP surface of the app process. Eight contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server, and what it posts there (`GET` and `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`); the frame has no origin of its own, so these two answer any origin without credentials. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists; a viewer that is refused is told why on the control channel before the wire is closed.",
+    "description": "The HTTP surface of the app process. Eight contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server, and what it posts there (`GET` and `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`); the frame has no origin of its own, so these two answer any origin without credentials. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists, and by `format` (`h264`, `h265` or `av1`, `h264` when none is named), one of the formats the same list names, a format this machine does not transcode in being refused before the wire opens; a viewer that is refused is told why on the control channel before the wire is closed.",
     "version": "0.3.4"
   },
   "servers": [
@@ -51,6 +51,20 @@
             }
           },
           {
+            "name": "format",
+            "in": "query",
+            "description": "The format the picture is encoded in while it is transcoded as it plays. Asking for none encodes it in h264, as it always was. GET /api/live/profiles names the formats this machine transcodes in, and one it does not is refused rather than handed over in another; the plan is refused the same way where the recording would be transcoded. One handed over as it is keeps the format it was encoded in, and the format asked for is not looked at.",
+            "schema": {
+              "enum": [
+                "h264",
+                "h265",
+                "av1"
+              ],
+              "type": "string",
+              "default": "h264"
+            }
+          },
+          {
             "name": "sound",
             "in": "query",
             "description": "The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with.",
@@ -80,13 +94,14 @@
           {
             "name": "decodes",
             "in": "query",
-            "description": "The picture codings the browser asking says it decodes, each named once. H.264 is always taken to be decoded. Naming h265 lets an artefact encoded in H.265 and tagged hvc1 be handed over as it is; one tagged hev1 is still transcoded while playing. Naming none decodes H.264 alone, as it always did, and naming anything else is refused. The picture and the captions are asked for with what the plan was asked with, so that all three settle on the same file.",
+            "description": "The picture codings the browser asking says it decodes, each named once. H.264 is always taken to be decoded. Naming h265 lets an artefact encoded in H.265 and tagged hvc1 be handed over as it is; one tagged hev1 is still transcoded while playing. Naming av1 is taken and changes nothing, since nothing is encoded in AV1 to be handed over. Naming none decodes H.264 alone, as it always did, and naming anything else is refused. The picture and the captions are asked for with what the plan was asked with, so that all three settle on the same file. The format a picture transcoded as it plays is encoded in is asked for by format, not by this.",
             "schema": {
               "type": "array",
               "items": {
                 "enum": [
                   "h264",
-                  "h265"
+                  "h265",
+                  "av1"
                 ],
                 "type": "string"
               }
@@ -168,7 +183,8 @@
               "items": {
                 "enum": [
                   "h264",
-                  "h265"
+                  "h265",
+                  "av1"
                 ],
                 "type": "string"
               }
@@ -280,7 +296,8 @@
               "items": {
                 "enum": [
                   "h264",
-                  "h265"
+                  "h265",
+                  "av1"
                 ],
                 "type": "string"
               }
@@ -14440,7 +14457,8 @@
           "frameRate",
           "softwareKilobitsPerSecond",
           "vaapiQuantiser",
-          "unasked"
+          "unasked",
+          "formats"
         ],
         "type": "object",
         "properties": {
@@ -14487,6 +14505,12 @@
           },
           "unasked": {
             "type": "boolean"
+          },
+          "formats": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VideoCodec"
+            }
           }
         }
       },
@@ -14495,6 +14519,7 @@
           "networkId",
           "serviceId",
           "profile",
+          "format",
           "sound",
           "viewers",
           "dropped",
@@ -14523,6 +14548,9 @@
           },
           "profile": {
             "type": "string"
+          },
+          "format": {
+            "$ref": "#/components/schemas/VideoCodec"
           },
           "sound": {
             "$ref": "#/components/schemas/SoundTrack"
@@ -22361,7 +22389,9 @@
       },
       "VideoCodec": {
         "enum": [
-          "h264"
+          "h264",
+          "h265",
+          "av1"
         ],
         "type": "string"
       },

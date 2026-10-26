@@ -92,7 +92,7 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { getLiveScreen, nowNextOf, takeLiveTicket } =
+const { fetchLiveProfiles, getLiveScreen, nowNextOf, takeLiveTicket } =
   await import('@/repository/live')
 
 const NOW = new Date('2026-08-08T12:04:00Z')
@@ -169,6 +169,7 @@ test('the channels of the kind asked for arrive with their key, their viewers an
       softwareKilobitsPerSecond: 9000,
       vaapiQuantiser: 24,
       unasked: true,
+      formats: ['h264', 'h265', 'av1'],
     },
     {
       name: '720p30',
@@ -179,6 +180,7 @@ test('the channels of the kind asked for arrive with their key, their viewers an
       softwareKilobitsPerSecond: 3000,
       vaapiQuantiser: 24,
       unasked: false,
+      formats: ['h264', 'vp9'],
     },
   ]
   store.programmes = [
@@ -222,8 +224,22 @@ test('the channels of the kind asked for arrive with their key, their viewers an
   assert.equal(screen.channels[0].next?.title, 'つぎ')
   assert.equal(screen.channels[1].now, undefined)
   assert.deepEqual(screen.profiles, [
-    { name: '1080p60', width: 1920, height: 1080, unasked: true },
-    { name: '720p30', width: 1280, height: 720, unasked: false },
+    {
+      name: '1080p60',
+      width: 1920,
+      height: 1080,
+      framerate: 60000 / 1001,
+      unasked: true,
+      formats: ['h264', 'h265', 'av1'],
+    },
+    {
+      name: '720p30',
+      width: 1280,
+      height: 720,
+      framerate: 30000 / 1001,
+      unasked: false,
+      formats: ['h264'],
+    },
   ])
 
   assert.equal(screen.watching?.channel.id, '32736-1024')
@@ -644,4 +660,30 @@ test('a refusal with no saying of its own still says what happened', async () =>
     write.state === 'refused' && write.message,
     '外部プレイヤーの札を発行できませんでした。時間をおいてからもう一度お試しください。',
   )
+})
+
+test('a Carina that names no formats is read as naming none, so nothing is asked for in one', async () => {
+  store.profiles = [
+    {
+      name: '720p30',
+      codec: 'h264',
+      width: 1280,
+      height: 720,
+      frameRate: { numerator: 30, denominator: 1 },
+      softwareKilobitsPerSecond: 3000,
+      vaapiQuantiser: 24,
+      unasked: true,
+    },
+  ]
+
+  assert.deepEqual(await fetchLiveProfiles(), [
+    {
+      name: '720p30',
+      width: 1280,
+      height: 720,
+      framerate: 30,
+      unasked: true,
+      formats: undefined,
+    },
+  ])
 })
