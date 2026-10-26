@@ -18,7 +18,12 @@ import type { FeedRecording } from '@/components/recordings/recording-feed'
 import { SKIP_THE } from '@/components/recordings/player-skip'
 import { SEEK_STEP_SECONDS } from '@/lib/player-keys'
 import { STEPS_JOIN_WITHIN_MS } from '@/lib/seek-events'
-import { seekNoted, seeks } from '@/stories/noted-seeks'
+import {
+  seekNoted,
+  seeks,
+  seeksWhileLeaving,
+  seekSentWhileLeaving,
+} from '@/stories/noted-seeks'
 import { skipNoted, skips } from '@/stories/noted-skips'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { drawnFrame } from '@/stories/fixtures/frames'
@@ -114,6 +119,7 @@ async function plannedAgain(): Promise<PlaybackRead> {
 
 function forgetWhatWasSent() {
   seeks.length = 0
+  seeksWhileLeaving.length = 0
   skips.length = 0
 }
 
@@ -147,6 +153,7 @@ const meta = {
     encodeChoices: ENCODE_CHOICES,
     onNoteSkip: skipNoted,
     onNoteSeek: seekNoted,
+    onSeekWhileLeaving: seekSentWhileLeaving,
     pictureHref: stalling,
     frameHref: drawnFrame,
     feedRecording: handedAsItIs,
@@ -258,3 +265,76 @@ export const 飛ばすボタンで飛ばしてもシークは送らない: Story
     await expect(seeks).toEqual([])
   },
 }
+
+export const シークバーの矢印キーとページ送りはキーとしてまとめて送る: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    canvas.getByRole('slider', { name: '再生位置' }).focus()
+    await userEvent.keyboard('{ArrowRight}{ArrowRight}{PageUp}')
+
+    await waitFor(() => expect(canvas.getByText('8:20 / 30:04')).toBeVisible())
+    await expect(seeks).toEqual([])
+    await waitFor(
+      () =>
+        expect(seeks).toEqual([
+          { event: 'forward', means: 'key', fromSec: 420, toSec: 500 },
+        ]),
+      { timeout: STEPS_JOIN_WITHIN_MS * 2 },
+    )
+  },
+}
+
+export const ページを閉じるとまとめ待ちのシークをページの後まで届く形で送る: Story =
+  {
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      for (let turn = 0; turn < 2; turn += 1) {
+        await userEvent.click(canvas.getByRole('button', { name: FORWARD }))
+      }
+
+      await waitFor(() =>
+        expect(canvas.getByText('7:20 / 30:04')).toBeVisible(),
+      )
+      window.dispatchEvent(new Event('pagehide'))
+
+      await expect(seeksWhileLeaving).toEqual([
+        { event: 'forward', means: 'step', fromSec: 420, toSec: 440 },
+      ])
+      await longerThanStepsAreJoined()
+      await expect(seeks).toEqual([])
+      await expect(seeksWhileLeaving).toHaveLength(1)
+    },
+  }
+
+export const ページが裏に回るとまとめ待ちのシークをページの後まで届く形で送る: Story =
+  {
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      for (let turn = 0; turn < 2; turn += 1) {
+        await userEvent.click(canvas.getByRole('button', { name: FORWARD }))
+      }
+
+      await waitFor(() =>
+        expect(canvas.getByText('7:20 / 30:04')).toBeVisible(),
+      )
+      Object.defineProperty(document, 'visibilityState', {
+        configurable: true,
+        get: () => 'hidden',
+      })
+
+      try {
+        document.dispatchEvent(new Event('visibilitychange'))
+      } finally {
+        Reflect.deleteProperty(document, 'visibilityState')
+      }
+
+      await expect(seeksWhileLeaving).toEqual([
+        { event: 'forward', means: 'step', fromSec: 420, toSec: 440 },
+      ])
+      await longerThanStepsAreJoined()
+      await expect(seeks).toEqual([])
+    },
+  }

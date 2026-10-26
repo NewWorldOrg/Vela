@@ -1,6 +1,7 @@
 import { unstable_rethrow } from 'next/navigation'
 
 import { carinaClient } from '@/repository/client/carina'
+import { seekBody } from '@/repository/recording-seek-paths'
 import type { Reading } from '@/repository/system'
 import type { SkippableKind } from '@/repository/videos'
 
@@ -114,12 +115,7 @@ export async function noteSeek(
       '/api/recordings/{id}/seeks',
       {
         params: { path: { id } },
-        body: {
-          event: seek.event,
-          means: seek.means,
-          fromSec: seek.fromSec,
-          toSec: seek.toSec,
-        },
+        body: seekBody(seek),
       },
     )
 
