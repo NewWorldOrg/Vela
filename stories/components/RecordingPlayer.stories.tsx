@@ -17,6 +17,14 @@ import {
   type PlaybackProfile,
 } from '@/repository/video-paths'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
+import { LIVE_PROFILE_FIXTURES_EVERY_FORMAT } from '@/repository/live.fixtures'
+import type { BrowserDecoding } from '@/lib/browser-decodes'
+import { FORMAT_COOKIE, type PlaybackFormat } from '@/lib/playback-format'
+import { forgettingCookie } from '@/lib/stored-flag'
+import {
+  PLAYS_AV1_IN_SOFTWARE,
+  PLAYS_EVERY_FORMAT_LIGHTLY,
+} from '@/stories/fixtures/format-probes'
 import {
   DRAWN_PICTURE,
   drawnFrame,
@@ -341,6 +349,20 @@ function carrying(id: string, from: number, profile?: string, sound?: string) {
 }
 
 const handed: string[] = []
+
+function formatting(
+  id: string,
+  from: number,
+  profile?: PlaybackProfile,
+  sound?: SoundTrack,
+  source?: PlaybackSource,
+  decodes?: readonly BrowserDecoding[],
+  format?: PlaybackFormat,
+) {
+  asked.push(`${from}/${profile ?? '—'}/${format ?? '—'}`)
+
+  return stalling()
+}
 
 function carryingTheSource(
   id: string,
@@ -929,8 +951,137 @@ export const オンザフライでない録画の画質は押せない: Story = 
     }
 
     await expect(
+      within(settings).getByText(
+        'エンコード版を再生中のため、画質は選べません。',
+      ),
+    ).toBeVisible()
+    await expect(
+      within(settings).queryByRole('group', { name: '形式' }),
+    ).toBeNull()
+    await expect(
       within(settings).queryByText(/選べます|実装されます/),
     ).toBeNull()
+  },
+}
+
+export const オンザフライの形式は自動で解いて映像に付ける: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    profiles: LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
+    askBrowser: PLAYS_AV1_IN_SOFTWARE,
+    pictureHref: formatting,
+  },
+  beforeEach: () => {
+    asked.length = 0
+    document.cookie = forgettingCookie(FORMAT_COOKIE)
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked).toEqual(['0/1080p60/h265']))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const formats = await screen.findByRole('group', { name: '形式' })
+
+    await expect(
+      within(formats)
+        .getAllByRole('button')
+        .map((one) => one.textContent),
+    ).toEqual(['自動', 'H.264', 'H.265', 'AV1'])
+    await expect(
+      within(formats).getByRole('button', { name: '自動' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(screen.queryByText(/エンコード版を再生中/)).toBeNull()
+  },
+}
+
+export const 形式を選ぶと観ていた秒から開き直してブラウザが覚える: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    profiles: LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
+    askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
+    pictureHref: formatting,
+  },
+  beforeEach: () => {
+    asked.length = 0
+    document.cookie = forgettingCookie(FORMAT_COOKIE)
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked).toEqual(['0/1080p60/av1']))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const formats = await screen.findByRole('group', { name: '形式' })
+
+    await userEvent.click(within(formats).getByRole('button', { name: 'AV1' }))
+    await expect(asked).toEqual(['0/1080p60/av1'])
+    await expect(cookieIn(document.cookie, FORMAT_COOKIE)).toBe('av1')
+
+    await userEvent.click(
+      within(formats).getByRole('button', { name: 'H.265' }),
+    )
+
+    await waitFor(() =>
+      expect(asked).toEqual(['0/1080p60/av1', '0/1080p60/h265']),
+    )
+    await expect(
+      within(formats).getByRole('button', { name: 'H.265' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(cookieIn(document.cookie, FORMAT_COOKIE)).toBe('h265')
+
+    const quality = screen.getByRole('group', { name: '画質' })
+
+    await userEvent.click(
+      within(quality).getByRole('button', { name: '720p30' }),
+    )
+
+    await waitFor(() => expect(asked.at(-1)).toBe('0/720p30/h265'))
+  },
+}
+
+export const エンコード版の再生中は画質と形式を押せず理由を添える: Story = {
+  args: {
+    detail: detail('1274'),
+    plan: WITH_AN_ARTEFACT,
+    startAt: 0,
+    profiles: LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
+    askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
+    pictureHref: formatting,
+  },
+  beforeEach: () => {
+    asked.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(asked).toEqual(['0/—/—']))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const settings = await screen.findByRole('dialog', { name: '設定' })
+    const formats = await within(settings).findByRole('group', {
+      name: '形式',
+    })
+    const quality = within(settings).getByRole('group', { name: '画質' })
+
+    for (const one of [
+      ...within(quality).getAllByRole('button'),
+      ...within(formats).getAllByRole('button'),
+    ]) {
+      await expect(one).toBeDisabled()
+      await expect(one).not.toHaveAttribute('aria-pressed')
+    }
+
+    await expect(
+      within(settings).getByText(
+        'エンコード版を再生中のため、画質と形式は選べません。',
+      ),
+    ).toBeVisible()
+    await expect(
+      settings.querySelectorAll('[data-slot="gear-reason"]'),
+    ).toHaveLength(1)
   },
 }
 

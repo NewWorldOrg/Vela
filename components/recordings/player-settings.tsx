@@ -21,6 +21,10 @@ import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-setting'
 import {
+  FormatSetting,
+  type FormatSettingProps,
+} from '@/components/recordings/format-setting'
+import {
   CaptionStyleEntry,
   CaptionStylePanel,
   gearWidth,
@@ -30,10 +34,17 @@ import type { CaptionStyle } from '@/lib/caption-style'
 
 export const PLAYBACK_SPEEDS = ['0.5', '1.0', '1.25', '1.5', '2.0'] as const
 
+const WHY_NEITHER_IS_CHOSEN =
+  'エンコード版を再生中のため、画質と形式は選べません。'
+
+const WHY_NO_QUALITY_IS_CHOSEN =
+  'エンコード版を再生中のため、画質は選べません。'
+
 export function PlayerSettings({
   container,
   profile,
   onChooseProfile,
+  format,
   onTheFly,
   speed,
   onChooseSpeed,
@@ -50,6 +61,7 @@ export function PlayerSettings({
   container: HTMLElement | null
   profile?: PlaybackProfile
   onChooseProfile: (next: string) => void
+  format?: FormatSettingProps
   onTheFly: boolean
   speed: string
   onChooseSpeed: (next: string) => void
@@ -65,6 +77,9 @@ export function PlayerSettings({
 }) {
   const gear = useGearPanel(onOpenChange)
   const captions = captionStyle && onCaptionStyle
+  const formatShown = format !== undefined && format.choices.length > 0
+  const reason = formatShown ? WHY_NEITHER_IS_CHOSEN : WHY_NO_QUALITY_IS_CHOSEN
+  const note = onTheFly ? undefined : reason
 
   return (
     <Popover open={gear.open} onOpenChange={gear.change}>
@@ -91,7 +106,7 @@ export function PlayerSettings({
           />
         ) : (
           <>
-            <Setting label="画質">
+            <Setting label="画質" note={formatShown ? undefined : note}>
               <PlayerSegmentedControl
                 label="画質"
                 options={PLAYBACK_PROFILES}
@@ -101,6 +116,9 @@ export function PlayerSettings({
                 off={!onTheFly}
               />
             </Setting>
+            {format && (
+              <FormatSetting {...format} off={!onTheFly} note={note} />
+            )}
             <Setting label="速度">
               <PlayerSegmentedControl
                 label="速度"

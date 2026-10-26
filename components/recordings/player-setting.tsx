@@ -39,7 +39,7 @@ export function Setting({
       </div>
       <p
         data-slot="gear-reason"
-        className="mt-2 w-0 min-w-full text-sub text-(--pl-ink-3)"
+        className="mt-2 w-0 min-w-full text-sub text-balance text-(--pl-ink-3) [word-break:auto-phrase]"
       >
         {note}
       </p>
