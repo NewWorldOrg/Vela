@@ -63,7 +63,10 @@ import type {
 } from '@/components/recordings/recording-playlist'
 import { withoutAMediaSource } from '@/stories/fixtures/without-a-media-source'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
-import type { ReadDataBroadcast } from '@/components/recordings/read-data-broadcast'
+import type {
+  ReadDataBroadcast,
+  ReadDataBroadcastModule,
+} from '@/components/recordings/read-data-broadcast'
 import {
   DATA_BROADCAST_CATALOG,
   PROGRAMME_READING_CATALOG,
@@ -5398,7 +5401,7 @@ const ON_A_PLAYLIST = {
   askWhy: askedWhy,
 }
 
-export const MSE_の無いブラウザはオンザフライを_HLS_で開き録画の秒で字幕を出し形式とデータ放送を置かない: Story =
+export const MSE_の無いブラウザはオンザフライを_HLS_で開き録画の秒で字幕を出し形式の行を置かない: Story =
   {
     args: {
       ...ON_A_PLAYLIST,
@@ -5411,8 +5414,6 @@ export const MSE_の無いブラウザはオンザフライを_HLS_で開き録�
       profiles: LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
       askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
       readCaptions: readingTheCaptionsAt,
-      readDataBroadcast: readingTheBroadcast(),
-      readDataBroadcastModule: readingTheModules,
     },
     beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
     play: async ({ canvasElement }) => {
@@ -5429,10 +5430,6 @@ export const MSE_の無いブラウザはオンザフライを_HLS_で開き録�
       await captionSays(canvasElement, 'shown')
       await expect(captionsAskedAt[0]).toBeGreaterThanOrEqual(600)
       await expect(canvas.getByRole('button', { name: '字幕' })).toBeVisible()
-      await waitFor(() => expect(broadcastAsked).toEqual(['1266/—']))
-      await expect(
-        canvas.queryByRole('button', { name: 'データ放送' }),
-      ).toBeNull()
 
       await userEvent.click(canvas.getByRole('button', { name: '設定' }))
       await screen.findByRole('group', { name: '画質' })
@@ -5589,3 +5586,70 @@ export const MSE_の無いブラウザでもエンコード版は映像のアド
       await expect(fed).toEqual([])
     },
   }
+
+const BROADCAST_FROM_TEN_MINUTES = (() => {
+  const timeline = throughout(DATA_BROADCAST_CATALOG)
+
+  return {
+    ...timeline,
+    carousels: timeline.carousels.map((carousel) => ({
+      ...carousel,
+      versions: carousel.versions.map((version) => ({
+        ...version,
+        fromSec: 600,
+        toSec: 1200,
+      })),
+    })),
+  }
+})()
+
+const modulesReadAt: number[] = []
+
+const readingTheModulesAt: ReadDataBroadcastModule = async (
+  id,
+  placed,
+  signal,
+) => {
+  modulesReadAt.push(placed.fromSec)
+
+  return readingTheModules(id, placed, signal)
+}
+
+export const HLS_でも録画のデータ放送を置き_録画の秒で合わせる: Story = {
+  args: {
+    ...ON_A_PLAYLIST,
+    detail: {
+      ...detail('1266'),
+      service: { networkId: 32736, serviceId: 1024 },
+    },
+    openPlaylist: playingThePlaylist,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: BROADCAST_FROM_TEN_MINUTES,
+    }),
+    readDataBroadcastModule: readingTheModulesAt,
+  },
+  beforeEach: withoutAMediaSource('maybe', () => {
+    forgetWhatWasHanded()
+    modulesReadAt.length = 0
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(handedPlaylists).toEqual([PLAYLIST_AT_TEN_MINUTES]),
+    )
+    await expect(
+      await canvas.findByRole(
+        'button',
+        { name: 'データ放送' },
+        { timeout: 10000 },
+      ),
+    ).toBeVisible()
+    await expect(broadcastAsked).toEqual(['1266/—'])
+    await waitFor(() => expect(modulesReadAt.length).toBeGreaterThan(0), {
+      timeout: 10000,
+    })
+    await expect(modulesReadAt.every((at) => at === 600)).toBe(true)
+  },
+}

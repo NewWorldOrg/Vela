@@ -343,13 +343,10 @@ export function Player({
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
   const romSounds = useRomSound(muted ? 0 : volume)
-  const [streamed, setStreamed] = useState(opened.transcodes)
-  const carriage = useRecordingCarriage()
-  const playlist = streamed && carriage === 'playlist'
   const broadcast = useDataBroadcast(
     broadcastFeed,
     d.id,
-    { autoOpens: autoOpens && !playlist, programme: d.startedAt },
+    { autoOpens, programme: d.startedAt },
     null,
     romSounds,
   )
@@ -395,6 +392,9 @@ export function Player({
   const fromNow = useRef(from)
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
+  const [streamed, setStreamed] = useState(opened.transcodes)
+  const carriage = useRecordingCarriage()
+  const playlist = streamed && carriage === 'playlist'
   const [openings, setOpenings] = useState(0)
   const cut = useRef(false)
   const [pictureAsked, setPictureAsked] = useState<PictureAsked | undefined>(
@@ -1269,20 +1269,16 @@ export function Player({
     shell?.focus({ preventScroll: true })
   }
 
-  const broadcastOffered = broadcast.offered && !playlist
-  const faceShown = broadcast.view.open && !playlist
-  const pictureRect = faceShown ? broadcast.view.rect : null
-
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     const route = routeKey(
       event,
       {
         seeks: duration > 0,
         captions: captioning,
-        dataBroadcast: broadcastOffered,
+        dataBroadcast: broadcast.offered,
         aimed: aimed.current,
       },
-      faceShown ? { usedKeys: broadcast.view.usedKeys } : null,
+      broadcast.view.open ? { usedKeys: broadcast.view.usedKeys } : null,
     )
 
     if (!route) {
@@ -1338,6 +1334,7 @@ export function Player({
     }
   }
 
+  const faceShown = broadcast.view.open
   const place = bandPlace(full, wide)
   const underTheBox = faceShown && place !== 'over'
   const skipInTheRow =
@@ -1345,7 +1342,7 @@ export function Player({
   const bandUnderTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
   const clearsTheRow =
-    captioning && chromeUp && !underTheBox && !pictureRect && !pip.out
+    captioning && chromeUp && !underTheBox && !broadcast.view.rect && !pip.out
   const clearance = useMemo(
     () => (clearsTheRow ? () => clearanceOf(chrome, shell) : null),
     [clearsTheRow, chrome, shell],
@@ -1418,9 +1415,11 @@ export function Player({
               <div
                 data-slot="player-picture"
                 data-rect={
-                  pictureRect ? Object.values(pictureRect).join(',') : undefined
+                  broadcast.view.rect
+                    ? Object.values(broadcast.view.rect).join(',')
+                    : undefined
                 }
-                style={{ transform: pictureTransform(pictureRect) }}
+                style={{ transform: pictureTransform(broadcast.view.rect) }}
                 className="relative size-full origin-top-left transition-transform duration-200 ease-out still:transition-none"
               >
                 <video
@@ -1782,7 +1781,7 @@ export function Player({
                     </button>
                   </PlayerTip>
                 )}
-                {broadcastOffered && (
+                {broadcast.offered && (
                   <DataBroadcastToggle
                     open={faceShown}
                     onToggle={toggleBroadcast}
