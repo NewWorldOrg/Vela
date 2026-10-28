@@ -209,10 +209,9 @@ export function GuideGrid({
     filled,
     settled: done,
     day: dayKey,
-    nowMin,
   })
 
-  useGlyphsAhead(glyphLoads, filled)
+  useGlyphsAhead(glyphLoads, filled && drawn.minutes.to > drawn.minutes.from)
 
   const carriedBy = useMemo(() => {
     const by = new Map<string, Program[]>()

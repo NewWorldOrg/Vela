@@ -2,9 +2,11 @@
 
 import { startTransition, useEffect, useState } from 'react'
 
-/** False for the first drawing, the server's HTML included, and true right after: the guide's frame is drawn first and its columns are filled in the browser. */
+import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
+
 export function useFilledSoon(): boolean {
-  const [filled, setFilled] = useState(false)
+  const cameWithTheHtml = useCameWithTheHtml()
+  const [filled, setFilled] = useState(cameWithTheHtml)
 
   useEffect(() => {
     if (!filled) {

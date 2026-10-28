@@ -439,9 +439,35 @@ export function wholeDayOf<P extends { startMin: number }>(
   )
 }
 
+export const MINUTES_DRAWN_AROUND_THE_VIEW = 60
+
+/** The minutes of the day the scroller shows, an hour either side, drawn first so the cells in view come before the rest of the day. A scroller that cannot be measured shows the whole day. */
+export function minutesInViewOf(
+  view: { scrollTop: number; clientHeight: number; scrollHeight: number },
+  windowMin: number,
+): MinuteRange {
+  if (!(view.scrollHeight > 0)) {
+    return { from: 0, to: windowMin }
+  }
+
+  const minuteOf = (px: number) => (px / view.scrollHeight) * windowMin
+
+  return {
+    from: Math.max(
+      0,
+      Math.floor(minuteOf(view.scrollTop)) - MINUTES_DRAWN_AROUND_THE_VIEW,
+    ),
+    to: Math.min(
+      windowMin,
+      Math.ceil(minuteOf(view.scrollTop + view.clientHeight)) +
+        MINUTES_DRAWN_AROUND_THE_VIEW,
+    ),
+  }
+}
+
 export const HOURS_DRAWN_BEFORE_MEASURING = 12
 
-/** The minutes drawn before the guide is measured: the hours around where it opens, so the first filling builds what is first in view and not the whole day. */
+/** The hours the guide opens on: the part of the day the page reads first, the rest of the day following in the same answer. */
 export function minutesBeforeMeasuringOf(
   nowMin: number | undefined,
   windowMin: number,

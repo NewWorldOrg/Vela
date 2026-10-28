@@ -1,6 +1,12 @@
 'use client'
 
-import { type RefObject, startTransition, useEffect, useState } from 'react'
+import {
+  type RefObject,
+  startTransition,
+  useEffect,
+  useRef,
+  useState,
+} from 'react'
 
 import {
   type ColumnRange,
@@ -10,8 +16,9 @@ import {
   grownColumnsOf,
   holdsEveryColumn,
   joinedColumnsOf,
-  minutesBeforeMeasuringOf,
+  minutesInViewOf,
 } from '@/lib/guide'
+import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
 
 export interface DrawnRange {
   columns: ColumnRange
@@ -19,6 +26,9 @@ export interface DrawnRange {
 }
 
 const IDLE_WAIT_MS = 500
+
+/** No minute of the day: the server's HTML carries the guide's frame and empty columns. Once the browser has measured the guide, the cells in view are drawn, and the rest of the day when the browser is next idle or the guide is scrolled. */
+const NOTHING_YET = { from: 0, to: 0 }
 
 const BETWEEN_COLUMNS_MS = 100
 
@@ -49,20 +59,20 @@ export function useDrawnRange(
     filled,
     settled,
     day,
-    nowMin,
   }: {
     columns: number
     windowMin: number
-    nowMin?: number
     filled: boolean
     settled: boolean
     day: string
   },
 ): DrawnRange {
+  const cameWithTheHtml = useCameWithTheHtml()
   const [range, setRange] = useState<DrawnRange>(() => ({
     columns: columnsBeforeMeasuringOf(columns),
-    minutes: minutesBeforeMeasuringOf(nowMin, windowMin),
+    minutes: cameWithTheHtml ? NOTHING_YET : { from: 0, to: windowMin },
   }))
+  const wholeDayDrawn = useRef(!cameWithTheHtml)
 
   useEffect(() => {
     const node = scroller.current
@@ -71,10 +81,14 @@ export function useDrawnRange(
       return
     }
 
-    const minutes = { from: 0, to: windowMin }
+    const wholeDay = { from: 0, to: windowMin }
+    let minutes = wholeDayDrawn.current
+      ? wholeDay
+      : minutesInViewOf(node, windowMin)
     let built: ColumnRange | null = null
     let frame: number | null = null
     let stopGrowing: (() => void) | null = null
+    let stopWidening: (() => void) | null = null
 
     const show = (next: ColumnRange): void => {
       built = next
@@ -102,6 +116,24 @@ export function useDrawnRange(
       }
     }
 
+    const widen = (): void => {
+      stopWidening?.()
+      stopWidening = null
+
+      if (wholeDayDrawn.current) {
+        return
+      }
+
+      wholeDayDrawn.current = true
+      minutes = wholeDay
+      soon()
+    }
+
+    const scrolled = (): void => {
+      widen()
+      soon()
+    }
+
     const grow = (): void => {
       stopGrowing = null
 
@@ -118,14 +150,19 @@ export function useDrawnRange(
       stopGrowing = whenIdle(grow)
     }
 
-    node.addEventListener('scroll', soon, { passive: true })
+    node.addEventListener('scroll', scrolled, { passive: true })
     resizing.observe(node)
     soon()
 
+    if (!wholeDayDrawn.current) {
+      stopWidening = whenIdle(widen)
+    }
+
     return () => {
-      node.removeEventListener('scroll', soon)
+      node.removeEventListener('scroll', scrolled)
       resizing.disconnect()
       stopGrowing?.()
+      stopWidening?.()
 
       if (frame !== null) {
         cancelAnimationFrame(frame)
