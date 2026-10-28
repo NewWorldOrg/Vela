@@ -61,7 +61,7 @@
   },
   "resolutions": {
     "uuid": "^14.0.0",
-    "webpack-dev-middleware": "^7.4.6",
+    "webpack-dev-middleware": "^8.0.0",
     "jest-runtime": "30.4.2"
   }
 }
