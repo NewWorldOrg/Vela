@@ -15,6 +15,7 @@ import {
   GUTTER_PX,
   gridMinWidthOf,
   fallsWithin,
+  halfWidthOf,
   isDrawn,
   type MinuteRange,
   type OpeningSeam,
@@ -72,8 +73,8 @@ const GuideHeading = memo(function GuideHeading({
       {drawn && (
         <>
           <ChannelMark logo={c.logo} no={c.no} />
-          <InFull says={c.name}>
-            <span className="min-w-0 truncate">{c.name}</span>
+          <InFull says={halfWidthOf(c.name)}>
+            <span className="min-w-0 truncate">{halfWidthOf(c.name)}</span>
           </InFull>
         </>
       )}

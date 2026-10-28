@@ -13,6 +13,8 @@ import {
   foldedGuideOf,
   foldsAColumn,
   gridMinWidthOf,
+  genreWordOf,
+  halfWidthOf,
   isDrawn,
   isOnAir,
   joinedColumnsOf,
@@ -904,4 +906,21 @@ test('the script in the first HTML does not scroll above the start of the day', 
   run({ currentScript: { closest: () => guide } })
 
   assert.equal(guide.scrollTop, 0)
+})
+
+test('full-width letters, digits and signs are drawn half-width', () => {
+  assert.equal(halfWidthOf('ＮＨＫニュース７'), 'NHKニュース7')
+  assert.equal(halfWidthOf('第３５話「ａ！？」'), '第35話「a!?」')
+  assert.equal(halfWidthOf('（字）\u3000＃１５～'), '(字) #15~')
+})
+
+test('broadcast marks and kana are left as they are', () => {
+  assert.equal(halfWidthOf('🈑🈞アニメ・ドラマ'), '🈑🈞アニメ・ドラマ')
+  assert.equal(halfWidthOf('ｱｲｳ'), 'ｱｲｳ')
+})
+
+test('a genre is named in the cell by the word before its slash', () => {
+  assert.equal(genreWordOf('情報/ワイドショー'), '情報')
+  assert.equal(genreWordOf('アニメ/特撮'), 'アニメ')
+  assert.equal(genreWordOf('スポーツ'), 'スポーツ')
 })

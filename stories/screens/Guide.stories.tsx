@@ -6,7 +6,9 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 import {
   COLUMN_MIN_PX,
   bookingMarkOf,
+  genreWordOf,
   gridMinWidthOf,
+  halfWidthOf,
   isOnAir,
   nowLineTopOf,
 } from '@/lib/guide'
@@ -110,8 +112,12 @@ export const 通常: Story = {
     await expect(cells).toHaveLength(IN_GRID_ORDER.length)
 
     for (const [index, program] of IN_GRID_ORDER.entries()) {
-      await expect(cells[index]).toHaveTextContent(program.title)
-      await expect(cells[index]).toHaveTextContent(program.genreLabel)
+      await expect(cells[index]).toHaveTextContent(halfWidthOf(program.title))
+      if (cells[index].dataset.cellSize !== 'xs') {
+        await expect(cells[index]).toHaveTextContent(
+          genreWordOf(program.genreLabel),
+        )
+      }
     }
   },
 }

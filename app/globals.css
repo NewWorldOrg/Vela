@@ -2341,19 +2341,53 @@
 }
 
 @utility guide-cell {
-  @apply absolute right-px left-px z-[1] cursor-pointer overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none;
+  @apply absolute right-px left-px z-[1] flex cursor-pointer flex-col overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none;
+  --guide-pitch: calc(15.5rem / 16);
+  --guide-title: calc(12rem / 16);
+  --guide-desc: calc(10.75rem / 16);
+  --guide-desc-features: 'palt';
+  --guide-xs: calc(9.5rem / 16);
+  --guide-xs-pitch: calc(11.5rem / 16);
+}
+
+@utility guide-cell-text {
+  display: block;
+  min-height: 0;
+  max-height: round(down, 100%, var(--guide-pitch));
+  overflow: hidden;
+  line-height: var(--guide-pitch);
+}
+
+@utility guide-cell-title {
+  @apply block font-bold text-ink;
+  font-size: var(--guide-title);
+  line-height: var(--guide-pitch);
+  font-feature-settings: 'palt';
+}
+
+@utility guide-cell-desc {
+  @apply block text-ink-2;
+  font-size: var(--guide-desc);
+  line-height: var(--guide-pitch);
+  font-feature-settings: var(--guide-desc-features);
 }
 
 @utility guide-cell-genre {
-  @apply ml-[calc(5rem/16)] border-l border-dotted border-line-strong pl-[calc(5rem/16)] font-medium text-ink-3;
+  @apply mr-[calc(5rem/16)] border-r border-dotted border-line-strong pr-[calc(5rem/16)] font-medium text-ink-3;
+  line-height: 1;
 }
 
 @utility guide-cell-start {
   @apply mr-[calc(5rem/16)] font-code text-micro font-medium text-ink-3 tabular-nums;
+  line-height: 1;
 }
 
 @utility guide-cell-line {
-  @apply overflow-hidden text-[calc(10rem/16)] leading-tight font-medium text-ellipsis whitespace-nowrap;
+  @apply block overflow-hidden font-medium text-ellipsis whitespace-nowrap;
+  font-size: var(--guide-xs);
+  line-height: var(--guide-xs-pitch);
+  max-height: round(down, 100%, var(--guide-xs-pitch));
+  font-feature-settings: 'palt';
 }
 
 @utility arrives {

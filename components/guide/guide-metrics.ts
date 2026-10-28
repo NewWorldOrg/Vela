@@ -27,3 +27,5 @@ export const GENRE_CLASS_PAST: Record<Program['genre'], string> = {
   doc: 'border-dashed bg-surface-2 border-genre-doc-line',
   other: 'border-dashed bg-surface-2 border-genre-other-line',
 }
+
+export const ONE_LINE_BELOW_PX = 24

@@ -3,7 +3,7 @@
 import { memo } from 'react'
 
 import type { BookingMark } from '@/lib/guide'
-import { bookingMarkOf } from '@/lib/guide'
+import { bookingMarkOf, genreWordOf, halfWidthOf } from '@/lib/guide'
 import {
   RECORDING_IN_PROGRESS_TERM,
   RESERVATION_STANDING_TERMS,
@@ -14,12 +14,11 @@ import {
   GENRE_CLASS,
   GENRE_CLASS_PAST,
   HOUR_PX,
+  ONE_LINE_BELOW_PX,
 } from '@/components/guide/guide-metrics'
 import { RecordIcon } from '@/components/vela/icons'
 
 type CellSize = 'md' | 's' | 'xs'
-
-const GENRE_LABEL = 'guide-cell-genre'
 
 const MARK_BOX: Record<CellSize, string> = {
   md: 'size-[calc(13rem/16)]',
@@ -50,8 +49,10 @@ export const ProgramCell = memo(function ProgramCell({
   onSelect: (program: Program) => void
 }) {
   const height = (p.durationMin / 60) * HOUR_PX
-  const size: CellSize = height < 40 ? 'xs' : height < 72 ? 's' : 'md'
+  const size: CellSize =
+    height < ONE_LINE_BELOW_PX ? 'xs' : height < 72 ? 's' : 'md'
   const mark = bookingMarkOf(p.booking)
+  const title = halfWidthOf(p.title)
 
   return (
     <button
@@ -69,8 +70,8 @@ export const ProgramCell = memo(function ProgramCell({
         'guide-cell',
         past ? GENRE_CLASS_PAST[p.genre] : GENRE_CLASS[p.genre],
         size === 'md' && 'px-[calc(7rem/16)] py-1',
-        size === 's' && 'px-[calc(7rem/16)] py-0.5',
-        size === 'xs' && 'flex items-center px-1.5 py-0',
+        size === 's' && 'px-[calc(7rem/16)] py-px',
+        size === 'xs' && 'justify-center px-1.5 py-0',
         mark === 'booked' && 'outline-2 -outline-offset-2 outline-mint',
         mark === 'recording' && 'outline-2 -outline-offset-2 outline-coral',
         selected && 'z-[3] border-brand shadow-pop',
@@ -79,38 +80,23 @@ export const ProgramCell = memo(function ProgramCell({
       {size === 'xs' ? (
         <span className={cn('guide-cell-line', past && 'text-ink-2')}>
           {mark && <BookingGlyph mark={mark} size={size} />}
-          {p.title}
-          <span className={cn(GENRE_LABEL, 'text-[calc(10rem/16)]')}>
-            {p.genreLabel}
-          </span>
+          {title}
         </span>
       ) : (
-        <>
-          <span
-            className={cn(
-              'block leading-snug font-bold text-ink [font-feature-settings:"palt"]',
-              size === 'md' ? 'text-sub' : 'text-cap',
-              past && 'text-ink-2',
-            )}
-          >
+        <span className="guide-cell-text">
+          <span className={cn('guide-cell-title', past && 'text-ink-2')}>
             {mark && <BookingGlyph mark={mark} size={size} />}
             <span className="guide-cell-start">{p.startLabel.slice(3)}</span>
-            {p.title}
-            <span className={cn(GENRE_LABEL, 'text-micro')}>
-              {p.genreLabel}
-            </span>
+            {title}
           </span>
-          {p.endUndecided && (
-            <span className="mt-px block text-[calc(10.8rem/16)] leading-normal text-ink-2">
-              終了未定
+          <span className="guide-cell-desc">
+            <span className="guide-cell-genre">
+              {genreWordOf(p.genreLabel)}
             </span>
-          )}
-          {size === 'md' && p.description && (
-            <span className="mt-px block text-[calc(10.8rem/16)] leading-normal text-ink-2">
-              {p.description}
-            </span>
-          )}
-        </>
+            {p.endUndecided && '終了未定 '}
+            {p.description && halfWidthOf(p.description)}
+          </span>
+        </span>
       )}
     </button>
   )
