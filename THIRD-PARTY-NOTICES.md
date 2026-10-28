@@ -92,6 +92,7 @@ carries, and the license files Next.js ships with them, are under
 | File | Font | License |
 | --- | --- | --- |
 | `public/fonts/denpa-font.woff2` | Denpa Font 3.2, a monospaced round gothic for broadcast captions, data broadcasting and programme guides. Copyright 2022 The BIZ UDGothic Project Authors, Copyright (c) 2026 danything | OFL-1.1 |
+| `public/fonts/denpa-marks.woff2` | The broadcast marks of Denpa Font 3.2, cut from `denpa-font.woff2` when the image is built. Copyright 2022 The BIZ UDGothic Project Authors, Copyright (c) 2026 danything | OFL-1.1 |
 
 Each license is at `/usr/share/doc/vela/fonts/<file>.txt`.
 

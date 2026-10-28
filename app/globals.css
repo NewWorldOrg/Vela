@@ -370,13 +370,17 @@
 
 /* The broadcast marks (字, 再, デ …) come from Denpa Font, the round gothic
    bundled for data broadcasting, held to these blocks so the rest of the UI
-   keeps its own faces. SIL Open Font License 1.1: http://scripts.sil.org/OFL */
+   keeps its own faces. The image carries the marks cut out of the font by
+   scripts/denpa-marks.sh; without them the whole font is read.
+   SIL Open Font License 1.1: http://scripts.sil.org/OFL */
 @font-face {
   font-family: 'Denpa Font';
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/denpa-font.woff2') format('woff2');
+  src:
+    url('/fonts/denpa-marks.woff2') format('woff2'),
+    url('/fonts/denpa-font.woff2') format('woff2');
   unicode-range:
     U+1F110-1F16F, U+1F200-1F202, U+1F210-1F23B, U+1F240-1F248, U+1F250-1F251;
 }

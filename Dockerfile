@@ -1,5 +1,16 @@
 FROM node:24.22.1-slim AS base
 
+FROM python:3.13.15-slim-bookworm AS marks
+
+WORKDIR /marks
+
+COPY scripts/denpa-marks/requirements.txt ./
+RUN pip install --no-cache-dir --require-hashes -r requirements.txt
+
+COPY scripts/denpa-marks.sh scripts/
+COPY public/fonts/denpa-font.woff2 public/fonts/
+RUN sh scripts/denpa-marks.sh public/fonts/denpa-font.woff2 /out/denpa-marks.woff2
+
 FROM base AS builder
 
 WORKDIR /app
@@ -8,6 +19,7 @@ COPY package.json yarn.lock ./
 RUN yarn install --frozen-lockfile
 
 COPY . .
+COPY --from=marks /out/denpa-marks.woff2 public/fonts/denpa-marks.woff2
 RUN yarn build
 
 FROM builder AS notices
