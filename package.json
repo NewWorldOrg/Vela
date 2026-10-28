@@ -38,9 +38,9 @@
     "tailwind-merge": "^3.7.0"
   },
   "devDependencies": {
-    "@storybook/addon-a11y": "^10.6.3",
-    "@storybook/nextjs": "^10.6.3",
-    "@storybook/react": "^10.6.3",
+    "@storybook/addon-a11y": "^10.6.5",
+    "@storybook/nextjs": "^10.6.5",
+    "@storybook/react": "^10.6.5",
     "@storybook/test-runner": "^0.26.0",
     "@tailwindcss/postcss": "^4.3.3",
     "@types/node": "^24.19.0",
@@ -54,7 +54,7 @@
     "http-server": "^14",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.31",
-    "storybook": "^10.6.3",
+    "storybook": "^10.6.5",
     "tailwindcss": "^4.3.3",
     "typescript": "^6.0.3",
     "wait-on": "^9.5.1"
