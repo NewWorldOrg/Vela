@@ -67,20 +67,32 @@ test('while a new promise is on its way, what the last one settled with stays fo
   const kept = { key: '2026-10-28|terrestrial', value: ['夜の映画'] }
 
   assert.deepEqual(
-    keptWhileSettling(undefined, kept, '2026-10-28|terrestrial'),
+    keptWhileSettling(true, undefined, kept, '2026-10-28|terrestrial'),
     ['夜の映画'],
   )
   assert.deepEqual(
-    keptWhileSettling(['深夜の番組'], kept, '2026-10-28|terrestrial'),
+    keptWhileSettling(true, ['深夜の番組'], kept, '2026-10-28|terrestrial'),
     ['深夜の番組'],
   )
   assert.equal(
-    keptWhileSettling(undefined, kept, '2026-10-29|terrestrial'),
+    keptWhileSettling(true, undefined, kept, '2026-10-29|terrestrial'),
     undefined,
   )
-  assert.equal(keptWhileSettling(undefined, kept, '2026-10-28|bs'), undefined)
   assert.equal(
-    keptWhileSettling(undefined, null, '2026-10-28|terrestrial'),
+    keptWhileSettling(true, undefined, kept, '2026-10-28|bs'),
+    undefined,
+  )
+  assert.equal(
+    keptWhileSettling(true, undefined, null, '2026-10-28|terrestrial'),
+    undefined,
+  )
+})
+
+test('a page handed no promise, its whole day already in what it opened on, keeps nothing from before', () => {
+  const kept = { key: '2026-10-28|terrestrial', value: ['消えた番組'] }
+
+  assert.equal(
+    keptWhileSettling(false, undefined, kept, '2026-10-28|terrestrial'),
     undefined,
   )
 })

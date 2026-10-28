@@ -68,8 +68,9 @@ export interface Kept<T> {
   value: T
 }
 
-/** What to show while a promise is on its way: what it settled with once it has, and until then what the last one settled with, if that was for the same page. */
+/** What to show while a promise is on its way: what it settled with once it has, and until then what the last one settled with, if that was for the same page. A page handed no promise keeps nothing from before. */
 export function keptWhileSettling<T>(
+  waiting: boolean,
   settled: T | undefined,
   kept: Kept<T> | null,
   key: string,
@@ -78,7 +79,7 @@ export function keptWhileSettling<T>(
     return settled
   }
 
-  return kept?.key === key ? kept.value : undefined
+  return waiting && kept?.key === key ? kept.value : undefined
 }
 
 /** `useSettled`, holding on to what the last promise for the same page settled with while a new one, handed down by a refresh, is on its way. */
@@ -93,5 +94,5 @@ export function useSettledKept<T>(
     keep({ key, value: settled })
   }
 
-  return keptWhileSettling(settled, kept, key)
+  return keptWhileSettling(promise !== undefined, settled, kept, key)
 }
