@@ -20,6 +20,7 @@ import {
   newcomersOf,
   rowArrivesIn,
   rowDelayMs,
+  CODE_FACE,
   glyphLoadsOf,
   glyphsOf,
   GUIDE_FACES,
@@ -96,21 +97,29 @@ test('each face and weight the guide draws in is loaded ahead of scrolling', () 
     '400 1em "Zen Kaku Gothic New"',
     '500 1em "Zen Kaku Gothic New"',
     '700 1em "Zen Kaku Gothic New"',
-    '500 1em "M PLUS 1 Code"',
   ])
+  assert.equal(CODE_FACE, '500 1em "M PLUS 1 Code"')
 })
 
 test('the titles are also loaded in the face the detail panel heads them with', () => {
   assert.equal(PANEL_TITLE_FACE, '700 1em "Zen Maru Gothic"')
-  assert.deepEqual(glyphLoadsOf(['NHK 1', '番組'], ['番組', '表']), [
+  assert.deepEqual(glyphLoadsOf(['NHK 1', '番組'], ['番組', '表'], []), [
     ...GUIDE_FACES.map((face) => [face, 'NHK 1番組']),
     [PANEL_TITLE_FACE, '番組表'],
   ])
 })
 
+test('the code face is loaded only with what is drawn in it, never the titles', () => {
+  assert.deepEqual(glyphLoadsOf(['番組'], ['番組'], ['19:00', '4時']), [
+    ...GUIDE_FACES.map((face) => [face, '番組']),
+    [PANEL_TITLE_FACE, '番組'],
+    [CODE_FACE, '19:04時'],
+  ])
+})
+
 test('nothing is loaded for a guide with no text', () => {
-  assert.deepEqual(glyphLoadsOf([], []), [])
-  assert.deepEqual(glyphLoadsOf([], ['題']), [[PANEL_TITLE_FACE, '題']])
+  assert.deepEqual(glyphLoadsOf([], [], []), [])
+  assert.deepEqual(glyphLoadsOf([], ['題'], []), [[PANEL_TITLE_FACE, '題']])
 })
 
 test('the burst throws twenty shapes all the way round', () => {

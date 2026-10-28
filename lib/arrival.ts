@@ -90,8 +90,10 @@ export const GUIDE_FACES = [
   '400 1em "Zen Kaku Gothic New"',
   '500 1em "Zen Kaku Gothic New"',
   '700 1em "Zen Kaku Gothic New"',
-  '500 1em "M PLUS 1 Code"',
 ] as const
+
+/** The face of the times and numbers. It is loaded with what is drawn in it, not the titles, which it never draws. */
+export const CODE_FACE = '500 1em "M PLUS 1 Code"'
 
 export function glyphsOf(texts: readonly string[]): string {
   return [...new Set(texts.join(''))].join('')
@@ -102,16 +104,26 @@ export const PANEL_TITLE_FACE = '700 1em "Zen Maru Gothic"'
 export function glyphLoadsOf(
   drawn: readonly string[],
   titles: readonly string[],
+  coded: readonly string[],
 ): Array<readonly [string, string]> {
+  const loads: Array<readonly [string, string]> = []
   const drawnGlyphs = glyphsOf(drawn)
   const titleGlyphs = glyphsOf(titles)
+  const codedGlyphs = glyphsOf(coded)
 
-  return [
-    ...(drawnGlyphs === ''
-      ? []
-      : GUIDE_FACES.map((face) => [face, drawnGlyphs] as const)),
-    ...(titleGlyphs === '' ? [] : [[PANEL_TITLE_FACE, titleGlyphs] as const]),
-  ]
+  if (drawnGlyphs !== '') {
+    loads.push(...GUIDE_FACES.map((face) => [face, drawnGlyphs] as const))
+  }
+
+  if (titleGlyphs !== '') {
+    loads.push([PANEL_TITLE_FACE, titleGlyphs])
+  }
+
+  if (codedGlyphs !== '') {
+    loads.push([CODE_FACE, codedGlyphs])
+  }
+
+  return loads
 }
 
 export const BURST_SHAPES = [

@@ -20,6 +20,7 @@ const THE_SUITE = [
   'tests/components/data-broadcast/residence.test.ts',
   'tests/components/data-broadcast/rom-sound.test.ts',
   'tests/components/every-weight-that-is-drawn-is-loaded.test.ts',
+  'tests/components/guide/cell-class.test.ts',
   'tests/components/library/the-same-line-for-every-chip.test.ts',
   'tests/components/library/what-the-library-put-away.test.ts',
   'tests/components/live/live-captions.test.ts',

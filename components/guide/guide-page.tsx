@@ -97,8 +97,23 @@ export function GuideView({
           ]),
         ],
         guide.programs.map((p) => p.title),
+        [
+          ...guide.channels.map((c) => c.no ?? ''),
+          ...guide.programs.map((p) => p.startLabel),
+          ...Array.from(
+            { length: guide.windowHours },
+            (_, i) => `${(guide.windowStartHour + i) % 24}時`,
+          ),
+          guide.nowLabel ?? '',
+        ],
       ),
-    [guide.channels, guide.programs],
+    [
+      guide.channels,
+      guide.programs,
+      guide.windowHours,
+      guide.windowStartHour,
+      guide.nowLabel,
+    ],
   )
 
   const shown = selected
