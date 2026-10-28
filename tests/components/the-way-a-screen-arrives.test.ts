@@ -677,9 +677,10 @@ test('the guide shows its frame first and fills its columns under the cover', as
   )
   assert.match(
     hook,
-    /useState\(useCameWithTheHtml\(\)\)|const cameWithTheHtml = useCameWithTheHtml\(\)\s*const \[filled, setFilled\] = useState\(cameWithTheHtml\)/,
-    'a page opened directly keeps the filled columns its HTML came with',
+    /const \[filled, setFilled\] = useState\(false\)/,
+    'a page opened directly also comes with its frame alone, and fills its columns in the browser',
   )
+  assert.doesNotMatch(hook, /useCameWithTheHtml/)
   assert.match(
     hydrating,
     /useSyncExternalStore\(\s*listenToNothing,\s*\(\) => false,\s*\(\) => true,?\s*\)/,

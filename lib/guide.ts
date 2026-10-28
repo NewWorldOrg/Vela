@@ -441,7 +441,7 @@ export function wholeDayOf<P extends { startMin: number }>(
 
 export const HOURS_DRAWN_BEFORE_MEASURING = 12
 
-/** The minutes drawn before the guide is measured: the hours around where it opens, so the HTML carries what is first in view and not the whole day. */
+/** The minutes drawn before the guide is measured: the hours around where it opens, so the first filling builds what is first in view and not the whole day. */
 export function minutesBeforeMeasuringOf(
   nowMin: number | undefined,
   windowMin: number,
