@@ -18,7 +18,7 @@ jobs:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/image
         with:
           tag: vela:built
@@ -30,7 +30,7 @@ jobs:
       contents: read
       packages: write
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: The tag is named for this commit
         run: echo "REFERENCE=ghcr.io/${GITHUB_REPOSITORY,,}:sha-${GITHUB_SHA::12}" >> "${GITHUB_ENV}"
       - name: Sign in to the registry

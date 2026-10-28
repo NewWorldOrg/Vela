@@ -11,6 +11,7 @@ import {
 } from 'react'
 
 import { MOVED_BY_HAND, delayOf } from '@/lib/arrival'
+import { halfWidthOf } from '@/lib/guide-cell'
 import {
   GUTTER_PX,
   gridMinWidthOf,
@@ -28,7 +29,11 @@ import {
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
-import { HOUR_PX } from '@/components/guide/guide-metrics'
+import {
+  HOUR_REM,
+  hourPxIn,
+  remOfMinutes,
+} from '@/components/guide/guide-metrics'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
@@ -45,7 +50,7 @@ const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
 
 const COLUMN_FLEX = '1 1 0'
 
-const UNSCHEDULED_LABEL_PX = 52
+const UNSCHEDULED_LABEL_REM = 3.25
 
 const NOTHING_CARRIED: Program[] = []
 
@@ -72,8 +77,8 @@ const GuideHeading = memo(function GuideHeading({
       {drawn && (
         <>
           <ChannelMark logo={c.logo} no={c.no} />
-          <InFull says={c.name}>
-            <span className="min-w-0 truncate">{c.name}</span>
+          <InFull says={halfWidthOf(c.name)}>
+            <span className="min-w-0 truncate">{halfWidthOf(c.name)}</span>
           </InFull>
         </>
       )}
@@ -120,19 +125,17 @@ const GuideColumn = memo(function GuideColumn({
       {c.sub &&
         carried &&
         unscheduledSpansOf(carried, windowHours * 60).map((span) => {
-          const height = (span.durationMin / 60) * HOUR_PX
-
           return (
             <div
               key={span.startMin}
               data-guide-unscheduled
               style={{
-                top: `${(span.startMin / 60) * HOUR_PX}px`,
-                height: `${height}px`,
+                top: remOfMinutes(span.startMin),
+                height: remOfMinutes(span.durationMin),
               }}
               className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
             >
-              {height >= UNSCHEDULED_LABEL_PX && (
+              {(span.durationMin / 60) * HOUR_REM >= UNSCHEDULED_LABEL_REM && (
                 <span className="text-micro tracking-[0.2em] text-ink-3 [writing-mode:vertical-rl]">
                   編成なし
                 </span>
@@ -245,7 +248,7 @@ export function GuideGrid({
 
     node.scrollTop = openingScrollTopOf(
       nowAtOpening.current,
-      HOUR_PX,
+      hourPxIn(node.ownerDocument),
       node.clientHeight - heading,
     )
   }, [])
@@ -259,7 +262,7 @@ export function GuideGrid({
 
     const opens = openingSeamOf({
       nowMin,
-      hourPx: HOUR_PX,
+      hourPx: hourPxIn(node.ownerDocument),
       scrollTop: node.scrollTop,
       headingPx:
         node.querySelector<HTMLElement>('[data-guide-heading]')?.parentElement
@@ -310,7 +313,7 @@ export function GuideGrid({
             opening && 'guide-settles',
           )}
           style={{
-            minWidth: `${gridMinWidthOf(channels.length)}px`,
+            minWidth: gridMinWidthOf(channels.length),
             ...(seam !== null && {
               transformOrigin: `50% ${seam.origin}px`,
             }),
@@ -334,12 +337,12 @@ export function GuideGrid({
 
           <div
             className="relative flex rounded-b-lg"
-            style={{ height: `${windowHours * HOUR_PX}px` }}
+            style={{ height: remOfMinutes(windowHours * 60) }}
           >
             {cameWithTheHtml && nowMin !== undefined && (
               <script
                 dangerouslySetInnerHTML={{
-                  __html: openingScrollScriptOf(nowMin, HOUR_PX),
+                  __html: openingScrollScriptOf(nowMin, HOUR_REM),
                 }}
               />
             )}
@@ -352,7 +355,7 @@ export function GuideGrid({
                 <div
                   key={h}
                   className="flex items-start justify-center pt-1.5 font-code text-cap text-ink-3 first:border-t-0 [&+&]:border-t [&+&]:border-dashed [&+&]:border-line"
-                  style={{ height: `${HOUR_PX}px` }}
+                  style={{ height: remOfMinutes(60) }}
                 >
                   {h % 24}時
                 </div>
@@ -368,7 +371,7 @@ export function GuideGrid({
                 <div
                   key={h}
                   className="absolute right-0 left-0 h-0 border-t border-line"
-                  style={{ top: `${i * HOUR_PX}px` }}
+                  style={{ top: remOfMinutes(i * 60) }}
                 />
               ))}
             </div>
@@ -404,16 +407,13 @@ export function GuideGrid({
               nowMin !== undefined &&
               (done || opening) &&
               (() => {
-                const lineTopPx = nowLineTopOf(nowMin, HOUR_PX, windowHours)
-                const labelTopPx = nowLabelTopOf(lineTopPx)
-
                 return (
                   <div
                     data-now-line
                     className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-brand"
                     style={{
                       ...delayOf(opening ? NOW_LABEL_AFTER_OPENING_MS : 0),
-                      top: `${lineTopPx}px`,
+                      top: nowLineTopOf(nowMin, HOUR_REM, windowHours),
                     }}
                   >
                     <svg
@@ -433,7 +433,7 @@ export function GuideGrid({
                     </svg>
                     <span
                       className="guide-now-pop absolute left-1.5 rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand"
-                      style={{ top: `${labelTopPx}px` }}
+                      style={{ top: nowLabelTopOf(nowMin, HOUR_REM) }}
                     >
                       {nowLabel}
                     </span>

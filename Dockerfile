@@ -1,6 +1,6 @@
 FROM node:24.22.1-slim AS base
 
-FROM python:3.13.15-slim-bookworm AS marks
+FROM python:3.15.2-slim-bookworm AS marks
 
 WORKDIR /marks
 

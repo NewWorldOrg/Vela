@@ -100,6 +100,7 @@ const THE_SUITE = [
   'tests/lib/encode.test.ts',
   'tests/lib/external-player.test.ts',
   'tests/lib/format.test.ts',
+  'tests/lib/guide-cell.test.ts',
   'tests/lib/guide.test.ts',
   'tests/lib/hybridcast/boundary.test.ts',
   'tests/lib/hybridcast/event-information.test.ts',
