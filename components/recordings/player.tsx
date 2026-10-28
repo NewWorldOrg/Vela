@@ -88,6 +88,7 @@ import {
 import { MAIN_SOUND, type SoundTrack } from '@/repository/sounds'
 import {
   videoPictureHref,
+  videoPlaylistHref,
   videoFrameHref,
   THE_SOUNDS_COULD_NOT_BE_READ,
   type PlaybackProfile,
@@ -176,6 +177,12 @@ import {
   feedRecording as feedTheRecording,
   type FeedRecording,
 } from '@/components/recordings/recording-feed'
+import {
+  openRecordingPlaylist,
+  type OpenRecordingPlaylist,
+  type RecordingPlaylistFault,
+} from '@/components/recordings/recording-playlist'
+import { useRecordingCarriage } from '@/hooks/useRecordingCarriage'
 import { RecordingDataBroadcast } from '@/components/recordings/recording-data-broadcast'
 import {
   readDataBroadcast as readTheDataBroadcast,
@@ -244,6 +251,8 @@ export function Player({
   takeCapture = takeItNow,
   readCaptions = readTheCaptions,
   feedRecording = feedTheRecording,
+  openPlaylist = openRecordingPlaylist,
+  playlistHref = videoPlaylistHref,
   readDataBroadcast = readTheDataBroadcast,
   readDataBroadcastModule = readTheModule,
   autoOpensDataBroadcast = false,
@@ -287,6 +296,13 @@ export function Player({
   takeCapture?: TakeCapture
   readCaptions?: ReadCaptions
   feedRecording?: FeedRecording
+  openPlaylist?: OpenRecordingPlaylist
+  playlistHref?: (
+    id: string,
+    from: number,
+    profile?: PlaybackProfile,
+    sound?: SoundTrack,
+  ) => string
   readDataBroadcast?: ReadDataBroadcast
   readDataBroadcastModule?: ReadDataBroadcastModule
   autoOpensDataBroadcast?: boolean
@@ -377,6 +393,8 @@ export function Player({
   const [position, setPosition] = useState(startAt ?? 0)
   const onTheFly = plan.transcodes
   const [streamed, setStreamed] = useState(opened.transcodes)
+  const carriage = useRecordingCarriage()
+  const playlist = streamed && carriage === 'playlist'
   const [openings, setOpenings] = useState(0)
   const cut = useRef(false)
   const [pictureAsked, setPictureAsked] = useState<PictureAsked | undefined>(
@@ -392,9 +410,10 @@ export function Player({
           }
         : undefined,
   )
-  const pictureFormat = pictureAsked
-    ? formatFor(pictureAsked.format, pictureAsked.profile)
-    : NO_FORMAT_TO_SETTLE
+  const pictureFormat =
+    pictureAsked && !playlist
+      ? formatFor(pictureAsked.format, pictureAsked.profile)
+      : NO_FORMAT_TO_SETTLE
   const pictureSettled = pictureFormat.settled
   const pictureFormatted = pictureFormat.settled
     ? pictureFormat.format
@@ -413,6 +432,18 @@ export function Player({
           )
         : undefined,
     [d.id, pictureHref, pictureAsked, pictureSettled, pictureFormatted],
+  )
+  const playlistAt = useMemo(
+    () =>
+      pictureAsked && playlist
+        ? playlistHref(
+            d.id,
+            pictureAsked.from,
+            pictureAsked.profile,
+            pictureAsked.sound,
+          )
+        : undefined,
+    [d.id, playlistHref, pictureAsked, playlist],
   )
 
   const poster =
@@ -704,6 +735,12 @@ export function Player({
     })
   }
 
+  const breaks = (fault: PlaybackFault) => {
+    attempt.current += 1
+    setFault(faultOnTheFace(d) ?? fault)
+    setPhase('broken')
+  }
+
   const stumbled = () => {
     const mine = (attempt.current += 1)
     const onTheFace = faultOnTheFace(d)
@@ -748,11 +785,42 @@ export function Player({
     }
   })
 
+  const playlistFaulted = useEffectEvent((fault: RecordingPlaylistFault) =>
+    breaks({
+      kind: fault === 'unplayable' ? 'theBrowserWouldNotPlay' : 'transcode',
+    }),
+  )
+
   useEffect(() => {
     const element = video.current
 
-    if (!element || source === undefined || !streamed || !faceUp) {
+    if (
+      !element ||
+      source === undefined ||
+      !streamed ||
+      !faceUp ||
+      carriage === undefined
+    ) {
       return
+    }
+
+    if (carriage === 'none') {
+      const saying = setTimeout(() => playlistFaulted('unplayable'), 0)
+
+      return () => clearTimeout(saying)
+    }
+
+    if (carriage === 'playlist') {
+      if (playlistAt === undefined) {
+        return
+      }
+
+      const played = openPlaylist(element, playlistAt, {
+        onFault: (fault) => playlistFaulted(fault),
+        onCut: () => feedCut(),
+      })
+
+      return () => played.close()
     }
 
     const carrying = feedRecording(element, source, {
@@ -762,7 +830,16 @@ export function Player({
     })
 
     return () => carrying.close()
-  }, [source, streamed, faceUp, feedRecording, openings])
+  }, [
+    source,
+    streamed,
+    faceUp,
+    carriage,
+    playlistAt,
+    feedRecording,
+    openPlaylist,
+    openings,
+  ])
 
   const answer = (what: PlayerBezel) =>
     setBezel((last) => ({ ...what, nth: (last?.nth ?? 0) + 1 }))
@@ -1376,7 +1453,7 @@ export function Player({
                     setPhase((was) => (was === 'waiting' ? was : 'paused'))
                   }
                   onEnded={() => setPhase('paused')}
-                  onError={stumbled}
+                  onError={playlist ? undefined : stumbled}
                   onProgress={(event) =>
                     noteBuffered(event.currentTarget.buffered)
                   }
@@ -1717,11 +1794,15 @@ export function Player({
                     onOpenChange={setSettingsOpen}
                     profile={profile}
                     onChooseProfile={chooseProfile}
-                    format={{
-                      choices: formatsToChoose,
-                      chosen: choiceShown(formatChoice, formatsToChoose),
-                      onChoose: chooseFormat,
-                    }}
+                    format={
+                      playlist
+                        ? undefined
+                        : {
+                            choices: formatsToChoose,
+                            chosen: choiceShown(formatChoice, formatsToChoose),
+                            onChoose: chooseFormat,
+                          }
+                    }
                     onTheFly={onTheFly}
                     speed={speed}
                     onChooseSpeed={chooseSpeed}

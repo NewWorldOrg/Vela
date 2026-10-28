@@ -5,6 +5,7 @@ import { test } from 'node:test'
 import {
   PLAYBACK_PROFILES,
   videoPictureHref,
+  videoPlaylistHref,
   WHEN_CARRYING_A_SOUND,
   whyItRefused,
 } from '@/repository/video-paths'
@@ -198,4 +199,28 @@ test('a picture asked for without a source is asked for as it always was', () =>
     videoPictureHref('1266', 90, '720p60', 'main'),
     '/api/videos/1266/play?from=90&profile=720p60&sound=main',
   )
+})
+
+test('the playlist of a recording names the second it starts at, the profile and the sound', () => {
+  assert.equal(
+    videoPlaylistHref('1266', 612, '720p60', 'secondary'),
+    '/api/videos/1266/hls.m3u8?from=612&profile=720p60&sound=secondary',
+  )
+})
+
+test('the playlist names zero for the beginning, so the remembered position never moves it', () => {
+  assert.equal(videoPlaylistHref('1266', 0), '/api/videos/1266/hls.m3u8?from=0')
+})
+
+test('the playlist starts at the second the player counts from, to the millisecond', () => {
+  assert.equal(
+    videoPlaylistHref('1266', 612.3456, '1080p60'),
+    '/api/videos/1266/hls.m3u8?from=612.346&profile=1080p60',
+  )
+})
+
+test('the playlist asks for no format and no source, the endpoint takes neither', () => {
+  const href = videoPlaylistHref('1266', 90, '720p60', 'main')
+
+  assert.doesNotMatch(href, /[?&](format|source|decodes)=/)
 })

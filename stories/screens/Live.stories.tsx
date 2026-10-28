@@ -75,6 +75,7 @@ import type { OpenPlaylist } from '@/components/live/live-playlist'
 import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { inTheApp } from '@/stories/frames'
+import { withoutAMediaSource } from '@/stories/fixtures/without-a-media-source'
 import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
 
 class ScriptedSocket implements LiveSocket {
@@ -1377,48 +1378,8 @@ const holdingThePlaylist: OpenPlaylist = (_video, href) => {
   return { leave: () => {} }
 }
 
-const HLS = 'application/vnd.apple.mpegurl'
-
-/** Takes both media sources away for as long as a story is up, with the video answering about HLS as it is told. */
-function withoutAMediaSource(playsHls: CanPlayTypeResult): () => () => void {
-  return () => {
-    const held = window as unknown as Record<string, unknown>
-    const sources = ['MediaSource', 'ManagedMediaSource'].map(
-      (name) => [name, Object.getOwnPropertyDescriptor(window, name)] as const,
-    )
-    const canPlayType = Object.getOwnPropertyDescriptor(
-      HTMLMediaElement.prototype,
-      'canPlayType',
-    )
-
-    handedPlaylists.length = 0
-
-    for (const [name] of sources) {
-      Reflect.deleteProperty(held, name)
-    }
-
-    Object.defineProperty(HTMLMediaElement.prototype, 'canPlayType', {
-      configurable: true,
-      writable: true,
-      value: (type: string) => (type === HLS ? playsHls : ''),
-    })
-
-    return () => {
-      for (const [name, was] of sources) {
-        if (was) {
-          Object.defineProperty(window, name, was)
-        }
-      }
-
-      if (canPlayType) {
-        Object.defineProperty(
-          HTMLMediaElement.prototype,
-          'canPlayType',
-          canPlayType,
-        )
-      }
-    }
-  }
+const forgetThePlaylists = () => {
+  handedPlaylists.length = 0
 }
 
 export const MSE_の無いブラウザは_HLS_のプレイリストで開き字幕と形式を置かない: Story =
@@ -1428,7 +1389,7 @@ export const MSE_の無いブラウザは_HLS_のプレイリストで開き字�
       askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
       openPlaylist: holdingThePlaylist,
     },
-    beforeEach: withoutAMediaSource('maybe'),
+    beforeEach: withoutAMediaSource('maybe', forgetThePlaylists),
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement)
 
@@ -1452,7 +1413,7 @@ export const MSE_の無いブラウザは_HLS_のプレイリストで開き字�
 
 export const MSE_も_HLS_も無いブラウザは再生できないと言う: Story = {
   args: { openPlaylist: holdingThePlaylist },
-  beforeEach: withoutAMediaSource(''),
+  beforeEach: withoutAMediaSource('', forgetThePlaylists),
   play: async ({ canvasElement }) => {
     await expect(
       await within(canvasElement).findByText(

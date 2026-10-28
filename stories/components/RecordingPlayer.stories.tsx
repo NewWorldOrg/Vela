@@ -57,8 +57,16 @@ import type {
   FeedRecording,
   RecordingFeedEvents,
 } from '@/components/recordings/recording-feed'
+import type {
+  OpenRecordingPlaylist,
+  RecordingPlaylistEvents,
+} from '@/components/recordings/recording-playlist'
+import { withoutAMediaSource } from '@/stories/fixtures/without-a-media-source'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
-import type { ReadDataBroadcast } from '@/components/recordings/read-data-broadcast'
+import type {
+  ReadDataBroadcast,
+  ReadDataBroadcastModule,
+} from '@/components/recordings/read-data-broadcast'
 import {
   DATA_BROADCAST_CATALOG,
   PROGRAMME_READING_CATALOG,
@@ -5335,5 +5343,313 @@ export const 不透明の帯の放送も背景なしで帯が消える: Story = 
     await expect(alphaAt(canvasElement, SOLID_BAND, 34, 46)).toBeGreaterThan(
       200,
     )
+  },
+}
+
+const handedPlaylists: string[] = []
+
+const playlistHeard: { events?: RecordingPlaylistEvents } = {}
+
+const reasonsAsked: string[] = []
+
+const holdingThePlaylist: OpenRecordingPlaylist = (_video, href, events) => {
+  handedPlaylists.push(href)
+  playlistHeard.events = events
+
+  return { close: () => {} }
+}
+
+const playingThePlaylist: OpenRecordingPlaylist = (video, href, events) => {
+  holdingThePlaylist(video, href, events)
+  video.src = DRAWN_PICTURE
+
+  return { close: () => {} }
+}
+
+const captionsAskedAt: number[] = []
+
+const readingTheCaptionsAt: ReadCaptions = async (_id, fromSec) => {
+  captionsAskedAt.push(fromSec)
+
+  return { state: 'read', window: CAPTION_ALL_ALONG }
+}
+
+async function askedWhy(href: string): Promise<PlaybackFault> {
+  reasonsAsked.push(href)
+
+  return { kind: 'tooManyAtOnce' }
+}
+
+const forgetWhatWasHanded = () => {
+  handedPlaylists.length = 0
+  reasonsAsked.length = 0
+  captionsAskedAt.length = 0
+  broadcastAsked.length = 0
+  fed.length = 0
+  playlistHeard.events = undefined
+  document.cookie = forgettingCookie(FORMAT_COOKIE)
+}
+
+const PLAYLIST_AT_TEN_MINUTES =
+  '/api/videos/1266/hls.m3u8?from=600&profile=1080p60'
+
+const ON_A_PLAYLIST = {
+  detail: detail('1266'),
+  startAt: 600,
+  openPlaylist: holdingThePlaylist,
+  feedRecording: keptForTheFeed,
+  askWhy: askedWhy,
+}
+
+export const MSE_の無いブラウザはオンザフライを_HLS_で開き録画の秒で字幕を出し形式の行を置かない: Story =
+  {
+    args: {
+      ...ON_A_PLAYLIST,
+      detail: {
+        ...detail('1266'),
+        service: { networkId: 32736, serviceId: 1024 },
+      },
+      plan: CAPTIONED,
+      openPlaylist: playingThePlaylist,
+      profiles: LIVE_PROFILE_FIXTURES_EVERY_FORMAT,
+      askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY,
+      readCaptions: readingTheCaptionsAt,
+    },
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() =>
+        expect(handedPlaylists).toEqual([PLAYLIST_AT_TEN_MINUTES]),
+      )
+      await expect(fed).toEqual([])
+      await waitFor(
+        () => expect(canvas.getByText(/^10:0\d \/ 4:12:38$/)).toBeVisible(),
+        { timeout: 10000 },
+      )
+      await captionSays(canvasElement, 'shown')
+      await expect(captionsAskedAt[0]).toBeGreaterThanOrEqual(600)
+      await expect(canvas.getByRole('button', { name: '字幕' })).toBeVisible()
+
+      await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+      await screen.findByRole('group', { name: '画質' })
+      await expect(screen.queryByRole('group', { name: '形式' })).toBeNull()
+    },
+  }
+
+export const HLS_でシークすると秒を変えてプレイリストを開き直し_時刻は録画の秒のまま: Story =
+  {
+    args: ON_A_PLAYLIST,
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() =>
+        expect(handedPlaylists).toEqual([PLAYLIST_AT_TEN_MINUTES]),
+      )
+      await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
+      await waitFor(() =>
+        expect(handedPlaylists.at(-1)).toBe(
+          '/api/videos/1266/hls.m3u8?from=610&profile=1080p60',
+        ),
+      )
+      await expect(canvas.getByText('10:10 / 4:12:38')).toBeVisible()
+      await expect(fed).toEqual([])
+    },
+  }
+
+export const HLS_でも_OP_を飛ばすと区間の終わりからプレイリストを開き直す: Story =
+  {
+    args: {
+      ...ON_A_PLAYLIST,
+      plan: { ...ON_THE_FLY, chapters: THEMED_CHAPTERS },
+      startAt: 120,
+    },
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await userEvent.click(
+        await canvas.findByRole('button', { name: SKIP_THE_OPENING }),
+      )
+      await waitFor(() =>
+        expect(handedPlaylists.at(-1)).toBe(
+          '/api/videos/1266/hls.m3u8?from=180&profile=1080p60',
+        ),
+      )
+      await expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible()
+      await expect(canvas.queryByRole('button', { name: ANY_SKIP })).toBeNull()
+    },
+  }
+
+export const HLS_を断られたら変換の失敗と言い_再試行で同じ秒から開き直す: Story =
+  {
+    args: ON_A_PLAYLIST,
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(playlistHeard.events).toBeDefined())
+      playlistHeard.events?.onFault('refused')
+
+      await expect(
+        await canvas.findByText('再生を開始できませんでした'),
+      ).toBeVisible()
+      await expect(
+        canvas.getByText('元 TS からのトランスコードに失敗しました。'),
+      ).toBeVisible()
+      await expect(reasonsAsked).toEqual([])
+
+      await userEvent.click(canvas.getByRole('button', { name: '再試行' }))
+      await waitFor(() => expect(handedPlaylists).toHaveLength(2))
+      await expect(handedPlaylists.at(-1)).toBe(PLAYLIST_AT_TEN_MINUTES)
+    },
+  }
+
+export const HLS_の映像を復号できなければこのブラウザーでは再生できないと言う: Story =
+  {
+    args: ON_A_PLAYLIST,
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(playlistHeard.events).toBeDefined())
+      playlistHeard.events?.onFault('unplayable')
+
+      await expect(
+        await canvas.findByText('このブラウザーでは再生できません'),
+      ).toBeVisible()
+      await expect(
+        canvas.getByText(
+          'トランスコードした映像をこのブラウザーが再生できませんでした。',
+        ),
+      ).toBeVisible()
+      await expect(canvas.queryByRole('button', { name: '再試行' })).toBeNull()
+      await expect(reasonsAsked).toEqual([])
+    },
+  }
+
+export const HLS_が止めているあいだに切れたら_次の再生でその秒から開き直す: Story =
+  {
+    args: ON_A_PLAYLIST,
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(playlistHeard.events).toBeDefined())
+      playlistHeard.events?.onCut()
+      await expect(handedPlaylists).toHaveLength(1)
+
+      await userEvent.click(
+        canvas.getAllByRole('button', { name: '再生' }).at(-1) as HTMLElement,
+      )
+      await waitFor(() => expect(handedPlaylists).toHaveLength(2))
+      await expect(handedPlaylists.at(-1)).toBe(PLAYLIST_AT_TEN_MINUTES)
+      await expect(reasonsAsked).toEqual([])
+    },
+  }
+
+export const MSE_も_HLS_も無いブラウザはオンザフライを再生できないと言う: Story =
+  {
+    args: ON_A_PLAYLIST,
+    beforeEach: withoutAMediaSource('', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      await expect(
+        await within(canvasElement).findByText(
+          'このブラウザーでは再生できません',
+        ),
+      ).toBeVisible()
+      await expect(handedPlaylists).toEqual([])
+      await expect(fed).toEqual([])
+      await expect(reasonsAsked).toEqual([])
+    },
+  }
+
+export const MSE_の無いブラウザでもエンコード版は映像のアドレスにそのまま渡す: Story =
+  {
+    args: {
+      ...ON_A_PLAYLIST,
+      detail: detail('1274'),
+      plan: WITH_AN_ARTEFACT,
+      startAt: 0,
+      pictureHref: () => DRAWN_PICTURE,
+    },
+    beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
+    play: async ({ canvasElement }) => {
+      await waitFor(() =>
+        expect(canvasElement.querySelector('video')).toHaveAttribute(
+          'src',
+          DRAWN_PICTURE,
+        ),
+      )
+      await expect(handedPlaylists).toEqual([])
+      await expect(fed).toEqual([])
+    },
+  }
+
+const BROADCAST_FROM_TEN_MINUTES = (() => {
+  const timeline = throughout(DATA_BROADCAST_CATALOG)
+
+  return {
+    ...timeline,
+    carousels: timeline.carousels.map((carousel) => ({
+      ...carousel,
+      versions: carousel.versions.map((version) => ({
+        ...version,
+        fromSec: 600,
+        toSec: 1200,
+      })),
+    })),
+  }
+})()
+
+const modulesReadAt: number[] = []
+
+const readingTheModulesAt: ReadDataBroadcastModule = async (
+  id,
+  placed,
+  signal,
+) => {
+  modulesReadAt.push(placed.fromSec)
+
+  return readingTheModules(id, placed, signal)
+}
+
+export const HLS_でも録画のデータ放送を置き_録画の秒で合わせる: Story = {
+  args: {
+    ...ON_A_PLAYLIST,
+    detail: {
+      ...detail('1266'),
+      service: { networkId: 32736, serviceId: 1024 },
+    },
+    openPlaylist: playingThePlaylist,
+    readDataBroadcast: readingTheBroadcast({
+      state: 'read',
+      timeline: BROADCAST_FROM_TEN_MINUTES,
+    }),
+    readDataBroadcastModule: readingTheModulesAt,
+  },
+  beforeEach: withoutAMediaSource('maybe', () => {
+    forgetWhatWasHanded()
+    modulesReadAt.length = 0
+  }),
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(handedPlaylists).toEqual([PLAYLIST_AT_TEN_MINUTES]),
+    )
+    await expect(
+      await canvas.findByRole(
+        'button',
+        { name: 'データ放送' },
+        { timeout: 10000 },
+      ),
+    ).toBeVisible()
+    await expect(broadcastAsked).toEqual(['1266/—'])
+    await waitFor(() => expect(modulesReadAt.length).toBeGreaterThan(0), {
+      timeout: 10000,
+    })
+    await expect(modulesReadAt.every((at) => at === 600)).toBe(true)
   },
 }
