@@ -28,7 +28,7 @@
     "acorn": "^8.19.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "next": "16.4.2",
+    "next": "16.4.3",
     "openapi-fetch": "^0.17.0",
     "prettier": "^3.9.10",
     "radix-ui": "^1.8.1",
@@ -50,7 +50,7 @@
     "concurrently": "^10.0.6",
     "esbuild": "0.28.2",
     "eslint": "^10.13.0",
-    "eslint-config-next": "16.4.2",
+    "eslint-config-next": "16.4.3",
     "http-server": "^14",
     "openapi-typescript": "^7.13.0",
     "postcss": "^8.5.31",
@@ -62,6 +62,6 @@
   "resolutions": {
     "uuid": "^11.1.1",
     "webpack-dev-middleware": "^7.4.6",
-    "jest-runtime": "30.4.2"
+    "jest-runtime": "30.5.2"
   }
 }
