@@ -10,42 +10,42 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: yarn lint
 
   typecheck:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: yarn typecheck
 
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: yarn test
 
   codegen:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: yarn codegen:verify
 
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: yarn build
 
   release-tags:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: A prerelease never takes latest, and latest names the newest release that is not one
         run: .github/release-latest.sh prove
 
@@ -58,7 +58,7 @@ jobs:
         shard: [1/2, 2/2]
     name: stories (${{ matrix.theme }}, ${{ matrix.shard }})
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - run: yarn playwright install --with-deps --only-shell chromium
       - run: yarn build-storybook
