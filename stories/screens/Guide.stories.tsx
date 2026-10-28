@@ -112,7 +112,7 @@ export const 通常: Story = {
 
     for (const [index, program] of IN_GRID_ORDER.entries()) {
       await expect(cells[index]).toHaveTextContent(halfWidthOf(program.title))
-      if (cells[index].dataset.cellSize !== 'xs') {
+      if (shown(partOfCell(cells[index], '.guide-cell-desc'))) {
         await expect(cells[index]).toHaveTextContent(
           genreWordOf(program.genreLabel),
         )
@@ -299,7 +299,7 @@ type CellSize = 'md' | 's' | 'xs'
 const cellSizeOf = (program: Program): CellSize => {
   const height = (program.durationMin / 60) * HOUR_PX
 
-  return height < 40 ? 'xs' : height < 72 ? 's' : 'md'
+  return height < 20 ? 'xs' : height < 72 ? 's' : 'md'
 }
 
 const endsAt = (program: Program) => program.startMin + program.durationMin
@@ -425,13 +425,13 @@ export const 予約の印: Story = {
       await expect(framed.outlineOffset).toBe('-2px')
       await expect(framed.outlineColor).toBe(colour)
 
-      sizesMarked.add(cell.dataset.cellSize ?? '')
+      sizesMarked.add(drawn.width.toFixed(1))
     }
 
     await expect(colourOf.booked).toBeDefined()
     await expect(colourOf.recording).toBeDefined()
     await expect(colourOf.booked).not.toBe(colourOf.recording)
-    await expect([...sizesMarked].sort()).toEqual(['md', 's', 'xs'])
+    await expect(sizesMarked.size).toBe(3)
   },
 }
 
@@ -978,6 +978,7 @@ const READ_IN_CELLS: Program[] = [
     '英語の歌と遊び',
     '趣味/教育',
   ],
+  [15, '０６５５', '朝の目覚めに　ピタゴラ装置', '趣味/教育'],
   [
     25,
     'おはよう日本　関東甲信越のニュース',
@@ -1029,43 +1030,61 @@ function cellOf(canvasElement: HTMLElement, nth: number): HTMLElement {
   return cell
 }
 
+const READ_IN_CELLS_GUIDE = {
+  ...base,
+  programs: [
+    ...READ_IN_CELLS,
+    ...base.programs.filter(
+      (program) => program.channelId !== READ_IN_CELLS_CHANNEL,
+    ),
+  ],
+}
+
+function shown(part: HTMLElement): boolean {
+  return getComputedStyle(part).display !== 'none' && part.offsetHeight > 0
+}
+
+async function shortCellsKeepTheirNames(
+  canvasElement: HTMLElement,
+): Promise<void> {
+  const [fiveMinutes, tenMinutes, fifteenMinutes] = READ_IN_CELLS.map(
+    (_, nth) => cellOf(canvasElement, nth),
+  )
+
+  await expect(shown(partOfCell(fiveMinutes, '.guide-cell-text'))).toBe(false)
+
+  for (const [nth, cell] of [tenMinutes, fifteenMinutes].entries()) {
+    const title = partOfCell(cell, '.guide-cell-title')
+    const text = partOfCell(cell, '.guide-cell-text')
+
+    await expect(title.offsetHeight).toBeGreaterThan(0)
+    await expect(text.offsetHeight).toBeGreaterThan(0)
+    await expect(text.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      cell.getBoundingClientRect().bottom,
+    )
+    await expect(title).toHaveTextContent(
+      halfWidthOf(READ_IN_CELLS[nth + 1].title),
+    )
+  }
+}
+
 export const 枠には収まる行だけを出す: Story = {
-  args: {
-    guide: {
-      ...base,
-      programs: [
-        ...READ_IN_CELLS,
-        ...base.programs.filter(
-          (program) => program.channelId !== READ_IN_CELLS_CHANNEL,
-        ),
-      ],
-    },
-  },
+  args: { guide: READ_IN_CELLS_GUIDE },
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
+    await shortCellsKeepTheirNames(canvasElement)
 
-    const [fiveMinutes, tenMinutes, ...tall] = READ_IN_CELLS.map((_, nth) =>
+    const [, tenMinutes, , ...tall] = READ_IN_CELLS.map((_, nth) =>
       cellOf(canvasElement, nth),
     )
+    const oneLine = partOfCell(tenMinutes, '.guide-cell-title')
 
-    await expect(fiveMinutes.dataset.cellSize).toBe('xs')
-    await expect(partOfCell(fiveMinutes, '.guide-cell-line').offsetHeight).toBe(
-      0,
-    )
-
-    const oneLine = partOfCell(tenMinutes, '.guide-cell-line')
-
-    await expect(tenMinutes.dataset.cellSize).toBe('xs')
     await expect(getComputedStyle(oneLine).whiteSpace).toBe('nowrap')
-    await expect(oneLine.offsetHeight).toBeGreaterThan(0)
-    await expect(oneLine.offsetHeight).toBeLessThanOrEqual(
-      tenMinutes.clientHeight,
-    )
     await expect(oneLine).toHaveTextContent('🈑えいごであそぼ with Orbeche')
-    await expect(oneLine.querySelector('.guide-cell-genre')).toBeNull()
+    await expect(shown(partOfCell(tenMinutes, '.guide-cell-desc'))).toBe(false)
 
     for (const [nth, cell] of tall.entries()) {
-      const program = READ_IN_CELLS[nth + 2]
+      const program = READ_IN_CELLS[nth + 3]
       const text = partOfCell(cell, '.guide-cell-text')
       const title = partOfCell(cell, '.guide-cell-title')
       const pitch = parseFloat(getComputedStyle(title).lineHeight)
@@ -1086,6 +1105,37 @@ export const 枠には収まる行だけを出す: Story = {
     }
 
     await expect(tall[2]).toHaveTextContent('🈞連続テレビ小説「おむすび」(35)')
+  },
+}
+
+function withRootFontSize(size: string): () => () => void {
+  return () => {
+    const root = document.documentElement
+    const was = root.style.fontSize
+
+    root.style.fontSize = size
+
+    return () => {
+      root.style.fontSize = was
+    }
+  }
+}
+
+export const 文字を大きくしても短い枠に番組名が出る: Story = {
+  args: { guide: READ_IN_CELLS_GUIDE },
+  beforeEach: withRootFontSize('20px'),
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    await shortCellsKeepTheirNames(canvasElement)
+  },
+}
+
+export const 文字をさらに大きくしても短い枠に番組名が出る: Story = {
+  args: { guide: READ_IN_CELLS_GUIDE },
+  beforeEach: withRootFontSize('24px'),
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    await shortCellsKeepTheirNames(canvasElement)
   },
 }
 

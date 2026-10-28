@@ -2340,14 +2340,39 @@
   --rise-stretch: 1;
 }
 
+/* A cell is sized by its programme's length and its words by rem, so the
+   cell asks its own height which form fits: whole lines of title and
+   description, one small line, or only the colour of its genre. */
 @utility guide-cell {
   @apply absolute right-px left-px z-[1] flex cursor-pointer flex-col overflow-hidden rounded-md border text-left transition-[translate,box-shadow] duration-150 ease-toy hover:z-[2] hover:-translate-x-px hover:-translate-y-px hover:shadow-pop active:translate-x-px active:translate-y-px active:shadow-pop-none;
+  container-type: size;
   --guide-pitch: calc(15.5rem / 16);
   --guide-title: calc(12rem / 16);
   --guide-desc: calc(10.75rem / 16);
   --guide-desc-features: 'palt';
-  --guide-xs: calc(9.5rem / 16);
-  --guide-xs-pitch: calc(11.5rem / 16);
+}
+
+@utility guide-cell-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  padding: 0.25rem calc(7rem / 16);
+  --guide-mark: calc(13rem / 16);
+  --guide-dot: calc(9rem / 16);
+
+  @container (height < 4.375rem) {
+    padding-block: 1px;
+    --guide-mark: calc(12rem / 16);
+    --guide-dot: calc(8rem / 16);
+  }
+
+  @container (height < 1.1rem) {
+    justify-content: center;
+    padding: 0 0.375rem;
+    --guide-mark: calc(11rem / 16);
+    --guide-dot: calc(7rem / 16);
+  }
 }
 
 @utility guide-cell-text {
@@ -2356,6 +2381,15 @@
   max-height: round(down, 100%, var(--guide-pitch));
   overflow: hidden;
   line-height: var(--guide-pitch);
+
+  @container (height < 1.1rem) {
+    --guide-pitch: min(calc(11.5rem / 16), 100cqh);
+    --guide-title: min(calc(9.5rem / 16), 80cqh);
+  }
+
+  @container (height < 10px) {
+    max-height: 0;
+  }
 }
 
 @utility guide-cell-title {
@@ -2363,6 +2397,10 @@
   font-size: var(--guide-title);
   line-height: var(--guide-pitch);
   font-feature-settings: 'palt';
+
+  @container (height < 1.1rem) {
+    @apply overflow-hidden font-medium text-ellipsis whitespace-nowrap;
+  }
 }
 
 @utility guide-cell-desc {
@@ -2370,6 +2408,10 @@
   font-size: var(--guide-desc);
   line-height: var(--guide-pitch);
   font-feature-settings: var(--guide-desc-features);
+
+  @container (height < 1.1rem) {
+    display: none;
+  }
 }
 
 @utility guide-cell-genre {
@@ -2380,14 +2422,20 @@
 @utility guide-cell-start {
   @apply mr-[calc(5rem/16)] font-code text-micro font-medium text-ink-3 tabular-nums;
   line-height: 1;
+
+  @container (height < 1.1rem) {
+    display: none;
+  }
 }
 
-@utility guide-cell-line {
-  @apply block overflow-hidden font-medium text-ellipsis whitespace-nowrap;
-  font-size: var(--guide-xs);
-  line-height: var(--guide-xs-pitch);
-  max-height: round(down, 100%, var(--guide-xs-pitch));
-  font-feature-settings: 'palt';
+@utility guide-cell-mark {
+  width: var(--guide-mark);
+  height: var(--guide-mark);
+}
+
+@utility guide-cell-dot {
+  width: var(--guide-dot);
+  height: var(--guide-dot);
 }
 
 @utility arrives {
