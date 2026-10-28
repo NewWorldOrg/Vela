@@ -99,6 +99,10 @@ docker compose exec app yarn bml-runtime   # ランタイムと受信機のス�
 ```
 
 放送向けの字(データ放送の面・番組名の放送マーク)は `public/fonts/denpa-font.woff2`(Denpa Font)で、`sh scripts/fetch-denpa-font.sh` が版を固定して取り直し、sha256 を確かめる。
+ふだんの画面が読むのは番組名の放送マークだけを抜き出した `public/fonts/denpa-marks.woff2` で、イメージを組むときに `scripts/denpa-marks.sh`(fonttools)が作る。
+手元で作るなら `pip install --require-hashes -r scripts/denpa-marks/requirements.txt` のあと `sh scripts/denpa-marks.sh`。
+無いときは画面が全部のフォントを読むので、見た目は変わらない。
+データ放送は開いたときに全部のフォントを読む。
 
 ## ライセンス
 

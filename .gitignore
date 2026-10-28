@@ -58,3 +58,6 @@ Thumbs.db
 
 # Claude Code
 CLAUDE.local.md
+
+# cut from public/fonts/denpa-font.woff2 when the image is built
+/public/fonts/denpa-marks.woff2
