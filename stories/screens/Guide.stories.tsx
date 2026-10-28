@@ -4,12 +4,13 @@ import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import {
-  COLUMN_MIN_PX,
+  COLUMN_MIN_REM,
+  GUTTER_PX,
   bookingMarkOf,
-  gridMinWidthOf,
   isOnAir,
-  nowLineTopOf,
+  NOW_LINE_THICKNESS_PX,
 } from '@/lib/guide'
+import { genreWordOf, halfWidthOf } from '@/lib/guide-cell'
 import {
   AERIAL_CHANNEL_FIXTURES,
   CHANNEL_FIXTURES,
@@ -41,7 +42,7 @@ import {
   A_FULL_DAY_WINDOW,
 } from '@/stories/fixtures/a-full-day'
 import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
-import { HOUR_PX } from '@/components/guide/guide-metrics'
+import { HOUR_REM, hourPxIn } from '@/components/guide/guide-metrics'
 import { GuideView } from '@/components/guide/guide-page'
 import { inTheApp } from '@/stories/frames'
 
@@ -110,8 +111,12 @@ export const 通常: Story = {
     await expect(cells).toHaveLength(IN_GRID_ORDER.length)
 
     for (const [index, program] of IN_GRID_ORDER.entries()) {
-      await expect(cells[index]).toHaveTextContent(program.title)
-      await expect(cells[index]).toHaveTextContent(program.genreLabel)
+      await expect(cells[index]).toHaveTextContent(halfWidthOf(program.title))
+      if (shown(partOfCell(cells[index], '.guide-cell-desc'))) {
+        await expect(cells[index]).toHaveTextContent(
+          genreWordOf(program.genreLabel),
+        )
+      }
     }
   },
 }
@@ -289,13 +294,20 @@ export const 放送済み: Story = {
   },
 }
 
-type CellSize = 'md' | 's' | 'xs'
+type CellSize = 'md' | 's'
 
-const cellSizeOf = (program: Program): CellSize => {
-  const height = (program.durationMin / 60) * HOUR_PX
+const ROOT_PX_IN_THE_RUNNER = 16
 
-  return height < 40 ? 'xs' : height < 72 ? 's' : 'md'
-}
+const cellSizeOf = (program: Program): CellSize =>
+  (program.durationMin / 60) * HOUR_REM < 4 + 2 / ROOT_PX_IN_THE_RUNNER
+    ? 's'
+    : 'md'
+
+const hourPx = () => hourPxIn(document)
+
+const columnMinPx = () =>
+  COLUMN_MIN_REM *
+  parseFloat(getComputedStyle(document.documentElement).fontSize)
 
 const endsAt = (program: Program) => program.startMin + program.durationMin
 
@@ -326,13 +338,6 @@ const BOOKED_CELLS: { program: Program; standing: BookingStanding }[] = [
     program: firstCell(
       'upcoming s',
       (p) => p.startMin > NOW_MIN && cellSizeOf(p) === 's',
-    ),
-    standing: 'scheduled',
-  },
-  {
-    program: firstCell(
-      'upcoming xs',
-      (p) => p.startMin > NOW_MIN && cellSizeOf(p) === 'xs',
     ),
     standing: 'scheduled',
   },
@@ -420,13 +425,13 @@ export const 予約の印: Story = {
       await expect(framed.outlineOffset).toBe('-2px')
       await expect(framed.outlineColor).toBe(colour)
 
-      sizesMarked.add(cell.dataset.cellSize ?? '')
+      sizesMarked.add(drawn.width.toFixed(1))
     }
 
     await expect(colourOf.booked).toBeDefined()
     await expect(colourOf.recording).toBeDefined()
     await expect(colourOf.booked).not.toBe(colourOf.recording)
-    await expect([...sizesMarked].sort()).toEqual(['md', 's', 'xs'])
+    await expect(sizesMarked.size).toBe(2)
   },
 }
 
@@ -444,6 +449,15 @@ async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
       expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull()
     },
     { timeout: 5000 },
+  )
+  await waitFor(
+    () =>
+      expect(
+        Array.from(
+          canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
+        ).filter((heading) => heading.childElementCount === 0),
+      ).toHaveLength(0),
+    { timeout: 10_000 },
   )
 }
 
@@ -478,8 +492,8 @@ export const 現在時刻の位置で開く: Story = {
 
 const LATE_AT_NIGHT = {
   ...day,
-  nowMin: (26 - 4) * 60 + 13,
-  nowLabel: '02:13',
+  nowMin: (27 - 4) * 60 + 13,
+  nowLabel: '03:13',
 }
 
 const THE_LAST_MINUTE_OF_THE_DAY = {
@@ -543,11 +557,14 @@ export const 深夜3時59分は線が表の高さに収まる: Story = {
     const label = partOf(canvasElement, '[data-now-line] span')
 
     await expect(line.offsetTop).toBeCloseTo(
-      nowLineTopOf(THE_LAST_MINUTE_OF_THE_DAY.nowMin, HOUR_PX, 24),
+      Math.min(
+        (THE_LAST_MINUTE_OF_THE_DAY.nowMin / 60) * hourPx(),
+        24 * hourPx() - NOW_LINE_THICKNESS_PX,
+      ),
       0,
     )
     await expect(line.offsetTop + line.offsetHeight).toBeLessThanOrEqual(
-      24 * HOUR_PX,
+      24 * hourPx(),
     )
     await expect(label.offsetTop).toBeCloseTo(-10, 0)
   },
@@ -696,7 +713,7 @@ export const 読み直しても動かない: Story = {
 
     await expect(
       partOf(canvasElement, '[data-now-line]').offsetTop,
-    ).toBeCloseTo(was + (A_WHILE_MIN / 60) * HOUR_PX, 0)
+    ).toBeCloseTo(was + (A_WHILE_MIN / 60) * hourPx(), 0)
     await expect(scroller.scrollTop).toBeCloseTo(moved, 0)
   },
 }
@@ -737,7 +754,7 @@ export const 列が余れば分け合う: Story = {
     await expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth)
 
     for (const column of columns) {
-      await expect(widthOf(column)).toBeGreaterThan(COLUMN_MIN_PX)
+      await expect(widthOf(column)).toBeGreaterThan(columnMinPx())
       await expect(widthOf(column)).toBeCloseTo(widthOf(columns[0]), 0)
     }
 
@@ -789,7 +806,7 @@ export const 副チャンネルも同じ列: Story = {
       await expect(getComputedStyle(column).contain).toBe('size layout style')
       await expect(column.offsetHeight).toBe(body.offsetHeight)
     }
-    await expect(widthOf(columns[split])).toBeGreaterThan(COLUMN_MIN_PX)
+    await expect(widthOf(columns[split])).toBeGreaterThan(columnMinPx())
 
     for (const index of SERVICES_ONE_OF_THEM_SPLIT.keys()) {
       await expect(widthOf(columns[index])).toBeCloseTo(
@@ -867,11 +884,11 @@ export const 副チャンネルは別番組の時間帯だけ: Story = {
     for (const [index, run] of UNSCHEDULED.entries()) {
       await expect(bands[index]).toHaveTextContent('編成なし')
       await expect(bands[index].offsetTop).toBeCloseTo(
-        (run.startMin / 60) * HOUR_PX,
+        (run.startMin / 60) * hourPx(),
         0,
       )
       await expect(bands[index].offsetHeight).toBeCloseTo(
-        (run.durationMin / 60) * HOUR_PX,
+        (run.durationMin / 60) * hourPx(),
         0,
       )
     }
@@ -945,9 +962,9 @@ const A_SHORT_RETURN = [
     title: '第二試合',
     genre: 'sports' as const,
     genreLabel: 'スポーツ',
-    startMin: 90,
-    durationMin: 60,
-    startLabel: '20:30',
+    startMin: 80,
+    durationMin: 70,
+    startLabel: '20:20',
     endLabel: '21:30',
   },
   {
@@ -962,6 +979,223 @@ const A_SHORT_RETURN = [
     endLabel: '03:00',
   },
 ]
+
+const READ_IN_CELLS_CHANNEL = CHANNEL_FIXTURES[0].id
+
+const BOOKED_IN_ONE_LINE = 1
+
+const clockOfTheDay = (minute: number): string => {
+  const at = (4 * 60 + minute) % (24 * 60)
+
+  return `${String(Math.floor(at / 60)).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`
+}
+
+const READ_IN_CELLS: Program[] = [
+  [5, 'ＮＨＫニュース', undefined, 'ニュース/報道'],
+  [
+    7,
+    '🈑えいごであそぼ　ｗｉｔｈ　Ｏｒｂｅｃｈｅ',
+    '英語の歌と遊び',
+    '趣味/教育',
+  ],
+  [10, 'ニュース・気象情報', undefined, 'ニュース/報道'],
+  [15, '０６５５', '朝の目覚めに　ピタゴラ装置', '趣味/教育'],
+  [
+    25,
+    'おはよう日本　関東甲信越のニュース',
+    '首都圏の交通情報と天気',
+    'ニュース/報道',
+  ],
+  [
+    30,
+    'ＴＨＥ　ＴＩＭＥ，【３５話】安住紳一郎が生放送でお届け',
+    '全国の朝の顔をつなぐ情報番組',
+    '情報/ワイドショー',
+  ],
+  [
+    54,
+    '🈞連続テレビ小説「おむすび」（３５）',
+    'ギャルの心を胸に　栄養士として人の心と未来を結ぶ物語　第７週「おむすびのチカラ」　ふだんの食卓から始まる物語',
+    'ドラマ',
+  ],
+].reduce<Program[]>((cells, [durationMin, title, description, genreLabel]) => {
+  const startMin =
+    cells.length === 0
+      ? EVENING_MIN
+      : cells[cells.length - 1].startMin + cells[cells.length - 1].durationMin
+
+  return [
+    ...cells,
+    {
+      ...PROGRAM_FIXTURES[0],
+      id: `read-in-cells-${cells.length}`,
+      channelId: READ_IN_CELLS_CHANNEL,
+      title: title as string,
+      description: description as string | undefined,
+      genreLabel: genreLabel as string,
+      startMin,
+      startLabel: clockOfTheDay(startMin),
+      durationMin: durationMin as number,
+      ...(cells.length === BOOKED_IN_ONE_LINE
+        ? {
+            booked: true,
+            booking: {
+              id: 'booking-read-in-cells',
+              standing: 'scheduled' as const,
+              priority: 0,
+              marginBeforeSeconds: 0,
+              marginAfterSeconds: 0,
+              encodeWhenRecorded: true,
+            },
+          }
+        : {}),
+    },
+  ]
+}, [])
+
+function cellOf(canvasElement: HTMLElement, nth: number): HTMLElement {
+  const cell = canvasElement.querySelectorAll<HTMLElement>(
+    '[data-opens="program-panel"]',
+  )[nth]
+
+  if (!cell) {
+    throw new Error(`the guide has no cell ${nth}`)
+  }
+
+  return cell
+}
+
+const READ_IN_CELLS_GUIDE = {
+  ...base,
+  programs: [
+    ...READ_IN_CELLS,
+    ...base.programs.filter(
+      (program) => program.channelId !== READ_IN_CELLS_CHANNEL,
+    ),
+  ],
+}
+
+function shown(part: HTMLElement): boolean {
+  return getComputedStyle(part).display !== 'none' && part.offsetHeight > 0
+}
+
+async function shortCellsKeepTheirNames(
+  canvasElement: HTMLElement,
+): Promise<void> {
+  const [fiveMinutes, ...short] = READ_IN_CELLS.slice(0, 4).map((_, nth) =>
+    cellOf(canvasElement, nth),
+  )
+
+  await expect(shown(partOfCell(fiveMinutes, '.guide-cell-text'))).toBe(false)
+
+  for (const [nth, cell] of short.entries()) {
+    const title = partOfCell(cell, '.guide-cell-title')
+    const text = partOfCell(cell, '.guide-cell-text')
+
+    await expect(title.offsetHeight).toBeGreaterThan(0)
+    await expect(text.offsetHeight).toBeGreaterThan(0)
+    await expect(text.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      cell.getBoundingClientRect().bottom,
+    )
+    await expect(title).toHaveTextContent(
+      halfWidthOf(READ_IN_CELLS[nth + 1].title),
+    )
+  }
+}
+
+export const 枠には収まる行だけを出す: Story = {
+  args: { guide: READ_IN_CELLS_GUIDE },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    await shortCellsKeepTheirNames(canvasElement)
+
+    const [, sevenMinutes, ...tall] = READ_IN_CELLS.map((_, nth) =>
+      cellOf(canvasElement, nth),
+    )
+    const oneLine = partOfCell(sevenMinutes, '.guide-cell-title')
+    const mark = partOfCell(sevenMinutes, '[data-booking-mark]')
+    const marked = mark.getBoundingClientRect()
+    const room = sevenMinutes.getBoundingClientRect()
+    const rootPx = parseFloat(
+      getComputedStyle(document.documentElement).fontSize,
+    )
+
+    await expect(getComputedStyle(oneLine).whiteSpace).toBe('nowrap')
+    await expect(oneLine).toHaveTextContent('🈑えいごであそぼ with Orbeche')
+    await expect(shown(partOfCell(sevenMinutes, '.guide-cell-desc'))).toBe(
+      false,
+    )
+    await expect(marked.width).toBeCloseTo((11 / 16) * rootPx, 0)
+    await expect(marked.top).toBeGreaterThanOrEqual(room.top)
+    await expect(marked.bottom).toBeLessThanOrEqual(room.bottom)
+
+    for (const [nth, cell] of tall.entries()) {
+      const program = READ_IN_CELLS[nth + 2]
+      const text = partOfCell(cell, '.guide-cell-text')
+      const title = partOfCell(cell, '.guide-cell-title')
+      const pitch = parseFloat(getComputedStyle(title).lineHeight)
+      const lines = text.getBoundingClientRect().height / pitch
+      const bottom = cell.getBoundingClientRect().bottom
+      const below = text.getBoundingClientRect().bottom
+
+      await expect(lines).toBeGreaterThanOrEqual(1)
+      await expect(Math.abs(lines - Math.round(lines))).toBeLessThan(0.01)
+      await expect(below).toBeLessThanOrEqual(bottom)
+      if (text.scrollHeight > text.clientHeight + 1) {
+        await expect(bottom - below).toBeLessThan(pitch + 8)
+      }
+      await expect(title).toHaveTextContent(halfWidthOf(program.title))
+      await expect(title.textContent).not.toMatch(/[\uFF01-\uFF5E\u3000]/)
+      await expect(title.querySelector('.guide-cell-genre')).toBeNull()
+      await expect(
+        partOfCell(cell, '.guide-cell-desc').firstElementChild,
+      ).toHaveTextContent(genreWordOf(program.genreLabel))
+    }
+
+    await expect(tall[4]).toHaveTextContent('🈞連続テレビ小説「おむすび」(35)')
+  },
+}
+
+function withRootFontSize(size: string): () => () => void {
+  return () => {
+    const root = document.documentElement
+    const was = root.style.fontSize
+
+    root.style.fontSize = size
+
+    return () => {
+      root.style.fontSize = was
+    }
+  }
+}
+
+export const 文字を大きくしても短い枠に番組名が出る: Story = {
+  args: { guide: READ_IN_CELLS_GUIDE },
+  beforeEach: withRootFontSize('20px'),
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    await shortCellsKeepTheirNames(canvasElement)
+  },
+}
+
+export const 文字をさらに大きくしても短い枠に番組名が出る: Story = {
+  args: { guide: READ_IN_CELLS_GUIDE },
+  beforeEach: withRootFontSize('24px'),
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    await shortCellsKeepTheirNames(canvasElement)
+  },
+}
+
+function partOfCell(cell: HTMLElement, selector: string): HTMLElement {
+  const part = cell.querySelector<HTMLElement>(selector)
+
+  if (!part) {
+    throw new Error(`the cell has no ${selector}`)
+  }
+
+  return part
+}
 
 export const 編成なしの短い帯は名前を落とす: Story = {
   args: {
@@ -990,9 +1224,9 @@ export const 編成なしの短い帯は名前を落とす: Story = {
 
     const [, brief, long] = bands
 
-    await expect(brief.offsetHeight).toBeCloseTo(HOUR_PX / 2, 0)
+    await expect(brief.offsetHeight).toBeCloseTo(hourPx() / 3, 0)
     await expect(brief.querySelector('span')).toBeNull()
-    await expect(long.offsetHeight).toBeCloseTo(HOUR_PX * 1.5, 0)
+    await expect(long.offsetHeight).toBeCloseTo(hourPx() * 1.5, 0)
     await expect(long).toHaveTextContent('編成なし')
   },
 }
@@ -1020,7 +1254,7 @@ export const 列が多ければ横に流れる: Story = {
     ).toBeGreaterThan(0)
 
     for (const index of AERIAL_CHANNEL_FIXTURES.keys()) {
-      await expect(widthOf(columns[index])).toBeCloseTo(COLUMN_MIN_PX, 0)
+      await expect(widthOf(columns[index])).toBeCloseTo(columnMinPx(), 0)
       await expect(widthOf(headings[index])).toBeCloseTo(
         widthOf(columns[index]),
         0,
@@ -1028,7 +1262,7 @@ export const 列が多ければ横に流れる: Story = {
     }
 
     await expect(scroller.scrollWidth).toBeCloseTo(
-      gridMinWidthOf(AERIAL_CHANNEL_FIXTURES.length),
+      GUTTER_PX + AERIAL_CHANNEL_FIXTURES.length * columnMinPx(),
       0,
     )
 
@@ -1232,7 +1466,7 @@ export const 起き上がったあとも描いた枠は消さない: Story = {
     await new Promise((settled) => setTimeout(settled, ARRIVAL_SPAN_MS + 300))
     await expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length)
 
-    scroller.scrollTop = (EVENING_MIN / 60) * HOUR_PX
+    scroller.scrollTop = (EVENING_MIN / 60) * hourPx()
 
     await expect(drawnCells()).toHaveLength(IN_GRID_ORDER.length)
 
@@ -1241,7 +1475,7 @@ export const 起き上がったあとも描いた枠は消さない: Story = {
     for (const [index, program] of IN_GRID_ORDER.entries()) {
       await expect(cells[index]).toHaveTextContent(program.title)
       await expect(cells[index].offsetTop).toBeCloseTo(
-        ((program.startMin + EVENING_MIN) / 60) * HOUR_PX,
+        ((program.startMin + EVENING_MIN) / 60) * hourPx(),
         0,
       )
     }
@@ -1374,9 +1608,9 @@ export const 番組を開いても場所は動かない: Story = {
 
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
 
-    await expect(scroller.scrollTop).toBeGreaterThan(HOUR_PX)
+    await expect(scroller.scrollTop).toBeGreaterThan(hourPx())
 
-    scroller.scrollTop -= HOUR_PX
+    scroller.scrollTop -= hourPx()
 
     const wasAt = scroller.scrollTop
     const wasAcross = scroller.scrollLeft
@@ -1414,7 +1648,8 @@ export const 別の番組を押すとまず閉じる: Story = {
 
     await readsInFull(await openedPanel(canvasElement), read.program)
 
-    const [across, down] = middleOf(next.cell)
+    const [, down] = middleOf(next.cell)
+    const across = next.cell.getBoundingClientRect().left + 8
 
     await expect(doc.elementFromPoint(across, down)).toBe(
       overlayOver(canvasElement),
