@@ -53,6 +53,7 @@ const THE_SUITE = [
   'tests/hooks/useNow.test.ts',
   'tests/hooks/usePictureInPicture.test.ts',
   'tests/hooks/useReadAgain.test.ts',
+  'tests/hooks/useSettled.test.ts',
   'tests/hooks/useStoredText.test.ts',
   'tests/lib/app-signals.test.ts',
   'tests/lib/arrival.test.ts',

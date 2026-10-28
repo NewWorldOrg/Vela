@@ -429,6 +429,16 @@ export interface MinuteRange {
   to: number
 }
 
+/** The hours the guide opened on and the rest of the day as one day, each column's cells in the order they air. */
+export function wholeDayOf<P extends { startMin: number }>(
+  opening: readonly P[],
+  rest: readonly P[],
+): P[] {
+  return [...opening, ...rest].sort(
+    (one, other) => one.startMin - other.startMin,
+  )
+}
+
 export const HOURS_DRAWN_BEFORE_MEASURING = 12
 
 /** The minutes drawn before the guide is measured: the hours around where it opens, so the HTML carries what is first in view and not the whole day. */

@@ -123,8 +123,14 @@ mock.module('@/repository/client/carina', {
   },
 })
 
-const { extrasOf, forTheGrid, getGuide, getProgram, primaryProgramKeyOf } =
-  await import('@/repository/programs')
+const {
+  extrasOf,
+  forTheGrid,
+  getGuide,
+  getGuideInTwo,
+  getProgram,
+  primaryProgramKeyOf,
+} = await import('@/repository/programs')
 
 function broadcastDay(at: string): string {
   return new Date(
@@ -714,6 +720,47 @@ test('the panel reads back what the grid was not handed, for the cell it was ope
     ),
     undefined,
   )
+})
+
+test('the guide comes in two, the hours it opens on and then the rest of the day, with nothing in both', async () => {
+  const tomorrow = (hour: number) => hourOfTheDay(24 + hour)
+  const { networkId, serviceId } = CARRIED
+
+  store.services = [service(networkId, serviceId, 'みなと総合1', 1)]
+  store.programmes = [
+    programme(
+      networkId,
+      serviceId,
+      1,
+      '朝のニュース',
+      tomorrow(2),
+      tomorrow(3),
+    ),
+    programme(
+      networkId,
+      serviceId,
+      2,
+      '昼の連続ドラマ',
+      tomorrow(11.5),
+      tomorrow(12.5),
+    ),
+    programme(networkId, serviceId, 3, '夜の映画', tomorrow(17), tomorrow(19)),
+  ]
+
+  const date = broadcastDay(tomorrow(2))
+  const whole = await getGuide('terrestrial', date)
+  const { guide, rest } = await getGuideInTwo('terrestrial', date)
+  const later = await rest
+
+  assert.deepEqual(
+    guide.programs.map((program) => program.title),
+    ['朝のニュース', '昼の連続ドラマ'],
+  )
+  assert.deepEqual(
+    later.map((program) => program.title),
+    ['夜の映画'],
+  )
+  assert.deepEqual({ ...guide, programs: [...guide.programs, ...later] }, whole)
 })
 
 test('the guide is asked for without waiting for the bookings it marks', async () => {

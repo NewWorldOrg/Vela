@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import { cookies } from 'next/headers'
 
-import { forTheGrid, getGuide } from '@/repository/programs'
+import { forTheGrid, getGuideInTwo } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
 import {
   coverageDaysOf,
@@ -39,14 +39,19 @@ export default async function Page({
 }) {
   const params = await searchParams
   const jar = await cookies()
-  const [guide, collection] = await Promise.all([
-    getGuide(
+  const [{ guide, rest }, collection] = await Promise.all([
+    getGuideInTwo(
       typeof params.kind === 'string' ? params.kind : undefined,
       typeof params.date === 'string' ? params.date : undefined,
       listBookings(),
     ),
     getCollectionStatus(),
   ])
+  const opening = guide.programs.length > 0 ? guide.programs : await rest
+  const later =
+    guide.programs.length > 0
+      ? rest.then((programs) => packedRowsOf(programs.map(forTheGrid)))
+      : undefined
 
   return (
     <>
@@ -56,10 +61,11 @@ export default async function Page({
       <PackedGuideView
         guide={{
           ...guide,
-          programs: packedRowsOf(guide.programs.map(forTheGrid)),
+          programs: packedRowsOf(opening.map(forTheGrid)),
           health: epgHealthOf(collection, guide.kind),
           coverageDays: coverageDaysOf(collection, guide.kind),
         }}
+        rest={later}
         collection={collection}
         onCollectNow={boostCollection}
         onRebuild={discardAndRebuildEpg}

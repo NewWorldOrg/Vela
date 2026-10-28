@@ -30,6 +30,7 @@ import {
   sharesWith,
   servicesSettled,
   unscheduledSpansOf,
+  wholeDayOf,
   windowStartOf,
 } from '@/lib/guide'
 
@@ -800,6 +801,27 @@ test('before the guide is measured, only the hours around where it opens are dra
     to: 720,
   })
   assert.deepEqual(minutesBeforeMeasuringOf(300, 600), { from: 0, to: 600 })
+})
+
+test('the rest of the day joins the hours it opened on, each column in the order it airs', () => {
+  const cell = (channelId: string, startMin: number) => ({
+    channelId,
+    startMin,
+  })
+
+  assert.deepEqual(
+    wholeDayOf(
+      [cell('a', 600), cell('b', 540)],
+      [cell('a', 0), cell('b', 1200), cell('a', 900)],
+    ),
+    [
+      cell('a', 0),
+      cell('b', 540),
+      cell('a', 600),
+      cell('a', 900),
+      cell('b', 1200),
+    ],
+  )
 })
 
 test('the columns drawn so far and the ones in view are drawn together', () => {
