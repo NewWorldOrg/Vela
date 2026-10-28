@@ -18,8 +18,9 @@ import {
   GUIDE_SUB_CHANNELS_FOLDED,
   flagOf,
 } from '@/lib/stored-flag'
+import { packedRowsOf } from '@/lib/packed-rows'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { GuideView } from '@/components/guide/guide-page'
+import { PackedGuideView } from '@/components/guide/packed-guide'
 import {
   boostCollection,
   discardAndRebuildEpg,
@@ -52,10 +53,10 @@ export default async function Page({
       <RefreshOnSignal
         events={[PROGRAMS_EVENT, EPG_COLLECTION_EVENT, RESERVATIONS_EVENT]}
       />
-      <GuideView
+      <PackedGuideView
         guide={{
           ...guide,
-          programs: guide.programs.map(forTheGrid),
+          programs: packedRowsOf(guide.programs.map(forTheGrid)),
           health: epgHealthOf(collection, guide.kind),
           coverageDays: coverageDaysOf(collection, guide.kind),
         }}

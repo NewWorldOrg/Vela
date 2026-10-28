@@ -231,9 +231,9 @@ export const PANEL_ONLY = [
 
 export type ProgramExtras = Pick<Program, (typeof PANEL_ONLY)[number]>
 
-export function forTheGrid(
-  program: Program,
-): Omit<Program, keyof ProgramExtras> {
+export type GridProgram = Omit<Program, keyof ProgramExtras>
+
+export function forTheGrid(program: Program): GridProgram {
   const handed: Program = { ...program }
 
   for (const key of PANEL_ONLY) {
