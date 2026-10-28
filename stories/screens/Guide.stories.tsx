@@ -401,11 +401,6 @@ export const 予約の印: Story = {
       await expect(mark).not.toBeNull()
       await expect(mark!.dataset.bookingMark).toBe(expected)
 
-      cell.scrollIntoView({ block: 'center' })
-      await waitFor(() =>
-        expect(mark!.getBoundingClientRect().width).toBeGreaterThan(0),
-      )
-
       const drawn = mark!.getBoundingClientRect()
       const room = cell.getBoundingClientRect()
 

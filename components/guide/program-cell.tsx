@@ -10,9 +10,14 @@ import {
 } from '@/lib/state-terms'
 import { cn } from '@/lib/utils'
 import type { Program } from '@/repository/programs'
-import { HOUR_PX } from '@/components/guide/guide-metrics'
-import { cellClassOf, type CellSize } from '@/components/guide/cell-class'
+import {
+  GENRE_CLASS,
+  GENRE_CLASS_PAST,
+  HOUR_PX,
+} from '@/components/guide/guide-metrics'
 import { RecordIcon } from '@/components/vela/icons'
+
+type CellSize = 'md' | 's' | 'xs'
 
 const GENRE_LABEL = 'guide-cell-genre'
 
@@ -60,7 +65,16 @@ export const ProgramCell = memo(function ProgramCell({
         top: `${(p.startMin / 60) * HOUR_PX}px`,
         height: `${height}px`,
       }}
-      className={cellClassOf({ genre: p.genre, past, size, mark, selected })}
+      className={cn(
+        'guide-cell',
+        past ? GENRE_CLASS_PAST[p.genre] : GENRE_CLASS[p.genre],
+        size === 'md' && 'px-[calc(7rem/16)] py-1',
+        size === 's' && 'px-[calc(7rem/16)] py-0.5',
+        size === 'xs' && 'flex items-center px-1.5 py-0',
+        mark === 'booked' && 'outline-2 -outline-offset-2 outline-mint',
+        mark === 'recording' && 'outline-2 -outline-offset-2 outline-coral',
+        selected && 'z-[3] border-brand shadow-pop',
+      )}
     >
       {size === 'xs' ? (
         <span className={cn('guide-cell-line', past && 'text-ink-2')}>
