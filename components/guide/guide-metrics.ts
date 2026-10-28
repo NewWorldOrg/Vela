@@ -1,6 +1,18 @@
 import type { Program } from '@/repository/programs'
 
-export const HOUR_PX = 96
+export const HOUR_REM = 9
+
+/** A length of the guide's time axis, in rem so the hours grow with the words. */
+export function remOfMinutes(minutes: number): string {
+  return `${(minutes / 60) * HOUR_REM}rem`
+}
+
+/** How tall an hour is drawn in this document, in pixels. */
+export function hourPxIn(document: Document): number {
+  const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize)
+
+  return HOUR_REM * (rootPx > 0 ? rootPx : 16)
+}
 
 export const GENRE_CLASS: Record<Program['genre'], string> = {
   news: 'bg-genre-news border-genre-news-line',
@@ -13,6 +25,19 @@ export const GENRE_CLASS: Record<Program['genre'], string> = {
   anime: 'bg-genre-anime border-genre-anime-line',
   doc: 'bg-genre-doc border-genre-doc-line',
   other: 'bg-genre-other border-genre-other-line',
+}
+
+export const GENRE_MARK_CLASS: Record<Program['genre'], string> = {
+  news: 'bg-genre-news-mark',
+  sports: 'bg-genre-sports-mark',
+  info: 'bg-genre-info-mark',
+  drama: 'bg-genre-drama-mark',
+  music: 'bg-genre-music-mark',
+  variety: 'bg-genre-variety-mark',
+  movie: 'bg-genre-movie-mark',
+  anime: 'bg-genre-anime-mark',
+  doc: 'bg-genre-doc-mark',
+  other: 'bg-genre-other-mark',
 }
 
 export const GENRE_CLASS_PAST: Record<Program['genre'], string> = {

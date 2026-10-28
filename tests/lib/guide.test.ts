@@ -12,6 +12,8 @@ import {
   holdsEveryColumn,
   foldedGuideOf,
   foldsAColumn,
+  COLUMN_MIN_REM,
+  GUTTER_PX,
   gridMinWidthOf,
   isDrawn,
   isOnAir,
@@ -35,6 +37,8 @@ import {
 } from '@/lib/guide'
 
 const HOUR_PX = 96
+
+const HOUR_REM = 9
 
 const AFTER_MIDNIGHT = new Date('2026-08-20T16:00:00Z')
 
@@ -99,37 +103,25 @@ test('the start of a day opens at the top, not above it', () => {
   assert.equal(openingScrollTopOf(240, HOUR_PX, 700), 384 - 350)
 })
 
-test('the now line sits where the minute says, away from the edges', () => {
-  assert.equal(nowLineTopOf(600, HOUR_PX, 24), (600 / 60) * HOUR_PX)
-})
-
-test('the now line does not run past the bottom of the day', () => {
-  const windowHours = 24
-  const lastMinute = windowHours * 60 - 1
-
+test('the now line sits where the minute says, on the rem hour', () => {
   assert.equal(
-    nowLineTopOf(lastMinute, HOUR_PX, windowHours),
-    windowHours * HOUR_PX - NOW_LINE_THICKNESS_PX,
+    nowLineTopOf(600, HOUR_REM, 24),
+    'min(90rem, calc(216rem - 2px))',
   )
 })
 
-test('the label sits ten pixels above the line, away from the top', () => {
-  assert.equal(nowLabelTopOf(200), -NOW_LABEL_GAP_PX)
-  assert.equal(nowLabelTopOf(NOW_LABEL_GAP_PX), -NOW_LABEL_GAP_PX)
+test('the now line does not run past the bottom of the day', () => {
+  assert.equal(
+    nowLineTopOf(24 * 60 - 1, HOUR_REM, 24),
+    `min(${((24 * 60 - 1) / 60) * HOUR_REM}rem, calc(216rem - ${NOW_LINE_THICKNESS_PX}px))`,
+  )
 })
 
-test('the label stops at the top of the day instead of climbing into the heading', () => {
-  assert.equal(nowLabelTopOf(0), 0)
-  assert.equal(nowLabelTopOf(4), -4)
-  assert.equal(nowLabelTopOf(9), -9)
-})
-
-test('the label never sits above where the day begins, at any minute', () => {
-  for (const nowMin of [0, 1, 3, 6, 9, 10, 11, 30]) {
-    const lineTopPx = nowLineTopOf(nowMin, HOUR_PX, 24)
-
-    assert.ok(lineTopPx + nowLabelTopOf(lineTopPx) >= 0)
-  }
+test('the label sits ten pixels above the line, but never above where the day begins', () => {
+  assert.equal(nowLabelTopOf(200, HOUR_REM), 'max(-10px, -30rem)')
+  assert.equal(nowLabelTopOf(0, HOUR_REM), 'max(-10px, 0rem)')
+  assert.equal(nowLabelTopOf(1, HOUR_REM), 'max(-10px, -0.15rem)')
+  assert.equal(NOW_LABEL_GAP_PX, 10)
 })
 
 test('a programme nobody booked carries no mark', () => {
@@ -249,26 +241,25 @@ test('a copy does not follow a relay back, only a shared broadcast', () => {
 
 const TELEVISION_SERVICES = 27
 
-test('a channel is given a column a programme name fits in', () => {
-  assert.equal(gridMinWidthOf(1), 46 + 200)
-  assert.equal(gridMinWidthOf(4), 46 + 4 * 200)
+test('a channel is given a column a programme name fits in, in rem', () => {
+  assert.equal(gridMinWidthOf(1), 'calc(46px + 15rem)')
+  assert.equal(gridMinWidthOf(4), 'calc(46px + 60rem)')
 })
 
 test('a whole aerial is wider than the screen it is read on', () => {
-  const width = gridMinWidthOf(TELEVISION_SERVICES)
-
-  assert.equal(width, 46 + TELEVISION_SERVICES * 200)
-  assert.ok(width > 1400)
+  assert.ok(GUTTER_PX + TELEVISION_SERVICES * COLUMN_MIN_REM * 16 > 1400)
 })
 
 test('a grid with no channels is the hour gutter and nothing else', () => {
-  assert.equal(gridMinWidthOf(0), 46)
+  assert.equal(gridMinWidthOf(0), 'calc(46px + 0rem)')
 })
+
+const COLUMN_PX = 200
 
 const aGridOf = (columns: number, clientWidth: number, scrollLeft = 0) => ({
   scrollLeft,
   clientWidth,
-  scrollWidth: Math.max(clientWidth, gridMinWidthOf(columns)),
+  scrollWidth: Math.max(clientWidth, GUTTER_PX + columns * COLUMN_PX),
 })
 
 test('before the width is known the first twelve columns are drawn', () => {
@@ -939,11 +930,30 @@ test('the script in the first HTML scrolls the guide where opening it would', ()
     scrollTop: 0,
     querySelector: () => ({ parentElement: { offsetHeight: 40 } }),
   }
-  const run = new Function('document', openingScrollScriptOf(960, HOUR_PX))
+  const run = new Function(
+    'document',
+    'getComputedStyle',
+    openingScrollScriptOf(960, HOUR_REM),
+  )
+
+  run({ currentScript: { closest: () => guide }, documentElement: {} }, () => ({
+    fontSize: '20px',
+  }))
+
+  assert.equal(guide.scrollTop, openingScrollTopOf(960, HOUR_REM * 20, 700))
+})
+
+test('the script in the first HTML reads a root of 16 pixels when it cannot measure one', () => {
+  const guide = {
+    clientHeight: 740,
+    scrollTop: 0,
+    querySelector: () => ({ parentElement: { offsetHeight: 40 } }),
+  }
+  const run = new Function('document', openingScrollScriptOf(960, HOUR_REM))
 
   run({ currentScript: { closest: () => guide } })
 
-  assert.equal(guide.scrollTop, openingScrollTopOf(960, HOUR_PX, 700))
+  assert.equal(guide.scrollTop, openingScrollTopOf(960, HOUR_REM * 16, 700))
 })
 
 test('the script in the first HTML does not scroll above the start of the day', () => {
@@ -952,7 +962,7 @@ test('the script in the first HTML does not scroll above the start of the day', 
     scrollTop: 0,
     querySelector: () => null,
   }
-  const run = new Function('document', openingScrollScriptOf(30, HOUR_PX))
+  const run = new Function('document', openingScrollScriptOf(30, HOUR_REM))
 
   run({ currentScript: { closest: () => guide } })
 
