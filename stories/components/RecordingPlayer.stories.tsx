@@ -4772,7 +4772,9 @@ export const データ放送を自動で開く: Story = {
     )
 
     await waitFor(() => expect(toggle).toHaveAttribute('aria-pressed', 'true'))
-    await expect(canvasElement.querySelector('iframe')).not.toBeNull()
+    await waitFor(() =>
+      expect(canvasElement.querySelector('iframe')).not.toBeNull(),
+    )
   },
 }
 

@@ -33,10 +33,8 @@ import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import type { BandPlace } from '@/lib/data-broadcast-view'
 import { KEY_CAP } from '@/lib/player-keys'
 import { cn } from '@/lib/utils'
-import {
-  BmlFrame,
-  type SendToRuntime,
-} from '@/components/data-broadcast/bml-frame'
+import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
+import { FrameOnDemand } from '@/components/data-broadcast/frame-on-demand'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
 import { residenceFromCarina } from '@/components/data-broadcast/residence'
 import {
@@ -374,7 +372,7 @@ export function DataBroadcastFace({
 
   return (
     <>
-      <BmlFrame onReady={ready} onMessage={heard} className="z-[1]" />
+      <FrameOnDemand onReady={ready} onMessage={heard} className="z-[1]" />
       <p
         role="status"
         data-slot="data-broadcast-says"

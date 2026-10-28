@@ -210,6 +210,7 @@ export function GuideGrid({
     filled,
     settled: done,
     day: dayKey,
+    nowMin,
   })
 
   useGlyphsAhead(glyphLoads, filled)

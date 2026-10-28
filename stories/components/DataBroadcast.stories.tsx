@@ -27,6 +27,7 @@ import {
   type SendToRuntime,
 } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
+import { FrameOnDemand } from '@/components/data-broadcast/frame-on-demand'
 import { RUNTIME_SCRIPT } from '@/components/data-broadcast/runtime-script.generated'
 import {
   BAND_MAX_SCALE,
@@ -1753,5 +1754,65 @@ export const 読み込み直した枠は壊れたものとして閉じる: Story
       },
     )
     await expect(group).toHaveAttribute('data-readies', '1')
+  },
+}
+
+function UnreadFrame() {
+  const [open, setOpen] = useState(false)
+  const [said, setSaid] = useState<string | null>(null)
+  const tries = useRef(0)
+  const load = useMemo(
+    () => () => {
+      tries.current += 1
+
+      return Promise.reject(new Error('chunk gone'))
+    },
+    [],
+  )
+
+  return (
+    <div className="p-4">
+      <button
+        type="button"
+        className={STORY_BUTTON}
+        aria-pressed={open}
+        onClick={() => setOpen((was) => !was)}
+      >
+        {DATA_BROADCAST_NAME}
+      </button>
+      <div className={cn(PLAYER_FACE, 'relative mt-3')}>
+        {open && (
+          <FrameOnDemand
+            load={load}
+            onReady={() => {}}
+            onMessage={(message) => {
+              setSaid(`${message.kind}:${tries.current}`)
+              setOpen(false)
+            }}
+          />
+        )}
+      </div>
+      <p data-testid="said">{said}</p>
+    </div>
+  )
+}
+
+export const 枠を読めないとき: Story = {
+  render: () => <UnreadFrame />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const toggle = canvas.getByRole('button', { name: DATA_BROADCAST_NAME })
+
+    await userEvent.click(toggle)
+    await waitFor(() =>
+      expect(canvas.getByTestId('said')).toHaveTextContent('error:1'),
+    )
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvasElement.querySelector('iframe')).toBeNull()
+
+    await userEvent.click(toggle)
+    await waitFor(() =>
+      expect(canvas.getByTestId('said')).toHaveTextContent('error:2'),
+    )
   },
 }
