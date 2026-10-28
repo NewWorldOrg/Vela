@@ -14,7 +14,7 @@ import type { Program } from '@/repository/programs'
 import {
   GENRE_CLASS,
   GENRE_CLASS_PAST,
-  HOUR_PX,
+  remOfMinutes,
 } from '@/components/guide/guide-metrics'
 import { RecordIcon } from '@/components/vela/icons'
 
@@ -34,7 +34,6 @@ export const ProgramCell = memo(function ProgramCell({
   selected: boolean
   onSelect: (program: Program) => void
 }) {
-  const height = (p.durationMin / 60) * HOUR_PX
   const mark = bookingMarkOf(p.booking)
 
   return (
@@ -45,8 +44,8 @@ export const ProgramCell = memo(function ProgramCell({
       aria-pressed={selected}
       onClick={() => onSelect(p)}
       style={{
-        top: `${(p.startMin / 60) * HOUR_PX}px`,
-        height: `${height}px`,
+        top: remOfMinutes(p.startMin),
+        height: remOfMinutes(p.durationMin),
       }}
       className={cn(
         'guide-cell',

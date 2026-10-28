@@ -695,7 +695,7 @@ test('a guide opened directly is scrolled to now before its first paint, by its 
 
   assert.match(
     grid,
-    /\{cameWithTheHtml && nowMin !== undefined && \(\s*<script\s*dangerouslySetInnerHTML=\{\{\s*__html: openingScrollScriptOf\(nowMin, HOUR_PX\)/,
+    /\{cameWithTheHtml && nowMin !== undefined && \(\s*<script\s*dangerouslySetInnerHTML=\{\{\s*__html: openingScrollScriptOf\(nowMin, HOUR_REM\)/,
   )
 })
 

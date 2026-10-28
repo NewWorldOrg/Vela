@@ -2365,7 +2365,7 @@
   --guide-mark: calc(13rem / 16);
   --guide-dot: calc(9rem / 16);
 
-  @container (height < 4.375rem) {
+  @container (height < 4rem) {
     padding-block: 1px;
     --guide-mark: calc(12rem / 16);
     --guide-dot: calc(8rem / 16);
@@ -2391,7 +2391,7 @@
     --guide-title: min(calc(9.5rem / 16), 80cqh);
   }
 
-  @container (height < 10px) {
+  @container (height < 0.75rem) {
     max-height: 0;
   }
 }

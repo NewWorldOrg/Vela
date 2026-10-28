@@ -60,26 +60,25 @@ export const NOW_LABEL_GAP_PX = 10
 
 export const NOW_LINE_THICKNESS_PX = 2
 
+/** The now line's top as CSS: where the minute says, but never past the bottom of the day. */
 export function nowLineTopOf(
   nowMin: number,
-  hourPx: number,
+  hourRem: number,
   windowHours: number,
-): number {
-  return Math.min(
-    (nowMin / 60) * hourPx,
-    windowHours * hourPx - NOW_LINE_THICKNESS_PX,
-  )
+): string {
+  return `min(${(nowMin / 60) * hourRem}rem, calc(${windowHours * hourRem}rem - ${NOW_LINE_THICKNESS_PX}px))`
 }
 
-export function nowLabelTopOf(lineTopPx: number): number {
-  return Math.max(-NOW_LABEL_GAP_PX, -lineTopPx) + 0
+/** The label's top against the line as CSS: ten pixels above it, but never above where the day begins. */
+export function nowLabelTopOf(nowMin: number, hourRem: number): string {
+  return `max(${-NOW_LABEL_GAP_PX}px, ${-(nowMin / 60) * hourRem}rem)`
 }
 
 /** 最初の HTML で番組表の枠の直後に置き、最初の描画の前に今の位置へ送るスクリプト。 */
-export function openingScrollScriptOf(nowMin: number, hourPx: number): string {
-  const nowPx = (nowMin / 60) * hourPx
+export function openingScrollScriptOf(nowMin: number, hourRem: number): string {
+  const nowRem = (nowMin / 60) * hourRem
 
-  return `(function(s){var h=s.querySelector('[data-guide-heading]');h=h&&h.parentElement?h.parentElement.offsetHeight:0;s.scrollTop=Math.max(0,${nowPx}-(s.clientHeight-h)/2)})(document.currentScript.closest('[data-guide-scroll]'))`
+  return `(function(s){var r=16;try{r=parseFloat(getComputedStyle(document.documentElement).fontSize)||16}catch(e){}var h=s.querySelector('[data-guide-heading]');h=h&&h.parentElement?h.parentElement.offsetHeight:0;s.scrollTop=Math.max(0,${nowRem}*r-(s.clientHeight-h)/2)})(document.currentScript.closest('[data-guide-scroll]'))`
 }
 
 export interface GuideService {
