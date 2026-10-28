@@ -228,12 +228,5 @@ class RecordingFeed implements Carrying {
   }
 }
 
-export const feedRecording: FeedRecording = (video, href, events) => {
-  if (!MediaFeed.supported('managedFirst')) {
-    video.src = href
-
-    return { close: () => {} }
-  }
-
-  return new RecordingFeed(video, href, events)
-}
+export const feedRecording: FeedRecording = (video, href, events) =>
+  new RecordingFeed(video, href, events)
