@@ -7,7 +7,7 @@ import {
   type RuntimeMessage,
   type ScriptState,
 } from '@/lib/bml/messages'
-import { MOST_RUN_MS } from '@/lib/bml/scripts'
+import { MOST_RUN_MS } from '@/lib/bml/run-limit'
 import { GRID } from '@/lib/bml/style'
 import type { DataBroadcastAvailability } from '@/lib/data-broadcast-feed'
 import { KEY_SET_UNTIL_TOLD, keysOfKeySet } from '@/lib/hybridcast/keys'

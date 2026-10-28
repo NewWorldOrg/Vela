@@ -74,8 +74,7 @@ export const SHADOWED_GLOBALS = [
 
 export type ScriptGlobals = Record<string, unknown>
 
-/** How long one run of a script may take before the frame is remade around it. */
-export const MOST_RUN_MS = 2000
+export { MOST_RUN_MS } from '@/lib/bml/run-limit'
 
 /** Names and what they held at one moment: a document's own global bindings, the names its declarations put on the global object, or what it wrote by the names its scope hides. */
 export type Bindings = Map<string, unknown>

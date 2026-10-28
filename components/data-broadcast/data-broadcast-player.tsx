@@ -7,6 +7,7 @@ import {
   type CSSProperties,
   type ReactNode,
 } from 'react'
+import dynamic from 'next/dynamic'
 
 import type { AitApplication, AppStart } from '@/lib/bml/ait'
 import type { BmlCatalog } from '@/lib/bml/catalog'
@@ -33,10 +34,7 @@ import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import type { BandPlace } from '@/lib/data-broadcast-view'
 import { KEY_CAP } from '@/lib/player-keys'
 import { cn } from '@/lib/utils'
-import {
-  BmlFrame,
-  type SendToRuntime,
-} from '@/components/data-broadcast/bml-frame'
+import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
 import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
 import { residenceFromCarina } from '@/components/data-broadcast/residence'
 import {
@@ -56,6 +54,14 @@ import {
   transmitAnswerOf,
   type Relayed,
 } from '@/repository/live-data-broadcast'
+
+const BmlFrame = dynamic(
+  () =>
+    import('@/components/data-broadcast/bml-frame').then(
+      (frame) => frame.BmlFrame,
+    ),
+  { ssr: false },
+)
 
 export const DATA_BROADCAST_NAME = 'データ放送'
 
