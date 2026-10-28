@@ -16,6 +16,7 @@ import {
   isDrawn,
   isOnAir,
   joinedColumnsOf,
+  minutesBeforeMeasuringOf,
   NOW_LABEL_GAP_PX,
   NOW_LINE_THICKNESS_PX,
   nowLabelTopOf,
@@ -785,6 +786,20 @@ test('a programme is drawn when any of it falls within the range', () => {
   assert.equal(fallsWithin(range, { startMin: 700, durationMin: 60 }), true)
   assert.equal(fallsWithin(range, { startMin: 720, durationMin: 30 }), false)
   assert.equal(fallsWithin(range, { startMin: 500, durationMin: 400 }), true)
+})
+
+test('before the guide is measured, only the hours around where it opens are drawn', () => {
+  assert.deepEqual(minutesBeforeMeasuringOf(900, 1440), { from: 540, to: 1260 })
+  assert.deepEqual(minutesBeforeMeasuringOf(60, 1440), { from: 0, to: 720 })
+  assert.deepEqual(minutesBeforeMeasuringOf(1400, 1440), {
+    from: 720,
+    to: 1440,
+  })
+  assert.deepEqual(minutesBeforeMeasuringOf(undefined, 1440), {
+    from: 0,
+    to: 720,
+  })
+  assert.deepEqual(minutesBeforeMeasuringOf(300, 600), { from: 0, to: 600 })
 })
 
 test('the columns drawn so far and the ones in view are drawn together', () => {

@@ -10,6 +10,7 @@ import {
   grownColumnsOf,
   holdsEveryColumn,
   joinedColumnsOf,
+  minutesBeforeMeasuringOf,
 } from '@/lib/guide'
 
 export interface DrawnRange {
@@ -48,9 +49,11 @@ export function useDrawnRange(
     filled,
     settled,
     day,
+    nowMin,
   }: {
     columns: number
     windowMin: number
+    nowMin?: number
     filled: boolean
     settled: boolean
     day: string
@@ -58,7 +61,7 @@ export function useDrawnRange(
 ): DrawnRange {
   const [range, setRange] = useState<DrawnRange>(() => ({
     columns: columnsBeforeMeasuringOf(columns),
-    minutes: { from: 0, to: windowMin },
+    minutes: minutesBeforeMeasuringOf(nowMin, windowMin),
   }))
 
   useEffect(() => {

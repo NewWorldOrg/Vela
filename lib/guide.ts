@@ -429,6 +429,24 @@ export interface MinuteRange {
   to: number
 }
 
+export const HOURS_DRAWN_BEFORE_MEASURING = 12
+
+/** The minutes drawn before the guide is measured: the hours around where it opens, so the HTML carries what is first in view and not the whole day. */
+export function minutesBeforeMeasuringOf(
+  nowMin: number | undefined,
+  windowMin: number,
+): MinuteRange {
+  const span = HOURS_DRAWN_BEFORE_MEASURING * 60
+
+  if (windowMin <= span) {
+    return { from: 0, to: windowMin }
+  }
+
+  const from = Math.min(Math.max(0, (nowMin ?? 0) - span / 2), windowMin - span)
+
+  return { from, to: from + span }
+}
+
 export function fallsWithin(
   range: MinuteRange,
   span: { startMin: number; durationMin: number },
