@@ -6,6 +6,9 @@ import {
   JST_OFFSET_MS,
   WINDOW_HOURS,
   broadcastDateOf,
+  fallsWithin,
+  minutesBeforeMeasuringOf,
+  type MinuteRange,
   nowMinOf,
   primaryKeyOfShadow,
   servicesSettled,
@@ -159,13 +162,7 @@ const KIND_OF_SYSTEM: Partial<Record<TuneSystem, ChannelKind>> = {
   isdbSCs110: 'cs110',
 }
 
-export async function getGuide(
-  rawKind: string | undefined,
-  rawDate: string | undefined,
-  bookings:
-    | ReadonlyMap<string, ProgramBooking>
-    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
-): Promise<GuideResult> {
+function guideDayOf(rawKind: string | undefined, rawDate: string | undefined) {
   const kind: ChannelKind =
     rawKind === 'bs' || rawKind === 'cs110' ? rawKind : 'terrestrial'
   const days = guideDays()
@@ -174,16 +171,27 @@ export async function getGuide(
     days.find((d) => d.isToday) ??
     days[0]
   const windowStart = windowStartOf(day.date)
-  const windowEnd = new Date(
-    windowStart.getTime() + WINDOW_HOURS * 60 * 60 * 1000,
-  )
+  const now = new Date()
+  const nowMin = nowMinOf(now, windowStart)
 
+  return { kind, days, day, windowStart, now, nowMin }
+}
+
+async function programsOver(
+  kind: ChannelKind,
+  windowStart: Date,
+  minutes: MinuteRange,
+  bookings:
+    | ReadonlyMap<string, ProgramBooking>
+    | Promise<ReadonlyMap<string, ProgramBooking>>,
+): Promise<{ channels: Channel[]; programs: Program[] }> {
+  const at = (min: number) => new Date(windowStart.getTime() + min * 60_000)
   const [services, guide, marked] = await Promise.all([
     fetchServiceChannels(),
     fetchGuide({
       type: SYSTEM_OF_KIND[kind],
-      from: windowStart,
-      to: windowEnd,
+      from: at(minutes.from),
+      to: at(minutes.to),
     }),
     bookings,
   ])
@@ -198,8 +206,39 @@ export async function getGuide(
     guide.programmes.filter((programme) => !programme.isShadow),
   )
 
-  const now = new Date()
-  const nowMin = nowMinOf(now, windowStart)
+  return {
+    channels: settled.services.map(({ service, sub, whole }) =>
+      sub ? { ...service, sub, whole: whole.id } : { ...service },
+    ),
+    programs: settled.carried
+      .map(({ service, broadcast }) =>
+        toProgram(broadcast, windowStart, services, shadows, service),
+      )
+      .filter(
+        (program): program is Program =>
+          program !== null && fallsWithin(minutes, program),
+      )
+      .map((program) => booked(program, marked.get(program.id))),
+  }
+}
+
+export async function getGuide(
+  rawKind: string | undefined,
+  rawDate: string | undefined,
+  bookings:
+    | ReadonlyMap<string, ProgramBooking>
+    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
+): Promise<GuideResult> {
+  const { kind, days, day, windowStart, now, nowMin } = guideDayOf(
+    rawKind,
+    rawDate,
+  )
+  const { channels, programs } = await programsOver(
+    kind,
+    windowStart,
+    { from: 0, to: WINDOW_HOURS * 60 },
+    bookings,
+  )
 
   return {
     kind,
@@ -209,15 +248,63 @@ export async function getGuide(
     windowHours: WINDOW_HOURS,
     nowMin,
     nowLabel: nowMin === undefined ? undefined : clockLabel(now),
-    channels: settled.services.map(({ service, sub, whole }) =>
-      sub ? { ...service, sub, whole: whole.id } : { ...service },
-    ),
-    programs: settled.carried
-      .map(({ service, broadcast }) =>
-        toProgram(broadcast, windowStart, services, shadows, service),
-      )
-      .filter((program): program is Program => program !== null)
-      .map((program) => booked(program, marked.get(program.id))),
+    channels,
+    programs,
+  }
+}
+
+function cellKeyOf(program: Program): string {
+  return `${program.channelId}|${program.id}`
+}
+
+/** The guide in two readings: the hours the grid opens on, which the page is drawn with, and the rest of the day, which follows in the same answer. A programme is in one of them, never both. */
+export async function getGuideInTwo(
+  rawKind: string | undefined,
+  rawDate: string | undefined,
+  bookings:
+    | ReadonlyMap<string, ProgramBooking>
+    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
+): Promise<{ guide: GuideResult; rest: Promise<Program[]> }> {
+  const { kind, days, day, windowStart, now, nowMin } = guideDayOf(
+    rawKind,
+    rawDate,
+  )
+  const windowMin = WINDOW_HOURS * 60
+  const opening = programsOver(
+    kind,
+    windowStart,
+    minutesBeforeMeasuringOf(nowMin, windowMin),
+    bookings,
+  )
+  const whole = programsOver(
+    kind,
+    windowStart,
+    { from: 0, to: windowMin },
+    bookings,
+  )
+  const rest = Promise.all([opening, whole]).then(([first, all]) => {
+    const drawn = new Set(first.programs.map(cellKeyOf))
+
+    return all.programs.filter((program) => !drawn.has(cellKeyOf(program)))
+  })
+
+  rest.catch(() => undefined)
+
+  const { channels, programs } = await opening
+
+  return {
+    guide: {
+      kind,
+      day,
+      days,
+      windowStartHour: DAY_STARTS_AT_HOUR,
+      windowHours: WINDOW_HOURS,
+      nowMin,
+      nowLabel: nowMin === undefined ? undefined : clockLabel(now),
+      channels,
+      programs,
+    },
+    rest,
   }
 }
 
@@ -231,9 +318,9 @@ export const PANEL_ONLY = [
 
 export type ProgramExtras = Pick<Program, (typeof PANEL_ONLY)[number]>
 
-export function forTheGrid(
-  program: Program,
-): Omit<Program, keyof ProgramExtras> {
+export type GridProgram = Omit<Program, keyof ProgramExtras>
+
+export function forTheGrid(program: Program): GridProgram {
   const handed: Program = { ...program }
 
   for (const key of PANEL_ONLY) {
