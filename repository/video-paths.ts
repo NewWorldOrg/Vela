@@ -104,6 +104,34 @@ export function videoPictureHref(
   return `${VIDEOS}/${encodeURIComponent(id)}/play?${asked.toString()}`
 }
 
+const MILLISECONDS = 1000
+
+function toTheMillisecond(seconds: number) {
+  return Number.isFinite(seconds)
+    ? Math.round(Math.max(0, seconds) * MILLISECONDS) / MILLISECONDS
+    : 0
+}
+
+/** The playlist a browser without a media source plays the recording from, transcoded from that second on. */
+export function videoPlaylistHref(
+  id: string,
+  from: number,
+  profile?: PlaybackProfile,
+  sound?: SoundTrack,
+) {
+  const asked = new URLSearchParams({ from: String(toTheMillisecond(from)) })
+
+  if (profile) {
+    asked.set('profile', profile)
+  }
+
+  if (sound) {
+    asked.set('sound', sound)
+  }
+
+  return `${VIDEOS}/${encodeURIComponent(id)}/hls.m3u8?${asked.toString()}`
+}
+
 export function videoThumbnailHref(id: string) {
   return `${VIDEOS}/${encodeURIComponent(id)}/thumbnail`
 }
