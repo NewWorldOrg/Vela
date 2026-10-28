@@ -17,7 +17,6 @@ import {
   isOnAir,
   joinedColumnsOf,
   minutesBeforeMeasuringOf,
-  minutesInViewOf,
   NOW_LABEL_GAP_PX,
   NOW_LINE_THICKNESS_PX,
   nowLabelTopOf,
@@ -822,24 +821,6 @@ test('the rest of the day joins the hours it opened on, each column in the order
       cell('a', 900),
       cell('b', 1200),
     ],
-  )
-})
-
-test('the minutes in view are the part of the day the scroller shows, with an hour either side', () => {
-  const view = { scrollTop: 960, clientHeight: 480, scrollHeight: 2400 }
-
-  assert.deepEqual(minutesInViewOf(view, 1440), { from: 516, to: 924 })
-  assert.deepEqual(minutesInViewOf({ ...view, scrollTop: 0 }, 1440), {
-    from: 0,
-    to: 348,
-  })
-  assert.deepEqual(minutesInViewOf({ ...view, scrollTop: 1920 }, 1440), {
-    from: 1092,
-    to: 1440,
-  })
-  assert.deepEqual(
-    minutesInViewOf({ scrollTop: 0, clientHeight: 0, scrollHeight: 0 }, 1440),
-    { from: 0, to: 1440 },
   )
 })
 

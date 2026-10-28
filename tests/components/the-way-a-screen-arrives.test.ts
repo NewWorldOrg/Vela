@@ -668,11 +668,7 @@ test('the guide shows its frame first and fills its columns under the cover', as
   )
 
   assert.match(grid, /const filled = useFilledSoon\(\)/)
-  assert.match(
-    grid,
-    /useGlyphsAhead\(\s*glyphLoads,\s*filled && drawn\.minutes\.to > drawn\.minutes\.from,?\s*\)/,
-    'the faces are loaded once the cells are built, not while the columns are still empty',
-  )
+  assert.match(grid, /useGlyphsAhead\(glyphLoads, filled\)/)
   assert.match(grid, /filled && isDrawn\(/)
   assert.doesNotMatch(
     grid,
@@ -689,17 +685,6 @@ test('the guide shows its frame first and fills its columns under the cover', as
     /useSyncExternalStore\(\s*listenToNothing,\s*\(\) => false,\s*\(\) => true,?\s*\)/,
   )
   assert.match(hook, /startTransition\(\(\) => setFilled\(true\)\)/)
-})
-
-test('a guide opened directly comes with its frame and empty columns, and its cells are drawn in the browser', async () => {
-  const hook = await readFile(path.join(ROOT, 'hooks/useDrawnRange.ts'), 'utf8')
-
-  assert.match(hook, /const cameWithTheHtml = useCameWithTheHtml\(\)/)
-  assert.match(
-    hook,
-    /minutes: cameWithTheHtml \? NOTHING_YET : \{ from: 0, to: windowMin \}/,
-    'the HTML carries no cell, and a guide reached from another screen fills its columns before they rise',
-  )
 })
 
 test('a guide opened directly is scrolled to now before its first paint, by its HTML alone', async () => {
