@@ -11,11 +11,11 @@ import {
 } from 'react'
 
 import { MOVED_BY_HAND, delayOf } from '@/lib/arrival'
+import { halfWidthOf } from '@/lib/guide-cell'
 import {
   GUTTER_PX,
   gridMinWidthOf,
   fallsWithin,
-  halfWidthOf,
   isDrawn,
   type MinuteRange,
   type OpeningSeam,

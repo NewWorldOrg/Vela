@@ -3,7 +3,8 @@
 import { memo } from 'react'
 
 import type { BookingMark } from '@/lib/guide'
-import { bookingMarkOf, genreWordOf, halfWidthOf } from '@/lib/guide'
+import { bookingMarkOf } from '@/lib/guide'
+import { genreWordOf, halfWidthOf } from '@/lib/guide-cell'
 import {
   RECORDING_IN_PROGRESS_TERM,
   RESERVATION_STANDING_TERMS,

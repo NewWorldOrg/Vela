@@ -471,15 +471,3 @@ export function openingSeamOf({
 
   return { top: middle, line: false }
 }
-
-const FULL_WIDTH_ASCII = /[！-～　]/g
-
-export function halfWidthOf(text: string): string {
-  return text.replace(FULL_WIDTH_ASCII, (c) =>
-    c === '　' ? ' ' : String.fromCharCode(c.charCodeAt(0) - 0xfee0),
-  )
-}
-
-export function genreWordOf(label: string): string {
-  return label.split('/')[0] ?? label
-}

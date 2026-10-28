@@ -6,12 +6,11 @@ import { expect, userEvent, waitFor, within } from 'storybook/test'
 import {
   COLUMN_MIN_PX,
   bookingMarkOf,
-  genreWordOf,
   gridMinWidthOf,
-  halfWidthOf,
   isOnAir,
   nowLineTopOf,
 } from '@/lib/guide'
+import { genreWordOf, halfWidthOf } from '@/lib/guide-cell'
 import {
   AERIAL_CHANNEL_FIXTURES,
   CHANNEL_FIXTURES,
@@ -968,6 +967,137 @@ const A_SHORT_RETURN = [
     endLabel: '03:00',
   },
 ]
+
+const READ_IN_CELLS_CHANNEL = CHANNEL_FIXTURES[0].id
+
+const READ_IN_CELLS: Program[] = [
+  [5, 'ＮＨＫニュース', undefined, 'ニュース/報道'],
+  [
+    10,
+    '🈑えいごであそぼ　ｗｉｔｈ　Ｏｒｂｅｃｈｅ',
+    '英語の歌と遊び',
+    '趣味/教育',
+  ],
+  [
+    25,
+    'おはよう日本　関東甲信越のニュース',
+    '首都圏の交通情報と天気',
+    'ニュース/報道',
+  ],
+  [
+    30,
+    'ＴＨＥ　ＴＩＭＥ，【３５話】安住紳一郎が生放送でお届け',
+    '全国の朝の顔をつなぐ情報番組',
+    '情報/ワイドショー',
+  ],
+  [
+    54,
+    '🈞連続テレビ小説「おむすび」（３５）',
+    'ギャルの心を胸に　栄養士として人の心と未来を結ぶ物語　第７週「おむすびのチカラ」　ふだんの食卓から始まる物語',
+    'ドラマ',
+  ],
+].reduce<Program[]>((cells, [durationMin, title, description, genreLabel]) => {
+  const startMin =
+    cells.length === 0
+      ? EVENING_MIN
+      : cells[cells.length - 1].startMin + cells[cells.length - 1].durationMin
+
+  return [
+    ...cells,
+    {
+      ...PROGRAM_FIXTURES[0],
+      id: `read-in-cells-${cells.length}`,
+      channelId: READ_IN_CELLS_CHANNEL,
+      title: title as string,
+      description: description as string | undefined,
+      genreLabel: genreLabel as string,
+      startMin,
+      durationMin: durationMin as number,
+    },
+  ]
+}, [])
+
+function cellOf(canvasElement: HTMLElement, nth: number): HTMLElement {
+  const cell = canvasElement.querySelectorAll<HTMLElement>(
+    '[data-opens="program-panel"]',
+  )[nth]
+
+  if (!cell) {
+    throw new Error(`the guide has no cell ${nth}`)
+  }
+
+  return cell
+}
+
+export const 枠には収まる行だけを出す: Story = {
+  args: {
+    guide: {
+      ...base,
+      programs: [
+        ...READ_IN_CELLS,
+        ...base.programs.filter(
+          (program) => program.channelId !== READ_IN_CELLS_CHANNEL,
+        ),
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const [fiveMinutes, tenMinutes, ...tall] = READ_IN_CELLS.map((_, nth) =>
+      cellOf(canvasElement, nth),
+    )
+
+    await expect(fiveMinutes.dataset.cellSize).toBe('xs')
+    await expect(partOfCell(fiveMinutes, '.guide-cell-line').offsetHeight).toBe(
+      0,
+    )
+
+    const oneLine = partOfCell(tenMinutes, '.guide-cell-line')
+
+    await expect(tenMinutes.dataset.cellSize).toBe('xs')
+    await expect(getComputedStyle(oneLine).whiteSpace).toBe('nowrap')
+    await expect(oneLine.offsetHeight).toBeGreaterThan(0)
+    await expect(oneLine.offsetHeight).toBeLessThanOrEqual(
+      tenMinutes.clientHeight,
+    )
+    await expect(oneLine).toHaveTextContent('🈑えいごであそぼ with Orbeche')
+    await expect(oneLine.querySelector('.guide-cell-genre')).toBeNull()
+
+    for (const [nth, cell] of tall.entries()) {
+      const program = READ_IN_CELLS[nth + 2]
+      const text = partOfCell(cell, '.guide-cell-text')
+      const title = partOfCell(cell, '.guide-cell-title')
+      const pitch = parseFloat(getComputedStyle(title).lineHeight)
+      const lines = text.clientHeight / pitch
+      const room = cell.getBoundingClientRect().bottom
+      const below = text.getBoundingClientRect().bottom
+
+      await expect(lines).toBeGreaterThanOrEqual(1)
+      await expect(Math.abs(lines - Math.round(lines))).toBeLessThan(0.01)
+      await expect(below).toBeLessThanOrEqual(room)
+      await expect(room - below).toBeLessThan(pitch + 8)
+      await expect(title).toHaveTextContent(halfWidthOf(program.title))
+      await expect(title.textContent).not.toMatch(/[\uFF01-\uFF5E\u3000]/)
+      await expect(title.querySelector('.guide-cell-genre')).toBeNull()
+      await expect(
+        partOfCell(cell, '.guide-cell-desc').firstElementChild,
+      ).toHaveTextContent(genreWordOf(program.genreLabel))
+    }
+
+    await expect(tall[2]).toHaveTextContent('🈞連続テレビ小説「おむすび」(35)')
+  },
+}
+
+function partOfCell(cell: HTMLElement, selector: string): HTMLElement {
+  const part = cell.querySelector<HTMLElement>(selector)
+
+  if (!part) {
+    throw new Error(`the cell has no ${selector}`)
+  }
+
+  return part
+}
 
 export const 編成なしの短い帯は名前を落とす: Story = {
   args: {
