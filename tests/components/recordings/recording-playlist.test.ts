@@ -20,6 +20,10 @@ class Picture extends EventTarget {
     this.loaded += 1
   }
 
+  getAttribute(name: string): string | null {
+    return name === 'src' && this.src !== '' ? this.src : null
+  }
+
   removeAttribute(name: string): void {
     if (name === 'src') {
       this.src = ''
@@ -124,5 +128,17 @@ test('closing takes the playlist away from the video and hears nothing after', (
 
   assert.equal(video.src, '')
   assert.equal(video.loaded, 1)
+  assert.deepEqual(said, [])
+})
+
+test('closing leaves a source the page has handed the video since, such as the artefact played as it is', (context) => {
+  const { video, said, carrying } = opened(context)
+  const artefact = '/api/videos/1266/play?from=600&sound=main&source=artefact'
+
+  video.src = artefact
+  carrying.close()
+
+  assert.equal(video.src, artefact)
+  assert.equal(video.loaded, 0)
   assert.deepEqual(said, [])
 })
