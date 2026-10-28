@@ -313,7 +313,7 @@ export function GuideGrid({
             opening && 'guide-settles',
           )}
           style={{
-            minWidth: `${gridMinWidthOf(channels.length)}px`,
+            minWidth: gridMinWidthOf(channels.length),
             ...(seam !== null && {
               transformOrigin: `50% ${seam.origin}px`,
             }),

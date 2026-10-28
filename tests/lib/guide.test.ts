@@ -12,6 +12,8 @@ import {
   holdsEveryColumn,
   foldedGuideOf,
   foldsAColumn,
+  COLUMN_MIN_REM,
+  GUTTER_PX,
   gridMinWidthOf,
   isDrawn,
   isOnAir,
@@ -239,26 +241,25 @@ test('a copy does not follow a relay back, only a shared broadcast', () => {
 
 const TELEVISION_SERVICES = 27
 
-test('a channel is given a column a programme name fits in', () => {
-  assert.equal(gridMinWidthOf(1), 46 + 200)
-  assert.equal(gridMinWidthOf(4), 46 + 4 * 200)
+test('a channel is given a column a programme name fits in, in rem', () => {
+  assert.equal(gridMinWidthOf(1), 'calc(46px + 15rem)')
+  assert.equal(gridMinWidthOf(4), 'calc(46px + 60rem)')
 })
 
 test('a whole aerial is wider than the screen it is read on', () => {
-  const width = gridMinWidthOf(TELEVISION_SERVICES)
-
-  assert.equal(width, 46 + TELEVISION_SERVICES * 200)
-  assert.ok(width > 1400)
+  assert.ok(GUTTER_PX + TELEVISION_SERVICES * COLUMN_MIN_REM * 16 > 1400)
 })
 
 test('a grid with no channels is the hour gutter and nothing else', () => {
-  assert.equal(gridMinWidthOf(0), 46)
+  assert.equal(gridMinWidthOf(0), 'calc(46px + 0rem)')
 })
+
+const COLUMN_PX = 200
 
 const aGridOf = (columns: number, clientWidth: number, scrollLeft = 0) => ({
   scrollLeft,
   clientWidth,
-  scrollWidth: Math.max(clientWidth, gridMinWidthOf(columns)),
+  scrollWidth: Math.max(clientWidth, GUTTER_PX + columns * COLUMN_PX),
 })
 
 test('before the width is known the first twelve columns are drawn', () => {

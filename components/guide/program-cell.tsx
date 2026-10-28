@@ -14,6 +14,7 @@ import type { Program } from '@/repository/programs'
 import {
   GENRE_CLASS,
   GENRE_CLASS_PAST,
+  GENRE_MARK_CLASS,
   remOfMinutes,
 } from '@/components/guide/guide-metrics'
 import { RecordIcon } from '@/components/vela/icons'
@@ -59,7 +60,16 @@ export const ProgramCell = memo(function ProgramCell({
         <span className="guide-cell-text">
           <span className={cn('guide-cell-title', past && 'text-ink-2')}>
             {mark && <BookingGlyph mark={mark} />}
-            <span className="guide-cell-start">{p.startLabel.slice(3)}</span>
+            <span className="guide-cell-start">
+              <span
+                aria-hidden="true"
+                className={cn(
+                  'guide-cell-genre-dot',
+                  GENRE_MARK_CLASS[p.genre],
+                )}
+              />
+              {p.startLabel}
+            </span>
             {halfWidthOf(p.title)}
           </span>
           <span className="guide-cell-desc">

@@ -346,10 +346,11 @@ export function primaryKeyOfShadow(
 
 export const GUTTER_PX = 46
 
-export const COLUMN_MIN_PX = 200
+export const COLUMN_MIN_REM = 15
 
-export function gridMinWidthOf(columns: number): number {
-  return GUTTER_PX + columns * COLUMN_MIN_PX
+/** The narrowest the grid is drawn, as CSS: the hour gutter and every column at its narrowest. */
+export function gridMinWidthOf(columns: number): string {
+  return `calc(${GUTTER_PX}px + ${columns * COLUMN_MIN_REM}rem)`
 }
 
 export const COLUMNS_DRAWN_BEFORE_MEASURING = 12

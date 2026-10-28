@@ -4,9 +4,9 @@ import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, userEvent, waitFor, within } from 'storybook/test'
 
 import {
-  COLUMN_MIN_PX,
+  COLUMN_MIN_REM,
+  GUTTER_PX,
   bookingMarkOf,
-  gridMinWidthOf,
   isOnAir,
   NOW_LINE_THICKNESS_PX,
 } from '@/lib/guide'
@@ -305,6 +305,10 @@ const cellSizeOf = (program: Program): CellSize =>
 
 const hourPx = () => hourPxIn(document)
 
+const columnMinPx = () =>
+  COLUMN_MIN_REM *
+  parseFloat(getComputedStyle(document.documentElement).fontSize)
+
 const endsAt = (program: Program) => program.startMin + program.durationMin
 
 function firstCell(
@@ -445,6 +449,15 @@ async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
       expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull()
     },
     { timeout: 5000 },
+  )
+  await waitFor(
+    () =>
+      expect(
+        Array.from(
+          canvasElement.querySelectorAll<HTMLElement>('[data-guide-heading]'),
+        ).filter((heading) => heading.childElementCount === 0),
+      ).toHaveLength(0),
+    { timeout: 10_000 },
   )
 }
 
@@ -741,7 +754,7 @@ export const 列が余れば分け合う: Story = {
     await expect(scroller.scrollWidth).toBeLessThanOrEqual(scroller.clientWidth)
 
     for (const column of columns) {
-      await expect(widthOf(column)).toBeGreaterThan(COLUMN_MIN_PX)
+      await expect(widthOf(column)).toBeGreaterThan(columnMinPx())
       await expect(widthOf(column)).toBeCloseTo(widthOf(columns[0]), 0)
     }
 
@@ -793,7 +806,7 @@ export const 副チャンネルも同じ列: Story = {
       await expect(getComputedStyle(column).contain).toBe('size layout style')
       await expect(column.offsetHeight).toBe(body.offsetHeight)
     }
-    await expect(widthOf(columns[split])).toBeGreaterThan(COLUMN_MIN_PX)
+    await expect(widthOf(columns[split])).toBeGreaterThan(columnMinPx())
 
     for (const index of SERVICES_ONE_OF_THEM_SPLIT.keys()) {
       await expect(widthOf(columns[index])).toBeCloseTo(
@@ -971,6 +984,12 @@ const READ_IN_CELLS_CHANNEL = CHANNEL_FIXTURES[0].id
 
 const BOOKED_IN_ONE_LINE = 1
 
+const clockOfTheDay = (minute: number): string => {
+  const at = (4 * 60 + minute) % (24 * 60)
+
+  return `${String(Math.floor(at / 60)).padStart(2, '0')}:${String(at % 60).padStart(2, '0')}`
+}
+
 const READ_IN_CELLS: Program[] = [
   [5, 'ＮＨＫニュース', undefined, 'ニュース/報道'],
   [
@@ -1015,6 +1034,7 @@ const READ_IN_CELLS: Program[] = [
       description: description as string | undefined,
       genreLabel: genreLabel as string,
       startMin,
+      startLabel: clockOfTheDay(startMin),
       durationMin: durationMin as number,
       ...(cells.length === BOOKED_IN_ONE_LINE
         ? {
@@ -1234,7 +1254,7 @@ export const 列が多ければ横に流れる: Story = {
     ).toBeGreaterThan(0)
 
     for (const index of AERIAL_CHANNEL_FIXTURES.keys()) {
-      await expect(widthOf(columns[index])).toBeCloseTo(COLUMN_MIN_PX, 0)
+      await expect(widthOf(columns[index])).toBeCloseTo(columnMinPx(), 0)
       await expect(widthOf(headings[index])).toBeCloseTo(
         widthOf(columns[index]),
         0,
@@ -1242,7 +1262,7 @@ export const 列が多ければ横に流れる: Story = {
     }
 
     await expect(scroller.scrollWidth).toBeCloseTo(
-      gridMinWidthOf(AERIAL_CHANNEL_FIXTURES.length),
+      GUTTER_PX + AERIAL_CHANNEL_FIXTURES.length * columnMinPx(),
       0,
     )
 
@@ -1628,7 +1648,8 @@ export const 別の番組を押すとまず閉じる: Story = {
 
     await readsInFull(await openedPanel(canvasElement), read.program)
 
-    const [across, down] = middleOf(next.cell)
+    const [, down] = middleOf(next.cell)
+    const across = next.cell.getBoundingClientRect().left + 8
 
     await expect(doc.elementFromPoint(across, down)).toBe(
       overlayOver(canvasElement),

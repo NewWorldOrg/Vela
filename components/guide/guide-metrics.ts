@@ -27,6 +27,19 @@ export const GENRE_CLASS: Record<Program['genre'], string> = {
   other: 'bg-genre-other border-genre-other-line',
 }
 
+export const GENRE_MARK_CLASS: Record<Program['genre'], string> = {
+  news: 'bg-genre-news-mark',
+  sports: 'bg-genre-sports-mark',
+  info: 'bg-genre-info-mark',
+  drama: 'bg-genre-drama-mark',
+  music: 'bg-genre-music-mark',
+  variety: 'bg-genre-variety-mark',
+  movie: 'bg-genre-movie-mark',
+  anime: 'bg-genre-anime-mark',
+  doc: 'bg-genre-doc-mark',
+  other: 'bg-genre-other-mark',
+}
+
 export const GENRE_CLASS_PAST: Record<Program['genre'], string> = {
   news: 'border-dashed bg-surface-2 border-genre-news-line',
   sports: 'border-dashed bg-surface-2 border-genre-sports-line',
