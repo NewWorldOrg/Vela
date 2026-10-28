@@ -5388,7 +5388,7 @@ const forgetWhatWasHanded = () => {
 }
 
 const PLAYLIST_AT_TEN_MINUTES =
-  '/api/videos/1266/hls.m3u8?from=600&profile=1080p60&sound=main'
+  '/api/videos/1266/hls.m3u8?from=600&profile=1080p60'
 
 const ON_A_PLAYLIST = {
   detail: detail('1266'),
@@ -5453,7 +5453,7 @@ export const HLS_でシークすると秒を変えてプレイリストを開き
       await userEvent.click(canvas.getByRole('button', { name: '10 秒進む' }))
       await waitFor(() =>
         expect(handedPlaylists.at(-1)).toBe(
-          '/api/videos/1266/hls.m3u8?from=610&profile=1080p60&sound=main',
+          '/api/videos/1266/hls.m3u8?from=610&profile=1080p60',
         ),
       )
       await expect(canvas.getByText('10:10 / 4:12:38')).toBeVisible()
@@ -5477,7 +5477,7 @@ export const HLS_でも_OP_を飛ばすと区間の終わりからプレイリ�
       )
       await waitFor(() =>
         expect(handedPlaylists.at(-1)).toBe(
-          '/api/videos/1266/hls.m3u8?from=180&profile=1080p60&sound=main',
+          '/api/videos/1266/hls.m3u8?from=180&profile=1080p60',
         ),
       )
       await expect(canvas.getByText('3:00 / 4:12:38')).toBeVisible()
@@ -5575,14 +5575,14 @@ export const MSE_の無いブラウザでもエンコード版は映像のアド
       detail: detail('1274'),
       plan: WITH_AN_ARTEFACT,
       startAt: 0,
-      pictureHref: carryingTheSource,
+      pictureHref: () => DRAWN_PICTURE,
     },
     beforeEach: withoutAMediaSource('maybe', forgetWhatWasHanded),
     play: async ({ canvasElement }) => {
       await waitFor(() =>
         expect(canvasElement.querySelector('video')).toHaveAttribute(
           'src',
-          handed.at(-1),
+          DRAWN_PICTURE,
         ),
       )
       await expect(handedPlaylists).toEqual([])
