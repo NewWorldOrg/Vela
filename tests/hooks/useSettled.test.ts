@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { settlementOf, whenSettled } from '@/hooks/useSettled'
+import {
+  keptWhileSettling,
+  settlementOf,
+  whenSettled,
+} from '@/hooks/useSettled'
 
 test('what has not settled reads as nothing, and as its value once it has', async () => {
   let arrive: (value: string) => void = () => {}
@@ -57,4 +61,26 @@ test('a listener that has left is not told', async () => {
   await later
 
   assert.equal(told, 0)
+})
+
+test('while a new promise is on its way, what the last one settled with stays for the same day and kind', () => {
+  const kept = { key: '2026-10-28|terrestrial', value: ['夜の映画'] }
+
+  assert.deepEqual(
+    keptWhileSettling(undefined, kept, '2026-10-28|terrestrial'),
+    ['夜の映画'],
+  )
+  assert.deepEqual(
+    keptWhileSettling(['深夜の番組'], kept, '2026-10-28|terrestrial'),
+    ['深夜の番組'],
+  )
+  assert.equal(
+    keptWhileSettling(undefined, kept, '2026-10-29|terrestrial'),
+    undefined,
+  )
+  assert.equal(keptWhileSettling(undefined, kept, '2026-10-28|bs'), undefined)
+  assert.equal(
+    keptWhileSettling(undefined, null, '2026-10-28|terrestrial'),
+    undefined,
+  )
 })

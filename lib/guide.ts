@@ -429,14 +429,16 @@ export interface MinuteRange {
   to: number
 }
 
-/** The hours the guide opened on and the rest of the day as one day, each column's cells in the order they air. */
-export function wholeDayOf<P extends { startMin: number }>(
-  opening: readonly P[],
-  rest: readonly P[],
-): P[] {
-  return [...opening, ...rest].sort(
-    (one, other) => one.startMin - other.startMin,
-  )
+/** The hours the guide opened on and the rest of the day as one day, each column's cells in the order they air. A cell of the rest that the opening hours also hold is theirs: a rest kept from before a refresh gives way to what the refresh brought. */
+export function wholeDayOf<
+  P extends { id: string; channelId: string; startMin: number },
+>(opening: readonly P[], rest: readonly P[]): P[] {
+  const opened = new Set(opening.map((cell) => `${cell.channelId}|${cell.id}`))
+
+  return [
+    ...opening,
+    ...rest.filter((cell) => !opened.has(`${cell.channelId}|${cell.id}`)),
+  ].sort((one, other) => one.startMin - other.startMin)
 }
 
 export const HOURS_DRAWN_BEFORE_MEASURING = 12

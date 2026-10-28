@@ -805,6 +805,7 @@ test('before the guide is measured, only the hours around where it opens are dra
 
 test('the rest of the day joins the hours it opened on, each column in the order it airs', () => {
   const cell = (channelId: string, startMin: number) => ({
+    id: `${channelId}${startMin}`,
     channelId,
     startMin,
   })
@@ -821,6 +822,21 @@ test('the rest of the day joins the hours it opened on, each column in the order
       cell('a', 900),
       cell('b', 1200),
     ],
+  )
+})
+
+test('a rest kept from before a refresh gives way to the hours the refresh brought', () => {
+  const opening = [
+    { id: 'e1', channelId: 'a', startMin: 600, title: '新しい題' },
+  ]
+  const kept = [
+    { id: 'e1', channelId: 'a', startMin: 600, title: '前の題' },
+    { id: 'e2', channelId: 'a', startMin: 900, title: '夜の映画' },
+  ]
+
+  assert.deepEqual(
+    wholeDayOf(opening, kept).map((program) => program.title),
+    ['新しい題', '夜の映画'],
   )
 })
 

@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useSyncExternalStore } from 'react'
+import { useCallback, useState, useSyncExternalStore } from 'react'
 
 type Settlement<T> = { value: T } | { error: unknown }
 
@@ -60,4 +60,38 @@ export function useSettled<T>(promise: Promise<T> | undefined): T | undefined {
   }
 
   return settlement?.value
+}
+
+/** What a promise last settled with, and for which page: its day and kind. */
+export interface Kept<T> {
+  key: string
+  value: T
+}
+
+/** What to show while a promise is on its way: what it settled with once it has, and until then what the last one settled with, if that was for the same page. */
+export function keptWhileSettling<T>(
+  settled: T | undefined,
+  kept: Kept<T> | null,
+  key: string,
+): T | undefined {
+  if (settled !== undefined) {
+    return settled
+  }
+
+  return kept?.key === key ? kept.value : undefined
+}
+
+/** `useSettled`, holding on to what the last promise for the same page settled with while a new one, handed down by a refresh, is on its way. */
+export function useSettledKept<T>(
+  promise: Promise<T> | undefined,
+  key: string,
+): T | undefined {
+  const settled = useSettled(promise)
+  const [kept, keep] = useState<Kept<T> | null>(null)
+
+  if (settled !== undefined && (kept?.value !== settled || kept.key !== key)) {
+    keep({ key, value: settled })
+  }
+
+  return keptWhileSettling(settled, kept, key)
 }
