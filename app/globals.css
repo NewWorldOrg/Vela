@@ -63,6 +63,27 @@
     }
   }
 
+  /* The tab bar at the foot of a phone's window, and how much of the window it covers. */
+  :root {
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+    --tab-bar: 0px;
+    --tab-bar-cover: 0px;
+  }
+
+  @media (width < 600px) {
+    :root {
+      --tab-bar: calc(56rem / 16);
+      --tab-bar-cover: calc(var(--tab-bar) + var(--safe-bottom));
+      --text-title: calc(15rem / 16);
+      --text-body: calc(14rem / 16);
+      --text-ui: calc(13.5rem / 16);
+      --text-sub: calc(12.5rem / 16);
+      --text-note: calc(12rem / 16);
+      --text-cap: calc(11.5rem / 16);
+      --text-micro: calc(11rem / 16);
+    }
+  }
+
   body {
     font-family: var(--font-body);
     font-synthesis-weight: none;
@@ -420,7 +441,8 @@
   --font-mono: 'M PLUS 1 Code', ui-monospace, 'SFMono-Regular', monospace;
 }
 
-@theme inline {
+/* Not inline: below 600px the base layer moves the steps from title down one step up. */
+@theme {
   --text-h1: calc(22rem / 16);
   --text-h1--line-height: 1.45;
   --text-h2: calc(18rem / 16);
@@ -441,7 +463,9 @@
   --text-cap--line-height: 1.7;
   --text-micro: calc(10.5rem / 16);
   --text-micro--line-height: 1.6;
+}
 
+@theme inline {
   --color-bg: var(--bg);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
@@ -2965,5 +2989,26 @@
 
   [data-arrived] &.arrives {
     animation: none;
+  }
+}
+
+/* iOS enlarges the page when a field under 16px takes the focus: on a phone, held either way, no field is smaller. Unlayered, so it outranks the size a field is given. */
+@media (width < 600px), (pointer: coarse) and (height < 600px) {
+  :where(
+    input:not(
+      [type='checkbox'],
+      [type='radio'],
+      [type='range'],
+      [type='color'],
+      [type='file'],
+      [type='button'],
+      [type='submit'],
+      [type='reset'],
+      [type='image']
+    ),
+    select,
+    textarea
+  ) {
+    font-size: 16px;
   }
 }

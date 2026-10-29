@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { isPathActive } from '@/lib/path'
+import { DESTINATIONS, SETTINGS_HREF, destinationOf } from '@/lib/destinations'
 import {
   Brand,
   GlobalNav,
@@ -13,36 +13,25 @@ import {
 } from '@/components/vela/app-shell'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
-const SERVICE_NAV = [
-  { href: '/guide', label: '番組表', alsoUnder: ['/search'] },
-  { href: '/live', label: 'ライブ', alsoUnder: [] },
-  { href: '/library', label: 'ライブラリ', alsoUnder: ['/recordings'] },
-  { href: '/reservations', label: '予約', alsoUnder: [] },
-] as const
+const SERVICES = DESTINATIONS.filter(({ href }) => href !== SETTINGS_HREF)
 
 export function AppTopBar() {
-  const pathname = usePathname()
-  const inSettings = isPathActive(pathname, '/settings')
-  const activeIndex = inSettings
-    ? -1
-    : SERVICE_NAV.findIndex(({ href, alsoUnder }) =>
-        [href, ...alsoUnder].some((root) => isPathActive(pathname, root)),
-      )
+  const current = destinationOf(usePathname())
 
   return (
     <TopBar>
       <Brand />
       <GlobalNav>
-        {SERVICE_NAV.map(({ href, label }, index) => (
-          <GlobalNavItem key={href} asChild active={index === activeIndex}>
+        {SERVICES.map(({ href, label }) => (
+          <GlobalNavItem key={href} asChild active={href === current}>
             <Link href={href}>{label}</Link>
           </GlobalNavItem>
         ))}
       </GlobalNav>
-      <div className="flex items-center gap-[calc(7rem/16)]">
+      <div className="flex items-center gap-[calc(7rem/16)] max-[600px]:ml-auto">
         <ThemeToggle />
-        <SettingsLink asChild active={inSettings}>
-          <Link href="/settings">設定</Link>
+        <SettingsLink asChild active={current === SETTINGS_HREF}>
+          <Link href={SETTINGS_HREF}>設定</Link>
         </SettingsLink>
       </div>
     </TopBar>

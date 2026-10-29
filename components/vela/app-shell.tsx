@@ -10,7 +10,7 @@ const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
 const BELOW_TOP_BAR = 'top-[calc(46rem/16)]'
 
 export const ADMIN_LIST_HEIGHT_CAP =
-  'max-h-[calc(100dvh-66rem/16-env(safe-area-inset-bottom))]'
+  'max-h-[calc(100dvh-66rem/16-var(--safe-bottom)-var(--tab-bar))]'
 
 export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
   return (
@@ -18,7 +18,7 @@ export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
       data-slot="app-frame"
       className={cn(
         'dot-grid flex min-h-dvh flex-col bg-bg',
-        'pr-[env(safe-area-inset-right)] pb-[env(safe-area-inset-bottom)] pl-[env(safe-area-inset-left)]',
+        'pr-[env(safe-area-inset-right)] pb-[calc(var(--safe-bottom)+var(--tab-bar))] pl-[env(safe-area-inset-left)]',
         'has-[[data-scroll=within]]:h-dvh has-[[data-scroll=within]]:overflow-hidden',
         className,
       )}
@@ -79,7 +79,7 @@ export function GlobalNav({
     <nav
       data-slot="global-nav"
       aria-label={ariaLabel}
-      className={cn('flex flex-1 gap-0.5', className)}
+      className={cn('flex flex-1 gap-0.5 max-[600px]:hidden', className)}
       {...props}
     />
   )
@@ -123,7 +123,7 @@ export function SettingsLink({
       data-slot="settings-link"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none',
+        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none max-[600px]:hidden',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'border-brand bg-brand-soft font-bold text-brand',
@@ -134,6 +134,82 @@ export function SettingsLink({
       <SettingsIcon />
       {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : children}
     </Comp>
+  )
+}
+
+export function TabBar({
+  className,
+  children,
+  'aria-label': ariaLabel = 'メイン',
+  ...props
+}: ComponentProps<'nav'>) {
+  return (
+    <nav
+      data-slot="tab-bar"
+      aria-label={ariaLabel}
+      className={cn(
+        'fixed inset-x-0 bottom-0 z-40 hidden border-t border-line bg-surface',
+        'pr-[env(safe-area-inset-right)] pb-(--safe-bottom) pl-[env(safe-area-inset-left)]',
+        'max-[600px]:block [body:has([data-fill])_&]:hidden',
+        className,
+      )}
+      {...props}
+    >
+      <ul className="flex h-[calc(var(--tab-bar)-1px)]">{children}</ul>
+    </nav>
+  )
+}
+
+export function TabBarItem({
+  active,
+  asChild,
+  icon,
+  label,
+  className,
+  children,
+  ...props
+}: ComponentProps<'a'> & {
+  active?: boolean
+  asChild?: boolean
+  icon: ReactNode
+  label: string
+}) {
+  const Comp = asChild ? Slot.Root : 'a'
+
+  return (
+    <li className="flex min-w-0 flex-1">
+      <Comp
+        data-slot="tab-bar-item"
+        aria-current={active ? 'page' : undefined}
+        className={cn(
+          'group/tab flex min-w-0 flex-1 flex-col items-center justify-center gap-[calc(2rem/16)] text-ink-2 no-underline outline-none',
+          'transition-colors duration-150 ease-out hover:text-ink',
+          active && 'text-brand hover:text-brand',
+          className,
+        )}
+        {...props}
+      >
+        <span
+          className={cn(
+            'flex h-[calc(28rem/16)] w-[calc(52rem/16)] items-center justify-center rounded-full',
+            'transition-[background-color,box-shadow] duration-150 ease-out',
+            'group-focus-visible/tab:shadow-ring [&_svg]:size-[calc(20rem/16)]',
+            active && 'bg-brand-soft',
+          )}
+        >
+          {icon}
+        </span>
+        <span
+          className={cn(
+            'max-w-full truncate text-cap leading-none font-medium',
+            active && 'font-bold',
+          )}
+        >
+          {label}
+        </span>
+        {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : null}
+      </Comp>
+    </li>
   )
 }
 

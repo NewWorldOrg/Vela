@@ -408,9 +408,9 @@ export function CollectionDrawer({
         className={cn(
           'fixed top-[calc(60rem/16)] right-[calc(18rem/16)] bottom-[calc(18rem/16)] z-[45] flex w-[calc(500rem/16)] flex-col overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl outline-none transition-transform duration-200 ease-toy still:transition-none',
           'max-[1060px]:w-[calc(440rem/16)]',
-          'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-3 max-[900px]:left-3 max-[900px]:max-h-[70vh] max-[900px]:w-auto',
+          'max-[900px]:top-auto max-[900px]:right-3 max-[900px]:bottom-[calc(0.75rem+var(--tab-bar-cover))] max-[900px]:left-3 max-[900px]:max-h-[70vh] max-[900px]:w-auto',
           !open &&
-            'translate-x-[calc(100%+30px)] max-[900px]:translate-x-0 max-[900px]:translate-y-[calc(100%+30px)]',
+            'translate-x-[calc(100%+30px)] max-[900px]:translate-x-0 max-[900px]:translate-y-[calc(100%+30px+var(--tab-bar-cover))]',
         )}
       >
         <div className="flex items-center gap-2.5 px-5 pt-4">
