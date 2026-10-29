@@ -1387,7 +1387,12 @@ export function LivePlayer({
                 'data-[up]:translate-y-0 data-[up]:opacity-100',
               )}
             >
-              <span className="block truncate text-sub text-white">
+              <span
+                className={cn(
+                  'text-sub text-white',
+                  compact && 'block truncate',
+                )}
+              >
                 <b className="font-bold">
                   {channel.no && (
                     <span className="mr-1.5 font-code font-medium">
