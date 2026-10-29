@@ -737,6 +737,13 @@ test('the remote stands in the column where the page has one beside the player, 
   assert.equal(bandPlace(true, false), 'over')
 })
 
+test('on a phone the remote opens in the dock beside the picture, except in full screen', () => {
+  assert.equal(bandPlace(false, false, true), 'dock')
+  assert.equal(bandPlace(false, true, true), 'dock')
+  assert.equal(bandPlace(true, false, true), 'over')
+  assert.equal(bandPlace(false, false, false), 'under')
+})
+
 test('each way the application ends is kept with the view, to be said once', () => {
   const ended = (...steps: DataBroadcastStep[]) =>
     after(OPEN, STARTING, STARTED, ...steps).appEnded

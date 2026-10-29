@@ -5283,10 +5283,9 @@ export const 狭い窓でも歯車の字幕の面は崩れない: Story = {
 
     const face = await toTheCaptionFace(canvasElement)
     const panel = face.closest('[data-slot="caption-style"]') as HTMLElement
-    const sheet = panel.closest('[data-slot="player-gear-sheet"]')
     const box = panel.getBoundingClientRect()
 
-    await expect(sheet).not.toBeNull()
+    await opensUnderThePicture(canvasElement, panel)
     await expect(box.left).toBeGreaterThanOrEqual(0)
     await expect(box.right).toBeLessThanOrEqual(375)
 
@@ -5706,6 +5705,49 @@ function centreOf(box: DOMRect): { x: number; y: number } {
   return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
 }
 
+function dockOf(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('[data-slot="player-dock"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error('the dock is not on the screen')
+  }
+
+  return found
+}
+
+async function opensUnderThePicture(
+  canvasElement: HTMLElement,
+  face: HTMLElement,
+) {
+  const dock = dockOf(canvasElement)
+  const shell = board(canvasElement).getBoundingClientRect()
+  const box = dock.getBoundingClientRect()
+
+  await expect(dock.contains(face)).toBe(true)
+  await expect(dock).toHaveAttribute('data-side', 'under')
+  await expect(box.top).toBeGreaterThanOrEqual(shell.bottom - 0.5)
+  await expect(box.top - shell.bottom).toBeLessThan(16)
+  await expect(Math.abs(box.left - shell.left)).toBeLessThan(1)
+  await expect(Math.abs(box.right - shell.right)).toBeLessThan(1)
+}
+
+async function opensBesideThePicture(
+  canvasElement: HTMLElement,
+  face: HTMLElement,
+) {
+  const dock = dockOf(canvasElement)
+  const shell = board(canvasElement).getBoundingClientRect()
+  const box = dock.getBoundingClientRect()
+
+  await expect(dock.contains(face)).toBe(true)
+  await expect(dock).toHaveAttribute('data-side', 'right')
+  await expect(box.left).toBeGreaterThanOrEqual(shell.right - 0.5)
+  await expect(Math.abs(box.top - shell.top)).toBeLessThan(1)
+  await expect(box.right).toBeLessThanOrEqual(window.innerWidth)
+  await expect(shell.width).toBeGreaterThan(400)
+  await expect(shell.height).toBeLessThanOrEqual(window.innerHeight)
+}
+
 const ON_A_PHONE = { width: 390, height: 844 }
 
 export const 電話の幅では送りを映像の真ん中に置きシークバーを時刻の行の下に置く: Story =
@@ -5766,7 +5808,7 @@ export const 電話の幅では送りを映像の真ん中に置きシークバ�
     },
   }
 
-export const 電話の幅では歯車が下から出るシートになる: Story = {
+export const 電話の幅では歯車が映像のすぐ下に開く: Story = {
   args: {
     detail: detail('1266'),
     startAt: 0,
@@ -5781,35 +5823,25 @@ export const 電話の幅では歯車が下から出るシートになる: Story
     await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('compact'))
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
 
-    const sheet = await screen.findByRole('dialog', { name: '設定' })
+    const gear = await canvas.findByRole('region', { name: '設定' })
 
-    await expect(sheet).toHaveAttribute('data-slot', 'player-gear-sheet')
+    await opensUnderThePicture(canvasElement, gear)
+    await expect(screen.queryByRole('dialog')).toBeNull()
+    await userEvent.click(within(gear).getByRole('button', { name: '閉じる' }))
     await waitFor(() =>
-      expect(Math.round(sheet.getBoundingClientRect().bottom)).toBe(
-        window.innerHeight,
-      ),
-    )
-
-    const box = sheet.getBoundingClientRect()
-
-    await expect(box.left).toBeGreaterThanOrEqual(0)
-    await expect(box.right).toBeLessThanOrEqual(window.innerWidth)
-
-    await userEvent.keyboard('{Escape}')
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
     )
 
     taken.length = 0
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
     await userEvent.click(
-      within(await screen.findByRole('dialog', { name: '設定' })).getByRole(
+      within(await canvas.findByRole('region', { name: '設定' })).getByRole(
         'button',
         { name: 'キャプチャ' },
       ),
     )
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
     )
     await waitFor(() => expect(taken).toHaveLength(1))
   },
@@ -5846,7 +5878,9 @@ export const iPad_の縦では一行に収めキャプチャを歯車に移す: 
 
     const gear = await screen.findByRole('dialog', { name: '設定' })
 
-    await expect(gear).not.toHaveAttribute('data-slot', 'player-gear-sheet')
+    await expect(
+      canvasElement.querySelector('[data-slot="player-dock"]'),
+    ).toBeNull()
     await expect(
       within(gear).getByRole('button', { name: 'キャプチャ' }),
     ).toBeVisible()
@@ -5886,7 +5920,7 @@ export const 机の幅では一行に全部を並べる: Story = {
   },
 }
 
-export const 横向きの電話では映像を窓の高さいっぱいに出す: Story = {
+export const 横向きの電話では歯車を映像の右に開く: Story = {
   args: {
     detail: detail('1266'),
     plan: THEMED,
@@ -5897,16 +5931,19 @@ export const 横向きの電話では映像を窓の高さいっぱいに出す:
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() =>
-      expect(
-        Math.round(board(canvasElement).getBoundingClientRect().height),
-      ).toBe(window.innerHeight),
-    )
     await userEvent.click(canvas.getByRole('button', { name: '設定' }))
-    await expect(
-      await screen.findByRole('dialog', { name: '設定' }),
-    ).toHaveAttribute('data-slot', 'player-gear-sheet')
-    await userEvent.keyboard('{Escape}')
+    await opensBesideThePicture(
+      canvasElement,
+      await canvas.findByRole('region', { name: '設定' }),
+    )
+    await userEvent.click(
+      within(canvas.getByRole('region', { name: '設定' })).getByRole('button', {
+        name: '閉じる',
+      }),
+    )
+    await waitFor(() =>
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
+    )
   },
 }
 
@@ -5977,6 +6014,7 @@ export const 歯車を開いたまま電話の幅をまたいでも閉じたあ�
       await waitFor(() =>
         expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
       )
+      await expect(canvas.queryByRole('region', { name: '設定' })).toBeNull()
       await expect(
         canvas.getByRole('button', { name: '一時停止' }),
       ).toBeInTheDocument()
@@ -5992,5 +6030,60 @@ export const 歯車を開いたまま電話の幅をまたいでも閉じたあ�
       shell.style.width = ''
       shell.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
       await waitFor(() => expect(chrome()).toHaveAttribute('data-up', 'true'))
+    },
+  }
+
+export const 電話の幅ではデータ放送も映像のすぐ下に開き歯車と入れ替わる: Story =
+  {
+    args: BROADCAST_PLAYING,
+    parameters: { screen: ON_A_PHONE },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const toggle = await canvas.findByRole(
+        'button',
+        { name: 'データ放送' },
+        { timeout: 10000 },
+      )
+
+      await userEvent.click(toggle, { pointerEventsCheck: 0 })
+      await waitFor(() =>
+        expect(toggle).toHaveAttribute('aria-pressed', 'true'),
+      )
+      await opensUnderThePicture(
+        canvasElement,
+        await canvas.findByRole('region', { name: 'データ放送' }),
+      )
+      await expect(
+        within(dockOf(canvasElement)).getByRole('group', {
+          name: 'データ放送のリモコン',
+        }),
+      ).toBeInTheDocument()
+
+      await userEvent.click(canvas.getByRole('button', { name: '設定' }), {
+        pointerEventsCheck: 0,
+      })
+      await opensUnderThePicture(
+        canvasElement,
+        await canvas.findByRole('region', { name: '設定' }),
+      )
+      await waitFor(() =>
+        expect(toggle).toHaveAttribute('aria-pressed', 'false'),
+      )
+      await expect(
+        canvas.queryByRole('region', { name: 'データ放送' }),
+      ).toBeNull()
+
+      await userEvent.click(toggle, { pointerEventsCheck: 0 })
+      await canvas.findByRole('region', { name: 'データ放送' })
+      await waitFor(() =>
+        expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
+      )
+      within(canvas.getByRole('region', { name: 'データ放送' }))
+        .getByRole('button', { name: '閉じる' })
+        .click()
+      await waitFor(() =>
+        expect(toggle).toHaveAttribute('aria-pressed', 'false'),
+      )
+      await expect(canvasElement.querySelector('iframe')).toBeNull()
     },
   }

@@ -50,14 +50,13 @@ export const PLAYER_GLYPH_BUTTON_ON =
 export const PLAYER_BUTTON_ON =
   'border-(--pl-accent)/55 bg-(--pl-accent)/22 text-(--pl-accent-ink)'
 
-/** The picture's column: the window's height less the bar above and the band below, and on a phone held on its side the window's whole height, since the bar above scrolls away there. */
+/** The picture's column: the window's height less the bar above and the band below, and on a phone held on its side the window's height less only the bar above, which stays. */
 export const PLAYER_COLUMN =
-  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)] sideways:max-w-[calc((100svh-2px)*16/9+2px)]'
+  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)] sideways:max-w-[calc((100svh-62rem/16)*16/9)]'
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
   'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl outline-none',
-  'sideways:[--column-floor:50svw]',
   'data-[full]:flex data-[full]:max-w-none data-[full]:flex-col data-[full]:rounded-none data-[full]:border-0 data-[full]:shadow-none',
   'data-[fill]:fixed data-[fill]:inset-0 data-[fill]:z-[60] data-[fill]:m-0 data-[fill]:pt-[env(safe-area-inset-top)] data-[fill]:pr-[env(safe-area-inset-right)] data-[fill]:pb-[env(safe-area-inset-bottom)] data-[fill]:pl-[env(safe-area-inset-left)]',
 )

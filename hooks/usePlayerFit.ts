@@ -71,3 +71,23 @@ export function usePhoneOnItsSide(): boolean {
     notOnTheServer,
   )
 }
+
+/** A phone held upright: a window narrower than 600px. */
+export const PHONE_WIDTH = '(width < 600px)'
+
+function followTheWidth(notify: () => void): () => void {
+  const query = window.matchMedia(PHONE_WIDTH)
+
+  query.addEventListener('change', notify)
+
+  return () => query.removeEventListener('change', notify)
+}
+
+/** Whether the window is a phone's width; not on the server. Asked of the window, not of the board, because the board's own width moves with what opens beside and under it. */
+export function usePhoneWidth(): boolean {
+  return useSyncExternalStore(
+    followTheWidth,
+    () => window.matchMedia(PHONE_WIDTH).matches,
+    notOnTheServer,
+  )
+}

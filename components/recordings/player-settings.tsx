@@ -53,8 +53,8 @@ export function PlayerSettings({
   captionStyle,
   onCaptionStyle,
   onOpenChange,
-  sheet = false,
-  full = false,
+  dock = null,
+  open,
   actions = [],
 }: {
   container: HTMLElement | null
@@ -73,11 +73,11 @@ export function PlayerSettings({
   captionStyle?: CaptionStyle
   onCaptionStyle?: (next: CaptionStyle) => void
   onOpenChange?: (open: boolean) => void
-  sheet?: boolean
-  full?: boolean
+  dock?: HTMLElement | null
+  open?: boolean
   actions?: readonly GearAction[]
 }) {
-  const gear = useGearPanel(onOpenChange)
+  const gear = useGearPanel(onOpenChange, open)
   const captions = captionStyle && onCaptionStyle
   const formatShown = format !== undefined && format.choices.length > 0
   const reason = formatShown ? WHY_NEITHER_IS_CHOSEN : WHY_NO_QUALITY_IS_CHOSEN
@@ -86,8 +86,7 @@ export function PlayerSettings({
   return (
     <PlayerGear
       container={container}
-      sheet={sheet}
-      full={full}
+      dock={dock}
       open={gear.open}
       onOpenChange={gear.change}
       panel={gear.panel}
@@ -98,7 +97,7 @@ export function PlayerSettings({
           style={captionStyle}
           onChange={onCaptionStyle}
           onBack={gear.back}
-          narrow={sheet}
+          narrow={dock !== null}
         />
       ) : (
         <>

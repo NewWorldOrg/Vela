@@ -116,7 +116,11 @@ import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { useReceiverId } from '@/hooks/useReceiverId'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
-import { usePhoneOnItsSide, usePlayerFit } from '@/hooks/usePlayerFit'
+import {
+  usePhoneOnItsSide,
+  usePhoneWidth,
+  usePlayerFit,
+} from '@/hooks/usePlayerFit'
 import {
   SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD,
   wideRowWidth,
@@ -166,6 +170,11 @@ import {
 } from '@/components/live/live-wire-ahead'
 import { LiveSettings } from '@/components/live/live-settings'
 import type { GearAction } from '@/components/recordings/player-gear'
+import {
+  DockFace,
+  PlayerDock,
+  type DockSide,
+} from '@/components/recordings/player-dock'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
 const RESTS = 3000
@@ -291,6 +300,7 @@ export function LivePlayer({
   } = useCaptionBoard(storedCaptionStyle)
   const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
+  const [dock, setDock] = useState<HTMLDivElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
@@ -792,13 +802,6 @@ export function LivePlayer({
   const broadcastOffered = broadcast.offered && !playlist
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
-  const chromeUp =
-    phase !== 'playing' ||
-    stirred ||
-    onTheBar ||
-    focused ||
-    settingsOpen ||
-    pip.out
 
   const capture = async () => {
     const got = await takeCapture({
@@ -854,8 +857,20 @@ export function LivePlayer({
   const toggleCaptions = () => setCaptioned((was) => !was)
 
   const toggleBroadcast = () => {
+    if (docked && !broadcast.view.open) {
+      setSettingsOpen(false)
+    }
+
     shell?.focus({ preventScroll: true })
     broadcast.toggle()
+  }
+
+  const chooseGear = (next: boolean) => {
+    if (next && docked && broadcast.view.open) {
+      toggleBroadcast()
+    }
+
+    setSettingsOpen(next)
   }
 
   const hearBroadcast: typeof broadcast.hear = (message) => {
@@ -1013,6 +1028,8 @@ export function LivePlayer({
   const latency = running?.latency
   const losing = running?.losing ?? false
   const opened = broadcast.view.open
+  const sideways = usePhoneOnItsSide()
+  const phone = usePhoneWidth()
   const fit = usePlayerFit(
     shell,
     wideRowWidth({
@@ -1025,15 +1042,27 @@ export function LivePlayer({
             ? 'catching up'
             : 'plain',
     }),
-    opened && bandPlace(full, remoteInTheColumn) !== 'over'
+    opened &&
+      !phone &&
+      !sideways &&
+      bandPlace(full, remoteInTheColumn) !== 'over'
       ? SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD
       : 0,
   )
-  const sideways = usePhoneOnItsSide()
   const roomy = fit === 'wide'
-  const place = bandPlace(full, remoteInTheColumn)
-  const underTheBox = opened && place !== 'over'
+  const docked = !full && !filled && (phone || sideways)
+  const dockSide: DockSide = sideways ? 'right' : 'under'
+  const place = bandPlace(full, remoteInTheColumn, docked)
+  const underTheBox = opened && (place === 'under' || place === 'column')
   const compact = fit === 'compact' && !underTheBox
+  const chromeUp =
+    phase !== 'playing' ||
+    stirred ||
+    onTheBar ||
+    focused ||
+    (settingsOpen && !docked) ||
+    pip.out
+  const dockOpen = docked && (settingsOpen || opened)
   const [laidAs, setLaidAs] = useState(compact)
 
   if (laidAs !== compact) {
@@ -1147,10 +1176,10 @@ export function LivePlayer({
     <PlayerTip name="設定" container={shell} quiet={settingsOpen}>
       <LiveSettings
         container={shell}
-        sheet={fit === 'compact' || sideways}
-        full={full}
+        dock={docked ? dock : null}
+        open={settingsOpen}
         actions={roomy ? [] : rareActions}
-        onOpenChange={setSettingsOpen}
+        onOpenChange={chooseGear}
         profiles={profiles}
         profile={profile}
         onChooseProfile={setProfile}
@@ -1223,7 +1252,16 @@ export function LivePlayer({
   )
 
   return (
-    <div data-slot="live-player-frame" className="w-full">
+    <div
+      data-slot="live-player-frame"
+      className={cn(
+        'w-full',
+        docked &&
+          (dockSide === 'under'
+            ? 'flex flex-col'
+            : 'flex items-start justify-center'),
+      )}
+    >
       <section
         ref={setShell}
         data-full={full ? 'true' : undefined}
@@ -1348,7 +1386,7 @@ export function LivePlayer({
               data-slot="player-press"
               onMouseDown={(event) => {
                 event.preventDefault()
-                dismissing.current = settingsOpen
+                dismissing.current = settingsOpen && !docked
                 shell?.focus({ preventScroll: true })
               }}
               onClick={() => {
@@ -1501,7 +1539,7 @@ export function LivePlayer({
           data-up={chromeUp ? 'true' : undefined}
           {...chromeHands}
           style={{
-            backgroundImage: opened ? 'none' : PLAYER_SCRIM,
+            backgroundImage: opened && place !== 'dock' ? 'none' : PLAYER_SCRIM,
           }}
           className={
             underTheBox
@@ -1527,7 +1565,7 @@ export function LivePlayer({
             className={cn(
               'px-4 max-[700px]:px-3',
               compact ? 'pb-2' : 'pb-3',
-              opened ? 'pt-3' : compact ? 'pt-8' : 'pt-12',
+              opened && place !== 'dock' ? 'pt-3' : compact ? 'pt-8' : 'pt-12',
             )}
           >
             {barSaid && (
@@ -1637,7 +1675,36 @@ export function LivePlayer({
             />,
             remoteSlot,
           )}
+        {place === 'dock' &&
+          opened &&
+          dock &&
+          createPortal(
+            <DockFace name="データ放送" onClose={toggleBroadcast} flush>
+              {dockSide === 'under' ? (
+                <DataBroadcastBand
+                  place="under"
+                  numbers={broadcast.view.numbers}
+                  onNumbers={broadcast.showNumbers}
+                  onKey={broadcast.press}
+                  onAim={aimAtTheKeypad}
+                  station={channel?.name ?? ''}
+                  application={onTheBand}
+                />
+              ) : (
+                <DataBroadcastRemote
+                  station={channel?.name ?? ''}
+                  onKey={broadcast.press}
+                  onAim={aimAtTheKeypad}
+                  onToggle={dataButton}
+                  application={onTheBand}
+                  className="border-0 bg-transparent shadow-none"
+                />
+              )}
+            </DockFace>,
+            dock,
+          )}
       </section>
+      {docked && <PlayerDock ref={setDock} side={dockSide} open={dockOpen} />}
     </div>
   )
 }

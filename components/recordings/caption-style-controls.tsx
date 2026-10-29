@@ -30,8 +30,12 @@ import { Setting } from '@/components/recordings/player-setting'
 export type GearPanel = 'main' | 'captions'
 
 /** The gear's open state and which face is open: it opens on its own rows, the caption's row leads to the caption's face, and back returns to the row it left from. A gear taken away while open (the bar laid out anew across 600px) says it has closed, so the player does not go on holding its bar up for it. */
-export function useGearPanel(onOpenChange?: (open: boolean) => void) {
-  const [open, setOpen] = useState(false)
+export function useGearPanel(
+  onOpenChange?: (open: boolean) => void,
+  held?: boolean,
+) {
+  const [own, setOpen] = useState(false)
+  const open = held ?? own
   const [panel, setPanel] = useState<GearPanel>('main')
   const [returning, setReturning] = useState(false)
   const opened = useRef(false)
@@ -49,6 +53,10 @@ export function useGearPanel(onOpenChange?: (open: boolean) => void) {
     },
     [],
   )
+
+  useEffect(() => {
+    opened.current = open
+  }, [open])
 
   return {
     open,

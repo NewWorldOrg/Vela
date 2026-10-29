@@ -412,7 +412,7 @@ export function columnOverTheBand(row: number): string {
   return `min(${narrow}, max(${wide}, clamp(${BAND_MOCK_WIDTH}px, ${growing}, ${widest}px)))`
 }
 
-/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band, and never narrower than the board's `--column-floor` (a phone on its side, whose window cannot hold them all and scrolls instead). */
+/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band,. */
 export function widestColumn(
   place: BandPlace,
   underTheBox: boolean,
@@ -422,10 +422,7 @@ export function widestColumn(
     return undefined
   }
 
-  const bound =
-    place === 'column' ? columnOverTheRow(row) : columnOverTheBand(row)
-
-  return `max(${bound}, var(--column-floor, 0px))`
+  return place === 'column' ? columnOverTheRow(row) : columnOverTheBand(row)
 }
 
 /** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
@@ -835,12 +832,14 @@ export function DataBroadcastRemote({
   onAim,
   onToggle,
   application = null,
+  className,
 }: {
   station: string
   onKey: (key: BmlKey) => void
   onAim: () => void
   onToggle: () => void
   application?: { onClose: () => void } | null
+  className?: string
 }) {
   const pressing: Pressing = { onKey, onAim }
 
@@ -852,6 +851,7 @@ export function DataBroadcastRemote({
       className={cn(
         IN_THE_COLUMN,
         'flex flex-col gap-y-(--group-gap) rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl',
+        className,
       )}
     >
       <div className="flex h-[44px] shrink-0 items-center gap-[12px]">

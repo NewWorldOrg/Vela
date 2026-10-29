@@ -370,7 +370,9 @@ export function LiveView({
       width="full"
       className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col"
     >
-      <div className={cn('min-w-0 flex-1', PLAYER_COLUMN)}>
+      <div
+        className={cn('min-w-0 flex-1', PLAYER_COLUMN, 'sideways:max-w-none')}
+      >
         <LivePlayer
           channel={watching.channel}
           profiles={screen.profiles}

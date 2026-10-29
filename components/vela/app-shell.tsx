@@ -46,7 +46,6 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
       data-slot="top-bar"
       className={cn(
         'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[calc(14rem/16)]',
-        'sideways:[body:has([data-slot=player],[data-slot=live-player])_&]:static',
         TOP_BAR_HEIGHT,
         className,
       )}

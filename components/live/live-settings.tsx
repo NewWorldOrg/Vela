@@ -45,8 +45,8 @@ export function LiveSettings({
   captionStyle,
   onCaptionStyle,
   onOpenChange,
-  sheet = false,
-  full = false,
+  dock = null,
+  open,
   actions = [],
 }: {
   container: HTMLElement | null
@@ -63,18 +63,17 @@ export function LiveSettings({
   captionStyle?: CaptionStyle
   onCaptionStyle?: (next: CaptionStyle) => void
   onOpenChange?: (open: boolean) => void
-  sheet?: boolean
-  full?: boolean
+  dock?: HTMLElement | null
+  open?: boolean
   actions?: readonly GearAction[]
 }) {
-  const gear = useGearPanel(onOpenChange)
+  const gear = useGearPanel(onOpenChange, open)
   const captions = captionStyle && onCaptionStyle
 
   return (
     <PlayerGear
       container={container}
-      sheet={sheet}
-      full={full}
+      dock={dock}
       open={gear.open}
       onOpenChange={gear.change}
       panel={gear.panel}
@@ -84,7 +83,7 @@ export function LiveSettings({
           style={captionStyle}
           onChange={onCaptionStyle}
           onBack={gear.back}
-          narrow={sheet}
+          narrow={dock !== null}
         />
       ) : (
         <>

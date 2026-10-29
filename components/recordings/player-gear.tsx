@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
-import { Dialog as SheetPrimitive } from 'radix-ui'
+import { createPortal } from 'react-dom'
 
 import { cn } from '@/lib/utils'
 import { SettingsIcon } from '@/components/vela/icons'
@@ -14,7 +14,9 @@ import {
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
   PLAYER_GLYPH_BUTTON,
+  PLAYER_GLYPH_BUTTON_ON,
 } from '@/components/recordings/player-palette'
+import { DockFace } from '@/components/recordings/player-dock'
 import {
   gearWidth,
   type GearPanel,
@@ -22,11 +24,10 @@ import {
 
 const FACE = 'bg-(--pl-bg) text-(--pl-ink)'
 
-/** The gear: a small window over the picture where the board is wide enough, and a sheet from the foot of the window where it is not, so neither leaves the screen. The small window is drawn inside the board, and so is the sheet while the board is full screen; otherwise the sheet is drawn on the page, so nothing between it and the window holds it to a box of its own. */
+/** The gear: a small window over the picture, drawn inside the board so it goes full screen with it; and on a phone, where the board is given a dock, the gear's face opens in the dock instead, attached to the picture as the caption's face and the data broadcast are. */
 export function PlayerGear({
   container,
-  sheet,
-  full = false,
+  dock = null,
   open,
   onOpenChange,
   panel,
@@ -34,8 +35,7 @@ export function PlayerGear({
   children,
 }: {
   container: HTMLElement | null
-  sheet: boolean
-  full?: boolean
+  dock?: HTMLElement | null
   open: boolean
   onOpenChange: (open: boolean) => void
   panel: GearPanel
@@ -44,40 +44,26 @@ export function PlayerGear({
 }) {
   const trigger = <SettingsIcon className="size-4" />
 
-  if (sheet) {
+  if (dock) {
     return (
-      <SheetPrimitive.Root open={open} onOpenChange={onOpenChange}>
-        <SheetPrimitive.Trigger
+      <>
+        <button
+          type="button"
           aria-label="設定"
-          className={PLAYER_GLYPH_BUTTON}
+          aria-expanded={open}
+          onClick={() => onOpenChange(!open)}
+          className={cn(PLAYER_GLYPH_BUTTON, open && PLAYER_GLYPH_BUTTON_ON)}
         >
           {trigger}
-        </SheetPrimitive.Trigger>
-        <SheetPrimitive.Portal container={full ? container : undefined}>
-          <SheetPrimitive.Overlay
-            data-slot="player-gear-scrim"
-            className="fixed inset-0 z-[70] bg-black/45 data-[state=closed]:scrim-disappears data-[state=open]:scrim-appears"
-          />
-          <SheetPrimitive.Content
-            data-slot="player-gear-sheet"
-            aria-label="設定"
-            aria-describedby={undefined}
-            className={cn(
-              'fixed inset-x-0 bottom-0 z-[70] mx-auto max-h-[min(75dvh,calc(100dvh-3rem))] w-full max-w-[calc(560rem/16)] overflow-y-auto overscroll-contain rounded-t-xl border border-b-0 border-white/20 px-4 pt-2 pb-[calc(1rem+var(--safe-bottom))] shadow-pop-xl outline-none [--from-y:12px] data-[state=closed]:disappears data-[state=open]:appears',
-              FACE,
-            )}
-          >
-            <SheetPrimitive.Title className="sr-only">
-              設定
-            </SheetPrimitive.Title>
-            <span
-              aria-hidden="true"
-              className="mx-auto mb-2 block h-1 w-9 rounded-full bg-white/25"
-            />
-            {children}
-          </SheetPrimitive.Content>
-        </SheetPrimitive.Portal>
-      </SheetPrimitive.Root>
+        </button>
+        {open &&
+          createPortal(
+            <DockFace name="設定" onClose={() => onOpenChange(false)}>
+              {children}
+            </DockFace>,
+            dock,
+          )}
+      </>
     )
   }
 

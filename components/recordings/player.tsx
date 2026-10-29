@@ -146,6 +146,11 @@ import {
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
 import type { GearAction } from '@/components/recordings/player-gear'
+import {
+  DockFace,
+  PlayerDock,
+  type DockSide,
+} from '@/components/recordings/player-dock'
 import { CAPTION_GRIP } from '@/components/recordings/player-palette'
 import {
   PlayerSkip,
@@ -161,7 +166,11 @@ import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
 import { useWideWindow } from '@/hooks/useWideWindow'
-import { usePhoneOnItsSide, usePlayerFit } from '@/hooks/usePlayerFit'
+import {
+  usePhoneOnItsSide,
+  usePhoneWidth,
+  usePlayerFit,
+} from '@/hooks/usePlayerFit'
 import {
   SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD,
   wideRowWidth,
@@ -367,6 +376,7 @@ export function Player({
   )
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
+  const [dock, setDock] = useState<HTMLDivElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
   const wide = useWideWindow()
@@ -530,14 +540,6 @@ export function Player({
   const nextChapterAt = nextBoundaryAfter(position, chapters)
   const runHere = skippableRunAt(position, chapters)
   const framed = phase === 'playing' || phase === 'paused'
-  const chromeUp =
-    phase !== 'playing' ||
-    stirred ||
-    onTheBar ||
-    held ||
-    scrubbingAt !== null ||
-    settingsOpen ||
-    pip.out
 
   const capture = async () => {
     const got = await takeCapture({
@@ -1266,8 +1268,20 @@ export function Player({
   const toggleCaptions = () => setCaptioned((was) => !was)
 
   const toggleBroadcast = () => {
+    if (docked && !broadcast.view.open) {
+      setSettingsOpen(false)
+    }
+
     shell?.focus({ preventScroll: true })
     broadcast.toggle()
+  }
+
+  const chooseGear = (next: boolean) => {
+    if (next && docked && broadcast.view.open) {
+      toggleBroadcast()
+    }
+
+    setSettingsOpen(next)
   }
 
   const hearBroadcast: typeof broadcast.hear = (message) => {
@@ -1349,6 +1363,8 @@ export function Player({
   }
 
   const faceShown = broadcast.view.open
+  const sideways = usePhoneOnItsSide()
+  const phone = usePhoneWidth()
   const fit = usePlayerFit(
     shell,
     wideRowWidth({
@@ -1362,15 +1378,25 @@ export function Player({
       time: true,
       chapters: chapters.length > 0,
     }),
-    faceShown && bandPlace(full, wide) !== 'over'
+    faceShown && !phone && !sideways && bandPlace(full, wide) !== 'over'
       ? SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD
       : 0,
   )
-  const sideways = usePhoneOnItsSide()
   const roomy = fit === 'wide'
-  const place = bandPlace(full, wide)
-  const underTheBox = faceShown && place !== 'over'
+  const docked = !full && !filled && (phone || sideways)
+  const dockSide: DockSide = sideways ? 'right' : 'under'
+  const place = bandPlace(full, wide, docked)
+  const underTheBox = faceShown && (place === 'under' || place === 'column')
   const compact = fit === 'compact' && !underTheBox
+  const chromeUp =
+    phase !== 'playing' ||
+    stirred ||
+    onTheBar ||
+    held ||
+    scrubbingAt !== null ||
+    (settingsOpen && !docked) ||
+    pip.out
+  const dockOpen = docked && (settingsOpen || faceShown)
   const [laidAs, setLaidAs] = useState(compact)
 
   if (laidAs !== compact) {
@@ -1543,10 +1569,10 @@ export function Player({
     <PlayerTip name="設定" container={shell} quiet={settingsOpen}>
       <PlayerSettings
         container={shell}
-        sheet={fit === 'compact' || sideways}
-        full={full}
+        dock={docked ? dock : null}
+        open={settingsOpen}
         actions={roomy ? [] : rareActions}
-        onOpenChange={setSettingsOpen}
+        onOpenChange={chooseGear}
         profile={profile}
         onChooseProfile={chooseProfile}
         format={
@@ -1629,7 +1655,10 @@ export function Player({
     <div
       data-slot="player-row"
       data-remote={beside ? 'beside' : undefined}
-      className="flex items-start justify-center"
+      className={cn(
+        'flex items-start justify-center',
+        docked && dockSide === 'under' && 'flex-col items-stretch',
+      )}
     >
       <section
         ref={setShell}
@@ -1771,7 +1800,7 @@ export function Player({
               data-slot="player-press"
               onMouseDown={(event) => {
                 event.preventDefault()
-                dismissing.current = settingsOpen
+                dismissing.current = settingsOpen && !docked
                 shell?.focus({ preventScroll: true })
               }}
               onClick={(event) => {
@@ -1892,7 +1921,8 @@ export function Player({
           data-up={chromeUp ? 'true' : undefined}
           {...chromeHands}
           style={{
-            backgroundImage: faceShown ? 'none' : PLAYER_SCRIM,
+            backgroundImage:
+              faceShown && place !== 'dock' ? 'none' : PLAYER_SCRIM,
           }}
           className={
             underTheBox
@@ -1917,7 +1947,11 @@ export function Player({
             className={cn(
               'px-4 max-[700px]:px-3',
               compact ? 'pb-0.5' : 'pb-3',
-              faceShown ? 'pt-3' : compact ? 'pt-8' : 'pt-14',
+              faceShown && place !== 'dock'
+                ? 'pt-3'
+                : compact
+                  ? 'pt-8'
+                  : 'pt-14',
             )}
           >
             {!compact && seekBar}
@@ -2043,7 +2077,34 @@ export function Player({
             />,
             remoteSlot,
           )}
+        {place === 'dock' &&
+          faceShown &&
+          dock &&
+          createPortal(
+            <DockFace name="データ放送" onClose={toggleBroadcast} flush>
+              {dockSide === 'under' ? (
+                <DataBroadcastBand
+                  place="under"
+                  numbers={broadcast.view.numbers}
+                  onNumbers={broadcast.showNumbers}
+                  onKey={broadcast.press}
+                  onAim={aimAtTheKeypad}
+                />
+              ) : (
+                <DataBroadcastRemote
+                  station={d.channel}
+                  onKey={broadcast.press}
+                  onAim={aimAtTheKeypad}
+                  onToggle={toggleBroadcast}
+
+                  className="border-0 bg-transparent shadow-none"
+                />
+              )}
+            </DockFace>,
+            dock,
+          )}
       </section>
+      {docked && <PlayerDock ref={setDock} side={dockSide} open={dockOpen} />}
       {faceShown && wide && <RecordingRemoteColumn slotRef={setRemoteSlot} />}
     </div>
   )

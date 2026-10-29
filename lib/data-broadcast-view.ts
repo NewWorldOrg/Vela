@@ -595,12 +595,20 @@ export function pictureTransform(rect: Rect | null): string | undefined {
 }
 
 /** Where the remote control stands: in the page's column beside the player, as a tall remote; under the player's box as a band, where the window has no column; or over the picture on the control bar, in fullscreen, where there is no room beside or below. */
-export type BandPlace = 'column' | 'under' | 'over'
+export type BandPlace = 'column' | 'under' | 'over' | 'dock'
 
-/** The remote's place for a window or fullscreen, and for a page with a column beside the player or without one. A mouse and a finger get the same: the face is text to read, not a picture to keep whole. */
-export function bandPlace(full: boolean, column: boolean): BandPlace {
+/** The remote's place for a window or fullscreen, for a page with a column beside the player or without one, and for a phone, where it opens in the dock under the picture (or beside it, held on its side) as the gear does. A mouse and a finger get the same: the face is text to read, not a picture to keep whole. */
+export function bandPlace(
+  full: boolean,
+  column: boolean,
+  docked = false,
+): BandPlace {
   if (full) {
     return 'over'
+  }
+
+  if (docked) {
+    return 'dock'
   }
 
   return column ? 'column' : 'under'

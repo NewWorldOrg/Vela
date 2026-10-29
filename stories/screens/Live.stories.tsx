@@ -3631,20 +3631,23 @@ export const 電話の幅では再生を真ん中に置き歯車の仲間を上�
     player.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
     await userEvent.click(within(top).getByRole('button', { name: '設定' }))
 
-    const sheet = await screen.findByRole('dialog', { name: '設定' })
+    const gear = await canvas.findByRole('region', { name: '設定' })
+    const dock = liveLayer(canvasElement, 'player-dock')
+    const under = dock.getBoundingClientRect()
+    const frame2 = livePlayer(canvasElement).getBoundingClientRect()
 
-    await expect(sheet).toHaveAttribute('data-slot', 'player-gear-sheet')
-    await waitFor(() =>
-      expect(Math.round(sheet.getBoundingClientRect().bottom)).toBe(
-        window.innerHeight,
-      ),
-    )
+    await expect(dock.contains(gear)).toBe(true)
+    await expect(dock).toHaveAttribute('data-side', 'under')
+    await expect(under.top).toBeGreaterThanOrEqual(frame2.bottom - 0.5)
+    await expect(under.top - frame2.bottom).toBeLessThan(16)
+    await expect(Math.abs(under.left - frame2.left)).toBeLessThan(1)
+    await expect(Math.abs(under.right - frame2.right)).toBeLessThan(1)
     await expect(
-      within(sheet).getByRole('button', { name: 'キャプチャ' }),
+      within(gear).getByRole('button', { name: 'キャプチャ' }),
     ).toBeVisible()
-    await userEvent.keyboard('{Escape}')
+    await userEvent.click(within(gear).getByRole('button', { name: '閉じる' }))
     await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
     )
   },
 }
@@ -3730,5 +3733,73 @@ export const 電話の幅では準備中の印を真ん中の再生の位置に�
       canvasElement,
       plate.closest('[role="status"]') as HTMLElement,
     )
+  },
+}
+
+function seen(element: Element | null): boolean {
+  if (!(element instanceof HTMLElement)) {
+    return false
+  }
+
+  const box = element.getBoundingClientRect()
+
+  return (
+    getComputedStyle(element).display !== 'none' &&
+    box.height > 0 &&
+    box.bottom > 0 &&
+    box.top < window.innerHeight
+  )
+}
+
+export const 縦の電話では歯車を開いて送っても下のタブが見えている: Story = {
+  args: { openSocket: withAPicture },
+  parameters: { screen: { width: 390, height: 844 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(liveFit(canvasElement)).toBe('compact'))
+    livePlayer(canvasElement).dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true }),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await canvas.findByRole('region', { name: '設定' })
+
+    for (const down of [0, 400, 4000]) {
+      window.scrollTo(0, down)
+      await waitFor(() =>
+        expect(seen(document.querySelector('[data-slot="tab-bar"]'))).toBe(
+          true,
+        ),
+      )
+    }
+
+    window.scrollTo(0, 0)
+    await userEvent.click(
+      within(canvas.getByRole('region', { name: '設定' })).getByRole('button', {
+        name: '閉じる',
+      }),
+    )
+  },
+}
+
+export const 横向きの電話では送っても上の帯が見えている: Story = {
+  args: { openSocket: withAPicture },
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    for (const down of [0, 300, 4000]) {
+      window.scrollTo(0, down)
+      await waitFor(() => {
+        const bar = document.querySelector('[data-slot="top-bar"]')
+
+        expect(seen(bar)).toBe(true)
+        expect(bar?.getBoundingClientRect().top).toBe(0)
+        expect(
+          within(bar as HTMLElement).getByRole('link', { name: 'ライブ' }),
+        ).toBeVisible()
+      })
+    }
+
+    window.scrollTo(0, 0)
+    await waitFor(() => expect(liveFit(canvasElement)).not.toBeNull())
   },
 }
