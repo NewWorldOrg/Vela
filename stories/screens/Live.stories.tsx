@@ -3564,3 +3564,104 @@ export const 選局の一覧は見切れた題名を全文で言う: Story = {
     nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
 }
+
+function liveFit(canvasElement: HTMLElement): string | null {
+  return (
+    canvasElement
+      .querySelector('[data-slot="player-chrome"]')
+      ?.getAttribute('data-fit') ?? null
+  )
+}
+
+function liveLayer(canvasElement: HTMLElement, slot: string): HTMLElement {
+  const found = canvasElement.querySelector(`[data-slot="${slot}"]`)
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`${slot} is not on the screen`)
+  }
+
+  return found
+}
+
+export const 電話の幅では再生を真ん中に置き歯車の仲間を上に置く: Story = {
+  args: { openSocket: withAPicture },
+  parameters: { screen: { width: 390, height: 844 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(liveFit(canvasElement)).toBe('compact'))
+
+    const player = livePlayer(canvasElement)
+    const top = liveLayer(canvasElement, 'player-top')
+    const line = liveLayer(canvasElement, 'player-line')
+    const sends = canvasElement.querySelector('[data-slot="player-sends"]')
+    const frame = player.getBoundingClientRect()
+
+    await expect(
+      within(line).queryByRole('button', { name: /^(再生|一時停止)$/ }),
+    ).toBeNull()
+
+    if (sends instanceof HTMLElement) {
+      const middle = within(sends)
+        .getByRole('button', { name: /^(再生|一時停止)$/ })
+        .getBoundingClientRect()
+
+      await expect(
+        Math.abs(
+          middle.left + middle.width / 2 - (frame.left + frame.width / 2),
+        ),
+      ).toBeLessThan(1)
+    } else {
+      await expect(canvas.getByRole('status')).toHaveTextContent(
+        /^(バッファリング中|チャンネルを準備しています)$/,
+      )
+    }
+
+    for (const name of ['消音', '字幕', '設定']) {
+      await expect(
+        within(top).getByRole('button', { name }),
+      ).toBeInTheDocument()
+    }
+
+    await expect(
+      canvas.queryByRole('button', { name: 'キャプチャ' }),
+    ).toBeNull()
+    await expect(canvas.queryByRole('slider', { name: '音量' })).toBeNull()
+
+    player.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
+    await userEvent.click(within(top).getByRole('button', { name: '設定' }))
+
+    const sheet = await screen.findByRole('dialog', { name: '設定' })
+
+    await expect(sheet).toHaveAttribute('data-slot', 'player-gear-sheet')
+    await waitFor(() =>
+      expect(Math.round(sheet.getBoundingClientRect().bottom)).toBe(
+        window.innerHeight,
+      ),
+    )
+    await expect(
+      within(sheet).getByRole('button', { name: 'キャプチャ' }),
+    ).toBeVisible()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+    )
+  },
+}
+
+export const 机の幅のライブは今までどおり一行に並べる: Story = {
+  args: { openSocket: withAPicture },
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(liveFit(canvasElement)).toBe('wide'))
+    await expect(
+      canvas.getByRole('button', { name: 'キャプチャ' }),
+    ).toBeVisible()
+    await expect(canvas.getByRole('slider', { name: '音量' })).toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="player-sends"]'),
+    ).toBeNull()
+  },
+}

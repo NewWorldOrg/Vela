@@ -135,6 +135,7 @@ const THE_SUITE = [
   'tests/lib/playback-sound.test.ts',
   'tests/lib/playback-source.test.ts',
   'tests/lib/player-chapters.test.ts',
+  'tests/lib/player-fit.test.ts',
   'tests/lib/player-keys.test.ts',
   'tests/lib/player-taps.test.ts',
   'tests/lib/png-chunks.test.ts',

@@ -40,6 +40,7 @@ export function PlayerSeek({
   onChoose,
   onScrubbing,
   frameHref = videoFrameHref,
+  touch = false,
 }: {
   id: string
   duration: number
@@ -50,6 +51,7 @@ export function PlayerSeek({
   onChoose: (second: number, means: SeekMeans) => void
   onScrubbing?: (at: number | null) => void
   frameHref?: (id: string, at: number) => string
+  touch?: boolean
 }) {
   const rail = useRef<HTMLDivElement>(null)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -206,7 +208,8 @@ export function PlayerSeek({
       aria-valuenow={Math.round(shown)}
       aria-valuetext={`${formatPlayhead(shown)} / ${formatPlayhead(duration)}`}
       data-slot="player-seek"
-      data-wanted={wanted ? 'true' : undefined}
+      data-wanted={wanted || touch ? 'true' : undefined}
+      data-touch={touch ? 'true' : undefined}
       onPointerMove={drag}
       onPointerDown={take}
       onPointerUp={letGo}

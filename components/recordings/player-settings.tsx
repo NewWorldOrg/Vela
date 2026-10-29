@@ -10,14 +10,11 @@ import {
   PLAYBACK_PROFILES,
   type PlaybackProfile,
 } from '@/repository/video-paths'
-import { cn } from '@/lib/utils'
-import { SettingsIcon } from '@/components/vela/icons'
 import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
+  GearActions,
+  PlayerGear,
+  type GearAction,
+} from '@/components/recordings/player-gear'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-setting'
 import {
@@ -27,7 +24,6 @@ import {
 import {
   CaptionStyleEntry,
   CaptionStylePanel,
-  gearWidth,
   useGearPanel,
 } from '@/components/recordings/caption-style-controls'
 import type { CaptionStyle } from '@/lib/caption-style'
@@ -57,6 +53,9 @@ export function PlayerSettings({
   captionStyle,
   onCaptionStyle,
   onOpenChange,
+  sheet = false,
+  full = false,
+  actions = [],
 }: {
   container: HTMLElement | null
   profile?: PlaybackProfile
@@ -74,6 +73,9 @@ export function PlayerSettings({
   captionStyle?: CaptionStyle
   onCaptionStyle?: (next: CaptionStyle) => void
   onOpenChange?: (open: boolean) => void
+  sheet?: boolean
+  full?: boolean
+  actions?: readonly GearAction[]
 }) {
   const gear = useGearPanel(onOpenChange)
   const captions = captionStyle && onCaptionStyle
@@ -82,83 +84,75 @@ export function PlayerSettings({
   const note = onTheFly ? undefined : reason
 
   return (
-    <Popover open={gear.open} onOpenChange={gear.change}>
-      <PopoverTrigger aria-label="設定" className={PLAYER_GLYPH_BUTTON}>
-        <SettingsIcon className="size-4" />
-      </PopoverTrigger>
-      <PopoverContent
-        container={container}
-        aria-label="設定"
-        side="top"
-        align="end"
-        sideOffset={10}
-        updatePositionStrategy="always"
-        className={cn(
-          'w-auto min-w-[17rem] rounded-lg border-white/20 bg-(--pl-bg) px-4 pt-6 pb-[calc(22rem/16)] text-(--pl-ink) shadow-pop-xl',
-          gearWidth(gear.panel),
-        )}
-      >
-        {captions && gear.panel === 'captions' ? (
-          <CaptionStylePanel
-            style={captionStyle}
-            onChange={onCaptionStyle}
-            onBack={gear.back}
-          />
-        ) : (
-          <>
-            <Setting label="画質" note={formatShown ? undefined : note}>
+    <PlayerGear
+      container={container}
+      sheet={sheet}
+      full={full}
+      open={gear.open}
+      onOpenChange={gear.change}
+      panel={gear.panel}
+      padding="px-4 pt-6 pb-[calc(22rem/16)]"
+    >
+      {captions && gear.panel === 'captions' ? (
+        <CaptionStylePanel
+          style={captionStyle}
+          onChange={onCaptionStyle}
+          onBack={gear.back}
+          narrow={sheet}
+        />
+      ) : (
+        <>
+          <Setting label="画質" note={formatShown ? undefined : note}>
+            <PlayerSegmentedControl
+              label="画質"
+              options={PLAYBACK_PROFILES}
+              value={onTheFly ? profile : undefined}
+              onChange={onChooseProfile}
+              numeric
+              off={!onTheFly}
+            />
+          </Setting>
+          {format && <FormatSetting {...format} off={!onTheFly} note={note} />}
+          <Setting label="速度">
+            <PlayerSegmentedControl
+              label="速度"
+              options={PLAYBACK_SPEEDS}
+              value={speed}
+              onChange={onChooseSpeed}
+              numeric
+            />
+          </Setting>
+          {sounds.length > 1 && (
+            <Setting label="音声">
               <PlayerSegmentedControl
-                label="画質"
-                options={PLAYBACK_PROFILES}
-                value={onTheFly ? profile : undefined}
-                onChange={onChooseProfile}
-                numeric
-                off={!onTheFly}
+                label="音声"
+                options={sounds}
+                value={sound}
+                onChange={onChooseSound}
+                nameOf={soundLabel}
               />
             </Setting>
-            {format && (
-              <FormatSetting {...format} off={!onTheFly} note={note} />
-            )}
-            <Setting label="速度">
+          )}
+          {source !== undefined && alternative !== undefined && (
+            <Setting label="ソース">
               <PlayerSegmentedControl
-                label="速度"
-                options={PLAYBACK_SPEEDS}
-                value={speed}
-                onChange={onChooseSpeed}
-                numeric
+                label="ソース"
+                options={BOTH_SOURCES}
+                value={source}
+                onChange={onChooseSource}
+                nameOf={sourceLabel}
               />
             </Setting>
-            {sounds.length > 1 && (
-              <Setting label="音声">
-                <PlayerSegmentedControl
-                  label="音声"
-                  options={sounds}
-                  value={sound}
-                  onChange={onChooseSound}
-                  nameOf={soundLabel}
-                />
-              </Setting>
-            )}
-            {source !== undefined && alternative !== undefined && (
-              <Setting label="ソース">
-                <PlayerSegmentedControl
-                  label="ソース"
-                  options={BOTH_SOURCES}
-                  value={source}
-                  onChange={onChooseSource}
-                  nameOf={sourceLabel}
-                />
-              </Setting>
-            )}
-            {captions && (
-              <CaptionStyleEntry
-                onOpen={gear.toCaptions}
-                returning={gear.returning}
-              />
-            )}
-          </>
-        )}
-      </PopoverContent>
-    </Popover>
+          )}
+          {captions && (
+            <CaptionStyleEntry
+              onOpen={gear.toCaptions}
+              returning={gear.returning}
+            />
+          )}
+          <GearActions actions={actions} onDone={() => gear.change(false)} />
+        </>
+      )}
+    </PlayerGear>
   )
 }

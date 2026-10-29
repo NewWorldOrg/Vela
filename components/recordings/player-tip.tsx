@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactNode } from 'react'
+import { useState, type ReactNode } from 'react'
 
 import {
   Tooltip,
@@ -15,16 +15,20 @@ export function PlayerTip({
   name,
   keys,
   container,
+  quiet = false,
   children,
 }: {
   name: string
   keys?: readonly string[]
   container?: HTMLElement | null
+  quiet?: boolean
   children: ReactNode
 }) {
+  const [open, setOpen] = useState(false)
+
   return (
     <TooltipProvider delayDuration={PLAYER_TIP_WAITS} disableHoverableContent>
-      <Tooltip>
+      <Tooltip open={open && !quiet} onOpenChange={setOpen}>
         <TooltipTrigger asChild>
           <span data-slot="player-tip" className="inline-flex shrink-0">
             {children}

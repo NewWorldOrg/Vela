@@ -120,10 +120,12 @@ export function CaptionStylePanel({
   style,
   onChange,
   onBack,
+  narrow = false,
 }: {
   style: CaptionStyle
   onChange: (next: CaptionStyle) => void
   onBack: () => void
+  narrow?: boolean
 }) {
   const back = useRef<HTMLButtonElement>(null)
 
@@ -133,6 +135,20 @@ export function CaptionStylePanel({
 
   const choose = (patch: Partial<CaptionStyle>) =>
     onChange({ ...style, ...patch })
+  const allOneColour = (
+    <button
+      type="button"
+      aria-pressed={style.allOneColour}
+      disabled={style.colour === 'broadcast'}
+      onClick={() => choose({ allOneColour: !style.allOneColour })}
+      className={cn(
+        PLAYER_BUTTON,
+        style.allOneColour && style.colour !== 'broadcast' && PLAYER_BUTTON_ON,
+      )}
+    >
+      全部同じ色
+    </button>
+  )
 
   return (
     <div data-slot="caption-style">
@@ -176,21 +192,9 @@ export function CaptionStylePanel({
           nameOf={(one) => CAPTION_COLOUR_LABEL[one]}
           faceOf={faceOfColour}
         />
-        <button
-          type="button"
-          aria-pressed={style.allOneColour}
-          disabled={style.colour === 'broadcast'}
-          onClick={() => choose({ allOneColour: !style.allOneColour })}
-          className={cn(
-            PLAYER_BUTTON,
-            style.allOneColour &&
-              style.colour !== 'broadcast' &&
-              PLAYER_BUTTON_ON,
-          )}
-        >
-          全部同じ色
-        </button>
+        {!narrow && allOneColour}
       </Setting>
+      {narrow && <Setting label="">{allOneColour}</Setting>}
       <Setting label="縁取り">
         <PlayerSegmentedControl
           label="縁取り"

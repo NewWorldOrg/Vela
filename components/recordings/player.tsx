@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
 } from 'react'
@@ -115,7 +116,12 @@ import {
   PLAYER_GLYPH_BUTTON_ON,
   PLAYER_PICTURE,
   PLAYER_PICTURE_BOX,
+  PLAYER_LAYER,
+  PLAYER_LAYER_HANDS,
   PLAYER_SCRIM,
+  PLAYER_SCRIM_TOP,
+  PLAYER_SEND,
+  PLAYER_SEND_MAIN,
 } from '@/components/recordings/player-palette'
 import {
   KEY_CAP,
@@ -139,6 +145,7 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
+import type { GearAction } from '@/components/recordings/player-gear'
 import { CAPTION_GRIP } from '@/components/recordings/player-palette'
 import {
   PlayerSkip,
@@ -154,7 +161,11 @@ import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
 import { useWideWindow } from '@/hooks/useWideWindow'
-import { useNarrowWindow } from '@/hooks/useNarrowWindow'
+import { usePhoneOnItsSide, usePlayerFit } from '@/hooks/usePlayerFit'
+import {
+  SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD,
+  wideRowWidth,
+} from '@/lib/player-fit'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
 import { AirPlayButton } from '@/components/recordings/external-player'
@@ -355,7 +366,6 @@ export function Player({
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
   const wide = useWideWindow()
-  const narrow = useNarrowWindow()
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [speed, setSpeed] = useState('1.0')
   const [profile, setProfile] = useState<PlaybackProfile | undefined>(
@@ -1335,10 +1345,30 @@ export function Player({
   }
 
   const faceShown = broadcast.view.open
+  const fit = usePlayerFit(
+    shell,
+    wideRowWidth({
+      glyphs:
+        (duration > 0 ? 3 : 1) +
+        4 +
+        Number(airPlayCanBeHanded(plan)) +
+        Number(captioning) +
+        Number(broadcast.offered) +
+        Number(pip.offered),
+      time: true,
+      chapters: chapters.length > 0,
+    }),
+    faceShown && bandPlace(full, wide) !== 'over'
+      ? SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD
+      : 0,
+  )
+  const sideways = usePhoneOnItsSide()
+  const roomy = fit === 'wide'
   const place = bandPlace(full, wide)
   const underTheBox = faceShown && place !== 'over'
+  const compact = fit === 'compact' && !underTheBox
   const skipInTheRow =
-    offered !== undefined && narrow && !full && chromeUp && !underTheBox
+    offered !== undefined && compact && chromeUp && !underTheBox
   const bandUnderTheBox = faceShown && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
   const clearsTheRow =
@@ -1356,6 +1386,220 @@ export function Player({
   const barSaid: PlayerSaying | null = broadcast.view.failed
     ? { text: SAID_FAILED, tone: 'err' }
     : said
+
+  const chromeHands = {
+    onPointerEnter: () => setOnTheBar(true),
+    onPointerLeave: () => setOnTheBar(false),
+    onFocus: (event: FocusEvent) => {
+      const reached =
+        event.target instanceof Element &&
+        event.target.matches(':focus-visible')
+
+      setHeld(reached)
+
+      if (reached) {
+        aimed.current = true
+      }
+    },
+    onBlur: () => setHeld(false),
+  }
+  const waitingSaid = phase === 'waiting' || phase === 'diagnosing'
+  const seekBar = duration > 0 && (
+    <PlayerSeek
+      id={d.id}
+      duration={duration}
+      position={position}
+      buffered={buffered}
+      drops={drops}
+      chapters={chapters}
+      onChoose={choose}
+      onScrubbing={setScrubbingAt}
+      frameHref={frameHref}
+      touch={compact}
+    />
+  )
+  const playButton = (look: string) => (
+    <PlayerTip
+      name={phase === 'playing' ? '一時停止' : '再生'}
+      keys={[KEY_CAP.toggle]}
+      container={shell}
+    >
+      <button
+        type="button"
+        aria-label={phase === 'playing' ? '一時停止' : '再生'}
+        onClick={toggle}
+        className={look}
+      >
+        {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
+      </button>
+    </PlayerTip>
+  )
+  const backButton = (look: string) => (
+    <PlayerTip
+      name={`${SEEK_STEP_SECONDS} 秒戻る`}
+      keys={[KEY_CAP.back]}
+      container={shell}
+    >
+      <button
+        type="button"
+        aria-label={`${SEEK_STEP_SECONDS} 秒戻る`}
+        onClick={(event) => step(-SEEK_STEP_SECONDS, event.timeStamp)}
+        className={look}
+      >
+        <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
+      </button>
+    </PlayerTip>
+  )
+  const forwardButton = (look: string) => (
+    <PlayerTip
+      name={`${SEEK_STEP_SECONDS} 秒進む`}
+      keys={[KEY_CAP.forward]}
+      container={shell}
+    >
+      <button
+        type="button"
+        aria-label={`${SEEK_STEP_SECONDS} 秒進む`}
+        onClick={(event) => step(SEEK_STEP_SECONDS, event.timeStamp)}
+        className={look}
+      >
+        <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
+      </button>
+    </PlayerTip>
+  )
+  const muteButton = (
+    <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
+      <button
+        type="button"
+        aria-label="消音"
+        aria-pressed={muted}
+        onClick={() => mute(!muted)}
+        className={cn(PLAYER_GLYPH_BUTTON, muted && PLAYER_GLYPH_BUTTON_ON)}
+      >
+        <VolumeIcon level={muted ? 0 : volume} />
+      </button>
+    </PlayerTip>
+  )
+  const airPlayButton = airPlayCanBeHanded(plan) && (
+    <PlayerTip name="AirPlay" container={shell}>
+      <AirPlayButton
+        handover={recordingHandover(d.id, onTakeTicket)}
+        video={video}
+        onRefused={(message) => setSaid({ text: message, tone: 'err' })}
+      />
+    </PlayerTip>
+  )
+  const captionsButton = captioning && (
+    <PlayerTip name="字幕" keys={[KEY_CAP.captions]} container={shell}>
+      <button
+        type="button"
+        aria-label="字幕"
+        aria-pressed={captioned}
+        onClick={toggleCaptions}
+        className={cn(PLAYER_GLYPH_BUTTON, captioned && PLAYER_GLYPH_BUTTON_ON)}
+      >
+        <CaptionsGlyph />
+      </button>
+    </PlayerTip>
+  )
+  const broadcastButton = broadcast.offered && (
+    <DataBroadcastToggle
+      open={broadcast.view.open}
+      onToggle={toggleBroadcast}
+      container={shell}
+    />
+  )
+  const rareActions: GearAction[] = [
+    {
+      name: 'キャプチャ',
+      icon: <CaptureIcon />,
+      disabled: !framed,
+      onPress: capture,
+    },
+    ...(pip.offered
+      ? [
+          {
+            name: 'ピクチャーインピクチャー',
+            icon: <PictureInPictureIcon />,
+            disabled: !framed,
+            pressed: pip.out,
+            onPress: pip.toggle,
+          },
+        ]
+      : []),
+  ]
+  const gearButton = (
+    <PlayerTip name="設定" container={shell} quiet={settingsOpen}>
+      <PlayerSettings
+        container={shell}
+        sheet={fit === 'compact' || sideways}
+        full={full}
+        actions={roomy ? [] : rareActions}
+        onOpenChange={setSettingsOpen}
+        profile={profile}
+        onChooseProfile={chooseProfile}
+        format={
+          playlist
+            ? undefined
+            : {
+                choices: formatsToChoose,
+                chosen: choiceShown(formatChoice, formatsToChoose),
+                onChoose: chooseFormat,
+              }
+        }
+        onTheFly={onTheFly}
+        speed={speed}
+        onChooseSpeed={chooseSpeed}
+        sounds={plan.sounds}
+        sound={pendingSound ?? sound}
+        onChooseSound={chooseSound}
+        source={plan.source}
+        alternative={plan.alternative}
+        onChooseSource={chooseSource}
+        captionStyle={captioning ? captionStyle : undefined}
+        onCaptionStyle={setCaptionStyle}
+      />
+    </PlayerTip>
+  )
+  const captureButton = (
+    <PlayerTip name="キャプチャ" container={shell}>
+      <button
+        type="button"
+        aria-label="キャプチャ"
+        disabled={!framed}
+        onClick={capture}
+        className={PLAYER_GLYPH_BUTTON}
+      >
+        <CaptureIcon />
+      </button>
+    </PlayerTip>
+  )
+  const pipButton = pip.offered && (
+    <PlayerTip name="ピクチャーインピクチャー" container={shell}>
+      <button
+        type="button"
+        aria-label="ピクチャーインピクチャー"
+        aria-pressed={pip.out}
+        disabled={!framed}
+        onClick={pip.toggle}
+        className={cn(PLAYER_GLYPH_BUTTON, pip.out && PLAYER_GLYPH_BUTTON_ON)}
+      >
+        <PictureInPictureIcon />
+      </button>
+    </PlayerTip>
+  )
+  const fullscreenButton = (
+    <PlayerTip name="全画面" keys={[KEY_CAP.fullscreen]} container={shell}>
+      <button
+        type="button"
+        aria-label="全画面"
+        aria-pressed={full}
+        onClick={toggleFullscreen}
+        className={PLAYER_GLYPH_BUTTON}
+      >
+        <FullscreenIcon leaving={full} />
+      </button>
+    </PlayerTip>
+  )
 
   if (phase === 'broken') {
     return (
@@ -1547,7 +1791,7 @@ export function Player({
           )}
           <PlayerCenter
             standing={
-              !pip.out && (phase === 'idle' || phase === 'paused')
+              !compact && !pip.out && (phase === 'idle' || phase === 'paused')
                 ? 'play'
                 : undefined
             }
@@ -1577,7 +1821,7 @@ export function Player({
               ピクチャーインピクチャーで再生中
             </p>
           )}
-          {!pip.out && (phase === 'waiting' || phase === 'diagnosing') && (
+          {!pip.out && waitingSaid && (
             <p
               role="status"
               className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
@@ -1587,28 +1831,61 @@ export function Player({
             </p>
           )}
         </div>
+        {compact && (
+          <div
+            data-slot="player-top"
+            data-up={chromeUp ? 'true' : undefined}
+            {...chromeHands}
+            style={{ backgroundImage: PLAYER_SCRIM_TOP }}
+            className={cn(
+              PLAYER_LAYER,
+              'inset-x-0 top-0 flex justify-end gap-x-1 px-2 pt-1.5 pb-6',
+              '[[data-fill]_&]:top-[env(safe-area-inset-top)] [[data-fill]_&]:right-[env(safe-area-inset-right)]',
+            )}
+          >
+            <div
+              className={cn('flex items-center gap-x-1', PLAYER_LAYER_HANDS)}
+            >
+              {airPlayButton}
+              {muteButton}
+              {captionsButton}
+              {broadcastButton}
+              {gearButton}
+            </div>
+          </div>
+        )}
+        {compact && !pip.out && !waitingSaid && (
+          <div
+            data-slot="player-sends"
+            data-up={chromeUp ? 'true' : undefined}
+            {...chromeHands}
+            className={cn(
+              PLAYER_LAYER,
+              'inset-x-0 top-[calc(50%-15rem/16)] flex -translate-y-1/2 items-center justify-center gap-x-6',
+            )}
+          >
+            {duration > 0 && backButton(PLAYER_SEND)}
+            {playButton(PLAYER_SEND_MAIN)}
+            {duration > 0 && forwardButton(PLAYER_SEND)}
+          </div>
+        )}
         <div
           ref={setChrome}
           data-slot="player-chrome"
+          data-fit={fit}
           data-up={chromeUp ? 'true' : undefined}
-          onPointerEnter={() => setOnTheBar(true)}
-          onPointerLeave={() => setOnTheBar(false)}
-          onFocus={(event) => {
-            const reached =
-              event.target instanceof Element &&
-              event.target.matches(':focus-visible')
-
-            setHeld(reached)
-
-            if (reached) {
-              aimed.current = true
-            }
-          }}
-          onBlur={() => setHeld(false)}
+          {...chromeHands}
           style={{
             backgroundImage: faceShown ? 'none' : PLAYER_SCRIM,
           }}
-          className={underTheBox ? PLAYER_CHROME_UNDER : PLAYER_CHROME_OVER}
+          className={
+            underTheBox
+              ? PLAYER_CHROME_UNDER
+              : cn(
+                  PLAYER_CHROME_OVER,
+                  compact && 'data-[up]:pointer-events-none',
+                )
+          }
         >
           {overThePicture && (
             <DataBroadcastBand
@@ -1622,23 +1899,12 @@ export function Player({
           <div
             data-slot="player-controls"
             className={cn(
-              'px-4 pb-3 max-[700px]:px-3',
-              faceShown ? 'pt-3' : 'pt-14',
+              'px-4 max-[700px]:px-3',
+              compact ? 'pb-0.5' : 'pb-3',
+              faceShown ? 'pt-3' : compact ? 'pt-8' : 'pt-14',
             )}
           >
-            {duration > 0 && (
-              <PlayerSeek
-                id={d.id}
-                duration={duration}
-                position={position}
-                buffered={buffered}
-                drops={drops}
-                chapters={chapters}
-                onChoose={choose}
-                onScrubbing={setScrubbingAt}
-                frameHref={frameHref}
-              />
-            )}
+            {!compact && seekBar}
             {barSaid && (
               <p
                 role="status"
@@ -1652,86 +1918,48 @@ export function Player({
                 {barSaid.text}
               </p>
             )}
-            <div className="mt-5 flex flex-wrap items-center gap-x-1 gap-y-2">
-              <PlayerTip
-                name={phase === 'playing' ? '一時停止' : '再生'}
-                keys={[KEY_CAP.toggle]}
-                container={shell}
-              >
-                <button
-                  type="button"
-                  aria-label={phase === 'playing' ? '一時停止' : '再生'}
-                  onClick={toggle}
-                  className={PLAYER_GLYPH_BUTTON}
-                >
-                  {phase === 'playing' ? <PauseGlyph /> : <PlayGlyph />}
-                </button>
-              </PlayerTip>
-              {duration > 0 && (
+            <div
+              data-slot="player-line"
+              className={cn(
+                compact && PLAYER_LAYER_HANDS,
+                'flex flex-wrap items-center gap-x-1 gap-y-2',
+                !compact && 'mt-5',
+              )}
+            >
+              {!compact && (
                 <>
-                  <PlayerTip
-                    name={`${SEEK_STEP_SECONDS} 秒戻る`}
-                    keys={[KEY_CAP.back]}
-                    container={shell}
-                  >
-                    <button
-                      type="button"
-                      aria-label={`${SEEK_STEP_SECONDS} 秒戻る`}
-                      onClick={(event) =>
-                        step(-SEEK_STEP_SECONDS, event.timeStamp)
-                      }
-                      className={PLAYER_GLYPH_BUTTON}
+                  {playButton(PLAYER_GLYPH_BUTTON)}
+                  {duration > 0 && (
+                    <>
+                      {backButton(PLAYER_GLYPH_BUTTON)}
+                      {forwardButton(PLAYER_GLYPH_BUTTON)}
+                    </>
+                  )}
+                  {muteButton}
+                  {roomy && (
+                    <PlayerTip
+                      name="音量"
+                      keys={[KEY_CAP.louder, KEY_CAP.quieter]}
+                      container={shell}
                     >
-                      <SkipBackIcon seconds={SEEK_STEP_SECONDS} />
-                    </button>
-                  </PlayerTip>
-                  <PlayerTip
-                    name={`${SEEK_STEP_SECONDS} 秒進む`}
-                    keys={[KEY_CAP.forward]}
-                    container={shell}
-                  >
-                    <button
-                      type="button"
-                      aria-label={`${SEEK_STEP_SECONDS} 秒進む`}
-                      onClick={(event) =>
-                        step(SEEK_STEP_SECONDS, event.timeStamp)
-                      }
-                      className={PLAYER_GLYPH_BUTTON}
-                    >
-                      <SkipForwardIcon seconds={SEEK_STEP_SECONDS} />
-                    </button>
-                  </PlayerTip>
+                      <PlayerVolume
+                        level={muted ? 0 : volume}
+                        onChoose={chooseVolume}
+                      />
+                    </PlayerTip>
+                  )}
                 </>
               )}
-              <PlayerTip name="消音" keys={[KEY_CAP.mute]} container={shell}>
-                <button
-                  type="button"
-                  aria-label="消音"
-                  aria-pressed={muted}
-                  onClick={() => mute(!muted)}
-                  className={cn(
-                    PLAYER_GLYPH_BUTTON,
-                    muted && PLAYER_GLYPH_BUTTON_ON,
-                  )}
-                >
-                  <VolumeIcon level={muted ? 0 : volume} />
-                </button>
-              </PlayerTip>
-              <PlayerTip
-                name="音量"
-                keys={[KEY_CAP.louder, KEY_CAP.quieter]}
-                container={shell}
+              <span
+                className={cn(
+                  'font-code text-[calc(13rem/16)] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums',
+                  compact ? 'ml-1' : 'ml-2',
+                )}
               >
-                <PlayerVolume
-                  level={muted ? 0 : volume}
-                  onChoose={chooseVolume}
-                />
-              </PlayerTip>
-              <span className="ml-2 font-code text-[calc(13rem/16)] font-medium whitespace-nowrap text-(--pl-ink) tabular-nums">
                 {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>
-              {chapters.length > 0 && (
+              {chapters.length > 0 && !skipInTheRow && (
                 <button
                   type="button"
                   disabled={nextChapterAt === undefined}
@@ -1744,133 +1972,39 @@ export function Player({
                   次のチャプターへ
                 </button>
               )}
+              {skipInTheRow && (
+                <PlayerSkipInTheRow
+                  key={offered.chapters[0].endsAtSec}
+                  kinds={offered.kinds}
+                  to={offered.endsAtSec}
+                  onSkip={skipTheRun}
+                  onDismiss={leaveTheStretch}
+                  container={shell}
+                />
+              )}
               <div
                 className={cn(
-                  'ml-auto flex flex-wrap items-center gap-x-1 gap-y-2 max-[700px]:ml-0',
-                  skipInTheRow && 'grow',
+                  'flex flex-wrap items-center gap-x-1 gap-y-2',
+                  !skipInTheRow && 'ml-auto',
+                  !compact && 'max-[700px]:ml-0',
                 )}
               >
-                {airPlayCanBeHanded(plan) && (
-                  <PlayerTip name="AirPlay" container={shell}>
-                    <AirPlayButton
-                      handover={recordingHandover(d.id, onTakeTicket)}
-                      video={video}
-                      onRefused={(message) =>
-                        setSaid({ text: message, tone: 'err' })
-                      }
-                    />
-                  </PlayerTip>
+                {!compact && (
+                  <>
+                    {airPlayButton}
+                    {captionsButton}
+                    {broadcastButton}
+                    {gearButton}
+                  </>
                 )}
-                {captioning && (
-                  <PlayerTip
-                    name="字幕"
-                    keys={[KEY_CAP.captions]}
-                    container={shell}
-                  >
-                    <button
-                      type="button"
-                      aria-label="字幕"
-                      aria-pressed={captioned}
-                      onClick={toggleCaptions}
-                      className={cn(
-                        PLAYER_GLYPH_BUTTON,
-                        captioned && PLAYER_GLYPH_BUTTON_ON,
-                      )}
-                    >
-                      <CaptionsGlyph />
-                    </button>
-                  </PlayerTip>
-                )}
-                {broadcast.offered && (
-                  <DataBroadcastToggle
-                    open={faceShown}
-                    onToggle={toggleBroadcast}
-                    container={shell}
-                  />
-                )}
-                <PlayerTip name="設定" container={shell}>
-                  <PlayerSettings
-                    container={shell}
-                    onOpenChange={setSettingsOpen}
-                    profile={profile}
-                    onChooseProfile={chooseProfile}
-                    format={
-                      playlist
-                        ? undefined
-                        : {
-                            choices: formatsToChoose,
-                            chosen: choiceShown(formatChoice, formatsToChoose),
-                            onChoose: chooseFormat,
-                          }
-                    }
-                    onTheFly={onTheFly}
-                    speed={speed}
-                    onChooseSpeed={chooseSpeed}
-                    sounds={plan.sounds}
-                    sound={pendingSound ?? sound}
-                    onChooseSound={chooseSound}
-                    source={plan.source}
-                    alternative={plan.alternative}
-                    onChooseSource={chooseSource}
-                    captionStyle={captioning ? captionStyle : undefined}
-                    onCaptionStyle={setCaptionStyle}
-                  />
-                </PlayerTip>
-                <PlayerTip name="キャプチャ" container={shell}>
-                  <button
-                    type="button"
-                    aria-label="キャプチャ"
-                    disabled={!framed}
-                    onClick={capture}
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <CaptureIcon />
-                  </button>
-                </PlayerTip>
-                {pip.offered && (
-                  <PlayerTip name="ピクチャーインピクチャー" container={shell}>
-                    <button
-                      type="button"
-                      aria-label="ピクチャーインピクチャー"
-                      aria-pressed={pip.out}
-                      disabled={!framed}
-                      onClick={pip.toggle}
-                      className={cn(
-                        PLAYER_GLYPH_BUTTON,
-                        pip.out && PLAYER_GLYPH_BUTTON_ON,
-                      )}
-                    >
-                      <PictureInPictureIcon />
-                    </button>
-                  </PlayerTip>
-                )}
-                <PlayerTip
-                  name="全画面"
-                  keys={[KEY_CAP.fullscreen]}
-                  container={shell}
-                >
-                  <button
-                    type="button"
-                    aria-label="全画面"
-                    aria-pressed={full}
-                    onClick={toggleFullscreen}
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <FullscreenIcon leaving={full} />
-                  </button>
-                </PlayerTip>
-                {skipInTheRow && (
-                  <PlayerSkipInTheRow
-                    key={offered.chapters[0].endsAtSec}
-                    kinds={offered.kinds}
-                    to={offered.endsAtSec}
-                    onSkip={skipTheRun}
-                    onDismiss={leaveTheStretch}
-                    container={shell}
-                  />
-                )}
+                {roomy && captureButton}
+                {roomy && pipButton}
+                {fullscreenButton}
               </div>
             </div>
+            {compact && seekBar && (
+              <div className={cn('mt-4', PLAYER_LAYER_HANDS)}>{seekBar}</div>
+            )}
           </div>
         </div>
         {bandUnderTheBox && (

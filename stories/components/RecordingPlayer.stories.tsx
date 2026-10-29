@@ -3998,10 +3998,13 @@ function skipSeat(canvasElement: HTMLElement): HTMLElement {
   return seat
 }
 
-async function sitsAtTheRightOfTheLastLine(canvasElement: HTMLElement) {
+async function sitsBeforeTheFullScreen(canvasElement: HTMLElement) {
   const seat = skipSeat(canvasElement).getBoundingClientRect()
   const full = within(canvasElement)
     .getByRole('button', { name: '全画面' })
+    .getBoundingClientRect()
+  const time = within(canvasElement)
+    .getByText(/ \/ 4:12:38$/)
     .getBoundingClientRect()
   const controls = canvasElement
     .querySelector('[data-slot="player-controls"]')
@@ -4009,15 +4012,19 @@ async function sitsAtTheRightOfTheLastLine(canvasElement: HTMLElement) {
 
   await expect(skipSeat(canvasElement)).toHaveAttribute('data-place', 'row')
   await expect(Math.round(seat.top)).toBe(Math.round(full.top))
-  await expect(seat.left).toBeGreaterThan(full.right)
-  await expect(Math.round(controls?.right ?? 0) - Math.round(seat.right)).toBe(
+  await expect(
+    Math.abs(time.top + time.height / 2 - (full.top + full.height / 2)),
+  ).toBeLessThanOrEqual(1)
+  await expect(seat.left).toBeGreaterThan(time.right)
+  await expect(seat.right).toBeLessThan(full.left)
+  await expect(Math.round(controls?.right ?? 0) - Math.round(full.right)).toBe(
     12,
   )
 }
 
 const NARROW = { width: 375, height: 740 }
 
-export const 幅375ではバーの最下段の右端に出す: Story = {
+export const 幅375では時刻の行の全画面の手前に出す: Story = {
   args: {
     detail: detail('1266'),
     plan: THEMED,
@@ -4028,7 +4035,7 @@ export const 幅375ではバーの最下段の右端に出す: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
     await userEvent.click(
       canvas.getByRole('button', { name: SKIP_THE_OPENING }),
     )
@@ -4039,7 +4046,7 @@ export const 幅375ではバーの最下段の右端に出す: Story = {
   },
 }
 
-export const 幅375で2種類は飛ばすに縮める: Story = {
+export const 幅375では2種類をプラスでつないで出す: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
@@ -4050,13 +4057,13 @@ export const 幅375で2種類は飛ばすに縮める: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
     const skip = canvas.getByRole('button', {
       name: SKIP_THE_OPENING_AND_THE_BREAK,
     })
 
-    await expect(skip.textContent).toBe(SKIP_ONLY)
+    await expect(skip.textContent).toBe('OP+CM を飛ばす')
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
@@ -4075,7 +4082,7 @@ export const 幅375で3種類は飛ばすに縮める: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
     const skip = canvas.getByRole('button', { name: 'OP と CM と ED を飛ばす' })
 
@@ -4087,14 +4094,14 @@ export const 幅375で3種類は飛ばすに縮める: Story = {
   },
 }
 
-export const 幅375でバーが隠れると映像の右下に戻る: Story = {
+export const 幅360でバーが隠れると映像の右下に戻る: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
     startAt: 100,
     pictureHref: keeping,
   },
-  parameters: { screen: NARROW },
+  parameters: { screen: { width: 360, height: 740 } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -4117,18 +4124,18 @@ export const 幅375でバーが隠れると映像の右下に戻る: Story = {
   },
 }
 
-export const 幅393で2種類が入らないときは飛ばすに縮める: Story = {
+export const 幅360で2種類が入らないときは飛ばすに縮める: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
     startAt: 100,
     pictureHref: keeping,
   },
-  parameters: { screen: { width: 393, height: 740 } },
+  parameters: { screen: { width: 360, height: 740 } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
     const skip = canvas.getByRole('button', {
       name: SKIP_THE_OPENING_AND_THE_BREAK,
@@ -4153,7 +4160,7 @@ export const 幅414では2種類をプラスでつないで出す: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
     const skip = canvas.getByRole('button', {
       name: SKIP_THE_OPENING_AND_THE_BREAK,
@@ -4167,7 +4174,7 @@ export const 幅414では2種類をプラスでつないで出す: Story = {
   },
 }
 
-export const 幅414で3種類が入らないときは飛ばすに縮める: Story = {
+export const 幅414では3種類をプラスでつないで出す: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_BREAK_AND_ENDING,
@@ -4178,11 +4185,11 @@ export const 幅414で3種類が入らないときは飛ばすに縮める: Stor
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await waitFor(() => sitsAtTheRightOfTheLastLine(canvasElement))
+    await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
     const skip = canvas.getByRole('button', { name: 'OP と CM と ED を飛ばす' })
 
-    await expect(skip.textContent).toBe(SKIP_ONLY)
+    await expect(skip.textContent).toBe('OP+CM+ED を飛ばす')
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
@@ -4190,14 +4197,14 @@ export const 幅414で3種類が入らないときは飛ばすに縮める: Stor
   },
 }
 
-export const 幅430では今までどおり映像の上に出す: Story = {
+export const 電話より広い窓では今までどおり映像の上に出す: Story = {
   args: {
     detail: detail('1266'),
     plan: OPENING_THEN_A_BREAK,
     startAt: 100,
     pictureHref: keeping,
   },
-  parameters: { screen: { width: 430, height: 740 } },
+  parameters: { screen: { width: 700, height: 740 } },
   play: async ({ canvasElement }) => {
     await waitFor(() =>
       expect(skipSeat(canvasElement)).toHaveAttribute('data-raised', 'true'),
@@ -5264,8 +5271,10 @@ export const 狭い窓でも歯車の字幕の面は崩れない: Story = {
 
     const face = await toTheCaptionFace(canvasElement)
     const panel = face.closest('[data-slot="caption-style"]') as HTMLElement
+    const sheet = panel.closest('[data-slot="player-gear-sheet"]')
     const box = panel.getBoundingClientRect()
 
+    await expect(sheet).not.toBeNull()
     await expect(box.left).toBeGreaterThanOrEqual(0)
     await expect(box.right).toBeLessThanOrEqual(375)
 
@@ -5275,9 +5284,7 @@ export const 狭い窓でも歯車の字幕の面は崩れない: Story = {
       await expect(each.right).toBeLessThanOrEqual(box.right + 0.5)
     }
 
-    await userEvent.click(
-      within(canvasElement).getByRole('button', { name: '設定' }),
-    )
+    await userEvent.keyboard('{Escape}')
     await waitFor(() => expect(panel).not.toBeInTheDocument())
   },
 }
@@ -5653,5 +5660,240 @@ export const HLS_でも録画のデータ放送を置き_録画の秒で合わ�
       timeout: 10000,
     })
     await expect(modulesReadAt.every((at) => at === 600)).toBe(true)
+  },
+}
+
+function fitOfTheBar(canvasElement: HTMLElement): string | null {
+  return (
+    canvasElement
+      .querySelector('[data-slot="player-chrome"]')
+      ?.getAttribute('data-fit') ?? null
+  )
+}
+
+function inside(canvasElement: HTMLElement, slot: string): HTMLElement {
+  const found = canvasElement.querySelector(`[data-slot="${slot}"]`)
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`${slot} is not on the screen`)
+  }
+
+  return found
+}
+
+function overlap(one: DOMRect, other: DOMRect): boolean {
+  return (
+    one.left < other.right &&
+    other.left < one.right &&
+    one.top < other.bottom &&
+    other.top < one.bottom
+  )
+}
+
+function centreOf(box: DOMRect): { x: number; y: number } {
+  return { x: box.left + box.width / 2, y: box.top + box.height / 2 }
+}
+
+const ON_A_PHONE = { width: 390, height: 844 }
+
+export const 電話の幅では送りを映像の真ん中に置きシークバーを時刻の行の下に置く: Story =
+  {
+    parameters: { screen: ON_A_PHONE },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('compact'))
+
+      const sends = inside(canvasElement, 'player-sends')
+      const top = inside(canvasElement, 'player-top')
+      const shell = board(canvasElement).getBoundingClientRect()
+      const play = within(sends).getByRole('button', { name: '再生' })
+
+      await expect(
+        within(sends).getByRole('button', { name: '10 秒戻る' }),
+      ).toBeVisible()
+      await expect(
+        within(sends).getByRole('button', { name: '10 秒進む' }),
+      ).toBeVisible()
+      await expect(
+        Math.abs(centreOf(play.getBoundingClientRect()).x - centreOf(shell).x),
+      ).toBeLessThan(1)
+      await expect(
+        within(top).getByRole('button', { name: '消音' }),
+      ).toBeVisible()
+      await expect(
+        within(top).getByRole('button', { name: '設定' }),
+      ).toBeVisible()
+
+      const full = canvas
+        .getByRole('button', { name: '全画面' })
+        .getBoundingClientRect()
+      const time = canvas.getByText('0:00 / 4:12:38').getBoundingClientRect()
+      const seek = canvas
+        .getByRole('slider', { name: '再生位置' })
+        .getBoundingClientRect()
+
+      await expect(
+        Math.abs(centreOf(time).y - centreOf(full).y),
+      ).toBeLessThanOrEqual(1)
+      await expect(seek.top).toBeGreaterThan(full.bottom)
+      await expect(seek.bottom).toBeLessThanOrEqual(shell.bottom)
+      await expect(seek.width).toBeGreaterThan(shell.width * 0.9)
+      await expect(
+        canvas.getByRole('slider', { name: '再生位置' }),
+      ).toHaveAttribute('data-wanted', 'true')
+
+      for (const button of board(canvasElement).querySelectorAll('button')) {
+        await expect(overlap(button.getBoundingClientRect(), seek)).toBe(false)
+      }
+
+      await expect(
+        canvas.queryByRole('button', { name: 'キャプチャ' }),
+      ).toBeNull()
+      await expect(canvas.queryByRole('slider', { name: '音量' })).toBeNull()
+    },
+  }
+
+export const 電話の幅では歯車が下から出るシートになる: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+    takeCapture: capturing,
+  },
+  parameters: { screen: ON_A_PHONE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+    await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('compact'))
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const sheet = await screen.findByRole('dialog', { name: '設定' })
+
+    await expect(sheet).toHaveAttribute('data-slot', 'player-gear-sheet')
+    await waitFor(() =>
+      expect(Math.round(sheet.getBoundingClientRect().bottom)).toBe(
+        window.innerHeight,
+      ),
+    )
+
+    const box = sheet.getBoundingClientRect()
+
+    await expect(box.left).toBeGreaterThanOrEqual(0)
+    await expect(box.right).toBeLessThanOrEqual(window.innerWidth)
+
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+    )
+
+    taken.length = 0
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await userEvent.click(
+      within(await screen.findByRole('dialog', { name: '設定' })).getByRole(
+        'button',
+        { name: 'キャプチャ' },
+      ),
+    )
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+    )
+    await waitFor(() => expect(taken).toHaveLength(1))
+  },
+}
+
+export const iPad_の縦では一行に収めキャプチャを歯車に移す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 0,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('tight'))
+
+    const line = inside(canvasElement, 'player-line')
+    const middles = Array.from(line.querySelectorAll('button')).map((one) =>
+      Math.round(centreOf(one.getBoundingClientRect()).y),
+    )
+
+    await expect(new Set(middles).size).toBe(1)
+    await expect(
+      canvas.queryByRole('button', { name: 'キャプチャ' }),
+    ).toBeNull()
+    await expect(canvas.queryByRole('slider', { name: '音量' })).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: '次のチャプターへ' }),
+    ).toBeInTheDocument()
+
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+
+    const gear = await screen.findByRole('dialog', { name: '設定' })
+
+    await expect(gear).not.toHaveAttribute('data-slot', 'player-gear-sheet')
+    await expect(
+      within(gear).getByRole('button', { name: 'キャプチャ' }),
+    ).toBeVisible()
+    await expect(
+      within(gear).getByRole('button', { name: 'ピクチャーインピクチャー' }),
+    ).toBeVisible()
+    await userEvent.keyboard('{Escape}')
+  },
+}
+
+export const 机の幅では一行に全部を並べる: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 0,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('wide'))
+
+    const line = inside(canvasElement, 'player-line')
+    const middles = Array.from(line.querySelectorAll('button')).map((one) =>
+      Math.round(centreOf(one.getBoundingClientRect()).y),
+    )
+
+    await expect(new Set(middles).size).toBe(1)
+    await expect(
+      canvas.getByRole('button', { name: 'キャプチャ' }),
+    ).toBeVisible()
+    await expect(canvas.getByRole('slider', { name: '音量' })).toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="player-sends"]'),
+    ).toBeNull()
+  },
+}
+
+export const 横向きの電話では映像を窓の高さいっぱいに出す: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: THEMED,
+    startAt: 0,
+    pictureHref: keeping,
+  },
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(
+        Math.round(board(canvasElement).getBoundingClientRect().height),
+      ).toBe(window.innerHeight),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await expect(
+      await screen.findByRole('dialog', { name: '設定' }),
+    ).toHaveAttribute('data-slot', 'player-gear-sheet')
+    await userEvent.keyboard('{Escape}')
   },
 }
