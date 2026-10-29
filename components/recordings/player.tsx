@@ -1371,6 +1371,14 @@ export function Player({
   const place = bandPlace(full, wide)
   const underTheBox = faceShown && place !== 'over'
   const compact = fit === 'compact' && !underTheBox
+  const [laidAs, setLaidAs] = useState(compact)
+
+  if (laidAs !== compact) {
+    setLaidAs(compact)
+    setOnTheBar(false)
+    setHeld(false)
+  }
+
   const skipInTheRow =
     offered !== undefined && compact && chromeUp && !underTheBox
   const bandUnderTheBox = faceShown && place === 'under'

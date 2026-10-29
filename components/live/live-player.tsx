@@ -1034,6 +1034,14 @@ export function LivePlayer({
   const place = bandPlace(full, remoteInTheColumn)
   const underTheBox = opened && place !== 'over'
   const compact = fit === 'compact' && !underTheBox
+  const [laidAs, setLaidAs] = useState(compact)
+
+  if (laidAs !== compact) {
+    setLaidAs(compact)
+    setOnTheBar(false)
+    setFocused(false)
+  }
+
   const bandUnderTheBox = opened && place === 'under'
   const rowHeight = useHeight(underTheBox ? chrome : null)
   const clearsTheRow =

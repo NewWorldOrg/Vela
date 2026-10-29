@@ -5946,3 +5946,51 @@ export const 電話の幅では読み込み中の印を真ん中の再生の位�
     await standsWhereThePlayWould(canvasElement, plate, 15)
   },
 }
+
+export const 歯車を開いたまま電話の幅をまたいでも閉じたあと操作列が隠れて押下が効く: Story =
+  {
+    args: { detail: detail('1266'), pictureHref: keeping },
+    parameters: { screen: { width: 1280, height: 800 } },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const shell = board(canvasElement)
+      const area = canvasElement.querySelector(
+        '[data-slot="player-press"]',
+      ) as HTMLElement
+      const chrome = () =>
+        canvasElement.querySelector('[data-slot="player-chrome"]')
+
+      canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+      await waitFor(() =>
+        expect(canvas.getByRole('button', { name: '一時停止' })).toBeVisible(),
+      )
+      await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+      await screen.findByRole('dialog', { name: '設定' })
+
+      for (const width of [599, 601, 599]) {
+        shell.style.width = `${width}px`
+        await waitFor(() =>
+          expect(fitOfTheBar(canvasElement) === 'compact').toBe(width < 600),
+        )
+      }
+
+      await waitFor(() =>
+        expect(screen.queryByRole('dialog', { name: '設定' })).toBeNull(),
+      )
+      await expect(
+        canvas.getByRole('button', { name: '一時停止' }),
+      ).toBeInTheDocument()
+      await userEvent.click(area)
+      await waitFor(() =>
+        expect(canvas.queryByRole('button', { name: '一時停止' })).toBeNull(),
+      )
+
+      canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+      await waitFor(() => expect(chrome()).not.toHaveAttribute('data-up'), {
+        timeout: 6000,
+      })
+      shell.style.width = ''
+      shell.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
+      await waitFor(() => expect(chrome()).toHaveAttribute('data-up', 'true'))
+    },
+  }
