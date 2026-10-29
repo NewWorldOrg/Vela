@@ -10,7 +10,12 @@ import {
   PLAYER_BUTTON,
   PLAYER_GLYPH_BUTTON,
 } from '@/components/recordings/player-palette'
-import { SKIP_ONLY, skipWords, skipWordsInTheRow } from '@/lib/player-chapters'
+import {
+  SKIP_ONLY,
+  skipNameInTheRow,
+  skipWords,
+  skipWordsInTheRow,
+} from '@/lib/player-chapters'
 import type { SkippableKind } from '@/repository/videos'
 
 export const SKIP_THE: Record<SkippableKind, string> = {
@@ -176,7 +181,7 @@ export function PlayerSkipInTheRow({
     >
       <button
         type="button"
-        aria-label={skipWords(kinds)}
+        aria-label={skipNameInTheRow(kinds, fits)}
         onClick={() => onSkip(to)}
         className={PLAYER_BUTTON}
       >
