@@ -1,7 +1,9 @@
+import type { Route } from 'next'
+
 import { isPathActive } from '@/lib/path'
 
 export interface Destination {
-  href: string
+  href: Route
   label: string
   alsoUnder: readonly string[]
 }
@@ -15,9 +17,9 @@ export const DESTINATIONS: readonly Destination[] = [
   { href: '/settings', label: '設定', alsoUnder: [] },
 ]
 
-export const SETTINGS_HREF = '/settings'
+export const SETTINGS_HREF: Route = '/settings'
 
-export function destinationOf(pathname: string): string | null {
+export function destinationOf(pathname: string): Route | null {
   const found = DESTINATIONS.find(({ href, alsoUnder }) =>
     [href, ...alsoUnder].some((root) => isPathActive(pathname, root)),
   )
