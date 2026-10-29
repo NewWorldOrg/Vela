@@ -219,6 +219,10 @@ const LATENCY_TONE = {
   err: 'border-(--pl-err)/50 bg-(--pl-err)/14 text-(--pl-err)',
 } as const
 
+/** Where the play stands in a compact picture, and a mark that stands in for it: across the middle, between the title's line with the gear's company and the line of the latency and the full screen. */
+const LIVE_SENDS_PLACE =
+  'inset-x-0 top-[calc(50%-4rem/16)] mx-auto -translate-y-1/2'
+
 export function LivePlayer({
   channel,
   profiles,
@@ -1411,6 +1415,7 @@ export function LivePlayer({
               elapsedMs={running.elapsedMs}
               reconnecting={reconnecting}
               brief={compact}
+              className={compact ? LIVE_SENDS_PLACE : undefined}
             />
           )}
           {pip.out && (
@@ -1424,7 +1429,10 @@ export function LivePlayer({
           {!pip.out && phase === 'buffering' && (
             <p
               role="status"
-              className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
+              className={cn(
+                'pointer-events-none absolute flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)',
+                compact ? LIVE_SENDS_PLACE : 'inset-0 m-auto',
+              )}
             >
               <Spinner className="text-(--pl-accent)" />
               バッファリング中
@@ -1470,7 +1478,8 @@ export function LivePlayer({
             {...chromeHands}
             className={cn(
               PLAYER_LAYER,
-              'inset-x-0 top-[calc(50%-4rem/16)] flex -translate-y-1/2 items-center justify-center',
+              LIVE_SENDS_PLACE,
+              'flex items-center justify-center',
             )}
           >
             {playButton(PLAYER_SEND_MAIN)}

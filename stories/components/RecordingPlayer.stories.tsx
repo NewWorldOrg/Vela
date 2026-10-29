@@ -4022,6 +4022,14 @@ async function sitsBeforeTheFullScreen(canvasElement: HTMLElement) {
   )
 }
 
+async function namedFromWhatItShows(button: HTMLElement) {
+  await expect(
+    (button.getAttribute('aria-label') ?? '').startsWith(
+      button.textContent ?? '',
+    ),
+  ).toBe(true)
+}
+
 const NARROW = { width: 375, height: 740 }
 
 export const 幅375では時刻の行の全画面の手前に出す: Story = {
@@ -4036,6 +4044,9 @@ export const 幅375では時刻の行の全画面の手前に出す: Story = {
     const canvas = within(canvasElement)
 
     await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
+    await namedFromWhatItShows(
+      canvas.getByRole('button', { name: SKIP_THE_OPENING }),
+    )
     await userEvent.click(
       canvas.getByRole('button', { name: SKIP_THE_OPENING }),
     )
@@ -4059,11 +4070,10 @@ export const 幅375では2種類をプラスでつないで出す: Story = {
 
     await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
-    const skip = canvas.getByRole('button', {
-      name: SKIP_THE_OPENING_AND_THE_BREAK,
-    })
+    const skip = canvas.getByRole('button', { name: 'OP+CM を飛ばす' })
 
     await expect(skip.textContent).toBe('OP+CM を飛ばす')
+    await namedFromWhatItShows(skip)
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
@@ -4084,9 +4094,12 @@ export const 幅375で3種類は飛ばすに縮める: Story = {
 
     await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
-    const skip = canvas.getByRole('button', { name: 'OP と CM と ED を飛ばす' })
+    const skip = canvas.getByRole('button', {
+      name: '飛ばす(OP と CM と ED)',
+    })
 
     await expect(skip.textContent).toBe(SKIP_ONLY)
+    await namedFromWhatItShows(skip)
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
@@ -4137,11 +4150,10 @@ export const 幅360で2種類が入らないときは飛ばすに縮める: Stor
 
     await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
-    const skip = canvas.getByRole('button', {
-      name: SKIP_THE_OPENING_AND_THE_BREAK,
-    })
+    const skip = canvas.getByRole('button', { name: '飛ばす(OP と CM)' })
 
     await expect(skip.textContent).toBe(SKIP_ONLY)
+    await namedFromWhatItShows(skip)
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
@@ -4162,11 +4174,10 @@ export const 幅414では2種類をプラスでつないで出す: Story = {
 
     await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
-    const skip = canvas.getByRole('button', {
-      name: SKIP_THE_OPENING_AND_THE_BREAK,
-    })
+    const skip = canvas.getByRole('button', { name: 'OP+CM を飛ばす' })
 
     await expect(skip.textContent).toBe('OP+CM を飛ばす')
+    await namedFromWhatItShows(skip)
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('4:00 / 4:12:38')).toBeVisible(),
@@ -4187,9 +4198,10 @@ export const 幅414では3種類をプラスでつないで出す: Story = {
 
     await waitFor(() => sitsBeforeTheFullScreen(canvasElement))
 
-    const skip = canvas.getByRole('button', { name: 'OP と CM と ED を飛ばす' })
+    const skip = canvas.getByRole('button', { name: 'OP+CM+ED を飛ばす' })
 
     await expect(skip.textContent).toBe('OP+CM+ED を飛ばす')
+    await namedFromWhatItShows(skip)
     await userEvent.click(skip)
     await waitFor(() =>
       expect(canvas.getByText('5:30 / 4:12:38')).toBeVisible(),
@@ -5895,5 +5907,42 @@ export const 横向きの電話では映像を窓の高さいっぱいに出す:
       await screen.findByRole('dialog', { name: '設定' }),
     ).toHaveAttribute('data-slot', 'player-gear-sheet')
     await userEvent.keyboard('{Escape}')
+  },
+}
+
+async function standsWhereThePlayWould(
+  canvasElement: HTMLElement,
+  plate: HTMLElement,
+  above: number,
+) {
+  const shell = board(canvasElement).getBoundingClientRect()
+  const box = plate.getBoundingClientRect()
+
+  await expect(
+    canvasElement.querySelector('[data-slot="player-sends"]'),
+  ).toBeNull()
+  await expect(Math.abs(centreOf(box).x - centreOf(shell).x)).toBeLessThan(1)
+  await expect(
+    Math.abs(centreOf(box).y - (centreOf(shell).y - above)),
+  ).toBeLessThan(1)
+
+  for (const button of board(canvasElement).querySelectorAll('button')) {
+    await expect(overlap(button.getBoundingClientRect(), box)).toBe(false)
+  }
+}
+
+export const 電話の幅では読み込み中の印を真ん中の再生の位置に出す: Story = {
+  args: {
+    detail: { ...detail('1266'), thumbnailHref: SUBTITLED_FRAME },
+    startAt: 0,
+    pictureHref: stalling,
+  },
+  parameters: { screen: { width: 360, height: 800 } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('compact'))
+
+    const plate = await within(canvasElement).findByRole('status')
+
+    await standsWhereThePlayWould(canvasElement, plate, 15)
   },
 }

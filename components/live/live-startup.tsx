@@ -26,8 +26,8 @@ export function LiveStartupSteps({
         role="status"
         data-slot="live-startup-brief"
         className={cn(
-          'pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)',
-          className,
+          'pointer-events-none absolute flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)',
+          className ?? 'inset-0 m-auto',
         )}
       >
         <Spinner

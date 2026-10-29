@@ -3665,3 +3665,70 @@ export const 机の幅のライブは今までどおり一行に並べる: Story
     ).toBeNull()
   },
 }
+
+async function liveMarkStandsWhereThePlayWould(
+  canvasElement: HTMLElement,
+  plate: HTMLElement,
+) {
+  const frame = livePlayer(canvasElement).getBoundingClientRect()
+  const box = plate.getBoundingClientRect()
+  const middle = (one: DOMRect) => ({
+    x: one.left + one.width / 2,
+    y: one.top + one.height / 2,
+  })
+
+  await expect(
+    canvasElement.querySelector('[data-slot="player-sends"]'),
+  ).toBeNull()
+  await expect(Math.abs(middle(box).x - middle(frame).x)).toBeLessThan(1)
+  await expect(Math.abs(middle(box).y - (middle(frame).y - 4))).toBeLessThan(1)
+
+  for (const button of livePlayer(canvasElement).querySelectorAll('button')) {
+    const one = button.getBoundingClientRect()
+
+    if (one.width === 0) {
+      continue
+    }
+
+    await expect(
+      one.right <= box.left ||
+        box.right <= one.left ||
+        one.bottom <= box.top ||
+        box.bottom <= one.top,
+    ).toBe(true)
+  }
+}
+
+export const 電話の幅ではバッファリングの印を真ん中の再生の位置に出す: Story = {
+  args: { openSocket: stalling },
+  parameters: { screen: { width: 360, height: 800 } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(liveFit(canvasElement)).toBe('compact'))
+
+    const plate = await within(canvasElement).findByText('バッファリング中', {
+      exact: false,
+    })
+
+    await liveMarkStandsWhereThePlayWould(
+      canvasElement,
+      plate.closest('[role="status"]') as HTMLElement,
+    )
+  },
+}
+
+export const 電話の幅では準備中の印を真ん中の再生の位置に出す: Story = {
+  parameters: { screen: { width: 360, height: 800 } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => expect(liveFit(canvasElement)).toBe('compact'))
+
+    const plate = await within(canvasElement).findByText(
+      'チャンネルを準備しています',
+      { exact: false },
+    )
+
+    await liveMarkStandsWhereThePlayWould(
+      canvasElement,
+      plate.closest('[role="status"]') as HTMLElement,
+    )
+  },
+}

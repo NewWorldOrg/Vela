@@ -223,6 +223,10 @@ const FOLLOWS_EVERY_MS = 250
 
 type Phase = 'idle' | 'waiting' | 'playing' | 'paused' | 'diagnosing' | 'broken'
 
+/** Where the sends stand in a compact picture, and a mark that stands in for them: across the middle, between the gear's company at the top and the time's line with the seek bar at the foot. */
+const PLAYER_SENDS_PLACE =
+  'inset-x-0 top-[calc(50%-15rem/16)] mx-auto -translate-y-1/2'
+
 const WAITING_ON: Partial<Record<Phase, string>> = {
   diagnosing: '再生できませんでした — 理由の確認中',
 }
@@ -1824,7 +1828,10 @@ export function Player({
           {!pip.out && waitingSaid && (
             <p
               role="status"
-              className="pointer-events-none absolute inset-0 m-auto flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)"
+              className={cn(
+                'pointer-events-none absolute flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)',
+                compact ? PLAYER_SENDS_PLACE : 'inset-0 m-auto',
+              )}
             >
               <Spinner className="text-(--pl-accent)" />
               {WAITING_ON[phase]}
@@ -1861,7 +1868,8 @@ export function Player({
             {...chromeHands}
             className={cn(
               PLAYER_LAYER,
-              'inset-x-0 top-[calc(50%-15rem/16)] flex -translate-y-1/2 items-center justify-center gap-x-6',
+              PLAYER_SENDS_PLACE,
+              'flex items-center justify-center gap-x-6',
             )}
           >
             {duration > 0 && backButton(PLAYER_SEND)}
