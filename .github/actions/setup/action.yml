@@ -3,9 +3,9 @@ description: Node and the installed dependencies, restored from the cache when y
 runs:
   using: composite
   steps:
-    - uses: actions/setup-node@v4
+    - uses: actions/setup-node@v7
       with:
-        node-version: '24'
+        node-version: '26'
     - id: modules
       uses: actions/cache@v6
       with:

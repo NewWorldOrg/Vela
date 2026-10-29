@@ -1,6 +1,6 @@
 services:
   app:
-    image: node:24.22.1-slim
+    image: node:26.13.0-slim
     working_dir: /code
     volumes:
       - .:/code

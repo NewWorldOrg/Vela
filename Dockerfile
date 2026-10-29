@@ -1,4 +1,4 @@
-FROM node:24.22.1-slim AS base
+FROM node:26.13.0-slim AS base
 
 FROM python:3.15.2-slim-bookworm AS marks
 
