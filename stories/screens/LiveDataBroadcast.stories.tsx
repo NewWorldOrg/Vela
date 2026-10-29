@@ -2060,3 +2060,39 @@ export const 横向きの電話では映像の右に開く: Story = {
     await opensInTheDock(canvasElement, 'right')
   },
 }
+
+export const 字幕の面からデータ放送に替えたあと歯車は最初の行から開く: Story = {
+  parameters: { screen: { width: 390, height: 844 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const player = inThePlayer(canvasElement)
+    const toggle = await player.findByRole('button', { name: 'データ放送' })
+
+    await afterTheArrival(canvasElement)
+    await userEvent.click(player.getByRole('button', { name: '設定' }), {
+      pointerEventsCheck: 0,
+    })
+    await userEvent.click(
+      within(await canvas.findByRole('region', { name: '設定' })).getByRole(
+        'button',
+        { name: '字幕を変更' },
+      ),
+    )
+    await canvas.findByRole('group', { name: '背景' })
+
+    await userEvent.click(toggle, { pointerEventsCheck: 0 })
+    await canvas.findByRole('region', { name: 'データ放送' })
+
+    await userEvent.click(player.getByRole('button', { name: '設定' }), {
+      pointerEventsCheck: 0,
+    })
+
+    const gear = await canvas.findByRole('region', { name: '設定' })
+
+    await expect(within(gear).queryByRole('group', { name: '背景' })).toBeNull()
+    await expect(
+      within(gear).getByRole('button', { name: '字幕を変更' }),
+    ).toBeInTheDocument()
+    await userEvent.click(within(gear).getByRole('button', { name: '閉じる' }))
+  },
+}

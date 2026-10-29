@@ -377,6 +377,7 @@ export function Player({
   const redrawnAt = useRedrawnThumbnail(d.id)
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [dock, setDock] = useState<HTMLDivElement | null>(null)
+  const dockOpener = useRef<HTMLElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
   const wide = useWideWindow()
@@ -1270,10 +1271,22 @@ export function Player({
   const toggleBroadcast = () => {
     if (docked && !broadcast.view.open) {
       setSettingsOpen(false)
+      dockOpener.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null
     }
 
     shell?.focus({ preventScroll: true })
     broadcast.toggle()
+  }
+
+  const closeTheDock = () => {
+    if (settingsOpen) {
+      chooseGear(false)
+    } else {
+      toggleBroadcast()
+    }
   }
 
   const chooseGear = (next: boolean) => {
@@ -1298,6 +1311,13 @@ export function Player({
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape' && dockOpen) {
+      event.preventDefault()
+      closeTheDock()
+
+      return
+    }
+
     const route = routeKey(
       event,
       {
@@ -2081,7 +2101,12 @@ export function Player({
           faceShown &&
           dock &&
           createPortal(
-            <DockFace name="データ放送" onClose={toggleBroadcast} flush>
+            <DockFace
+              name="データ放送"
+              onClose={toggleBroadcast}
+              returnTo={dockOpener}
+              flush
+            >
               {dockSide === 'under' ? (
                 <DataBroadcastBand
                   place="under"

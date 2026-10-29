@@ -1,6 +1,14 @@
 'use client'
 
-import type { KeyboardEvent, ReactNode, Ref } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+  type Ref,
+  type RefObject,
+} from 'react'
 
 import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
@@ -38,18 +46,42 @@ export function PlayerDock({
   )
 }
 
-/** One face in the dock: its name and the close at the top, the same for the gear, the caption's face and the data broadcast, and Esc closes it as the close does. */
+function focused(): HTMLElement | null {
+  return typeof document !== 'undefined' &&
+    document.activeElement instanceof HTMLElement
+    ? document.activeElement
+    : null
+}
+
+/** One face in the dock: its name and the close at the top, the same for the gear, the caption's face and the data broadcast, and Esc closes it as the close does. It takes the focus to its close when it opens, and gives it back on closing to what opened it (`returnTo`, or whatever had the focus when it opened). */
 export function DockFace({
   name,
   onClose,
+  returnTo,
   flush = false,
   children,
 }: {
   name: string
   onClose: () => void
+  returnTo?: RefObject<HTMLElement | null>
   flush?: boolean
   children: ReactNode
 }) {
+  const close = useRef<HTMLButtonElement>(null)
+  const [opener] = useState(focused)
+
+  useEffect(() => {
+    const back = returnTo?.current ?? opener
+
+    close.current?.focus({ preventScroll: true })
+
+    return () => {
+      if (back?.isConnected) {
+        back.focus({ preventScroll: true })
+      }
+    }
+  }, [opener, returnTo])
+
   const onKeyDown = (event: KeyboardEvent) => {
     if (event.key === 'Escape') {
       event.stopPropagation()
@@ -67,6 +99,7 @@ export function DockFace({
       <div className="flex items-center gap-2 border-b border-dashed border-white/12 py-1 pr-1.5 pl-4">
         <span className="text-ui font-bold">{name}</span>
         <button
+          ref={close}
           type="button"
           aria-label="閉じる"
           onClick={onClose}

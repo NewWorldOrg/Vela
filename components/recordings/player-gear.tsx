@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useRef } from 'react'
 import { createPortal } from 'react-dom'
 
 import { cn } from '@/lib/utils'
@@ -43,11 +44,13 @@ export function PlayerGear({
   children: ReactNode
 }) {
   const trigger = <SettingsIcon className="size-4" />
+  const opener = useRef<HTMLButtonElement>(null)
 
   if (dock) {
     return (
       <>
         <button
+          ref={opener}
           type="button"
           aria-label="設定"
           aria-expanded={open}
@@ -58,7 +61,11 @@ export function PlayerGear({
         </button>
         {open &&
           createPortal(
-            <DockFace name="設定" onClose={() => onOpenChange(false)}>
+            <DockFace
+              name="設定"
+              onClose={() => onOpenChange(false)}
+              returnTo={opener}
+            >
               {children}
             </DockFace>,
             dock,

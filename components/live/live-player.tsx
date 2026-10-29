@@ -301,6 +301,7 @@ export function LivePlayer({
   const [broadcastFeed] = useState(() => new DataBroadcastFeed())
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [dock, setDock] = useState<HTMLDivElement | null>(null)
+  const dockOpener = useRef<HTMLElement | null>(null)
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
@@ -859,10 +860,22 @@ export function LivePlayer({
   const toggleBroadcast = () => {
     if (docked && !broadcast.view.open) {
       setSettingsOpen(false)
+      dockOpener.current =
+        document.activeElement instanceof HTMLElement
+          ? document.activeElement
+          : null
     }
 
     shell?.focus({ preventScroll: true })
     broadcast.toggle()
+  }
+
+  const closeTheDock = () => {
+    if (settingsOpen) {
+      chooseGear(false)
+    } else {
+      toggleBroadcast()
+    }
   }
 
   const chooseGear = (next: boolean) => {
@@ -957,6 +970,13 @@ export function LivePlayer({
   }
 
   const onKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape' && dockOpen) {
+      event.preventDefault()
+      closeTheDock()
+
+      return
+    }
+
     const route = routeKey(
       event,
       {
@@ -1679,7 +1699,12 @@ export function LivePlayer({
           opened &&
           dock &&
           createPortal(
-            <DockFace name="データ放送" onClose={toggleBroadcast} flush>
+            <DockFace
+              name="データ放送"
+              onClose={toggleBroadcast}
+              returnTo={dockOpener}
+              flush
+            >
               {dockSide === 'under' ? (
                 <DataBroadcastBand
                   place="under"

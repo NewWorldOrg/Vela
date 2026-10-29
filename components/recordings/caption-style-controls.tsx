@@ -38,6 +38,16 @@ export function useGearPanel(
   const open = held ?? own
   const [panel, setPanel] = useState<GearPanel>('main')
   const [returning, setReturning] = useState(false)
+  const [wasOpen, setWasOpen] = useState(open)
+
+  if (wasOpen !== open) {
+    setWasOpen(open)
+
+    if (!open) {
+      setPanel('main')
+      setReturning(false)
+    }
+  }
   const opened = useRef(false)
   const tell = useRef(onOpenChange)
 

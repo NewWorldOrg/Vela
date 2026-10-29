@@ -6087,3 +6087,53 @@ export const 電話の幅ではデータ放送も映像のすぐ下に開き歯�
       await expect(canvasElement.querySelector('iframe')).toBeNull()
     },
   }
+
+export const 面を開くと焦点が面に移りEscで閉じると開いたボタンに戻る: Story = {
+  args: {
+    detail: detail('1266'),
+    startAt: 0,
+    pictureHref: () => DRAWN_PICTURE,
+  },
+  parameters: { screen: ON_A_PHONE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await showing(canvasElement)
+    await waitFor(() => expect(fitOfTheBar(canvasElement)).toBe('compact'))
+
+    const gear = canvas.getByRole('button', { name: '設定' })
+
+    await userEvent.click(gear)
+
+    const face = await canvas.findByRole('region', { name: '設定' })
+
+    await waitFor(() =>
+      expect(face.contains(document.activeElement)).toBe(true),
+    )
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
+    )
+    await expect(document.activeElement).toBe(gear)
+
+    await userEvent.click(gear)
+    await canvas.findByRole('region', { name: '設定' })
+    await userEvent.click(
+      within(canvas.getByRole('region', { name: '設定' })).getByRole('button', {
+        name: '閉じる',
+      }),
+    )
+    await waitFor(() =>
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
+    )
+    await expect(document.activeElement).toBe(gear)
+
+    await userEvent.click(gear)
+    await canvas.findByRole('region', { name: '設定' })
+    board(canvasElement).focus()
+    await userEvent.keyboard('{Escape}')
+    await waitFor(() =>
+      expect(canvas.queryByRole('region', { name: '設定' })).toBeNull(),
+    )
+  },
+}
