@@ -394,8 +394,7 @@ export function CrumbCurrent({ className, ...props }: ComponentProps<'b'>) {
 }
 
 /** A tool in the bar at the top of a phone held upright: a round button of 40px. */
-export const PHONE_BAR_BUTTON =
-  "size-10 [&_svg:not([class*='size-'])]:size-[calc(19rem/16)]"
+export const PHONE_BAR_BUTTON = 'size-10 [&_svg]:size-[calc(19rem/16)]!'
 
 /** The name of the screen in the bar at the top of a phone held upright. Not a heading: the screen keeps its own, read aloud. */
 export function PhoneBarTitle({ className, ...props }: ComponentProps<'p'>) {
