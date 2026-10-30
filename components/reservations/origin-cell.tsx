@@ -1,5 +1,6 @@
 import { ListIcon } from '@/components/vela/icons'
-import { cardPlace, TableCell } from '@/components/ui/table'
+import { TableCell } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 
 export function OriginCell({
   origin,

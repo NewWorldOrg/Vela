@@ -19,7 +19,6 @@ import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/banner'
 import { Button } from '@/components/ui/button'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -28,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { CheckIcon } from '@/components/vela/icons'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Spinner } from '@/components/vela/progress'

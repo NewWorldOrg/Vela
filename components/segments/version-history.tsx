@@ -30,7 +30,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { ActionRow } from '@/components/vela/action-row'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableCell,
@@ -38,6 +37,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import {
   StateSay,
   StatusCell,
@@ -49,8 +49,7 @@ import { InFull } from '@/components/vela/in-full'
 import { Spinner } from '@/components/vela/progress'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { LearningRounds } from '@/components/segments/learning-rounds'
-
-export const VERSIONS_HEADING = 'モデルのバージョンの履歴'
+import { VERSIONS_HEADING } from '@/components/segments/wording'
 
 const STATES: Record<SegmentVersionState, { word: string; tone: StateTone }> = {
   active: { word: '使用中', tone: 'ok' },

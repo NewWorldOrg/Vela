@@ -17,19 +17,17 @@ import {
   PrecisionPanel,
 } from '@/components/segments/precision-panel'
 import type { SettleSkipThreshold } from '@/components/segments/skip-threshold-panel'
-import {
-  SKIP_THRESHOLD_SLOT,
-  SkipThresholdPanel,
-} from '@/components/segments/skip-threshold-panel'
+import { SkipThresholdPanel } from '@/components/segments/skip-threshold-panel'
 import { UnreadSurface } from '@/components/segments/value-rows'
 import type {
   ChooseSegmentVersion,
   LeaveSegmentVersionToLearning,
 } from '@/components/segments/version-history'
+import { VersionHistory } from '@/components/segments/version-history'
 import {
+  SKIP_THRESHOLD_SLOT,
   VERSIONS_HEADING,
-  VersionHistory,
-} from '@/components/segments/version-history'
+} from '@/components/segments/wording'
 
 const SEGMENTS = 'CM・OP・ED の検出'
 

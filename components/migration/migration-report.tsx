@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import type { MigrationResult } from '@/repository/migration'
 import { Badge } from '@/components/ui/badge'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -13,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import {
   CheckIcon,
   MarkDots,

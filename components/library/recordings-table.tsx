@@ -16,7 +16,8 @@ import {
   RecordingRow,
 } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
-import { cardPlace, SelectEvery, TableHead } from '@/components/ui/table'
+import { SelectEvery, TableHead } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { Checkbox } from '@/components/ui/checkbox'
 import { waitsWhile } from '@/components/vela/waiting'
 import { useArrived } from '@/hooks/useArrived'
