@@ -78,7 +78,11 @@ export function Toasts({ children }: { children: ReactNode }) {
       {children}
       <div
         aria-live="polite"
-        className="pointer-events-none fixed inset-x-3 bottom-[calc(max(var(--tab-bar-cover),var(--safe-bottom))+10rem/16)] z-[55] flex justify-center"
+        className={cn(
+          'pointer-events-none fixed inset-x-3 bottom-[calc(max(var(--tab-bar-cover),var(--safe-bottom))+10rem/16)] z-[55] flex justify-center',
+          'sideways:right-auto sideways:left-[calc(80rem/16+env(safe-area-inset-left))] sideways:w-[calc((100vw-68rem/16-env(safe-area-inset-left))*0.56-24rem/16)] sideways:justify-start',
+          'sideways:[body:has([data-watching])_&]:right-3 sideways:[body:has([data-watching])_&]:left-3 sideways:[body:has([data-watching])_&]:w-auto sideways:[body:has([data-watching])_&]:justify-center',
+        )}
       >
         {shown && (
           <div

@@ -33,13 +33,13 @@ function noSlotOnTheServer(): null {
   return null
 }
 
-/** The place itself, empty until a screen puts its tools in it. Drawn only on a phone held upright. */
+/** The place itself, empty until a screen puts its tools in it. Drawn only on a phone. */
 export function PhoneBarToolsSlot() {
   return (
     <div
       id={PHONE_BAR_TOOLS}
       data-slot="phone-bar-tools"
-      className="flex shrink-0 items-center gap-2 empty:hidden"
+      className="flex shrink-0 items-center gap-2 empty:hidden sideways:min-w-0 sideways:flex-1 sideways:justify-end"
     />
   )
 }
@@ -61,12 +61,12 @@ export function PhoneBarLeadSlot() {
     <div
       id={PHONE_BAR_LEAD}
       data-slot="phone-bar-lead"
-      className="flex min-w-0 flex-1 items-center empty:hidden sideways:hidden"
+      className="flex min-w-0 flex-1 items-center gap-2.5 empty:hidden"
     />
   )
 }
 
-/** What stands in for the screen's name in the bar at the top of a phone held upright. */
+/** What stands in for the screen's name in the bar at the top of a phone, held either way. */
 export function PhoneBarLead({ children }: { children: ReactNode }) {
   const slot = useSyncExternalStore(nothingToFollow, theLead, noSlotOnTheServer)
 

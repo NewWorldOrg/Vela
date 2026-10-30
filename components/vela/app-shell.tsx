@@ -21,6 +21,7 @@ export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
         'pr-[env(safe-area-inset-right)] pb-[calc(var(--safe-bottom)+var(--tab-bar))] pl-[env(safe-area-inset-left)]',
         'sideways:pl-[calc(68rem/16+env(safe-area-inset-left))]',
         'has-[[data-scroll=within]]:h-dvh has-[[data-scroll=within]]:overflow-hidden',
+        'sideways:has-[[data-slot=sideways-panes]]:h-dvh sideways:has-[[data-slot=sideways-panes]]:overflow-hidden sideways:has-[[data-slot=sideways-panes]]:pb-0',
         className,
       )}
       {...props}
@@ -357,6 +358,7 @@ export function ScreenMain({
       className={cn(
         rises && 'screen-rises',
         'min-h-0 flex-1',
+        'sideways:has-[[data-slot=sideways-panes]]:flex sideways:has-[[data-slot=sideways-panes]]:flex-col sideways:has-[[data-slot=sideways-panes]]:pb-0',
         SCREEN_WIDTHS[width],
         className,
       )}

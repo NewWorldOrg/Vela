@@ -50,7 +50,7 @@ export function AppTopBar() {
           </PhoneBarBack>
         )}
         <PhoneBarLeadSlot />
-        <PhoneBarTitle className="upright:[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden">
+        <PhoneBarTitle className="phone:[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden sideways:[&:has(~[data-slot=phone-bar-tools]:not(:empty))]:flex-none">
           {phone.title}
         </PhoneBarTitle>
         <PhoneBarToolsSlot />
