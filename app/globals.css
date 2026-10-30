@@ -40,8 +40,9 @@
   }
 }
 
+/* Dark, and inside anything marked `data-ink-face`: the panels beside the picture, which stay on the player's ink whatever the theme. */
 @custom-variant dark {
-  &:where(.dark, .dark *) {
+  &:where(.dark, .dark *, [data-ink-face], [data-ink-face] *) {
     @slot;
   }
 
@@ -280,7 +281,8 @@
     --logo-plate: #fffdf8;
   }
 
-  :root {
+  :root,
+  [data-ink-face] {
     @variant dark {
       color-scheme: dark;
       --bg: #141317;

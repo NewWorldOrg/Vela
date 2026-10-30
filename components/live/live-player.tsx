@@ -1799,7 +1799,7 @@ export function LivePlayer({
             name={screenFace}
             onClose={() => setScreenFace(undefined)}
             returnTo={dockOpener}
-            tone="page"
+            inPageParts
             flush
           >
             {side?.faces[screenFace]}
