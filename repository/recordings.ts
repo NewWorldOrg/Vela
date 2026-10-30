@@ -116,6 +116,8 @@ export interface Recording {
   thumbnail: ThumbnailState
   thumbnailLabel?: string
   thumbnailHref?: string
+  /** How far the signed-in viewer watched, in seconds; none where they have not. */
+  watchedSec?: number
 }
 
 export interface RecordingsFilter {
@@ -555,7 +557,20 @@ export function toRecording(
     thumbnailLabel: thumbnail.label,
     thumbnailHref:
       thumbnail.state === 'shot' ? videoThumbnailHref(r.id) : undefined,
+    ...watchedOf(r),
   }
+}
+
+function watchedOf(r: RecordingResponder): { watchedSec?: number } {
+  const at = r.watchedPositionSec
+
+  if (at === null || at === undefined) {
+    return {}
+  }
+
+  const sec = Number(at)
+
+  return Number.isFinite(sec) ? { watchedSec: sec } : {}
 }
 
 function toDetail(
