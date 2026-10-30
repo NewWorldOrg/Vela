@@ -512,6 +512,12 @@ test('a hit already reserved is marked, and the hit beside it is not', async () 
       ['131-1310-40002', undefined],
     ],
   )
+  assert.deepEqual(
+    result.outcome.state === 'searched'
+      ? result.outcome.found.hits.map((hit) => hit.booking?.standing)
+      : [],
+    ['scheduled', undefined],
+  )
 })
 
 test('a reservation that is no longer standing marks nothing', async () => {

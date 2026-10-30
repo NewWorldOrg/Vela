@@ -26,6 +26,7 @@ import {
   genreDisplayOf,
 } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
+import type { ProgramBooking } from '@/repository/programs'
 
 export type { RawSearchCondition, SearchCondition }
 
@@ -43,6 +44,8 @@ export interface SearchHit {
   genre: Genre
   genreLabel: string
   booked?: boolean
+  /** The reservation a booked programme holds, so the phone's circle can take it back. */
+  booking?: ProgramBooking
 }
 
 export interface SearchHits {
@@ -76,7 +79,7 @@ function dayEndOf(date: string): Date {
 function toHit(
   programme: Programme,
   channels: GuideChannel[],
-  booked: boolean,
+  booking: ProgramBooking | undefined,
 ): SearchHit {
   const channelId = `${programme.networkId}-${programme.serviceId}`
   const channel = channels.find((c) => c.id === channelId)
@@ -98,7 +101,8 @@ function toHit(
     description: programme.summary || undefined,
     genre: genre.slug,
     genreLabel: genre.label,
-    booked: booked || undefined,
+    booked: booking ? true : undefined,
+    ...(booking ? { booking } : {}),
   }
 }
 
@@ -156,7 +160,7 @@ export async function searchPrograms(
       state: 'searched',
       found: {
         hits: page.items.map((programme) =>
-          toHit(programme, channels, bookings.has(programme.id)),
+          toHit(programme, channels, bookings.get(programme.id)),
         ),
         total: page.total,
         page: page.currentPage,
