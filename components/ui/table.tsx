@@ -11,10 +11,12 @@ function Table({
   className,
   containerClassName,
   waiting = false,
+  cards = false,
   ...props
 }: React.ComponentProps<'table'> & {
   containerClassName?: string
   waiting?: boolean
+  cards?: boolean
 }) {
   const wait = waitsWhile(waiting)
 
@@ -31,6 +33,7 @@ function Table({
     >
       <table
         data-slot="table"
+        data-cards={cards ? '' : undefined}
         className={cn(
           'w-full caption-bottom border-separate border-spacing-0 text-ui',
           className,
@@ -46,6 +49,24 @@ function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
 }
 
 export const READABLE_LINE = 'max-w-[calc(880rem/16)]'
+
+/**
+ * Where a cell goes when its table, marked `data-cards`, lays each row as a card on a phone:
+ * `select` the row's checkbox at the card's left, `end` a fold or a way to the detail at its top
+ * right, `lead` the name across the first line, `meta` a value that says what it is (a channel, a
+ * date, a length, a size) on the next, `field` a value read with its column's name after them,
+ * and `actions` the row's buttons on the last. A cell with none takes the card's whole width.
+ */
+export type CardPlace = 'select' | 'end' | 'lead' | 'meta' | 'field' | 'actions'
+
+export function cardPlace(
+  place: CardPlace,
+  label?: string,
+): { 'data-card': CardPlace; 'data-label'?: string } {
+  return label === undefined
+    ? { 'data-card': place }
+    : { 'data-card': place, 'data-label': label }
+}
 
 function TableColumns({ widths }: { widths: (string | undefined)[] }) {
   return (
@@ -133,7 +154,20 @@ function TableCaption({
   )
 }
 
+/** The checkbox over every shown row, with the words that say so where the table is a list of cards. */
+function SelectEvery({ children }: { children: React.ReactNode }) {
+  return (
+    <label className="flex items-center gap-4">
+      {children}
+      <span className="text-sub font-medium tracking-normal text-ink-2 min-[600px]:hidden">
+        すべて選ぶ
+      </span>
+    </label>
+  )
+}
+
 export {
+  SelectEvery,
   Table,
   TableColumns,
   TableHeader,

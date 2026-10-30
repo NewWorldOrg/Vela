@@ -3019,3 +3019,204 @@
     font-size: 16px;
   }
 }
+
+/* A list on a phone: each row of a table marked `data-cards` is laid as a card of two or three lines, the name first, the values that say themselves next, the values that need their column's name after, and the row's buttons last. Unlayered, so it outranks the widths and paddings a cell is given for the table. */
+@media (width < 600px) {
+  table[data-cards] {
+    display: block;
+    width: 100%;
+    min-width: 0 !important;
+  }
+
+  table[data-cards] > colgroup {
+    display: none;
+  }
+
+  table[data-cards] > thead,
+  table[data-cards] > tbody {
+    display: block;
+  }
+
+  table[data-cards] > thead {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background-color: var(--surface);
+  }
+
+  table[data-cards] > thead:not(:has([data-card='select'])) {
+    display: none;
+  }
+
+  table[data-cards] > thead > tr {
+    display: flex;
+    align-items: center;
+    padding-inline: calc(14rem / 16);
+    border-bottom: 1px solid var(--line);
+  }
+
+  table[data-cards] > thead > tr > th:not([data-card='select']) {
+    display: none;
+  }
+
+  table[data-cards] > thead > tr > th[data-card='select'] {
+    position: static;
+    display: block;
+    width: 100%;
+    padding: calc(12rem / 16) 0;
+    border: 0;
+  }
+
+  table[data-cards] > tbody > tr {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: calc(14rem / 16);
+    padding: calc(12rem / 16) calc(14rem / 16) calc(13rem / 16);
+    border-bottom: 1px dashed var(--line);
+  }
+
+  table[data-cards] > tbody > tr:last-child {
+    border-bottom: 0;
+  }
+
+  table[data-cards] > tbody > tr:has(> [data-card='select']) {
+    padding-left: calc(48rem / 16);
+  }
+
+  table[data-cards] > tbody > tr::before,
+  table[data-cards] > tbody > tr::after {
+    content: '';
+    flex-basis: 100%;
+    height: 0;
+  }
+
+  table[data-cards] > tbody > tr::before {
+    order: 3;
+  }
+
+  table[data-cards] > tbody > tr::after {
+    order: 5;
+  }
+
+  table[data-cards] > tbody > tr > td {
+    display: block;
+    flex: 0 1 auto;
+    min-width: 0;
+    height: auto;
+    padding: 0;
+    border: 0;
+    text-align: left;
+    white-space: normal;
+  }
+
+  table[data-cards] > tbody > tr > [data-card='select'] {
+    position: absolute;
+    top: calc(14rem / 16);
+    left: calc(14rem / 16);
+    line-height: 0;
+  }
+
+  table[data-cards] > tbody > tr > [data-card='end'] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+  }
+
+  table[data-cards] > tbody > tr > [data-card='end'] > * {
+    width: auto;
+    height: auto;
+    padding: 0;
+  }
+
+  table[data-cards] > tbody > tr:has(> [data-card='end']) > [data-card='lead'] {
+    padding-right: calc(30rem / 16);
+  }
+
+  table[data-cards] > tbody > tr > [data-card='lead'] {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  table[data-cards] > tbody > tr > [data-card='meta'] {
+    order: 2;
+    margin-top: calc(4rem / 16);
+    color: var(--ink-2);
+    white-space: nowrap;
+  }
+
+  table[data-cards] > tbody > tr > [data-card='field'] {
+    order: 4;
+    display: inline-flex;
+    align-items: baseline;
+    gap: calc(7rem / 16);
+    margin-top: calc(6rem / 16);
+  }
+
+  table[data-cards] > tbody > tr > [data-card='field']::before {
+    content: attr(data-label);
+    flex-shrink: 0;
+    font-size: var(--text-micro);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    color: var(--ink-3);
+  }
+
+  table[data-cards] > tbody > tr > [data-card='actions'] {
+    order: 6;
+    display: flex;
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: calc(9rem / 16);
+    margin-top: calc(10rem / 16);
+  }
+
+  table[data-cards] > tbody > tr > [data-card='actions']:empty {
+    display: none;
+  }
+
+  table[data-cards] > tbody > tr > td:not([data-card]) {
+    order: 7;
+    flex-basis: 100%;
+  }
+
+  table[data-cards] > tbody > tr:not(:has(> [data-card])) {
+    display: block;
+    padding: 0;
+  }
+
+  table[data-cards] > tbody > tr:has(+ tr:not(:has(> [data-card]))) {
+    border-bottom: 0;
+  }
+
+  table[data-cards] [data-slot='action-row'] {
+    display: grid;
+    grid-auto-flow: row;
+    width: 100%;
+  }
+
+  table[data-cards] [data-card='actions'] > [data-slot='action-row'] {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  table[data-cards]
+    :is([data-slot='button'], [data-slot='alert-dialog-trigger']) {
+    height: calc(40rem / 16);
+  }
+
+  table[data-cards]
+    [data-card='actions']
+    :is([data-slot='button'], [data-slot='alert-dialog-trigger']) {
+    width: auto;
+    min-width: calc(104rem / 16);
+  }
+}
