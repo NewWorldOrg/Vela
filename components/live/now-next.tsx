@@ -1,4 +1,5 @@
 import type { LiveWatching } from '@/repository/live'
+import { cn } from '@/lib/utils'
 import { SPAN_DASH } from '@/lib/format'
 import { saysSubtitled } from '@/lib/program-title'
 import { Badge } from '@/components/ui/badge'
@@ -9,7 +10,13 @@ import {
   ProgramExtended,
 } from '@/components/guide/program-description'
 
-export function NowNext({ watching }: { watching: LiveWatching }) {
+export function NowNext({
+  watching,
+  className,
+}: {
+  watching: LiveWatching
+  className?: string
+}) {
   const { channel, progressPct, nowLabel, restMin } = watching
   const programme = channel.now
 
@@ -21,7 +28,10 @@ export function NowNext({ watching }: { watching: LiveWatching }) {
   return (
     <section
       data-slot="now-next"
-      className="mt-4 rounded-lg bg-surface px-5 pt-[calc(17rem/16)] pb-[calc(19rem/16)]"
+      className={cn(
+        'mt-4 rounded-lg bg-surface px-5 pt-[calc(17rem/16)] pb-[calc(19rem/16)]',
+        className,
+      )}
     >
       <div className="flex flex-wrap items-baseline gap-[calc(11rem/16)]">
         <ChannelMark

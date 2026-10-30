@@ -3613,7 +3613,7 @@ export const 電話の幅では再生を真ん中に置き歯車の仲間を上�
       ).toBeLessThan(1)
     } else {
       await expect(canvas.getByRole('status')).toHaveTextContent(
-        /^(バッファリング中|チャンネルを準備しています)$/,
+        /^(バッファリング中|.+を準備しています)$/,
       )
     }
 
@@ -3725,7 +3725,7 @@ export const 電話の幅では準備中の印を真ん中の再生の位置に�
     await waitFor(() => expect(liveFit(canvasElement)).toBe('compact'))
 
     const plate = await within(canvasElement).findByText(
-      'チャンネルを準備しています',
+      'みなと総合1を準備しています',
       { exact: false },
     )
 
@@ -3801,5 +3801,167 @@ export const 横向きの電話では送っても上の帯が見えている: St
 
     window.scrollTo(0, 0)
     await waitFor(() => expect(liveFit(canvasElement)).not.toBeNull())
+  },
+}
+
+const UPRIGHT = { width: 390, height: 844 }
+const NARROW_UPRIGHT = { width: 360, height: 800 }
+
+const recorded: string[] = []
+const takenBack: string[] = []
+
+const recordIt = async (programmeId: string) => {
+  recorded.push(programmeId)
+
+  return { state: 'ok' as const, reservationId: 'r-made' }
+}
+
+const takeItBack = async (reservationId: string) => {
+  takenBack.push(reservationId)
+
+  return { state: 'ok' as const }
+}
+
+function slotted(canvasElement: HTMLElement, slot: string): HTMLElement {
+  const found = canvasElement.querySelector(`[data-slot="${slot}"]`)
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`nothing is drawn as ${slot}`)
+  }
+
+  return found
+}
+
+export const 電話_選局前は局を全幅の行で並べる: Story = {
+  args: { screen: UNCHOSEN },
+  parameters: {
+    screen: UPRIGHT,
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const rows = slotted(canvasElement, 'phone-channel-rows')
+
+    await expect(rows).toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-grid"]'),
+    ).not.toBeVisible()
+    await expect(rows.getBoundingClientRect().left).toBe(0)
+    await expect(rows.getBoundingClientRect().width).toBe(window.innerWidth)
+
+    const first = within(rows).getAllByRole('button')[0]
+
+    await expect(first.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+      80,
+    )
+
+    await userEvent.click(
+      within(rows).getByRole('button', { name: /みなと教育1/ }),
+    )
+    await expect(getRouter().push).toHaveBeenCalledWith('/live?ch=32737-1032', {
+      scroll: false,
+    })
+  },
+}
+
+export const 電話_観ている間は映像を上に全幅で置き局を下に続ける: Story = {
+  args: { onRecord: recordIt, onTakeTheRecordingBack: takeItBack },
+  parameters: { screen: UPRIGHT },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const board = slotted(canvasElement, 'live-player')
+    const box = board.getBoundingClientRect()
+
+    await expect(box.left).toBe(0)
+    await expect(box.width).toBe(window.innerWidth)
+    await expect(box.top).toBeLessThanOrEqual(1)
+    await expect(
+      canvasElement.querySelector('[data-slot="top-bar"]'),
+    ).not.toBeVisible()
+
+    const info = slotted(canvasElement, 'phone-live-info')
+    const rows = slotted(canvasElement, 'phone-watched-rows')
+
+    await expect(info.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      box.bottom - 1,
+    )
+    await expect(rows.getBoundingClientRect().top).toBeGreaterThan(
+      info.getBoundingClientRect().top,
+    )
+    await expect(
+      canvasElement.querySelector('[data-slot="channel-list"]'),
+    ).not.toBeVisible()
+
+    const watched = within(rows).getByRole('button', { pressed: true })
+
+    await expect(watched).toHaveTextContent('みなと総合1')
+    await expect(
+      within(canvasElement).getByRole('button', { name: '閉じる' }),
+    ).toBeInTheDocument()
+  },
+}
+
+export const 電話_観ている番組を1回で録画予約して知らせで取り消す: Story = {
+  args: { onRecord: recordIt, onTakeTheRecordingBack: takeItBack },
+  parameters: { screen: UPRIGHT },
+  beforeEach: () => {
+    recorded.length = 0
+    takenBack.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const info = within(slotted(canvasElement, 'phone-live-info'))
+
+    await userEvent.click(info.getByRole('button', { name: 'この番組を録画' }))
+    await waitFor(() => expect(recorded).toHaveLength(1))
+
+    const toast = await waitFor(() => slotted(canvasElement, 'toast'))
+
+    await expect(toast).toHaveTextContent('録画予約しました')
+
+    const tabs = canvasElement
+      .querySelector('[data-slot="tab-bar"]')!
+      .getBoundingClientRect()
+
+    await expect(toast.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      tabs.top,
+    )
+
+    await userEvent.click(
+      within(toast).getByRole('button', { name: '取り消す' }),
+    )
+    await expect(takenBack).toEqual(['r-made'])
+    await expect(canvasElement.querySelector('[data-slot="toast"]')).toBeNull()
+  },
+}
+
+export const 電話_閉じると局の一覧に戻る: Story = {
+  parameters: { screen: NARROW_UPRIGHT },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '閉じる' }),
+    )
+    await expect(getRouter().push).toHaveBeenCalledWith('/live', {
+      scroll: false,
+    })
+  },
+}
+
+export const 電話_観ている間に別の局を押すと映像を閉じずに替える: Story = {
+  parameters: { screen: NARROW_UPRIGHT },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const rows = within(slotted(canvasElement, 'phone-watched-rows'))
+    const other = rows.getByRole('button', { name: /中央テレビ1/ })
+
+    await userEvent.click(other)
+
+    await expect(other).toHaveAttribute('aria-pressed', 'true')
+    await expect(other).toHaveTextContent(/準備中|視聴中/)
+    await expect(slotted(canvasElement, 'live-player')).toBeVisible()
+    await expect(window.scrollY).toBe(0)
   },
 }

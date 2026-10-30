@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  minutesLeft,
   nextProgrammeChangeAt,
   progressOf,
   screenAsOf,
@@ -295,4 +296,14 @@ test('a channel the light read did not mention keeps the count the page was draw
 
   assert.equal(screenAsOf(screen, NOW, { '9-9': 7 }).channels[0].viewers, 2)
   assert.equal(screenAsOf(screen, NOW).channels[0].viewers, 2)
+})
+
+test('a row says the whole minutes a programme has left, and nothing past its end or without an end', () => {
+  const at = new Date('2026-10-30T12:04:20Z')
+
+  assert.equal(minutesLeft('2026-10-30T13:00:00Z', at), 56)
+  assert.equal(minutesLeft('2026-10-30T12:04:21Z', at), 1)
+  assert.equal(minutesLeft('2026-10-30T12:04:20Z', at), undefined)
+  assert.equal(minutesLeft(undefined, at), undefined)
+  assert.equal(minutesLeft('2026-10-30T13:00:00Z', undefined), undefined)
 })

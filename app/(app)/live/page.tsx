@@ -15,7 +15,7 @@ import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
 import { getLiveScreen } from '@/repository/live'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { LiveView } from '@/components/live/live-page'
-import { takeTicket } from './actions'
+import { recordTheProgramme, takeTheRecordingBack, takeTicket } from './actions'
 
 export const metadata: Metadata = { title: 'ライブ' }
 
@@ -38,6 +38,8 @@ export default async function Page({
       <LiveView
         screen={screen}
         onTakeTicket={takeTicket}
+        onRecord={recordTheProgramme}
+        onTakeTheRecordingBack={takeTheRecordingBack}
         channelsFolded={flagOf(
           jar.get(LIVE_CHANNELS_FOLDED)?.value,
           FOLD_SPELLING,
