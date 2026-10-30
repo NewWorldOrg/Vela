@@ -19,7 +19,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -28,6 +27,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'

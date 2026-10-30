@@ -5,7 +5,6 @@ import type { AuthMethod } from '@/repository/auth'
 import type { RevokeResult, SessionRow } from '@/repository/sessions'
 import { Badge } from '@/components/ui/badge'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -14,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import {
   DeviceDesktopIcon,
   DevicePhoneIcon,

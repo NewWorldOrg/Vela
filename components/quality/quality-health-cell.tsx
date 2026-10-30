@@ -1,6 +1,7 @@
 import type { QualityTunerCell } from '@/repository/quality'
 import type { QualityLevel } from '@/lib/quality'
-import { cardPlace, TableCell } from '@/components/ui/table'
+import { TableCell } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { InFull } from '@/components/vela/in-full'

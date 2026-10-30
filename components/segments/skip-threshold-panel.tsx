@@ -16,8 +16,7 @@ import { FieldError } from '@/components/vela/field'
 import { Spinner } from '@/components/vela/progress'
 import { Surface } from '@/components/vela/surface'
 import { ValueRow, ValueRows } from '@/components/segments/value-rows'
-
-export const SKIP_THRESHOLD_SLOT = 'skip-threshold'
+import { SKIP_THRESHOLD_SLOT } from '@/components/segments/wording'
 
 const THRESHOLD = '閾値'
 

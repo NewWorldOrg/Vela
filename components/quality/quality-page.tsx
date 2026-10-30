@@ -14,7 +14,6 @@ import { TermTip } from '@/components/vela/term-tip'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -23,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import {
   ADMIN_LIST_HEIGHT_CAP,
   Crumb,

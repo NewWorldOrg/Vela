@@ -12,7 +12,7 @@ import type {
 import { cn } from '@/lib/utils'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { Badge } from '@/components/ui/badge'
-import { READABLE_LINE } from '@/components/ui/table'
+import { READABLE_LINE } from '@/components/ui/table-cards'
 import { Button } from '@/components/ui/button'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { ServiceId } from '@/components/channels/service-id'

@@ -17,7 +17,6 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  cardPlace,
   SelectEvery,
   Table,
   TableBody,
@@ -26,6 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PlusIcon, ReservationIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
