@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -39,7 +46,16 @@ import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
 import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
+import { ProgramBooking } from '@/components/guide/program-booking'
+import { ProgramDetailBody } from '@/components/guide/program-detail'
+import { ChannelStrip } from '@/components/guide/channel-strip'
+import { ChannelDayList } from '@/components/guide/channel-day-list'
+import { usePhoneWidth } from '@/hooks/usePhoneWidth'
 import { ScreenMain } from '@/components/vela/app-shell'
+import {
+  FilterFoldButton,
+  foldedFiltersOf,
+} from '@/components/vela/filter-fold'
 
 export function GuideView({
   guide,
@@ -108,6 +124,22 @@ export function GuideView({
     : null
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const phone = usePhoneWidth()
+  const [listedId, setListedId] = useState<string>()
+  const listed =
+    shownGuide.channels.find((c) => c.id === listedId) ?? shownGuide.channels[0]
+  const listedPrograms = useMemo(
+    () =>
+      shownGuide.programs
+        .filter((p) => p.channelId === listed?.id)
+        .sort((a, b) => a.startMin - b.startMin),
+    [shownGuide.programs, listed?.id],
+  )
+  const toolsId = useId()
+  const narrowed =
+    (guide.kind === 'terrestrial' ? 0 : 1) + (foldable && folded ? 1 : 0)
+  const foldedOnAPhone = foldedFiltersOf(toolsOpen, 'handheld')
 
   const [extras, setExtras] = useState<
     Record<string, ProgramExtras | 'failed'>
@@ -188,21 +220,12 @@ export function GuideView({
       scroll="within"
       className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)]">
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] sideways:sr-only">
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
-      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5">
-        <SegmentedControl
-          aria-label="放送の種別"
-          options={CHANNEL_KINDS}
-          value={guide.kind}
-          onValueChange={(next) =>
-            patch({ kind: next === 'terrestrial' ? null : next })
-          }
-        />
-
-        <div className="flex items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5 max-[600px]:gap-x-2.5 max-[600px]:gap-y-3 max-[600px]:py-2.5 sideways:gap-x-2.5 sideways:py-2">
+        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 sideways:order-first">
           <IconButton
             aria-label="前の日"
             size="sm"
@@ -233,23 +256,53 @@ export function GuideView({
           )}
         </div>
 
-        {foldable && (
-          <SubChannelToggle shown={!folded} onShownChange={(on) => fold(!on)} />
-        )}
+        <FilterFoldButton
+          open={toolsOpen}
+          onOpenChange={setToolsOpen}
+          controls={toolsId}
+          narrowed={narrowed}
+          on="handheld"
+          className="ml-auto"
+        />
 
-        <button
-          type="button"
-          data-opens="collection"
-          onClick={() => setCollectionOpen(true)}
-          className={cn(BAND_PRESS, BAND_CONTROL, 'ml-auto max-[700px]:ml-0')}
+        <div
+          id={toolsId}
+          className={cn(
+            'contents max-[600px]:flex max-[600px]:w-full max-[600px]:flex-wrap max-[600px]:items-center max-[600px]:gap-2.5 max-[600px]:border-t max-[600px]:border-dashed max-[600px]:border-line max-[600px]:pt-3 sideways:flex sideways:w-full sideways:flex-wrap sideways:items-center sideways:gap-2.5',
+            foldedOnAPhone,
+          )}
         >
-          <AntennaIcon />
-          収集状態
-        </button>
-        <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
-          <SearchIcon />
-          番組を検索
-        </Link>
+          <SegmentedControl
+            aria-label="放送の種別"
+            className="-order-1 max-[600px]:order-none sideways:order-none"
+            options={CHANNEL_KINDS}
+            value={guide.kind}
+            onValueChange={(next) =>
+              patch({ kind: next === 'terrestrial' ? null : next })
+            }
+          />
+
+          {foldable && (
+            <SubChannelToggle
+              shown={!folded}
+              onShownChange={(on) => fold(!on)}
+            />
+          )}
+
+          <button
+            type="button"
+            data-opens="collection"
+            onClick={() => setCollectionOpen(true)}
+            className={cn(BAND_PRESS, BAND_CONTROL, 'ml-auto max-[700px]:ml-0')}
+          >
+            <AntennaIcon />
+            収集状態
+          </button>
+          <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
+            <SearchIcon />
+            番組を検索
+          </Link>
+        </div>
       </div>
 
       {guide.health && (
@@ -287,20 +340,79 @@ export function GuideView({
         <EmptyState titleLevel={2} title="この日の番組情報がありません" />
       ) : (
         <>
-          <GuideGrid
-            key={guide.kind}
-            channels={shownGuide.channels}
-            programs={shownGuide.programs}
-            dayKey={guide.day.date}
-            windowStartHour={guide.windowStartHour}
-            windowHours={guide.windowHours}
-            nowMin={guide.nowMin}
-            nowLabel={guide.nowLabel}
-            selectedId={panelOpen ? selected?.id : undefined}
-            onSelect={select}
-            glyphLoads={glyphLoads}
-          />
-          {shown && (
+          {listed && (
+            <div
+              data-guide-phone
+              className="hidden min-h-0 flex-1 flex-col max-[600px]:flex"
+            >
+              <ChannelStrip
+                channels={shownGuide.channels}
+                shown={new Set([listed.id])}
+                onPick={(c) => {
+                  setListedId(c.id)
+                  setPanelOpen(false)
+                }}
+                className="mb-2.5"
+              />
+              <ChannelDayList
+                channelId={listed.id}
+                dayKey={guide.day.date}
+                programs={listedPrograms}
+                nowMin={guide.nowMin}
+                nowLabel={guide.nowLabel}
+                openId={phone && panelOpen ? selected?.id : undefined}
+                onToggle={(program) =>
+                  panelOpen && selected?.id === program.id
+                    ? setPanelOpen(false)
+                    : select(program)
+                }
+                detailOf={(program) => {
+                  const read =
+                    detailed && detailed.id === program.id ? detailed : program
+
+                  return (
+                    <ProgramDetailBody
+                      program={read}
+                      extras={extrasState ?? 'ready'}
+                      channel={listed}
+                      dayLabel={guide.day.label}
+                      onAir={isOnAir(program, guide.nowMin)}
+                      onReserve={onReserve}
+                      reservation={
+                        read.booking && (
+                          <ProgramBooking
+                            booking={read.booking}
+                            title={read.title}
+                            channel={listed}
+                            onCancel={onCancel}
+                            onRevise={onRevise}
+                          />
+                        )
+                      }
+                    />
+                  )
+                }}
+              />
+            </div>
+          )}
+          {!phone && (
+            <div className="flex min-h-0 flex-1 flex-col max-[600px]:hidden">
+              <GuideGrid
+                key={guide.kind}
+                channels={shownGuide.channels}
+                programs={shownGuide.programs}
+                dayKey={guide.day.date}
+                windowStartHour={guide.windowStartHour}
+                windowHours={guide.windowHours}
+                nowMin={guide.nowMin}
+                nowLabel={guide.nowLabel}
+                selectedId={panelOpen ? selected?.id : undefined}
+                onSelect={select}
+                glyphLoads={glyphLoads}
+              />
+            </div>
+          )}
+          {shown && !phone && (
             <ProgramPanel
               program={detailed ?? shown}
               extras={extrasState}
