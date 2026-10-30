@@ -1,13 +1,22 @@
 import type { QualityTunerCell } from '@/repository/quality'
 import type { QualityLevel } from '@/lib/quality'
-import { TableCell } from '@/components/ui/table'
+import { cardPlace, TableCell } from '@/components/ui/table'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { QualityChip } from '@/components/quality/signal-quality-chip'
 import { InFull } from '@/components/vela/in-full'
 
-export function QualityHealthCell({ cell }: { cell: QualityTunerCell }) {
+export function QualityHealthCell({
+  cell,
+  label,
+}: {
+  cell: QualityTunerCell
+  label: string
+}) {
   return (
-    <TableCell className="align-top whitespace-nowrap">
+    <TableCell
+      {...cardPlace('field', label)}
+      className="align-top whitespace-nowrap"
+    >
       <StatusCell>
         {cell.level !== undefined && (
           <Reading level={cell.level} sub={cell.sub} />

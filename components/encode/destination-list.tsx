@@ -15,6 +15,7 @@ import type {
   EncodeRemoved,
 } from '@/repository/encode-terms'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -77,6 +78,7 @@ export function DestinationList({
       </div>
 
       <Table
+        cards
         className="table-fixed min-w-[calc(810rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
@@ -100,22 +102,27 @@ export function DestinationList({
               key={destination.id}
               className={destination.retired ? RETIRED_ROW : undefined}
             >
-              <TableCell>
+              <TableCell {...cardPlace('lead')}>
                 <DefinitionName
                   label={destination.label}
                   retired={destination.retired}
                 />
               </TableCell>
-              <TableCell className="font-code">
+              <TableCell
+                {...cardPlace('field', '出力ルート')}
+                className="font-code wrap-anywhere"
+              >
                 {destination.outputRoot}
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', '既定のプロファイル')}>
                 {destination.defaultProfileLabel ?? (
                   <span className="text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
-              <TableCell className={STAMP}>{destination.definedAt}</TableCell>
-              <TableCell className="text-right">
+              <TableCell {...cardPlace('field', '作成')} className={STAMP}>
+                {destination.definedAt}
+              </TableCell>
+              <TableCell {...cardPlace('actions')} className="text-right">
                 {!destination.retired && (
                   <ActionRow>
                     <ChangeDestinationButton

@@ -3,7 +3,8 @@
 import type { ReservationOutcome } from '@/repository/reservation-outcomes'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
-import { TableCell, TableRow } from '@/components/ui/table'
+import { cardPlace, TableCell, TableRow } from '@/components/ui/table'
+import { WHEN_LABELS } from '@/lib/when-terms'
 import { OriginCell } from '@/components/reservations/origin-cell'
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/vela/icons'
 import { StatusCell } from '@/components/recordings/status-cell'
@@ -31,7 +32,7 @@ export function OutcomeRow({
   return (
     <>
       <TableRow className={rowArrivesIn(nth)} style={delayOf(rowDelayMs(nth))}>
-        <TableCell className="align-top">
+        <TableCell {...cardPlace('end')} className="align-top">
           {instead.length > 0 && (
             <button
               type="button"
@@ -44,12 +45,15 @@ export function OutcomeRow({
             </button>
           )}
         </TableCell>
-        <TableCell className="align-top whitespace-normal">
+        <TableCell
+          {...cardPlace('lead')}
+          className="align-top whitespace-normal"
+        >
           <b className="block text-[calc(13rem/16)] font-bold">
             {outcome.title}
           </b>
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell {...cardPlace('meta')} className="align-top">
           <span className="flex items-center gap-2">
             <ChannelMark
               logo={outcome.channelLogo}
@@ -59,19 +63,28 @@ export function OutcomeRow({
             <span className="min-w-0">{outcome.channelName}</span>
           </span>
         </TableCell>
-        <TableCell className="align-top font-code text-ink-2">
+        <TableCell
+          {...cardPlace('meta')}
+          className="align-top font-code text-ink-2"
+        >
           {outcome.whenLabel}
         </TableCell>
         <OriginCell origin={outcome.origin} ruleName={outcome.ruleName} />
-        <TableCell className="text-right align-top font-code tabular-nums text-ink-2">
+        <TableCell
+          {...cardPlace('field', '優先度')}
+          className="text-right align-top font-code tabular-nums text-ink-2"
+        >
           {outcome.priority}
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell {...cardPlace('field', '分類')} className="align-top">
           <StatusCell>
             <OutcomeKindChip outcome={outcome} say />
           </StatusCell>
         </TableCell>
-        <TableCell className="align-top font-code text-ink-2">
+        <TableCell
+          {...cardPlace('field', WHEN_LABELS.taken)}
+          className="align-top font-code text-ink-2"
+        >
           {outcome.occurredLabel}
         </TableCell>
       </TableRow>

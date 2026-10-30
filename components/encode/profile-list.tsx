@@ -20,6 +20,7 @@ import {
   RESOLUTION_LABEL,
 } from '@/repository/encode-terms'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -78,6 +79,7 @@ export function ProfileList({
       </div>
 
       <Table
+        cards
         className="table-fixed min-w-[calc(930rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
@@ -101,29 +103,40 @@ export function ProfileList({
               key={profile.id}
               className={profile.retired ? RETIRED_ROW : undefined}
             >
-              <TableCell>
+              <TableCell {...cardPlace('lead')}>
                 <DefinitionName
                   label={profile.label}
                   retired={profile.retired}
                 />
               </TableCell>
-              <TableCell className="font-code">
+              <TableCell
+                {...cardPlace('field', 'コーデック')}
+                className="font-code"
+              >
                 {wordFor(CODEC_LABEL, profile.codec)}
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', '解像度')}>
                 {wordFor(RESOLUTION_LABEL, profile.resolution)}
               </TableCell>
-              <TableCell className="font-code tabular-nums">
+              <TableCell
+                {...cardPlace('field', '品質(CRF)')}
+                className="font-code tabular-nums"
+              >
                 {profile.rateFactor}
               </TableCell>
-              <TableCell className="font-code tabular-nums">
+              <TableCell
+                {...cardPlace('field', '品質(QP)')}
+                className="font-code tabular-nums"
+              >
                 {profile.quantiser}
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', 'インタレース解除')}>
                 {wordFor(DEINTERLACE_LABEL, profile.deinterlace)}
               </TableCell>
-              <TableCell className={STAMP}>{profile.definedAt}</TableCell>
-              <TableCell className="text-right">
+              <TableCell {...cardPlace('field', '作成')} className={STAMP}>
+                {profile.definedAt}
+              </TableCell>
+              <TableCell {...cardPlace('actions')} className="text-right">
                 {!profile.retired && (
                   <ActionRow>
                     <ChangeProfileButton

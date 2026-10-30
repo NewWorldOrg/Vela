@@ -150,6 +150,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
       {items.length > 0 ? (
         <>
           <Table
+            cards
             className="table-fixed min-w-[calc(1040rem/16)]"
             waiting={waiting}
             containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"

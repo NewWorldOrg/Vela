@@ -68,7 +68,7 @@ export function ScanBar({
 
   return (
     <>
-      <div className="mt-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
+      <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-[calc(18rem/16)] rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
         <SearchIcon className="size-4 text-brand" />
         <SegmentedControl
           label="スキャン範囲"

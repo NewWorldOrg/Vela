@@ -15,6 +15,7 @@ import type {
 } from '@/repository/segment-status'
 import { Badge } from '@/components/ui/badge'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableCell,
@@ -87,7 +88,7 @@ export function PrecisionPanel({ status }: { status: SegmentStatus }) {
 
 function StationTable({ stations }: { stations: SegmentStation[] }) {
   return (
-    <Table containerClassName="mt-3" className="min-w-[calc(560rem/16)]">
+    <Table cards containerClassName="mt-3" className="min-w-[calc(560rem/16)]">
       <TableHeader>
         <TableRow>
           {STATION_COLUMNS.map((column) => (
@@ -98,16 +99,22 @@ function StationTable({ stations }: { stations: SegmentStation[] }) {
       <TableBody>
         {stations.map((station) => (
           <TableRow key={station.key}>
-            <TableCell>
+            <TableCell {...cardPlace('lead')}>
               <span className="flex items-center gap-2">
                 <ChannelMark logo={station.logo} no={station.no} keepsTheSlot />
                 <span className="min-w-0">{station.name}</span>
               </span>
             </TableCell>
-            <TableCell className={NUMBERS}>
+            <TableCell
+              {...cardPlace('field', STATION_COLUMNS[1])}
+              className={NUMBERS}
+            >
               {recordingsOf(station.recordings)}
             </TableCell>
-            <TableCell className={NUMBERS}>
+            <TableCell
+              {...cardPlace('field', STATION_COLUMNS[2])}
+              className={NUMBERS}
+            >
               {boundaryMatchOf(station.metrics.boundaryRecallWithin2s)}
             </TableCell>
           </TableRow>

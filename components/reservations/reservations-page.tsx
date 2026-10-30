@@ -17,6 +17,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
+  cardPlace,
+  SelectEvery,
   Table,
   TableBody,
   TableColumns,
@@ -297,6 +299,7 @@ export function ReservationsView({
         />
       ) : (
         <Table
+          cards
           className="table-fixed min-w-[calc(960rem/16)]"
           waiting={waiting}
           containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
@@ -309,24 +312,26 @@ export function ReservationsView({
           />
           <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(13rem/16)]">
             <TableRow>
-              <TableHead className="w-11">
-                <Checkbox
-                  checked={
-                    chosen.length === 0
-                      ? false
-                      : chosen.length === items.length
-                        ? true
-                        : 'indeterminate'
-                  }
-                  onCheckedChange={(next) =>
-                    setPicked(
-                      next === true
-                        ? new Set(items.map((one) => one.id))
-                        : new Set(),
-                    )
-                  }
-                  aria-label="表示中の予約をすべて選ぶ"
-                />
+              <TableHead {...cardPlace('select')} className="w-11">
+                <SelectEvery>
+                  <Checkbox
+                    checked={
+                      chosen.length === 0
+                        ? false
+                        : chosen.length === items.length
+                          ? true
+                          : 'indeterminate'
+                    }
+                    onCheckedChange={(next) =>
+                      setPicked(
+                        next === true
+                          ? new Set(items.map((one) => one.id))
+                          : new Set(),
+                      )
+                    }
+                    aria-label="表示中の予約をすべて選ぶ"
+                  />
+                </SelectEvery>
               </TableHead>
               {COLUMNS.map((column) => (
                 <TableHead key={column.label}>

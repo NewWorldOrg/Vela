@@ -16,7 +16,7 @@ import {
   RecordingRow,
 } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
-import { TableHead } from '@/components/ui/table'
+import { cardPlace, SelectEvery, TableHead } from '@/components/ui/table'
 import { Checkbox } from '@/components/ui/checkbox'
 import { waitsWhile } from '@/components/vela/waiting'
 import { useArrived } from '@/hooks/useArrived'
@@ -96,6 +96,8 @@ export function RecordingsTable({
       )}
     >
       <table
+        role="table"
+        data-cards=""
         className="w-full table-fixed border-separate border-spacing-0"
         style={{ minWidth: TABLE_MIN }}
       >
@@ -107,11 +109,12 @@ export function RecordingsTable({
             />
           ))}
         </colgroup>
-        <thead>
-          <tr>
+        <thead role="rowgroup">
+          <tr role="row">
             {COLUMNS.map((column) => (
               <TableHead
                 key={column.label}
+                {...(column === COLUMNS[0] ? cardPlace('select') : {})}
                 className={cn(
                   'sticky top-0 z-10',
                   column.right && 'text-right',
@@ -120,23 +123,25 @@ export function RecordingsTable({
                 )}
               >
                 {column === COLUMNS[0] ? (
-                  <Checkbox
-                    checked={
-                      shown === 0
-                        ? false
-                        : shown === items.length
-                          ? true
-                          : 'indeterminate'
-                    }
-                    onCheckedChange={(next) =>
-                      onPick(
-                        next === true
-                          ? new Set(items.map((one) => one.id))
-                          : new Set(),
-                      )
-                    }
-                    aria-label="表示中の録画をすべて選ぶ"
-                  />
+                  <SelectEvery>
+                    <Checkbox
+                      checked={
+                        shown === 0
+                          ? false
+                          : shown === items.length
+                            ? true
+                            : 'indeterminate'
+                      }
+                      onCheckedChange={(next) =>
+                        onPick(
+                          next === true
+                            ? new Set(items.map((one) => one.id))
+                            : new Set(),
+                        )
+                      }
+                      aria-label="表示中の録画をすべて選ぶ"
+                    />
+                  </SelectEvery>
                 ) : column.hidden ? (
                   <span className="sr-only">{column.label}</span>
                 ) : (
@@ -146,7 +151,7 @@ export function RecordingsTable({
             ))}
           </tr>
         </thead>
-        <tbody {...useArrived()}>
+        <tbody role="rowgroup" {...useArrived()}>
           {items.map((r, nth) => (
             <RecordingRow
               key={r.id}

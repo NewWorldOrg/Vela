@@ -10,6 +10,12 @@ import {
 import { MigrationView } from '@/components/migration/migration-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheSettings } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 const meta = {
   title: 'Screens/設定・移行記録',
@@ -112,4 +118,20 @@ export const 幅700: Story = {
   args: { result: MIGRATION },
   parameters: { screen: { width: 700, height: 900 } },
   play: async ({ canvasElement }) => staysWithinTheWindow(canvasElement),
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 通常.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
+  },
 }

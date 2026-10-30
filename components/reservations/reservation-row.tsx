@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { TableCell, TableRow } from '@/components/ui/table'
+import { cardPlace, TableCell, TableRow } from '@/components/ui/table'
 import { OriginCell } from '@/components/reservations/origin-cell'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ActionRow } from '@/components/vela/action-row'
@@ -133,14 +133,14 @@ export function ReservationRow({
         style={delayOf(rowDelayMs(nth))}
         className={cn(rowArrivesIn(nth), segment && 'bg-surface-2')}
       >
-        <TableCell className="h-11 align-top">
+        <TableCell {...cardPlace('select')} className="h-11 align-top">
           <Checkbox
             checked={selected}
             onCheckedChange={(next) => onSelect(next === true)}
             aria-label={`${reservation.title} を選ぶ`}
           />
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell {...cardPlace('end')} className="align-top">
           {conflict && (
             <button
               type="button"
@@ -153,7 +153,10 @@ export function ReservationRow({
             </button>
           )}
         </TableCell>
-        <TableCell className="align-top whitespace-normal">
+        <TableCell
+          {...cardPlace('lead')}
+          className="align-top whitespace-normal"
+        >
           <b className="block text-[calc(13rem/16)] font-bold">
             {reservation.title}
           </b>
@@ -167,7 +170,7 @@ export function ReservationRow({
             )
           )}
         </TableCell>
-        <TableCell className="align-top">
+        <TableCell {...cardPlace('meta')} className="align-top">
           <span className="flex items-center gap-2">
             <ChannelMark
               logo={reservation.channelLogo}
@@ -177,19 +180,22 @@ export function ReservationRow({
             <span className="min-w-0">{reservation.channelName}</span>
           </span>
         </TableCell>
-        <TableCell className="align-top font-code text-ink-2">
+        <TableCell
+          {...cardPlace('meta')}
+          className="align-top font-code text-ink-2"
+        >
           {reservation.whenLabel}
         </TableCell>
         <OriginCell
           origin={reservation.origin}
           ruleName={reservation.ruleName}
         />
-        <TableCell className="align-top">
+        <TableCell {...cardPlace('field', '状態')} className="align-top">
           <StatusCell>
             <ReservationStateChip reservation={reservation} say />
           </StatusCell>
         </TableCell>
-        <TableCell className="text-right align-top">
+        <TableCell {...cardPlace('actions')} className="text-right align-top">
           <ActionRow>
             {reservation.recordingId && (
               <Button variant="watch" size="sm" asChild>
@@ -318,7 +324,7 @@ export function ReservationRow({
                   entries={reservation.conflict.entries}
                   className="mt-2.5"
                 />
-                <ActionRow className="mt-2.5 max-[900px]:w-full max-[900px]:grid-flow-row">
+                <ActionRow className="mt-2.5 max-[900px]:grid-flow-row max-[900px]:gap-y-4">
                   <Button
                     variant="change"
                     size="sm"

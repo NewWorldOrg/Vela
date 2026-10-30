@@ -42,7 +42,7 @@ import type {
   SearchViewing,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
-import { READABLE_LINE, TableHead } from '@/components/ui/table'
+import { cardPlace, READABLE_LINE, TableHead } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
@@ -614,15 +614,19 @@ function SearchScreen({ result }: { result: SearchResult }) {
                     'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
                   )}
                 >
-                  <table className="w-full min-w-[calc(800rem/16)] table-fixed border-separate border-spacing-0">
+                  <table
+                    role="table"
+                    data-cards=""
+                    className="w-full min-w-[calc(800rem/16)] table-fixed border-separate border-spacing-0"
+                  >
                     <colgroup>
                       <col style={{ width: 'calc(220rem/16)' }} />
                       <col style={{ width: 'calc(240rem/16)' }} />
                       <col style={{ width: 'calc(420rem/16)' }} />
                       <col style={{ width: 'calc(160rem/16)' }} />
                     </colgroup>
-                    <thead>
-                      <tr>
+                    <thead role="rowgroup">
+                      <tr role="row">
                         {[
                           'チャンネル',
                           WHEN_LABELS.broadcast,
@@ -635,10 +639,14 @@ function SearchScreen({ result }: { result: SearchResult }) {
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody role="rowgroup">
                       {found.hits.map((p) => (
-                        <tr key={p.id} className="group">
-                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui">
+                        <tr key={p.id} role="row" className="group">
+                          <td
+                            role="cell"
+                            className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui"
+                            {...cardPlace('meta')}
+                          >
                             <span className="flex items-center gap-2">
                               <ChannelMark
                                 logo={p.channelLogo}
@@ -650,7 +658,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
                               </span>
                             </span>
                           </td>
-                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top font-code text-ui whitespace-nowrap text-ink-2">
+                          <td
+                            role="cell"
+                            className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top font-code text-ui whitespace-nowrap text-ink-2"
+                            {...cardPlace('meta')}
+                          >
                             <b className="mr-1.5 font-medium text-ink">
                               {p.dayLabel}
                             </b>
@@ -658,7 +670,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             {SPAN_DASH}
                             {p.endUndecided ? '終了未定' : p.endLabel}
                           </td>
-                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top">
+                          <td
+                            role="cell"
+                            className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top"
+                            {...cardPlace('lead')}
+                          >
                             <span
                               className={cn(
                                 READABLE_LINE,
@@ -688,7 +704,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
                               </p>
                             )}
                           </td>
-                          <td className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top">
+                          <td
+                            role="cell"
+                            className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top"
+                            {...cardPlace('meta')}
+                          >
                             <span
                               className={cn(
                                 'inline-block rounded-full border px-[calc(11rem/16)] py-0.5 text-note font-medium text-ink-2',

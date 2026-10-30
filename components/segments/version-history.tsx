@@ -28,7 +28,9 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
+import { ActionRow } from '@/components/vela/action-row'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableCell,
@@ -134,7 +136,7 @@ export function VersionHistory({
       </div>
       <LearningRounds lastRound={lastRound} nextRound={nextRound} />
       {versions.length > 0 && (
-        <Table className="min-w-[calc(640rem/16)]">
+        <Table cards className="min-w-[calc(640rem/16)]">
           <TableHeader>
             <TableRow>
               {COLUMNS.map((column) => (
@@ -150,27 +152,37 @@ export function VersionHistory({
           <TableBody>
             {versions.map((version) => (
               <TableRow key={version.number}>
-                <TableCell className="font-bold">
+                <TableCell {...cardPlace('lead')} className="font-bold">
                   {versionLabel(version.number)}
                 </TableCell>
-                <TableCell className={NUMBERS}>{version.trainedAt}</TableCell>
-                <TableCell>
+                <TableCell
+                  {...cardPlace('field', COLUMNS[1])}
+                  className={NUMBERS}
+                >
+                  {version.trainedAt}
+                </TableCell>
+                <TableCell {...cardPlace('field', COLUMNS[2])}>
                   <StatusCell>
                     <Standing version={version} />
                   </StatusCell>
                 </TableCell>
-                <TableCell className={NUMBERS}>
+                <TableCell
+                  {...cardPlace('field', COLUMNS[3])}
+                  className={NUMBERS}
+                >
                   {version.metrics
                     ? boundaryMatchOf(version.metrics.boundaryRecallWithin2s)
                     : NOT_APPLICABLE}
                 </TableCell>
                 {choosable && (
-                  <TableCell className="text-right">
+                  <TableCell {...cardPlace('actions')} className="text-right">
                     {version.state !== 'active' && (
-                      <SwitchVersionButton
-                        number={version.number}
-                        onChoose={onChoose}
-                      />
+                      <ActionRow>
+                        <SwitchVersionButton
+                          number={version.number}
+                          onChoose={onChoose}
+                        />
+                      </ActionRow>
                     )}
                   </TableCell>
                 )}

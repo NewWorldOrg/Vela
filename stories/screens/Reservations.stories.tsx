@@ -21,6 +21,13 @@ import { ReservationsView } from '@/components/reservations/reservations-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { cellOf, tipIn } from '@/stories/pills-in-a-column'
 import { inTheApp } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  NARROW_PHONE,
+  PHONE,
+} from '@/stories/rows-as-cards'
 import { formatMomentSpan } from '@/lib/format'
 
 const accept = async (): Promise<ReservationWrite> => ({ state: 'ok' })
@@ -1050,5 +1057,101 @@ export const 狭い幅での長い由来: Story = {
   parameters: { screen: { width: 1180, height: 820 } },
   play: async ({ canvasElement }) => {
     await theOriginStaysInItsColumn(canvasElement)
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+
+    await laysRowsAsCards(canvasElement)
+
+    const [first] = RESERVATION_FIXTURES.filter((one) => !one.relay)
+    const card = within(
+      canvas
+        .getByRole('checkbox', { name: `${first.title} を選ぶ` })
+        .closest('tr') as HTMLElement,
+    )
+
+    for (const value of [first.title, first.channelName, first.whenLabel]) {
+      await expect(card.getByText(value)).toBeVisible()
+    }
+
+    for (const said of card
+      .getAllByRole('cell')
+      .filter((cell) => cell.hasAttribute('data-label'))) {
+      await expect(said).toBeVisible()
+    }
+  },
+}
+
+export const 電話の幅で競合を解く: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+
+    for (const name of [
+      'この予約を優先',
+      'この予約を取り消し',
+      'チューナーへ',
+    ]) {
+      const [press] = canvas
+        .getAllByRole(name === 'チューナーへ' ? 'link' : 'button', { name })
+        .filter((one) => one.closest('[data-slot="unfold"][data-open]'))
+
+      press.scrollIntoView({ block: 'center' })
+
+      const box = press.getBoundingClientRect()
+
+      await expect(press).toBeVisible()
+      await expect(box.height).toBeGreaterThanOrEqual(40)
+      await expect(box.left).toBeGreaterThanOrEqual(0)
+      await expect(box.right).toBeLessThanOrEqual(window.innerWidth)
+      await expect(press.scrollWidth).toBeLessThanOrEqual(press.clientWidth + 1)
+    }
+  },
+}
+
+export const 電話の幅で選んで取り消す: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = RESERVATION_FIXTURES.filter(
+      (one) => !one.relay && one.standing === 'scheduled',
+    )
+
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
+    )
+    await userEvent.click(
+      canvas.getByRole('checkbox', { name: `${second.title} を選ぶ` }),
+    )
+
+    const bar = canvas.getByRole('group', { name: '選択した予約の操作' })
+
+    await expect(bar).toBeVisible()
+    await expect(bar).toHaveTextContent('2 件を選択')
+    await expect(
+      within(bar).getByRole('button', { name: '取り消し' }),
+    ).toBeEnabled()
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
+    await expect(
+      within(canvasElement).getByText('すべて選ぶ'),
+    ).not.toBeVisible()
   },
 }

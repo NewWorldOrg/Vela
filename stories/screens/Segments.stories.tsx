@@ -33,6 +33,12 @@ import type {
 import { SegmentsView } from '@/components/segments/segments-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 import { groundOf } from '@/stories/ground-of'
 
 const chooseVersion = fn<(number: number) => Promise<SegmentVersionWrite>>(
@@ -850,5 +856,21 @@ export const ナビの名前が名前の出る最も狭い幅でも収まる: St
   parameters: { screen: { width: 901, height: 900 } },
   play: async ({ canvasElement }) => {
     await theNavNameFits(canvasElement)
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 人が選んだ版.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 人が選んだ版.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }
