@@ -99,7 +99,7 @@ export function PlayerDock({
         'overflow-hidden rounded-xl border border-line-strong bg-(--pl-bg) text-(--pl-ink) shadow-pop-xl',
         side === 'under'
           ? cn(PLAYER_COLUMN, 'mt-2')
-          : 'ml-3 w-[calc(300rem/16+env(safe-area-inset-right))] shrink-0 self-stretch overflow-y-auto overscroll-contain rounded-none border-0 border-l border-white/8 pr-[env(safe-area-inset-right)] pb-(--safe-bottom) shadow-none has-[[data-tone=page]]:border-line has-[[data-tone=page]]:bg-surface',
+          : 'ml-3 w-[calc(300rem/16+env(safe-area-inset-right))] shrink-0 self-stretch overflow-y-auto overscroll-contain rounded-none border-0 border-l border-white/8 pr-[env(safe-area-inset-right)] pb-(--safe-bottom) shadow-none',
       )}
     />
   )
@@ -112,20 +112,21 @@ function focused(): HTMLElement | null {
     : null
 }
 
-/** One face in the dock: its name and the close at the top, the same for the gear, the caption's face, the data broadcast and a screen's own faces, and Esc closes it as the close does. A screen's face is in the page's colours, as the same things are under the picture on a phone held upright. It takes the focus to its close when it opens, and gives it back on closing to what opened it (`returnTo`, or whatever had the focus when it opened). */
+/** One face in the dock: its name and the close at the top, the same for the gear, the caption's face, the data broadcast and a screen's own faces, and Esc closes it as the close does. A screen's face holds what an upright phone shows under the picture in the page's parts; it lays them on the same ink as the others, in the dark theme's colours whatever the theme. It takes the focus to its close when it opens, and gives it back on closing to what opened it (`returnTo`, or whatever had the focus when it opened). */
 export function DockFace({
   name,
   onClose,
   returnTo,
   flush = false,
-  tone = 'player',
+  inPageParts = false,
   children,
 }: {
   name: string
   onClose: () => void
   returnTo?: RefObject<HTMLElement | null>
   flush?: boolean
-  tone?: 'player' | 'page'
+  /** It holds the page's parts rather than the player's, and lays them in the dark theme's colours. */
+  inPageParts?: boolean
   children: ReactNode
 }) {
   const close = useRef<HTMLButtonElement>(null)
@@ -155,27 +156,21 @@ export function DockFace({
       role="region"
       aria-label={name}
       data-slot="player-dock-face"
-      data-tone={tone}
+      data-ink-face={inPageParts ? '' : undefined}
       onKeyDown={onKeyDown}
-      className={cn(tone === 'page' && 'min-h-full bg-surface text-ink')}
+      className={cn(
+        inPageParts &&
+          'min-h-full text-(--pl-ink) [--bg:var(--pl-bg)] [--surface:var(--pl-bg)]',
+      )}
     >
-      <div
-        className={cn(
-          'flex items-center gap-2 border-b border-dashed py-1 pr-1.5 pl-4',
-          tone === 'page' ? 'border-line' : 'border-white/12',
-        )}
-      >
+      <div className="flex items-center gap-2 border-b border-dashed border-white/12 py-1 pr-1.5 pl-4">
         <span className="text-ui font-bold">{name}</span>
         <button
           ref={close}
           type="button"
           aria-label="閉じる"
           onClick={onClose}
-          className={cn(
-            PLAYER_GLYPH_BUTTON,
-            'ml-auto [&_svg]:size-5',
-            tone === 'page' && 'text-ink-2 hover:text-ink',
-          )}
+          className={cn(PLAYER_GLYPH_BUTTON, 'ml-auto [&_svg]:size-5')}
         >
           <CloseIcon />
         </button>
