@@ -22,6 +22,17 @@
   }
 }
 
+/* A phone held either way: upright, or on its side. */
+@custom-variant phone {
+  @media (width < 600px) and (pointer: fine),
+    (width < 600px) and (pointer: none),
+    (width < 600px) and (orientation: portrait),
+    (width < 600px) and (height >= 600px),
+    (pointer: coarse) and (orientation: landscape) and (height < 600px) {
+    @slot;
+  }
+}
+
 /* A phone held on its side: a finger's screen whose window is short and wide. */
 @custom-variant sideways {
   @media (pointer: coarse) and (orientation: landscape) and (height < 600px) {

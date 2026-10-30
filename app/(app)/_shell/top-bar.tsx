@@ -37,20 +37,20 @@ export function AppTopBar() {
           </GlobalNavItem>
         ))}
       </GlobalNav>
-      <div className="flex items-center gap-[calc(7rem/16)] upright:hidden">
+      <div className="flex items-center gap-[calc(7rem/16)] phone:hidden">
         <ThemeToggle />
         <SettingsLink asChild active={current === SETTINGS_HREF}>
           <Link href="/settings/system">設定</Link>
         </SettingsLink>
       </div>
-      <div className="hidden min-w-0 flex-1 items-center gap-2 upright:flex">
+      <div className="hidden min-w-0 flex-1 items-center gap-2 phone:flex">
         {phone.back && (
           <PhoneBarBack asChild aria-label={`${phone.back.label}へ`}>
             <Link href={phone.back.href} />
           </PhoneBarBack>
         )}
         <PhoneBarLeadSlot />
-        <PhoneBarTitle className="[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden">
+        <PhoneBarTitle className="upright:[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden">
           {phone.title}
         </PhoneBarTitle>
         <PhoneBarToolsSlot />

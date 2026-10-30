@@ -5,3 +5,6 @@ export const PHONE_UPRIGHT =
 /** A phone held on its side: a finger's screen whose window is short and wide. The same query as the `sideways` variant in `app/globals.css`. */
 export const PHONE_ON_ITS_SIDE =
   '(pointer: coarse) and (orientation: landscape) and (height < 600px)'
+
+/** A phone held either way. The same query as the `phone` variant in `app/globals.css`. */
+export const PHONE_EITHER_WAY = `${PHONE_UPRIGHT}, ${PHONE_ON_ITS_SIDE}`

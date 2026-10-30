@@ -236,7 +236,7 @@ export function GuideView({
       scroll="within"
       className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 upright:pb-0"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] sideways:sr-only upright:sr-only">
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] phone:sr-only">
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
@@ -282,7 +282,11 @@ export function GuideView({
         )}
       </PhoneBarLead>
       <PhoneBarTools>
-        <PhoneBarLink href="/search" aria-label="番組を検索">
+        <PhoneBarLink
+          href="/search"
+          aria-label="番組を検索"
+          className="sideways:hidden"
+        >
           <SearchIcon />
         </PhoneBarLink>
         <PhoneBarButton
@@ -292,6 +296,7 @@ export function GuideView({
           open={toolsOpen}
           count={narrowed}
           onClick={() => setToolsOpen(!toolsOpen)}
+          className="sideways:hidden"
         >
           <FilterIcon />
         </PhoneBarButton>

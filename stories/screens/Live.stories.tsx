@@ -3782,7 +3782,7 @@ export const 縦の電話では歯車を開いて送っても下のタブが見�
   },
 }
 
-export const 横向きの電話では送っても上の帯が見えている: Story = {
+export const 横向きの電話では送っても上の帯と行き先の列が見えている: Story = {
   args: { openSocket: withAPicture },
   parameters: { screen: { width: 844, height: 390 }, coarse: true },
   play: async ({ canvasElement }) => {
@@ -3794,7 +3794,9 @@ export const 横向きの電話では送っても上の帯が見えている: St
         expect(seen(bar)).toBe(true)
         expect(bar?.getBoundingClientRect().top).toBe(0)
         expect(
-          within(bar as HTMLElement).getByRole('link', { name: 'ライブ' }),
+          within(
+            document.querySelector<HTMLElement>('[data-slot="tab-bar"]')!,
+          ).getByRole('link', { name: 'ライブ' }),
         ).toBeVisible()
       })
     }
@@ -3963,5 +3965,34 @@ export const 電話_観ている間に別の局を押すと映像を閉じずに
     await expect(other).toHaveTextContent(/準備中|視聴中/)
     await expect(slotted(canvasElement, 'live-player')).toBeVisible()
     await expect(window.scrollY).toBe(0)
+  },
+}
+
+export const 横向きの電話_選局前は局を2列の行で並べる: Story = {
+  args: { screen: UNCHOSEN },
+  parameters: {
+    screen: { width: 844, height: 390 },
+    coarse: true,
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const rows = slotted(canvasElement, 'phone-channel-rows')
+    const [first, second] = within(rows).getAllByRole('button')
+
+    await expect(
+      Math.abs(
+        first.getBoundingClientRect().top - second.getBoundingClientRect().top,
+      ),
+    ).toBeLessThan(1)
+    await expect(second.getBoundingClientRect().left).toBeGreaterThan(
+      first.getBoundingClientRect().right - 1,
+    )
+    await expect(
+      within(
+        canvasElement.querySelector<HTMLElement>('[data-slot="top-bar"]')!,
+      ).getByRole('group', { name: '放送の種別' }),
+    ).toBeVisible()
   },
 }

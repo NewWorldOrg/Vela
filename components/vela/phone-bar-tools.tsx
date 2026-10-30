@@ -61,7 +61,7 @@ export function PhoneBarLeadSlot() {
     <div
       id={PHONE_BAR_LEAD}
       data-slot="phone-bar-lead"
-      className="flex min-w-0 flex-1 items-center empty:hidden"
+      className="flex min-w-0 flex-1 items-center empty:hidden sideways:hidden"
     />
   )
 }
