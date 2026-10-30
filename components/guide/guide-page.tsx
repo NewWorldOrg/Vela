@@ -39,7 +39,6 @@ import {
   AntennaIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
-  FilterIcon,
   ProgramGuideIcon,
   SearchIcon,
 } from '@/components/vela/icons'
@@ -53,6 +52,10 @@ import { ChannelStrip } from '@/components/guide/channel-strip'
 import { ChannelDayList } from '@/components/guide/channel-day-list'
 import { usePhoneWidth } from '@/hooks/usePhoneWidth'
 import { ScreenMain } from '@/components/vela/app-shell'
+import {
+  FilterFoldButton,
+  foldedFiltersOf,
+} from '@/components/vela/filter-fold'
 
 export function GuideView({
   guide,
@@ -136,7 +139,7 @@ export function GuideView({
   const toolsId = useId()
   const narrowed =
     (guide.kind === 'terrestrial' ? 0 : 1) + (foldable && folded ? 1 : 0)
-  const foldedOnAPhone = !toolsOpen && 'max-[600px]:hidden sideways:hidden'
+  const foldedOnAPhone = foldedFiltersOf(toolsOpen, 'handheld')
 
   const [extras, setExtras] = useState<
     Record<string, ProgramExtras | 'failed'>
@@ -253,28 +256,14 @@ export function GuideView({
           )}
         </div>
 
-        <button
-          type="button"
-          aria-expanded={toolsOpen}
-          aria-controls={toolsId}
-          onClick={() => setToolsOpen((was) => !was)}
-          className={cn(
-            BAND_CONTROL,
-            BAND_PRESS,
-            'ml-auto hidden shrink-0 max-[600px]:inline-flex sideways:inline-flex',
-            toolsOpen &&
-              'border-brand bg-brand-soft text-brand [&_svg]:text-brand',
-          )}
-        >
-          <FilterIcon />
-          絞り込み
-          {narrowed > 0 && ' '}
-          {narrowed > 0 && (
-            <b className="font-code font-bold text-brand tabular-nums">
-              {narrowed}
-            </b>
-          )}
-        </button>
+        <FilterFoldButton
+          open={toolsOpen}
+          onOpenChange={setToolsOpen}
+          controls={toolsId}
+          narrowed={narrowed}
+          on="handheld"
+          className="ml-auto"
+        />
 
         <div
           id={toolsId}
@@ -351,8 +340,11 @@ export function GuideView({
         <EmptyState titleLevel={2} title="この日の番組情報がありません" />
       ) : (
         <>
-          {phone && listed ? (
-            <div className="flex min-h-0 flex-1 flex-col">
+          {listed && (
+            <div
+              data-guide-phone
+              className="hidden min-h-0 flex-1 flex-col max-[600px]:flex"
+            >
               <ChannelStrip
                 channels={shownGuide.channels}
                 shown={new Set([listed.id])}
@@ -364,10 +356,11 @@ export function GuideView({
               />
               <ChannelDayList
                 channelId={listed.id}
+                dayKey={guide.day.date}
                 programs={listedPrograms}
                 nowMin={guide.nowMin}
                 nowLabel={guide.nowLabel}
-                openId={panelOpen ? selected?.id : undefined}
+                openId={phone && panelOpen ? selected?.id : undefined}
                 onToggle={(program) =>
                   panelOpen && selected?.id === program.id
                     ? setPanelOpen(false)
@@ -401,20 +394,23 @@ export function GuideView({
                 }}
               />
             </div>
-          ) : (
-            <GuideGrid
-              key={guide.kind}
-              channels={shownGuide.channels}
-              programs={shownGuide.programs}
-              dayKey={guide.day.date}
-              windowStartHour={guide.windowStartHour}
-              windowHours={guide.windowHours}
-              nowMin={guide.nowMin}
-              nowLabel={guide.nowLabel}
-              selectedId={panelOpen ? selected?.id : undefined}
-              onSelect={select}
-              glyphLoads={glyphLoads}
-            />
+          )}
+          {!phone && (
+            <div className="flex min-h-0 flex-1 flex-col max-[600px]:hidden">
+              <GuideGrid
+                key={guide.kind}
+                channels={shownGuide.channels}
+                programs={shownGuide.programs}
+                dayKey={guide.day.date}
+                windowStartHour={guide.windowStartHour}
+                windowHours={guide.windowHours}
+                nowMin={guide.nowMin}
+                nowLabel={guide.nowLabel}
+                selectedId={panelOpen ? selected?.id : undefined}
+                onSelect={select}
+                glyphLoads={glyphLoads}
+              />
+            </div>
           )}
           {shown && !phone && (
             <ProgramPanel

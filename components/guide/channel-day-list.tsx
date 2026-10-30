@@ -12,10 +12,12 @@ import { cn } from '@/lib/utils'
 import type { Program } from '@/repository/programs'
 import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
 import { ChevronDownIcon, RecordIcon } from '@/components/vela/icons'
+import { pressable } from '@/components/vela/tactile'
 
 /** One channel's day as rows from the top of the day, opened at the programme on the air; a row opens its detail under itself. */
 export function ChannelDayList({
   channelId,
+  dayKey,
   programs,
   nowMin,
   nowLabel,
@@ -24,6 +26,7 @@ export function ChannelDayList({
   detailOf,
 }: {
   channelId: string
+  dayKey: string
   programs: Program[]
   nowMin?: number
   nowLabel?: string
@@ -40,7 +43,7 @@ export function ChannelDayList({
     if (node) {
       node.scrollTop = onAir ? Math.max(0, onAir.offsetTop - 48) : 0
     }
-  }, [channelId])
+  }, [channelId, dayKey])
 
   useLayoutEffect(() => {
     const node = list.current
@@ -77,8 +80,10 @@ export function ChannelDayList({
             <li
               key={p.id}
               data-on-air={onAir ? '' : undefined}
+              data-past={past ? '' : undefined}
               className={cn(
                 'border-b border-dashed border-line last:border-b-0',
+                past && 'bg-surface-2',
                 onAir && 'bg-brand-soft/45',
               )}
             >
@@ -87,6 +92,7 @@ export function ChannelDayList({
                 aria-expanded={open}
                 onClick={() => onToggle(p)}
                 className={cn(
+                  pressable,
                   'flex min-h-14 w-full items-start gap-3 py-3 pr-1.5 pl-3.5 text-left',
                   onAir && 'shadow-[inset_3px_0_0_var(--color-brand)]',
                 )}
@@ -116,7 +122,12 @@ export function ChannelDayList({
                     {mark && <BookingGlyph mark={mark} />}
                     {halfWidthOf(p.title)}
                   </span>
-                  <span className="mt-0.5 line-clamp-2 text-sub text-ink-2">
+                  <span
+                    className={cn(
+                      'mt-0.5 line-clamp-2 text-sub',
+                      past ? 'text-ink-3' : 'text-ink-2',
+                    )}
+                  >
                     <span
                       aria-hidden="true"
                       className={cn(

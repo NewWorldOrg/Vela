@@ -6,6 +6,7 @@ import { halfWidthOf } from '@/lib/guide-cell'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import { ChannelMark } from '@/components/vela/channel-mark'
+import { pressable, tactileQuiet } from '@/components/vela/tactile'
 
 /** Every channel of the guide in one row a thumb slides along, the ones on the screen picked out. */
 export function ChannelStrip({
@@ -58,7 +59,9 @@ export function ChannelStrip({
             aria-pressed={on}
             onClick={() => onPick(c, nth)}
             className={cn(
-              'flex h-11 max-w-[calc(150rem/16)] shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface pr-3.5 pl-1.5 text-sub font-medium text-ink-2',
+              pressable,
+              tactileQuiet,
+              'flex h-11 max-w-[calc(150rem/16)] shrink-0 items-center gap-1.5 rounded-full border border-line bg-surface pr-3.5 pl-1.5 text-sub font-medium text-ink-2 hover:text-ink',
               on && 'border-brand bg-brand-soft font-bold text-brand',
             )}
           >
