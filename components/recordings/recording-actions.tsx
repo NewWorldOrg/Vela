@@ -61,7 +61,7 @@ export function RecordingActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
-        <ActionRow className="max-[700px]:w-full max-[700px]:grid-flow-row">
+        <ActionRow className="max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 [&>div]:items-stretch">
           {plan && (
             <ExternalPlayerOpener
               recording={recording}

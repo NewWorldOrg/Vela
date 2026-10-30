@@ -412,7 +412,7 @@ export function columnOverTheBand(row: number): string {
   return `min(${narrow}, max(${wide}, clamp(${BAND_MOCK_WIDTH}px, ${growing}, ${widest}px)))`
 }
 
-/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band. */
+/** The widest the player's column may be: unbounded but by the page while the control row is over the picture; with the control row under the box, the window holds the picture, the row and, where the remote is a band under it, the band,. */
 export function widestColumn(
   place: BandPlace,
   underTheBox: boolean,
@@ -832,12 +832,14 @@ export function DataBroadcastRemote({
   onAim,
   onToggle,
   application = null,
+  className,
 }: {
   station: string
   onKey: (key: BmlKey) => void
   onAim: () => void
   onToggle: () => void
   application?: { onClose: () => void } | null
+  className?: string
 }) {
   const pressing: Pressing = { onKey, onAim }
 
@@ -849,6 +851,7 @@ export function DataBroadcastRemote({
       className={cn(
         IN_THE_COLUMN,
         'flex flex-col gap-y-(--group-gap) rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl',
+        className,
       )}
     >
       <div className="flex h-[44px] shrink-0 items-center gap-[12px]">

@@ -10,7 +10,12 @@ import {
   PLAYER_BUTTON,
   PLAYER_GLYPH_BUTTON,
 } from '@/components/recordings/player-palette'
-import { SKIP_ONLY, skipWords, skipWordsInTheRow } from '@/lib/player-chapters'
+import {
+  SKIP_ONLY,
+  skipNameInTheRow,
+  skipWords,
+  skipWordsInTheRow,
+} from '@/lib/player-chapters'
 import type { SkippableKind } from '@/repository/videos'
 
 export const SKIP_THE: Record<SkippableKind, string> = {
@@ -79,7 +84,7 @@ function fitsOnTheServer(): boolean {
   return true
 }
 
-/** Whether the skip with the given words stands beside what comes before it on the line of the row it sits in. */
+/** Whether the skip with the given words stands on the line of the row it sits in, between what comes before it and what comes after it. */
 function fitsBeside(seat: HTMLElement | null, unseen: HTMLElement | null) {
   const row = seat?.parentElement
 
@@ -90,7 +95,18 @@ function fitsBeside(seat: HTMLElement | null, unseen: HTMLElement | null) {
   const line = row.getBoundingClientRect()
   const before = seat.previousElementSibling?.getBoundingClientRect().right
   const gap = parseFloat(getComputedStyle(row).columnGap) || 0
-  const room = before === undefined ? line.width : line.right - before - gap
+  let after = 0
+
+  for (
+    let next = seat.nextElementSibling;
+    next;
+    next = next.nextElementSibling
+  ) {
+    after += next.getBoundingClientRect().width + gap
+  }
+
+  const room =
+    (before === undefined ? line.width : line.right - before - gap) - after
 
   return unseen.getBoundingClientRect().width <= room
 }
@@ -109,7 +125,12 @@ function useFitsBeside(
 
       const resizing = new ResizeObserver(notify)
 
-      for (const one of [row, seat.previousElementSibling, unseen]) {
+      for (const one of [
+        row,
+        seat.previousElementSibling,
+        seat.nextElementSibling,
+        unseen,
+      ]) {
         if (one) {
           resizing.observe(one)
         }
@@ -130,8 +151,8 @@ function useFitsBeside(
 const SKIP_IN_THE_ROW = 'flex items-center gap-x-1'
 
 /**
- * The skip button and its close button at the right end of the last line of the control row, where the row folds over a
- * narrow picture; words that do not fit there give way to the shortest ones.
+ * The skip button and its close button in the line of the time, before the full screen, where the bar takes a phone's
+ * layout; words that do not fit there give way to the shortest ones.
  */
 export function PlayerSkipInTheRow({
   kinds,
@@ -160,7 +181,7 @@ export function PlayerSkipInTheRow({
     >
       <button
         type="button"
-        aria-label={skipWords(kinds)}
+        aria-label={skipNameInTheRow(kinds, fits)}
         onClick={() => onSkip(to)}
         className={PLAYER_BUTTON}
       >

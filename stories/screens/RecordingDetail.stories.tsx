@@ -1213,6 +1213,33 @@ export const 操作の並び: Story = {
   },
 }
 
+export const iPad_の縦では操作を二列に並べて重ねない: Story = {
+  args: { detail: withoutAnArtefact('1274') },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const drawn = THE_ACTIONS.map((name) =>
+      canvas.getByRole('button', { name }).getBoundingClientRect(),
+    )
+
+    await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
+      1,
+    )
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(2)
+
+    for (const [nth, one] of drawn.entries()) {
+      for (const other of drawn.slice(nth + 1)) {
+        await expect(
+          one.right <= other.left ||
+            other.right <= one.left ||
+            one.bottom <= other.top ||
+            other.bottom <= one.top,
+        ).toBe(true)
+      }
+    }
+  },
+}
+
 export const 記録の値は札で言う: Story = {
   args: { detail: detail('1274') },
   play: async ({ canvasElement }) => {

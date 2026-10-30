@@ -135,3 +135,13 @@ export function skipWordsInTheRow(kinds: readonly SkippableKind[]): string {
     ? skipWords(kinds)
     : `${kinds.map((kind) => SHORT_NAME[kind]).join('+')} を飛ばす`
 }
+
+/** The name of the skip in the control row: the words it shows, so a voice and a hand reach it by what they see (WCAG 2.5.3); when it shows only `飛ばす`, the kinds it skips follow in brackets. */
+export function skipNameInTheRow(
+  kinds: readonly SkippableKind[],
+  fits: boolean,
+): string {
+  return fits
+    ? skipWordsInTheRow(kinds)
+    : `${SKIP_ONLY}(${kinds.map((kind) => SHORT_NAME[kind]).join(' と ')})`
+}

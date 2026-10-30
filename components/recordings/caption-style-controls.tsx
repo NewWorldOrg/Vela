@@ -29,17 +29,51 @@ import { Setting } from '@/components/recordings/player-setting'
 /** Which face of the gear is open: its own rows, or the caption's. */
 export type GearPanel = 'main' | 'captions'
 
-/** The gear's open state and which face is open: it opens on its own rows, the caption's row leads to the caption's face, and back returns to the row it left from. */
-export function useGearPanel(onOpenChange?: (open: boolean) => void) {
-  const [open, setOpen] = useState(false)
+/** The gear's open state and which face is open: it opens on its own rows, the caption's row leads to the caption's face, and back returns to the row it left from. A gear taken away while open (the bar laid out anew across 600px) says it has closed, so the player does not go on holding its bar up for it. */
+export function useGearPanel(
+  onOpenChange?: (open: boolean) => void,
+  held?: boolean,
+) {
+  const [own, setOpen] = useState(false)
+  const open = held ?? own
   const [panel, setPanel] = useState<GearPanel>('main')
   const [returning, setReturning] = useState(false)
+  const [wasOpen, setWasOpen] = useState(open)
+
+  if (wasOpen !== open) {
+    setWasOpen(open)
+
+    if (!open) {
+      setPanel('main')
+      setReturning(false)
+    }
+  }
+  const opened = useRef(false)
+  const tell = useRef(onOpenChange)
+
+  useEffect(() => {
+    tell.current = onOpenChange
+  }, [onOpenChange])
+
+  useEffect(
+    () => () => {
+      if (opened.current) {
+        tell.current?.(false)
+      }
+    },
+    [],
+  )
+
+  useEffect(() => {
+    opened.current = open
+  }, [open])
 
   return {
     open,
     panel,
     returning,
     change: (next: boolean) => {
+      opened.current = next
       setOpen(next)
       setPanel('main')
       setReturning(false)
@@ -120,10 +154,12 @@ export function CaptionStylePanel({
   style,
   onChange,
   onBack,
+  narrow = false,
 }: {
   style: CaptionStyle
   onChange: (next: CaptionStyle) => void
   onBack: () => void
+  narrow?: boolean
 }) {
   const back = useRef<HTMLButtonElement>(null)
 
@@ -133,6 +169,20 @@ export function CaptionStylePanel({
 
   const choose = (patch: Partial<CaptionStyle>) =>
     onChange({ ...style, ...patch })
+  const allOneColour = (
+    <button
+      type="button"
+      aria-pressed={style.allOneColour}
+      disabled={style.colour === 'broadcast'}
+      onClick={() => choose({ allOneColour: !style.allOneColour })}
+      className={cn(
+        PLAYER_BUTTON,
+        style.allOneColour && style.colour !== 'broadcast' && PLAYER_BUTTON_ON,
+      )}
+    >
+      全部同じ色
+    </button>
+  )
 
   return (
     <div data-slot="caption-style">
@@ -176,21 +226,9 @@ export function CaptionStylePanel({
           nameOf={(one) => CAPTION_COLOUR_LABEL[one]}
           faceOf={faceOfColour}
         />
-        <button
-          type="button"
-          aria-pressed={style.allOneColour}
-          disabled={style.colour === 'broadcast'}
-          onClick={() => choose({ allOneColour: !style.allOneColour })}
-          className={cn(
-            PLAYER_BUTTON,
-            style.allOneColour &&
-              style.colour !== 'broadcast' &&
-              PLAYER_BUTTON_ON,
-          )}
-        >
-          全部同じ色
-        </button>
+        {!narrow && allOneColour}
       </Setting>
+      {narrow && <Setting label="">{allOneColour}</Setting>}
       <Setting label="縁取り">
         <PlayerSegmentedControl
           label="縁取り"

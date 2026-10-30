@@ -61,10 +61,11 @@ import type { CaptionStyle } from '@/lib/caption-style'
 
 const GUTTER = 'px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5'
 
-/** The page's one column, which the link back, the player and the programme's information share: as wide as the picture the window's height allows, centred. While the data broadcast's remote stands beside the player, it is as wide as the box, the gap and the remote's column, still centred, so everything above and below starts at the box's left edge. */
+/** The page's one column, which the link back, the player and the programme's information share: as wide as the picture the window's height allows, centred. While the data broadcast's remote stands beside the player, it is as wide as the box, the gap and the remote's column, still centred, so everything above and below starts at the box's left edge. On a phone held on its side the column takes the page's width, so the dock can open beside the picture. */
 const WATCH_COLUMN = cn(
   PLAYER_COLUMN,
   'has-[[data-remote=beside]]:w-fit has-[[data-remote=beside]]:max-w-full',
+  'sideways:max-w-none',
 )
 
 /** What runs along the column above and below the player: as wide as the column and no wider however long its text, so the player alone sets the column's width. */

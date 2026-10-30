@@ -50,8 +50,9 @@ export const PLAYER_GLYPH_BUTTON_ON =
 export const PLAYER_BUTTON_ON =
   'border-(--pl-accent)/55 bg-(--pl-accent)/22 text-(--pl-accent-ink)'
 
+/** The picture's column: the window's height less the bar above and the band below, and on a phone held on its side the window's height less only the bar above, which stays. */
 export const PLAYER_COLUMN =
-  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)]'
+  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)] sideways:max-w-[calc((100svh-62rem/16)*16/9)]'
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
@@ -70,4 +71,27 @@ export const PLAYER_PICTURE = cn(PLAYER_PICTURE_BOX, 'object-contain')
 export const CAPTION_GRIP = cn(
   'absolute hidden touch-none rounded-[calc(4rem/16)] data-[shown]:block',
   'data-[holding]:cursor-move data-[holding]:outline data-[holding]:outline-1 data-[holding]:outline-white/55',
+)
+
+/** A layer of the compact bar over the picture — the gear's company at the top, the sends in the middle: it takes no press of its own, and comes and goes with the bar. */
+export const PLAYER_LAYER = cn(
+  'pointer-events-none absolute z-10 opacity-0',
+  PLAYER_CHROME_FADE,
+  'data-[up]:opacity-100 has-[:focus-visible]:opacity-100',
+)
+
+/** What a compact layer holds that can be pressed: only while the bar is up. */
+export const PLAYER_LAYER_HANDS = 'in-data-[up]:pointer-events-auto'
+
+/** The sends in the middle of a compact picture: a glyph on a round of the picture's ink, larger than the bar's. */
+export const PLAYER_SEND = cn(
+  PLAYER_GLYPH_BUTTON,
+  PLAYER_LAYER_HANDS,
+  'size-11 rounded-full bg-black/45 [&_svg]:size-6',
+)
+
+/** The play and pause among the sends: the size of the mark that stands in the middle while the picture is stopped. */
+export const PLAYER_SEND_MAIN = cn(
+  PLAYER_SEND,
+  'size-14 [&_svg]:size-[calc(30rem/16)]',
 )

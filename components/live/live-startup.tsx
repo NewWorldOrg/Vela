@@ -8,13 +8,45 @@ export function LiveStartupSteps({
   startup,
   elapsedMs,
   reconnecting,
+  brief = false,
   className,
 }: {
   startup: LiveStartup
   elapsedMs: number
   reconnecting?: number
+  brief?: boolean
   className?: string
 }) {
+  const said =
+    reconnecting === undefined ? 'チャンネルを準備しています' : '再接続中'
+
+  if (brief) {
+    return (
+      <p
+        role="status"
+        data-slot="live-startup-brief"
+        className={cn(
+          'pointer-events-none absolute flex h-fit w-fit max-w-[88%] items-center justify-center gap-2 rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)',
+          className ?? 'inset-0 m-auto',
+        )}
+      >
+        <Spinner
+          className={
+            reconnecting === undefined
+              ? 'text-(--pl-accent)'
+              : 'text-(--pl-lemon)'
+          }
+        />
+        {said}
+        {reconnecting !== undefined && (
+          <span className="font-code text-note text-(--pl-ink-2)">
+            {reconnecting} 回目
+          </span>
+        )}
+      </p>
+    )
+  }
+
   return (
     <div
       role="status"
@@ -31,9 +63,7 @@ export function LiveStartupSteps({
             : 'text-(--pl-lemon)',
         )}
       />
-      <b className="heading text-[calc(14.5rem/16)]">
-        {reconnecting === undefined ? 'チャンネルを準備しています' : '再接続中'}
-      </b>
+      <b className="heading text-[calc(14.5rem/16)]">{said}</b>
       {reconnecting !== undefined && (
         <span className="mt-1 font-code text-note text-(--pl-ink-2)">
           {reconnecting} 回目

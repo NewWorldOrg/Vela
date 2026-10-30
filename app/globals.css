@@ -12,6 +12,13 @@
   }
 }
 
+/* A phone held on its side: a finger's screen whose window is short and wide. */
+@custom-variant sideways {
+  @media (pointer: coarse) and (orientation: landscape) and (height < 600px) {
+    @slot;
+  }
+}
+
 @custom-variant dark {
   &:where(.dark, .dark *) {
     @slot;

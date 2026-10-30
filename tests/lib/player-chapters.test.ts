@@ -10,6 +10,7 @@ import {
   SKIP_ONLY,
   skippableRunAt,
   skipWords,
+  skipNameInTheRow,
   skipWordsInTheRow,
 } from '@/lib/player-chapters'
 import type { PlaybackChapter } from '@/repository/videos'
@@ -307,4 +308,30 @@ test('in the control row, several kinds are joined with a plus, and one kind kee
   )
   assert.equal(skipWordsInTheRow(['opening']), 'OP を飛ばす')
   assert.equal(SKIP_ONLY, '飛ばす')
+})
+
+test('the skip in the control row is named from the words it shows, so the name begins with them', () => {
+  assert.equal(skipNameInTheRow(['opening', 'break'], true), 'OP+CM を飛ばす')
+  assert.equal(
+    skipNameInTheRow(['opening', 'break', 'ending'], true),
+    'OP+CM+ED を飛ばす',
+  )
+  assert.equal(skipNameInTheRow(['opening'], true), 'OP を飛ばす')
+  assert.equal(
+    skipNameInTheRow(['opening', 'break'], false),
+    '飛ばす(OP と CM)',
+  )
+  assert.equal(skipNameInTheRow(['break'], false), '飛ばす(CM)')
+
+  for (const kinds of [
+    ['opening', 'break'],
+    ['break'],
+    ['opening', 'break', 'ending'],
+  ] as const) {
+    for (const fits of [true, false]) {
+      const shown = fits ? skipWordsInTheRow(kinds) : SKIP_ONLY
+
+      assert.ok(skipNameInTheRow(kinds, fits).startsWith(shown))
+    }
+  }
 })
