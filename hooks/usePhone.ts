@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 
-import { PHONE_ON_ITS_SIDE, PHONE_UPRIGHT } from '@/lib/phone'
+import { PHONE_EITHER_WAY, PHONE_ON_ITS_SIDE, PHONE_UPRIGHT } from '@/lib/phone'
 
 function followed(query: string): (notify: () => void) => () => void {
   return (notify) => {
@@ -16,6 +16,7 @@ function followed(query: string): (notify: () => void) => () => void {
 
 const followTheUpright = followed(PHONE_UPRIGHT)
 const followTheSide = followed(PHONE_ON_ITS_SIDE)
+const followEitherWay = followed(PHONE_EITHER_WAY)
 
 function notOnTheServer(): boolean {
   return false
@@ -35,6 +36,15 @@ export function usePhoneOnItsSide(): boolean {
   return useSyncExternalStore(
     followTheSide,
     () => window.matchMedia(PHONE_ON_ITS_SIDE).matches,
+    notOnTheServer,
+  )
+}
+
+/** Whether the window is a phone held either way; not on the server. */
+export function useOnAPhone(): boolean {
+  return useSyncExternalStore(
+    followEitherWay,
+    () => window.matchMedia(PHONE_EITHER_WAY).matches,
     notOnTheServer,
   )
 }

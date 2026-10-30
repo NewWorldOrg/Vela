@@ -19,6 +19,7 @@ export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
       className={cn(
         'dot-grid flex min-h-dvh flex-col bg-bg',
         'pr-[env(safe-area-inset-right)] pb-[calc(var(--safe-bottom)+var(--tab-bar))] pl-[env(safe-area-inset-left)]',
+        'sideways:pl-[calc(68rem/16+env(safe-area-inset-left))]',
         'has-[[data-scroll=within]]:h-dvh has-[[data-scroll=within]]:overflow-hidden',
         className,
       )}
@@ -47,7 +48,7 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
       className={cn(
         'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[calc(14rem/16)]',
         TOP_BAR_HEIGHT,
-        'upright:h-[calc(52rem/16)] upright:gap-2 upright:border-b-0 upright:bg-bg upright:pr-3 upright:pl-4 upright:dot-grid',
+        'phone:h-[calc(52rem/16)] phone:gap-2 phone:border-b-0 phone:bg-bg phone:pr-3 phone:pl-4 phone:dot-grid',
         'upright:[body:has([data-watching])_&]:hidden',
         className,
       )}
@@ -61,7 +62,7 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="brand"
       className={cn(
-        'heading mr-[calc(14rem/16)] flex items-center gap-1.5 text-title upright:hidden',
+        'heading mr-[calc(14rem/16)] flex items-center gap-1.5 text-title phone:hidden',
         className,
       )}
       {...props}
@@ -81,7 +82,7 @@ export function GlobalNav({
     <nav
       data-slot="global-nav"
       aria-label={ariaLabel}
-      className={cn('flex flex-1 gap-0.5 upright:hidden', className)}
+      className={cn('flex flex-1 gap-0.5 phone:hidden', className)}
       {...props}
     />
   )
@@ -125,7 +126,7 @@ export function SettingsLink({
       data-slot="settings-link"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none upright:hidden',
+        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none phone:hidden',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'border-brand bg-brand-soft font-bold text-brand',
@@ -153,11 +154,14 @@ export function TabBar({
         'fixed inset-x-0 bottom-0 z-40 hidden border-t border-line bg-surface',
         'pr-[env(safe-area-inset-right)] pb-(--safe-bottom) pl-[env(safe-area-inset-left)]',
         'upright:block [body:has([data-fill])_&]:hidden',
+        'sideways:block sideways:top-0 sideways:right-auto sideways:w-[calc(68rem/16+env(safe-area-inset-left))] sideways:border-t-0 sideways:border-r sideways:pr-0 sideways:pb-0',
         className,
       )}
       {...props}
     >
-      <ul className="flex h-[calc(var(--tab-bar)-1px)]">{children}</ul>
+      <ul className="flex h-[calc(var(--tab-bar)-1px)] sideways:h-full sideways:flex-col sideways:justify-center sideways:gap-1 sideways:pb-(--safe-bottom)">
+        {children}
+      </ul>
     </nav>
   )
 }
@@ -181,7 +185,7 @@ export function TabBarItem({
   const Comp = asChild ? Slot.Root : 'a'
 
   return (
-    <li className="flex min-w-0 flex-1">
+    <li className="flex min-w-0 flex-1 sideways:h-[calc(60rem/16)] sideways:flex-none">
       <Comp
         data-slot="tab-bar-item"
         aria-current={active ? 'page' : undefined}
@@ -379,7 +383,7 @@ export function Crumb({ className, children, ...props }: ComponentProps<'p'>) {
     <p
       data-slot="crumb"
       className={cn(
-        'mb-[calc(5rem/16)] text-cap text-ink-3 upright:hidden',
+        'mb-[calc(5rem/16)] text-cap text-ink-3 phone:hidden',
         className,
       )}
       {...props}

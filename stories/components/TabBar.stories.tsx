@@ -371,3 +371,53 @@ export const TextOnAWideWindow: Story = {
     await expect(stepSize(canvasElement, 'micro')).toBe(10.5)
   },
 }
+
+const SIDEWAYS = { width: 844, height: 390 }
+
+export const OnAPhoneHeldSideways: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: SIDEWAYS,
+    coarse: true,
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+  },
+  play: async ({ canvasElement }) => {
+    const rail = tabBarOf(canvasElement)
+    const box = rail.getBoundingClientRect()
+
+    await expect(rail).toBeVisible()
+    await expect(box.left).toBe(0)
+    await expect(box.top).toBe(0)
+    await expect(box.height).toBe(window.innerHeight)
+    await expect(box.width).toBeLessThan(100)
+
+    const links = within(rail).getAllByRole('link')
+
+    await expect(links.map((link) => link.textContent)).toEqual([
+      '番組表',
+      'ライブ',
+      'ライブラリ',
+      '予約',
+      '設定',
+    ])
+
+    for (const link of links) {
+      await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+        44,
+      )
+    }
+
+    await expect(
+      canvasElement.querySelector('[data-slot="global-nav"]'),
+    ).not.toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="phone-bar-title"]'),
+    ).toHaveTextContent('ライブラリ')
+
+    const bar = canvasElement
+      .querySelector('[data-slot="top-bar"]')!
+      .getBoundingClientRect()
+
+    await expect(bar.left).toBeGreaterThanOrEqual(box.right - 1)
+  },
+}
