@@ -116,11 +116,8 @@ import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { useReceiverId } from '@/hooks/useReceiverId'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
-import {
-  usePhoneOnItsSide,
-  usePhoneWidth,
-  usePlayerFit,
-} from '@/hooks/usePlayerFit'
+import { usePhoneOnItsSide, usePhoneUpright } from '@/hooks/usePhone'
+import { usePlayerFit } from '@/hooks/usePlayerFit'
 import {
   SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD,
   wideRowWidth,
@@ -1049,7 +1046,7 @@ export function LivePlayer({
   const losing = running?.losing ?? false
   const opened = broadcast.view.open
   const sideways = usePhoneOnItsSide()
-  const phone = usePhoneWidth()
+  const phone = usePhoneUpright()
   const fit = usePlayerFit(
     shell,
     wideRowWidth({

@@ -50,7 +50,7 @@ import { ProgramBooking } from '@/components/guide/program-booking'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
 import { ChannelStrip } from '@/components/guide/channel-strip'
 import { ChannelDayList } from '@/components/guide/channel-day-list'
-import { usePhoneWidth } from '@/hooks/usePhoneWidth'
+import { usePhoneUpright } from '@/hooks/usePhone'
 import { ScreenMain } from '@/components/vela/app-shell'
 import {
   FilterFoldButton,
@@ -125,7 +125,7 @@ export function GuideView({
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
-  const phone = usePhoneWidth()
+  const phone = usePhoneUpright()
   const [listedId, setListedId] = useState<string>()
   const listed =
     shownGuide.channels.find((c) => c.id === listedId) ?? shownGuide.channels[0]
@@ -220,7 +220,7 @@ export function GuideView({
       scroll="within"
       className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] sideways:sr-only">
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] sideways:sr-only upright:sr-only">
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
@@ -343,7 +343,7 @@ export function GuideView({
           {listed && (
             <div
               data-guide-phone
-              className="hidden min-h-0 flex-1 flex-col max-[600px]:flex"
+              className="hidden min-h-0 flex-1 flex-col upright:flex"
             >
               <ChannelStrip
                 channels={shownGuide.channels}
@@ -396,7 +396,7 @@ export function GuideView({
             </div>
           )}
           {!phone && (
-            <div className="flex min-h-0 flex-1 flex-col max-[600px]:hidden">
+            <div className="flex min-h-0 flex-1 flex-col upright:hidden">
               <GuideGrid
                 key={guide.kind}
                 channels={shownGuide.channels}
