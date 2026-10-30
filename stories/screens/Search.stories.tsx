@@ -27,12 +27,7 @@ import { SearchView } from '@/components/search/search-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheApp } from '@/stories/frames'
-import {
-  FROM_600,
-  laysRowsAsATable,
-  laysRowsAsCards,
-  PHONE,
-} from '@/stories/rows-as-cards'
+import { FROM_600, laysRowsAsATable, PHONE } from '@/stories/rows-as-cards'
 
 const emptyCondition: SearchCondition = {
   fields: 'title,description',
@@ -1126,7 +1121,9 @@ export const 頼み直すと最初のページから: Story = {
       '&from=2026-08-09&to=2026-08-15'
 
     const walkOut = async (to: string): Promise<void> => {
-      await userEvent.click(canvas.getByRole('button', { name: '4 ページ目' }))
+      await userEvent.click(
+        await canvas.findByRole('button', { name: '4 ページ目' }),
+      )
       await waitFor(async () => {
         await expect(router.push).toHaveBeenLastCalledWith(to, {
           scroll: false,
@@ -1339,22 +1336,32 @@ export const 狭い幅で収まらないほどの検索結果: Story = {
   },
 }
 
-export const 電話の幅では結果をカードに組む: Story = {
+export const 電話の幅では結果を番組表の行に組む: Story = {
   args: 検索結果.args,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
-    await laysRowsAsCards(canvasElement)
+    const hits = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="phone-search-hits"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(
+      canvasElement.querySelector('[data-slot="table-container"]'),
+    ).not.toBeVisible()
 
     const [first] = SEARCH_HIT_FIXTURES
-    const card = within(
-      within(canvasElement)
-        .getByRole('link', { name: first.title })
-        .closest('tr') as HTMLElement,
-    )
+    const row = hits.querySelector<HTMLElement>(
+      `[data-programme="${first.id}"]`,
+    )!
 
-    for (const value of [first.title, first.channelName, first.genreLabel]) {
-      await expect(card.getByText(value)).toBeVisible()
-    }
+    await expect(row).toHaveTextContent(first.title)
+    await expect(row).toHaveTextContent(first.channelName)
+    await expect(row).toHaveTextContent(first.startLabel)
   },
 }
 
@@ -1363,5 +1370,86 @@ export const 幅600pxからは結果を表のまま: Story = {
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
     await laysRowsAsATable(canvasElement)
+  },
+}
+
+const UPRIGHT = { width: 390, height: 844 }
+
+const searchedOnAPhone: SearchResult = {
+  condition,
+  channels,
+  outcome: {
+    state: 'searched',
+    found: {
+      hits: SEARCH_HIT_FIXTURES,
+      total: SEARCH_HIT_FIXTURES.length,
+      page: 1,
+      lastPage: 1,
+      perPage: 20,
+      rangeFrom: 1,
+      rangeTo: SEARCH_HIT_FIXTURES.length,
+    },
+  },
+}
+
+const reservedHere: string[] = []
+
+export const 電話では上の帯が検索の欄で結果を番組表の行で並べる: Story = {
+  args: {
+    result: searchedOnAPhone,
+    onReserve: async (programmeId: string) => {
+      reservedHere.push(programmeId)
+
+      return { state: 'ok' as const, reservationId: 'r-1' }
+    },
+    onCancel: async () => ({ state: 'ok' as const }),
+  },
+  parameters: { screen: UPRIGHT },
+  beforeEach: () => {
+    reservedHere.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const bar = within(
+      canvasElement.querySelector<HTMLElement>('[data-slot="top-bar"]')!,
+    )
+    const field = bar.getByRole('searchbox', { name: 'キーワード' })
+
+    await expect(field).toHaveValue('観測所')
+    await expect(bar.getByRole('link', { name: '番組表へ' })).toHaveAttribute(
+      'href',
+      '/guide',
+    )
+
+    const chips = within(
+      canvasElement.querySelector<HTMLElement>(
+        '[data-slot="phone-conditions"]',
+      )!,
+    ).getAllByRole('button')
+
+    await expect(chips).toHaveLength(5)
+
+    const hits = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="phone-search-hits"]',
+    )!
+
+    await expect(hits).toBeVisible()
+    await expect(hits.querySelector('mark')).toHaveTextContent('観測所')
+    await expect(hits.getBoundingClientRect().width).toBe(window.innerWidth)
+
+    const circle = hits.querySelector<HTMLElement>(
+      '[data-slot="reserve-circle"][data-mark="none"]',
+    )!
+
+    await userEvent.click(circle)
+    await waitFor(() => expect(reservedHere).toHaveLength(1))
+
+    await userEvent.click(chips[1])
+    await expect(chips[1]).toHaveAttribute('aria-expanded', 'true')
+    await expect(
+      within(canvasElement).getByRole('combobox', { name: 'ジャンルを追加' }),
+    ).toBeVisible()
+    await expect(
+      within(canvasElement).queryByRole('combobox', { name: '種別' }),
+    ).toBeNull()
   },
 }

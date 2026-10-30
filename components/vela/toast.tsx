@@ -11,6 +11,7 @@ import {
 } from 'react'
 
 import { cn } from '@/lib/utils'
+import { pressable } from '@/components/vela/tactile'
 
 /** How long a toast stays, and how long a deletion it holds back waits before it is sent. */
 export const TOAST_MS = 5_000
@@ -97,7 +98,10 @@ export function Toasts({ children }: { children: ReactNode }) {
                   leave(false)
                   action?.onPress()
                 }}
-                className="flex h-11 shrink-0 items-center rounded-full px-3 font-bold text-brand-line outline-none focus-visible:shadow-ring dark:text-brand-soft"
+                className={cn(
+                  'flex h-11 shrink-0 items-center rounded-full px-3 font-bold text-brand-line outline-none focus-visible:shadow-ring dark:text-brand-soft',
+                  pressable,
+                )}
               >
                 {shown.action.label}
               </button>

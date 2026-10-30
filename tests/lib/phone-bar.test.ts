@@ -40,3 +40,8 @@ test('a screen pressed into from a tab goes back to the head of that tab', () =>
     label: 'ライブラリ',
   })
 })
+
+test('the search gives its bar to the field, without the theme', () => {
+  assert.equal(phoneBarOf('/search').withoutTheme, true)
+  assert.equal(phoneBarOf('/guide').withoutTheme, undefined)
+})

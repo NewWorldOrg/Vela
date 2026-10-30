@@ -6,6 +6,8 @@ import { isPathActive } from '@/lib/path'
 export interface PhoneBar {
   title: string
   back?: { href: Route; label: string }
+  /** The bar gives the screen its whole width, without the theme: the search's field. */
+  withoutTheme?: boolean
 }
 
 /** The settings, in the order the side nav and the phone's entrance give them. */
@@ -32,7 +34,10 @@ const TO_THE_GUIDE = { href: '/guide' as Route, label: '番組表' }
 const TO_THE_LIBRARY = { href: '/library' as Route, label: 'ライブラリ' }
 
 const PRESSED_INTO: readonly { root: string; bar: PhoneBar }[] = [
-  { root: '/search', bar: { title: '番組検索', back: TO_THE_GUIDE } },
+  {
+    root: '/search',
+    bar: { title: '番組検索', back: TO_THE_GUIDE, withoutTheme: true },
+  },
   { root: '/guide/programs', bar: { title: '番組詳細', back: TO_THE_GUIDE } },
   {
     root: '/library/integrity',

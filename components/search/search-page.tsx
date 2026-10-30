@@ -1,7 +1,7 @@
 'use client'
 
 import type { ReactElement, ReactNode } from 'react'
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter } from 'next/navigation'
@@ -62,8 +62,10 @@ import { IconButton } from '@/components/vela/icon-button'
 import { InFull } from '@/components/vela/in-full'
 import { Pager } from '@/components/vela/pager'
 import {
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  CloseIcon,
   FilterIcon,
   LinkIcon,
   ListIcon,
@@ -78,6 +80,12 @@ import {
   SubgenrePicks,
 } from '@/components/search/condition-picks'
 import { SPAN_DASH } from '@/lib/format'
+import type { ReservationWrite } from '@/repository/reservations'
+import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
+import { pressable } from '@/components/vela/tactile'
+import { PhoneBarLead } from '@/components/vela/phone-bar-tools'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import { PhoneSearchHits } from '@/components/search/phone-search-hits'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 const EVERY_KIND = 'all'
@@ -126,13 +134,47 @@ function insteadOfHits(
   return null
 }
 
-export function SearchView({ result }: { result: SearchResult }) {
+interface Reserving {
+  /** Reserves a hit in one press, from the phone's circle. */
+  onReserve?: (programmeId: string) => Promise<ReservationWrite>
+  /** Takes back a hit's reservation, from the circle or the toast. */
+  onCancel?: (id: string) => Promise<ReservationWrite>
+  /** Puts back a reservation the circle took back. */
+  onRestore?: (id: string) => Promise<ReservationWrite>
+}
+
+export function SearchView({
+  result,
+  ...reserving
+}: Reserving & { result: SearchResult }) {
   return (
-    <SearchScreen key={searchTermsQueryOf(result.condition)} result={result} />
+    <SearchScreen
+      key={searchTermsQueryOf(result.condition)}
+      result={result}
+      {...reserving}
+    />
   )
 }
 
-function SearchScreen({ result }: { result: SearchResult }) {
+/** The conditions a phone opens one at a time from the row of chips under the field. */
+type PhoneCondition = 'kind' | 'genre' | 'days' | 'channels' | 'fields'
+
+const PHONE_CONDITION_SHOWN: Record<PhoneCondition, string> = {
+  kind: 'upright:[&_[data-condition=kind]]:flex',
+  genre: 'upright:[&_[data-condition=genre]]:flex',
+  days: 'upright:[&_[data-condition=days]]:flex',
+  channels: 'upright:[&_[data-condition=channels]]:flex',
+  fields: 'upright:[&_[data-condition=fields]]:flex',
+}
+
+function SearchScreen({
+  result,
+  onReserve,
+  onCancel,
+  onRestore,
+}: Reserving & { result: SearchResult }) {
+  const [phoneCondition, setPhoneCondition] = useState<PhoneCondition>()
+  const formId = useId()
   const router = useRouter()
   const pathname = usePathname()
   const [copied, setCopied] = useState<{ href: string; ok: boolean } | null>(
@@ -204,9 +246,110 @@ function SearchScreen({ result }: { result: SearchResult }) {
   const channelNameOf = (id: string): string =>
     channels.find((channel) => channel.id === id)?.name || id
 
+  const chips: { name: PhoneCondition; label: string; on: boolean }[] = [
+    {
+      name: 'kind',
+      label: `種別 ${SEARCH_KIND_OPTIONS.find((option) => option.value === draft.kind)?.label ?? 'すべて'}`,
+      on: Boolean(draft.kind),
+    },
+    {
+      name: 'genre',
+      label:
+        draft.genres.length === 0
+          ? 'ジャンル'
+          : draft.genres.map(genreLabelOf).join('・'),
+      on: draft.genres.length > 0 || draft.subgenres.length > 0,
+    },
+    {
+      name: 'days',
+      label: '曜日',
+      on: namesSomeDays(draft.days) || Boolean(draft.from || draft.to),
+    },
+    {
+      name: 'channels',
+      label:
+        draft.channels.length === 0
+          ? 'チャンネル'
+          : draft.channels.map(channelNameOf).join('・'),
+      on: draft.channels.length > 0,
+    },
+    {
+      name: 'fields',
+      label:
+        SEARCH_FIELD_OPTIONS.find((option) => option.value === draft.fields)
+          ?.label ?? '対象',
+      on: false,
+    },
+  ]
+  const words = (found ? condition.q : undefined)?.split(/\s+/) ?? []
+
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
-      <div className="mb-4 flex flex-wrap items-start gap-3.5">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5">
+      <PhoneBarLead>
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border-[1.5px] border-brand bg-surface pr-1.5 pl-3.5 text-ink-3 shadow-ring">
+          <SearchIcon className="size-[calc(18rem/16)] shrink-0" />
+          <input
+            form={formId}
+            type="search"
+            enterKeyHint="search"
+            aria-label="キーワード"
+            autoFocus={outcome.state === 'idle'}
+            value={draft.q}
+            onChange={(event) => amend({ q: event.target.value })}
+            className="h-full min-w-0 flex-1 bg-transparent text-ink outline-none [&::-webkit-search-cancel-button]:hidden"
+          />
+          {draft.q !== '' && (
+            <button
+              type="button"
+              aria-label="キーワードを消す"
+              onClick={() => amend({ q: '' })}
+              className={cn(
+                'tap-target flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-3 [&_svg]:size-4',
+                pressable,
+              )}
+            >
+              <CloseIcon />
+            </button>
+          )}
+        </label>
+      </PhoneBarLead>
+      <OnAnUprightPhone>
+        <ul
+          aria-label="検索条件"
+          data-slot="phone-conditions"
+          className="-mx-3.5 mb-2 flex gap-2 overflow-x-auto px-4 pt-0.5 pb-1"
+        >
+          {chips.map((chip) => (
+            <li key={chip.name} className="shrink-0">
+              <button
+                type="button"
+                aria-expanded={phoneCondition === chip.name}
+                onClick={() =>
+                  setPhoneCondition(
+                    phoneCondition === chip.name ? undefined : chip.name,
+                  )
+                }
+                className={cn(
+                  BAND_PRESS,
+                  BAND_CONTROL,
+                  'h-11 max-w-[calc(220rem/16)]',
+                  (chip.on || phoneCondition === chip.name) &&
+                    'border-brand-line bg-brand-soft font-bold text-brand',
+                )}
+              >
+                <span className="truncate">{chip.label}</span>
+                <ChevronDownIcon
+                  className={cn(
+                    'shrink-0 transition-transform',
+                    phoneCondition === chip.name && 'rotate-180',
+                  )}
+                />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </OnAnUprightPhone>
+      <div className="mb-4 flex flex-wrap items-start gap-3.5 upright:hidden">
         <div className="min-w-0 flex-1">
           <h1 className="heading upright:sr-only text-[calc(20rem/16)]">
             番組検索
@@ -220,8 +363,15 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </Button>
       </div>
 
-      <section className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
-        <div className="flex flex-wrap items-center gap-2.5">
+      <section
+        className={cn(
+          'mb-3.5 rounded-lg bg-surface px-4 py-3.5',
+          phoneCondition
+            ? PHONE_CONDITION_SHOWN[phoneCondition]
+            : 'upright:hidden',
+        )}
+      >
+        <div className="flex flex-wrap items-center gap-2.5 upright:hidden">
           <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
             <FilterIcon className="size-4 text-brand" />
             検索条件
@@ -238,7 +388,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
         </div>
 
         <form
-          className="mt-2.5"
+          id={formId}
+          className="mt-2.5 upright:mt-0"
           // WebKit lets the Enter that settles an IME conversion submit the form; Chromium and Gecko hold it back themselves.
           onKeyDown={(event) => {
             if (event.key === 'Enter' && event.nativeEvent.isComposing) {
@@ -250,7 +401,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             go(asking, true)
           }}
         >
-          <ConditionRow label="キーワード">
+          <ConditionRow label="キーワード" name="keyword">
             <Input
               aria-label="キーワード"
               value={draft.q}
@@ -260,7 +411,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             />
           </ConditionRow>
 
-          <ConditionRow label="除外キーワード">
+          <ConditionRow label="除外キーワード" name="keyword">
             <Input
               aria-label="除外キーワード"
               value={draft.exclude}
@@ -270,7 +421,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             />
           </ConditionRow>
 
-          <ConditionRow label="対象範囲">
+          <ConditionRow label="対象範囲" name="fields">
             <Select
               value={draft.fields}
               onValueChange={(value) => amend({ fields: value as SearchField })}
@@ -296,7 +447,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             </Select>
           </ConditionRow>
 
-          <ConditionRow label="種別">
+          <ConditionRow label="種別" name="kind">
             <Select
               value={draft.kind ?? EVERY_KIND}
               onValueChange={(value) =>
@@ -327,7 +478,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             </Select>
           </ConditionRow>
 
-          <ConditionRow label="ジャンル">
+          <ConditionRow label="ジャンル" name="genre">
             {draft.genres.map((genre) => (
               <Pick
                 key={genre}
@@ -365,7 +516,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             )}
           </ConditionRow>
 
-          <ConditionRow label="サブジャンル">
+          <ConditionRow label="サブジャンル" name="genre">
             <SubgenrePicks
               genres={draft.genres}
               subgenres={draft.subgenres}
@@ -373,7 +524,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
             />
           </ConditionRow>
 
-          <ConditionRow label="チャンネル">
+          <ConditionRow label="チャンネル" name="channels">
             {draft.channels.map((id) => (
               <Pick
                 key={id}
@@ -417,11 +568,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
             )}
           </ConditionRow>
 
-          <ConditionRow label="曜日">
+          <ConditionRow label="曜日" name="days">
             <DayPicks days={draft.days} onChange={(days) => amend({ days })} />
           </ConditionRow>
 
-          <ConditionRow label="期間">
+          <ConditionRow label="期間" name="days">
             <Input
               type="date"
               aria-label="期間の開始日"
@@ -458,7 +609,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
           </div>
         </form>
 
-        <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3">
+        <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3 upright:hidden">
           <LinkIcon className="size-3.5 shrink-0 text-ink-3" />
           <InFull says={decodeURIComponent(href)}>
             <code className="min-w-0 truncate font-code text-note text-ink-3">
@@ -492,7 +643,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
           </button>
         </div>
 
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex justify-end upright:hidden">
           {narrowing ? (
             <Button size="sm" asChild>
               <Link href={ruleHref}>
@@ -516,7 +667,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
       {instead ??
         (found && (
           <div {...waitsWhile(waiting)}>
-            <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
+            <div className="mb-2.5 flex flex-wrap items-center gap-2.5 upright:hidden">
               <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
                 <ListIcon className="size-4 text-brand" />
                 検索結果
@@ -609,12 +760,23 @@ function SearchScreen({ result }: { result: SearchResult }) {
               />
             ) : (
               <>
+                <OnAnUprightPhone>
+                  <PhoneSearchHits
+                    hits={found.hits}
+                    total={found.total}
+                    words={words}
+                    ruleHref={narrowing ? ruleHref : undefined}
+                    onReserve={onReserve}
+                    onCancel={onCancel}
+                    onRestore={onRestore}
+                  />
+                </OnAnUprightPhone>
                 <div
                   data-slot="table-container"
                   tabIndex={0}
                   className={cn(
                     ADMIN_LIST_HEIGHT_CAP,
-                    'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
+                    'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring upright:hidden',
                   )}
                 >
                   <table
@@ -731,6 +893,10 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   page={found.page}
                   lastPage={found.lastPage}
                   onPage={(page) => show({ page }, true)}
+                  className={cn(
+                    'upright:mt-4',
+                    found.lastPage <= 1 && 'upright:hidden',
+                  )}
                 />
               </>
             )}
@@ -759,13 +925,19 @@ function termsOf(draft: SearchDraft): SearchTerms {
 
 function ConditionRow({
   label,
+  name,
   children,
 }: {
   label: string
+  /** Which of the phone's chips opens this row. */
+  name: PhoneCondition | 'keyword'
   children: ReactNode
 }) {
   return (
-    <div className="flex flex-col gap-1.5 border-b border-dashed border-line py-[calc(9rem/16)] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5">
+    <div
+      data-condition={name}
+      className="flex flex-col gap-1.5 border-b border-dashed border-line py-[calc(9rem/16)] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5 upright:hidden upright:border-b-0"
+    >
       <span className="text-note font-bold text-ink-3 min-[701px]:w-[calc(92rem/16)] min-[701px]:shrink-0 min-[701px]:pt-2">
         {label}
       </span>

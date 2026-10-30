@@ -323,7 +323,10 @@ export function PhoneLiveInfo({
             aria-expanded={unfolded}
             aria-label="番組の詳細"
             onClick={() => unfold(!unfolded)}
-            className="-mt-1 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring [&_svg]:size-5"
+            className={cn(
+              '-mt-1 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring [&_svg]:size-5',
+              pressable,
+            )}
           >
             {unfolded ? <ChevronUpIcon /> : <ChevronDownIcon />}
           </button>

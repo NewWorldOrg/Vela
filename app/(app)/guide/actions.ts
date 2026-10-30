@@ -17,6 +17,7 @@ import type {
 import {
   cancelReservation,
   createReservation,
+  restoreReservation,
   reviseReservation,
 } from '@/repository/reservations'
 
@@ -46,6 +47,7 @@ export async function reserveProgramme(
   if (result.state === 'ok') {
     revalidatePath('/guide')
     revalidatePath('/reservations')
+    revalidatePath('/search')
   }
 
   return result
@@ -58,6 +60,19 @@ export async function dropProgrammeReservation(
 
   revalidatePath('/guide')
   revalidatePath('/reservations')
+  revalidatePath('/search')
+
+  return result
+}
+
+export async function restoreProgrammeReservation(
+  id: string,
+): Promise<ReservationWrite> {
+  const result = await restoreReservation(id)
+
+  revalidatePath('/guide')
+  revalidatePath('/reservations')
+  revalidatePath('/search')
 
   return result
 }

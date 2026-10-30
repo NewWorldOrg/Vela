@@ -14,7 +14,10 @@ import {
   SettingsLink,
   TopBar,
 } from '@/components/vela/app-shell'
-import { PhoneBarToolsSlot } from '@/components/vela/phone-bar-tools'
+import {
+  PhoneBarLeadSlot,
+  PhoneBarToolsSlot,
+} from '@/components/vela/phone-bar-tools'
 import { PhoneThemeButton, ThemeToggle } from '@/components/theme/ThemeToggle'
 
 const SERVICES = DESTINATIONS.filter(({ href }) => href !== SETTINGS_HREF)
@@ -46,9 +49,12 @@ export function AppTopBar() {
             <Link href={phone.back.href} />
           </PhoneBarBack>
         )}
-        <PhoneBarTitle>{phone.title}</PhoneBarTitle>
+        <PhoneBarLeadSlot />
+        <PhoneBarTitle className="[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden">
+          {phone.title}
+        </PhoneBarTitle>
         <PhoneBarToolsSlot />
-        <PhoneThemeButton />
+        {!phone.withoutTheme && <PhoneThemeButton />}
       </div>
     </TopBar>
   )

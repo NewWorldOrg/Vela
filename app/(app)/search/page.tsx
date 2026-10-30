@@ -2,6 +2,11 @@ import type { Metadata } from 'next'
 
 import { rawSearchConditionOf } from '@/lib/search-condition'
 import { searchPrograms } from '@/repository/search'
+import {
+  dropProgrammeReservation,
+  reserveProgramme,
+  restoreProgrammeReservation,
+} from '../guide/actions'
 import { SearchView } from '@/components/search/search-page'
 
 export const metadata: Metadata = { title: '番組検索' }
@@ -14,5 +19,12 @@ export default async function Page({
   const params = await searchParams
   const result = await searchPrograms(rawSearchConditionOf(params))
 
-  return <SearchView result={result} />
+  return (
+    <SearchView
+      result={result}
+      onReserve={reserveProgramme}
+      onCancel={dropProgrammeReservation}
+      onRestore={restoreProgrammeReservation}
+    />
+  )
 }
