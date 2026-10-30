@@ -107,7 +107,7 @@ export function SidewaysChannels({
                 {on && preparing && (
                   <Spinner
                     size="control"
-                    className="absolute top-0.5 right-0.5 text-(--pl-accent)"
+                    className="absolute top-1 right-1 text-(--pl-accent)"
                   />
                 )}
               </button>
