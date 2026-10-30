@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
@@ -2253,13 +2253,11 @@ async function opensAtTheProgrammeOnAir(list: HTMLElement): Promise<void> {
 
     const room = list.getBoundingClientRect()
     const row = onAir!.getBoundingClientRect()
-    const room_for_the_row_above = Math.min(
-      48,
-      onAir!.offsetTop,
-      list.scrollHeight - list.clientHeight >= onAir!.offsetTop - 48
-        ? 48
-        : onAir!.offsetTop - (list.scrollHeight - list.clientHeight),
+    const scrolled = Math.min(
+      Math.max(0, onAir!.offsetTop - 48),
+      list.scrollHeight - list.clientHeight,
     )
+    const room_for_the_row_above = onAir!.offsetTop - scrolled
 
     expect(Math.abs(row.top - room.top - room_for_the_row_above)).toBeLessThan(
       2,
@@ -2636,5 +2634,169 @@ export const 幅600pxからは表: Story = {
     await expect(
       canvas.getByRole('group', { name: '放送の種別' }),
     ).toBeVisible()
+  },
+}
+
+const REST_ARRIVES = 'vela-story-guide-rest-arrives'
+
+const LIST_SHOWS = 'vela-story-guide-list-shows'
+
+const OPENING_HOURS = A_FULL_DAY_GUIDE.programs.filter(
+  (program) =>
+    program.startMin + program.durationMin > A_FULL_DAY_GUIDE.nowMin - 60 &&
+    program.startMin < A_FULL_DAY_GUIDE.nowMin + 120,
+)
+
+function TheRestArrivesLater(props: Parameters<typeof GuideView>[0]) {
+  const [whole, setWhole] = useState(false)
+
+  useEffect(() => {
+    const arrive = (): void => setWhole(true)
+
+    window.addEventListener(REST_ARRIVES, arrive)
+
+    return () => window.removeEventListener(REST_ARRIVES, arrive)
+  }, [])
+
+  return (
+    <GuideView
+      {...props}
+      guide={{
+        ...A_FULL_DAY_GUIDE,
+        programs: whole ? A_FULL_DAY_GUIDE.programs : OPENING_HOURS,
+      }}
+    />
+  )
+}
+
+function HiddenUntilTurned(props: Parameters<typeof GuideView>[0]) {
+  const [shown, setShown] = useState(false)
+
+  useEffect(() => {
+    const show = (): void => setShown(true)
+
+    window.addEventListener(LIST_SHOWS, show)
+
+    return () => window.removeEventListener(LIST_SHOWS, show)
+  }, [])
+
+  return (
+    <div className={shown ? 'contents' : 'hidden'}>
+      <GuideView {...props} />
+    </div>
+  )
+}
+
+const firstChannelRows = (whole: boolean) =>
+  programsOfChannel(
+    whole ? A_FULL_DAY_GUIDE.programs : OPENING_HOURS,
+    A_FULL_DAY_CHANNELS[0].id,
+  ).length
+
+export const 電話では残りが届いたあとも放送中の行が見える: Story = {
+  args: { guide: A_FULL_DAY_GUIDE },
+  parameters: { screen: PHONE },
+  render: (args) => <TheRestArrivesLater {...args} />,
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+
+    await waitFor(() =>
+      expect(rowsIn(list)).toHaveLength(firstChannelRows(false)),
+    )
+    await opensAtTheProgrammeOnAir(list)
+
+    window.dispatchEvent(new Event(REST_ARRIVES))
+
+    await waitFor(() =>
+      expect(rowsIn(list)).toHaveLength(firstChannelRows(true)),
+    )
+    await expect(firstChannelRows(true)).toBeGreaterThan(
+      firstChannelRows(false),
+    )
+    await opensAtTheProgrammeOnAir(list)
+  },
+}
+
+export const 電話では送ったあとに残りが届いても見ていた行が動かない: Story = {
+  args: { guide: A_FULL_DAY_GUIDE },
+  parameters: { screen: PHONE },
+  render: (args) => <TheRestArrivesLater {...args} />,
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+
+    await opensAtTheProgrammeOnAir(list)
+
+    list.dispatchEvent(new WheelEvent('wheel', { deltaY: 120 }))
+    list.scrollTop += 120
+
+    const room = list.getBoundingClientRect()
+    const looked = await waitFor(() => {
+      const row = rowsIn(list).find(
+        (one) => one.getBoundingClientRect().bottom > room.top + 1,
+      )
+
+      expect(row).toBeDefined()
+
+      return row!
+    })
+    const title = looked.querySelector(':scope > button')!.textContent
+    const was = looked.getBoundingClientRect().top
+
+    window.dispatchEvent(new Event(REST_ARRIVES))
+
+    await waitFor(() =>
+      expect(rowsIn(list)).toHaveLength(firstChannelRows(true)),
+    )
+
+    const same = rowsIn(list).find(
+      (one) => one.querySelector(':scope > button')!.textContent === title,
+    )
+
+    await expect(same).toBeDefined()
+    await waitFor(() =>
+      expect(Math.abs(same!.getBoundingClientRect().top - was)).toBeLessThan(2),
+    )
+  },
+}
+
+export const 横から縦に替えると放送中の行から始まる: Story = {
+  args: { guide: A_FULL_DAY_GUIDE },
+  parameters: { screen: PHONE },
+  render: (args) => <HiddenUntilTurned {...args} />,
+  play: async ({ canvasElement }) => {
+    const hidden = canvasElement.querySelector<HTMLElement>('[data-guide-list]')
+
+    await expect(hidden).not.toBeNull()
+    await expect(hidden!.getBoundingClientRect().height).toBe(0)
+
+    window.dispatchEvent(new Event(LIST_SHOWS))
+
+    const list = await phoneList(canvasElement)
+
+    await opensAtTheProgrammeOnAir(list)
+  },
+}
+
+export const 幅600pxで番組を押すと対話が開く: Story = {
+  args: { guide: base },
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const cell = Array.from(
+      canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]',
+      ),
+    ).find((one) => one.getBoundingClientRect().width > 0)!
+
+    cell.scrollIntoView({ block: 'center' })
+    await userEvent.click(cell)
+
+    const surface = await openedPanel(canvasElement)
+
+    await expect(surface.querySelector('[data-program-detail]')).not.toBeNull()
+    await expect(
+      canvasElement.querySelector('[data-guide-list] [data-program-detail]'),
+    ).toBeNull()
   },
 }
