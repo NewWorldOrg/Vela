@@ -30,7 +30,7 @@ import { RecordingSelection } from '@/components/library/recording-selection'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { iconButtonVariants } from '@/components/vela/icon-button'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
-import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import { OnAPhone } from '@/components/vela/on-an-upright-phone'
 import { goesOnFrom } from '@/lib/library-days'
 import { useHeldDeletions } from '@/components/recordings/held-deletions'
 import {
@@ -79,7 +79,7 @@ export function LibraryView({
     Boolean,
   ).length
   const hasFilter = Boolean(filter.q) || narrowed > 0
-  const foldedOnAPhone = foldedFiltersOf(filtersOpen)
+  const foldedOnAPhone = foldedFiltersOf(filtersOpen, 'handheld')
   const clearEveryCondition = (): void =>
     onFiltersChange({
       q: null,
@@ -92,7 +92,7 @@ export function LibraryView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 upright:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+      className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <PhoneBarTools>
         <button
@@ -111,14 +111,14 @@ export function LibraryView({
           選ぶ
         </button>
       </PhoneBarTools>
-      <div className="mb-4 flex flex-wrap items-baseline gap-3.5 upright:hidden">
-        <h1 className="heading upright:sr-only flex items-center gap-2 text-[calc(20rem/16)]">
+      <div className="mb-4 flex flex-wrap items-baseline gap-3.5 phone:hidden">
+        <h1 className="heading phone:sr-only flex items-center gap-2 text-[calc(20rem/16)]">
           <LibraryIcon className="size-[calc(18rem/16)] text-brand" />
           ライブラリ
         </h1>
       </div>
 
-      <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5 upright:mb-1 upright:bg-transparent upright:px-0 upright:py-2">
+      <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5 phone:mb-1 phone:bg-transparent phone:px-0 phone:py-2">
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-3">
           <div className="flex min-w-[calc(180rem/16)] flex-[1_1_100%] items-center gap-2.5 min-[701px]:flex-[0_1_268px]">
             <form
@@ -146,6 +146,7 @@ export function LibraryView({
               onOpenChange={setFiltersOpen}
               controls={filtersId}
               narrowed={narrowed}
+              on="handheld"
             />
           </div>
           <div id={filtersId} className={cn('contents', foldedOnAPhone)}>
@@ -222,12 +223,12 @@ export function LibraryView({
           chosen={chosen}
           onClear={() => setPicked(new Set())}
           onDeleteAll={onDeleteAll}
-          className="upright:fixed upright:inset-x-3 upright:bottom-[calc(var(--tab-bar-cover)+10rem/16)] upright:z-50 upright:mb-0 upright:shadow-pop-lg"
+          className="phone:fixed phone:inset-x-3 phone:bottom-[calc(var(--tab-bar-cover)+10rem/16)] phone:z-50 phone:mb-0 phone:shadow-pop-lg sideways:left-[calc(80rem/16+env(safe-area-inset-left))]"
         />
       )}
 
       {items.length > 0 && (
-        <OnAnUprightPhone>
+        <OnAPhone>
           <div
             data-slot="phone-library"
             className="-mx-3.5 min-h-0 flex-1 overflow-y-auto px-3.5 pb-24"
@@ -242,12 +243,12 @@ export function LibraryView({
               onDelete={onDelete}
             />
           </div>
-        </OnAnUprightPhone>
+        </OnAPhone>
       )}
 
       {items.length > 0 ? (
         <RecordingsTable
-          className="upright:hidden"
+          className="phone:hidden"
           items={items}
           waiting={waiting}
           onDelete={onDelete}

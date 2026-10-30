@@ -207,12 +207,12 @@ export function PhoneRecordingRows({
               {heading.near}
               <span className="font-code font-medium">{heading.date}</span>
             </h2>
-            <ul className="border-y border-line bg-surface">
+            <ul className="border-y border-line bg-surface sideways:grid sideways:grid-cols-2">
               {items.map((recording) => (
                 <li
                   key={recording.id}
                   data-recording={recording.id}
-                  className="border-b border-dashed border-line last:border-b-0"
+                  className="border-b border-dashed border-line last:border-b-0 sideways:odd:border-r sideways:[&:nth-last-child(2):nth-child(odd)]:border-b-0"
                 >
                   <div className="flex items-start">
                     {picking && (

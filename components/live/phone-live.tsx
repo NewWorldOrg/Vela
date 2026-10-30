@@ -61,7 +61,7 @@ export function PhoneChannelRows({
   return (
     <ul
       data-slot="phone-channel-rows"
-      className="border-y border-line bg-surface"
+      className="border-y border-line bg-surface sideways:grid sideways:grid-cols-2"
     >
       {channels.map((channel) => {
         const programme = channel.now
@@ -69,7 +69,7 @@ export function PhoneChannelRows({
         return (
           <li
             key={channel.id}
-            className="border-b border-dashed border-line last:border-b-0"
+            className="border-b border-dashed border-line last:border-b-0 sideways:odd:border-r sideways:[&:nth-last-child(2):nth-child(odd)]:border-b-0"
           >
             <button
               type="button"

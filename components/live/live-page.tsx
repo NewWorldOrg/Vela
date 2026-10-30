@@ -92,11 +92,15 @@ import {
 import type { Phase } from '@/components/live/live-player'
 import type { ReservationWrite } from '@/repository/reservations'
 import { PHONE_UPRIGHT } from '@/lib/phone'
-import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import {
+  OnAnUprightPhone,
+  OnAPhone,
+} from '@/components/vela/on-an-upright-phone'
+import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import type { CaptionStyle } from '@/lib/caption-style'
 
 const HEADING =
-  'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)] upright:sr-only'
+  'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)] phone:sr-only'
 
 const TICK_MS = 30_000
 
@@ -352,17 +356,25 @@ export function LiveView({
 
   if (!watching) {
     return (
-      <ScreenMain className="px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
+      <ScreenMain className="px-3.5 pt-4 pb-10 sideways:pt-0 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
         <h1 className={HEADING}>
           <LiveIcon className="size-[calc(22rem/16)] text-brand" />
           ライブ
         </h1>
-        <div className="mb-3.5 flex flex-wrap items-center gap-3.5 empty:hidden upright:mb-2.5">
+        <PhoneBarTools>
           <ChannelKinds
             kind={screen.kind}
             kinds={screen.kinds}
             onKind={kind}
-            className="upright:w-full upright:[&>*]:flex-1"
+            className="w-[calc(280rem/16)] upright:hidden [&>*]:flex-1"
+          />
+        </PhoneBarTools>
+        <div className="mb-3.5 flex flex-wrap items-center gap-3.5 empty:hidden upright:mb-2.5 sideways:mb-0">
+          <ChannelKinds
+            kind={screen.kind}
+            kinds={screen.kinds}
+            onKind={kind}
+            className="upright:w-full sideways:hidden upright:[&>*]:flex-1"
           />
           {foldable && (
             <SubChannelToggle
@@ -383,16 +395,16 @@ export function LiveView({
             <ChannelGrid
               channels={channels}
               onSelect={(channel) => choose(channel.id)}
-              className="upright:hidden"
+              className="phone:hidden"
             />
-            <OnAnUprightPhone>
-              <div className="-mx-3.5 hidden upright:block">
+            <OnAPhone>
+              <div className="-mx-3.5 hidden phone:block sideways:-mx-5">
                 <PhoneChannelRows
                   channels={channels}
                   onSelect={(channel) => choose(channel.id)}
                 />
               </div>
-            </OnAnUprightPhone>
+            </OnAPhone>
           </>
         )}
         {nothingIsOn && (

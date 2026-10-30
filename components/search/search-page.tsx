@@ -351,7 +351,7 @@ function SearchScreen({
       </OnAnUprightPhone>
       <div className="mb-4 flex flex-wrap items-start gap-3.5 upright:hidden">
         <div className="min-w-0 flex-1">
-          <h1 className="heading upright:sr-only text-[calc(20rem/16)]">
+          <h1 className="heading phone:sr-only text-[calc(20rem/16)]">
             番組検索
           </h1>
         </div>
