@@ -120,7 +120,7 @@ export function ChannelDayList({
                     <span
                       aria-hidden="true"
                       className={cn(
-                        'mr-1.5 inline-block size-[calc(7rem/16)] rounded-[2px] align-[1px]',
+                        'guide-cell-genre-dot mr-1.5',
                         GENRE_MARK_CLASS[p.genre],
                       )}
                     />
