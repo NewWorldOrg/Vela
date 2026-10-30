@@ -27,6 +27,12 @@ import { SearchView } from '@/components/search/search-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheApp } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 const emptyCondition: SearchCondition = {
   fields: 'title,description',
@@ -1330,5 +1336,32 @@ export const 狭い幅で収まらないほどの検索結果: Story = {
   parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, 'チャンネル')
+  },
+}
+
+export const 電話の幅では結果をカードに組む: Story = {
+  args: 検索結果.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+
+    const [first] = SEARCH_HIT_FIXTURES
+    const card = within(
+      within(canvasElement)
+        .getByRole('link', { name: first.title })
+        .closest('tr') as HTMLElement,
+    )
+
+    for (const value of [first.title, first.channelName, first.genreLabel]) {
+      await expect(card.getByText(value)).toBeVisible()
+    }
+  },
+}
+
+export const 幅600pxからは結果を表のまま: Story = {
+  args: 検索結果.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }
