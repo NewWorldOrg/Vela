@@ -265,6 +265,21 @@ export function GuideView({
             )}
           />
         </button>
+        {!guide.day.isToday && (
+          <button
+            type="button"
+            onClick={() => {
+              setDaysOpen(false)
+              patch({ date: null })
+            }}
+            className={cn(
+              'tap-target ml-1.5 shrink-0 rounded-full bg-brand-soft px-2.5 py-0.5 text-note font-bold text-brand outline-none focus-visible:shadow-ring',
+              pressable,
+            )}
+          >
+            今日
+          </button>
+        )}
       </PhoneBarLead>
       <PhoneBarTools>
         <PhoneBarLink href="/search" aria-label="番組を検索">

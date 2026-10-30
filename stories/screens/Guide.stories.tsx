@@ -2599,12 +2599,15 @@ export const 電話で別の日: Story = {
     await expect(list.querySelector('[data-on-air]')).toBeNull()
     await expect(list.querySelector('[data-past]')).toBeNull()
 
-    await userEvent.click(
-      within(canvasElement).getByRole('button', { name: /日を選ぶ/ }),
-    )
-    await expect(
-      within(canvasElement).getByRole('button', { name: '今日' }),
-    ).toBeVisible()
+    const today = within(
+      canvasElement.querySelector<HTMLElement>('[data-slot="top-bar"]')!,
+    ).getByRole('button', { name: '今日' })
+
+    await expect(today).toBeVisible()
+    await userEvent.click(today)
+    await expect(getRouter().replace).toHaveBeenLastCalledWith('/guide', {
+      scroll: false,
+    })
   },
 }
 
