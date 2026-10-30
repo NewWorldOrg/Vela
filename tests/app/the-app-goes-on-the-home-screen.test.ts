@@ -132,11 +132,18 @@ test('iPad opens it on its own, below a status bar of its own', async () => {
 test('the frame of every screen stays inside the safe area', async () => {
   const shell = (await read('components/vela/app-shell.tsx')).toString('utf8')
 
-  for (const side of ['right', 'bottom', 'left']) {
+  const sheet = (await read('app/globals.css')).toString('utf8')
+
+  for (const side of ['right', 'left']) {
     assert.match(shell, new RegExp(`env\\(safe-area-inset-${side}\\)`))
   }
+  assert.match(sheet, /--safe-bottom: env\(safe-area-inset-bottom, 0px\);/)
   assert.match(
     shell,
-    /ADMIN_LIST_HEIGHT_CAP =\s*'max-h-\[calc\(100dvh-66rem\/16-env\(safe-area-inset-bottom\)\)\]'/,
+    /'pr-\[env\(safe-area-inset-right\)\] pb-\[calc\(var\(--safe-bottom\)\+var\(--tab-bar\)\)\]/,
+  )
+  assert.match(
+    shell,
+    /ADMIN_LIST_HEIGHT_CAP =\s*'max-h-\[calc\(100dvh-66rem\/16-var\(--safe-bottom\)-var\(--tab-bar\)\)\]'/,
   )
 })

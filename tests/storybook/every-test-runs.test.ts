@@ -95,6 +95,7 @@ const THE_SUITE = [
   'tests/lib/data-broadcast-line.test.ts',
   'tests/lib/data-broadcast-sound.test.ts',
   'tests/lib/data-broadcast-view.test.ts',
+  'tests/lib/destinations.test.ts',
   'tests/lib/device.test.ts',
   'tests/lib/dismiss.test.ts',
   'tests/lib/encode.test.ts',

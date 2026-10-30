@@ -464,9 +464,12 @@ async function stepsOf(prefix: string): Promise<Map<number, string>> {
       Number(found[2]),
     ]),
   )
+  const declared = [...tokens.matchAll(/^@theme(?: inline)? \{([\s\S]*?)^\}/gm)]
+    .map((found) => found[1])
+    .join('\n')
   const steps = new Map<number, string>()
 
-  for (const found of tokens.matchAll(
+  for (const found of declared.matchAll(
     new RegExp(`^\\s*--${prefix}-([a-z0-9]+): ([^;]+);`, 'gm'),
   )) {
     const value = found[2].trim()
