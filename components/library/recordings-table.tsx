@@ -96,6 +96,7 @@ export function RecordingsTable({
       )}
     >
       <table
+        role="table"
         data-cards=""
         className="w-full table-fixed border-separate border-spacing-0"
         style={{ minWidth: TABLE_MIN }}
@@ -108,8 +109,8 @@ export function RecordingsTable({
             />
           ))}
         </colgroup>
-        <thead>
-          <tr>
+        <thead role="rowgroup">
+          <tr role="row">
             {COLUMNS.map((column) => (
               <TableHead
                 key={column.label}
@@ -150,7 +151,7 @@ export function RecordingsTable({
             ))}
           </tr>
         </thead>
-        <tbody {...useArrived()}>
+        <tbody role="rowgroup" {...useArrived()}>
           {items.map((r, nth) => (
             <RecordingRow
               key={r.id}

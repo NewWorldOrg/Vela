@@ -32,6 +32,7 @@ function Table({
       )}
     >
       <table
+        role="table"
         data-slot="table"
         data-cards={cards ? '' : undefined}
         className={cn(
@@ -45,7 +46,14 @@ function Table({
 }
 
 function TableHeader({ className, ...props }: React.ComponentProps<'thead'>) {
-  return <thead data-slot="table-header" className={cn(className)} {...props} />
+  return (
+    <thead
+      role="rowgroup"
+      data-slot="table-header"
+      className={cn(className)}
+      {...props}
+    />
+  )
 }
 
 export const READABLE_LINE = 'max-w-[calc(880rem/16)]'
@@ -81,6 +89,7 @@ function TableColumns({ widths }: { widths: (string | undefined)[] }) {
 function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
   return (
     <tbody
+      role="rowgroup"
       {...useArrived()}
       data-slot="table-body"
       className={cn('rows-arrive [&_tr:last-child_td]:border-b-0', className)}
@@ -92,6 +101,7 @@ function TableBody({ className, ...props }: React.ComponentProps<'tbody'>) {
 function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
   return (
     <tfoot
+      role="rowgroup"
       data-slot="table-footer"
       className={cn(
         'font-medium [&_td]:border-t [&_td]:border-line',
@@ -105,6 +115,7 @@ function TableFooter({ className, ...props }: React.ComponentProps<'tfoot'>) {
 function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
   return (
     <tr
+      role="row"
       data-slot="table-row"
       className={cn(
         'transition-colors duration-150 ease-out data-[state=selected]:shadow-[inset_3px_0_0_0_var(--color-brand)]',
@@ -118,6 +129,7 @@ function TableRow({ className, ...props }: React.ComponentProps<'tr'>) {
 function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
   return (
     <th
+      role="columnheader"
       data-slot="table-head"
       className={cn(
         'border-b border-line bg-surface px-[calc(13rem/16)] py-[calc(7rem/16)] text-left align-middle text-micro font-bold tracking-[0.04em] whitespace-nowrap text-ink-3 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',
@@ -131,6 +143,7 @@ function TableHead({ className, ...props }: React.ComponentProps<'th'>) {
 function TableCell({ className, ...props }: React.ComponentProps<'td'>) {
   return (
     <td
+      role="cell"
       data-slot="table-cell"
       className={cn(
         'border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-middle whitespace-nowrap [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[calc(2rem/16)]',

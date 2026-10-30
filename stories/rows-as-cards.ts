@@ -30,6 +30,27 @@ function cardsOf(table: HTMLTableElement): HTMLTableRowElement[] {
   )
 }
 
+/** Every part of a list says what it is in the table, so a reader that is told a laid-out table is no table still hears rows, cells and the heading of each column. */
+async function saysItIsATable(table: HTMLTableElement): Promise<void> {
+  await expect(table.getAttribute('role')).toBe('table')
+
+  for (const group of [table.tHead, ...table.tBodies]) {
+    if (group) {
+      await expect(group.getAttribute('role')).toBe('rowgroup')
+    }
+  }
+
+  for (const row of table.rows) {
+    await expect(row.getAttribute('role')).toBe('row')
+
+    for (const cell of row.cells) {
+      await expect(cell.getAttribute('role')).toBe(
+        cell.tagName === 'TH' ? 'columnheader' : 'cell',
+      )
+    }
+  }
+}
+
 /** Each row of every list is a card inside its container: nothing runs off to the side, every value and label is drawn whole, and every button says its word at a size a finger can press. */
 export async function laysRowsAsCards(
   canvasElement: HTMLElement,
@@ -41,6 +62,8 @@ export async function laysRowsAsCards(
   for (const table of tables) {
     const container = containerOf(table)
     const edge = container.getBoundingClientRect()
+
+    await saysItIsATable(table)
 
     await expect(getComputedStyle(table).display).toBe('block')
     await expect(container.scrollWidth).toBeLessThanOrEqual(
@@ -121,6 +144,7 @@ export async function laysRowsAsATable(
 
   for (const table of tables) {
     await expect(getComputedStyle(table).display).toBe('table')
+    await saysItIsATable(table)
 
     if (table.tHead) {
       await expect(getComputedStyle(table.tHead).display).toBe(

@@ -107,6 +107,7 @@ export function RecordingRow({
 
   return (
     <tr
+      role="row"
       data-pressable-row
       data-state={selected ? 'selected' : undefined}
       onClick={onOpen}
@@ -114,6 +115,7 @@ export function RecordingRow({
       className={cn(rowArrivesIn(nth), 'group cursor-pointer')}
     >
       <td
+        role="cell"
         {...cardPlace('select')}
         className={CELL}
         onClick={(event) => event.stopPropagation()}
@@ -124,7 +126,7 @@ export function RecordingRow({
           aria-label={`${r.title} を選ぶ`}
         />
       </td>
-      <td {...cardPlace('lead')} className={CELL}>
+      <td role="cell" {...cardPlace('lead')} className={CELL}>
         <span className="flex min-w-0 items-center gap-3">
           <RecordingThumb recording={r} subTone={subTone} />
           <span className={cn('min-w-0', READABLE_LINE)}>
@@ -158,25 +160,27 @@ export function RecordingRow({
           </span>
         </span>
       </td>
-      <td {...cardPlace('meta')} className={cn(CELL, 'text-ui')}>
+      <td role="cell" {...cardPlace('meta')} className={cn(CELL, 'text-ui')}>
         <span className="flex items-center gap-2">
           <ChannelMark logo={r.channelLogo} no={r.channelNo} keepsTheSlot />
           <span className="min-w-0 leading-[1.4]">{r.channel}</span>
         </span>
       </td>
       <td
+        role="cell"
         {...cardPlace('meta')}
         className={cn(CELL, 'font-code text-ui whitespace-nowrap text-ink-2')}
       >
         {r.recordedAtLabel}
       </td>
-      <td {...cardPlace('meta')} className={cn(CELL, NUMBER)}>
+      <td role="cell" {...cardPlace('meta')} className={cn(CELL, NUMBER)}>
         <Length recording={r} />
       </td>
-      <td {...cardPlace('meta')} className={cn(CELL, NUMBER)}>
+      <td role="cell" {...cardPlace('meta')} className={cn(CELL, NUMBER)}>
         <Size recording={r} />
       </td>
       <td
+        role="cell"
         {...cardPlace('field', '結果')}
         className={cn(CELL, GAP_BEFORE_STATE)}
       >
@@ -194,6 +198,7 @@ export function RecordingRow({
         </StatusCell>
       </td>
       <td
+        role="cell"
         {...cardPlace('field', '品質')}
         className={cn(CELL, GAP_BEFORE_STATE)}
       >
@@ -202,6 +207,7 @@ export function RecordingRow({
         </StatusCell>
       </td>
       <td
+        role="cell"
         {...cardPlace('field', 'エンコード')}
         className={cn(CELL, GAP_BEFORE_STATE)}
       >
@@ -210,6 +216,7 @@ export function RecordingRow({
         </StatusCell>
       </td>
       <td
+        role="cell"
         {...cardPlace('actions')}
         className={cn(CELL, GAP_BEFORE_ACTIONS, 'text-right whitespace-nowrap')}
       >
@@ -227,6 +234,7 @@ export function RecordingRow({
         </ActionRow>
       </td>
       <td
+        role="cell"
         {...cardPlace('end')}
         className={cn(
           CELL,

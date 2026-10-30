@@ -615,6 +615,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                   )}
                 >
                   <table
+                    role="table"
                     data-cards=""
                     className="w-full min-w-[calc(800rem/16)] table-fixed border-separate border-spacing-0"
                   >
@@ -624,8 +625,8 @@ function SearchScreen({ result }: { result: SearchResult }) {
                       <col style={{ width: 'calc(420rem/16)' }} />
                       <col style={{ width: 'calc(160rem/16)' }} />
                     </colgroup>
-                    <thead>
-                      <tr>
+                    <thead role="rowgroup">
+                      <tr role="row">
                         {[
                           'チャンネル',
                           WHEN_LABELS.broadcast,
@@ -638,10 +639,11 @@ function SearchScreen({ result }: { result: SearchResult }) {
                         ))}
                       </tr>
                     </thead>
-                    <tbody>
+                    <tbody role="rowgroup">
                       {found.hits.map((p) => (
-                        <tr key={p.id} className="group">
+                        <tr key={p.id} role="row" className="group">
                           <td
+                            role="cell"
                             className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top text-ui"
                             {...cardPlace('meta')}
                           >
@@ -657,6 +659,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             </span>
                           </td>
                           <td
+                            role="cell"
                             className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top font-code text-ui whitespace-nowrap text-ink-2"
                             {...cardPlace('meta')}
                           >
@@ -668,6 +671,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             {p.endUndecided ? '終了未定' : p.endLabel}
                           </td>
                           <td
+                            role="cell"
                             className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top"
                             {...cardPlace('lead')}
                           >
@@ -701,6 +705,7 @@ function SearchScreen({ result }: { result: SearchResult }) {
                             )}
                           </td>
                           <td
+                            role="cell"
                             className="border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-top"
                             {...cardPlace('meta')}
                           >

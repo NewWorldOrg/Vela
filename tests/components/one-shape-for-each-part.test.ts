@@ -94,7 +94,9 @@ test('the library and search tables head their columns with the shared heading c
   )
 
   const search = await read('components/search/search-page.tsx')
-  const cells = [...search.matchAll(/<td\s+className="([^"]+)"/g)]
+  const cells = [
+    ...search.matchAll(/<td\s+(?:role="cell"\s+)?className="([^"]+)"/g),
+  ]
 
   assert.ok(cells.length >= 4, `only ${cells.length} search cells were read`)
 
