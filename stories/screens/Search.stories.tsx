@@ -1121,7 +1121,9 @@ export const 頼み直すと最初のページから: Story = {
       '&from=2026-08-09&to=2026-08-15'
 
     const walkOut = async (to: string): Promise<void> => {
-      await userEvent.click(canvas.getByRole('button', { name: '4 ページ目' }))
+      await userEvent.click(
+        await canvas.findByRole('button', { name: '4 ページ目' }),
+      )
       await waitFor(async () => {
         await expect(router.push).toHaveBeenLastCalledWith(to, {
           scroll: false,
