@@ -4,11 +4,14 @@ import { AppTabBar } from '@/app/(app)/_shell/tab-bar'
 import { AppTopBar } from '@/app/(app)/_shell/top-bar'
 import { SettingsSideNav } from '@/app/(app)/settings/_shell/side-nav'
 import { AdminBody, AdminMain, AppFrame } from '@/components/vela/app-shell'
+import { Toasts } from '@/components/vela/toast'
 
 export const inTheApp: Decorator = (Story) => (
   <AppFrame>
     <AppTopBar />
-    <Story />
+    <Toasts>
+      <Story />
+    </Toasts>
     <AppTabBar />
   </AppFrame>
 )
