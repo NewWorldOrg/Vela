@@ -31,6 +31,7 @@ import { ScreenMain } from '@/components/vela/app-shell'
 import { iconButtonVariants } from '@/components/vela/icon-button'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { OnAPhone } from '@/components/vela/on-an-upright-phone'
+import { usePhoneOnItsSide } from '@/hooks/usePhone'
 import { goesOnFrom } from '@/lib/library-days'
 import { useHeldDeletions } from '@/components/recordings/held-deletions'
 import {
@@ -55,6 +56,7 @@ export function LibraryView({
   const [picking, setPicking] = useState(false)
   const held = useHeldDeletions()
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const sideways = usePhoneOnItsSide()
   const filtersId = useId()
   const router = useRouter()
   const [waiting, startWaiting] = useTransition()
@@ -89,12 +91,49 @@ export function LibraryView({
       ch: null,
     })
 
+  const searchAndFilter = (
+    <>
+      <form
+        className="relative min-w-0 flex-1"
+        onSubmit={(e) => {
+          e.preventDefault()
+          const q = new FormData(e.currentTarget).get('q')
+          onFiltersChange({ q: typeof q === 'string' ? q : null })
+        }}
+      >
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-3" />
+        <Input
+          key={filter.q ?? ''}
+          name="q"
+          defaultValue={filter.q ?? ''}
+          placeholder="番組名・概要・出演者で検索"
+          className={cn(
+            BAND_CONTROL,
+            'rounded-full pl-[calc(34rem/16)] text-ellipsis',
+          )}
+        />
+      </form>
+      <FilterFoldButton
+        open={filtersOpen}
+        onOpenChange={setFiltersOpen}
+        controls={filtersId}
+        narrowed={narrowed}
+        on="handheld"
+      />
+    </>
+  )
+
   return (
     <ScreenMain
       scroll="within"
       className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <PhoneBarTools>
+        {sideways && (
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {searchAndFilter}
+          </div>
+        )}
         <button
           type="button"
           aria-pressed={picking}
@@ -118,36 +157,15 @@ export function LibraryView({
         </h1>
       </div>
 
-      <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5 phone:mb-1 phone:bg-transparent phone:px-0 phone:py-2">
+      <div
+        className={cn(
+          'mb-3.5 rounded-lg bg-surface px-4 py-3.5 phone:mb-1 phone:bg-transparent phone:px-0 phone:py-2',
+          !filtersOpen && 'sideways:hidden',
+        )}
+      >
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-3">
-          <div className="flex min-w-[calc(180rem/16)] flex-[1_1_100%] items-center gap-2.5 min-[701px]:flex-[0_1_268px]">
-            <form
-              className="relative min-w-0 flex-1"
-              onSubmit={(e) => {
-                e.preventDefault()
-                const q = new FormData(e.currentTarget).get('q')
-                onFiltersChange({ q: typeof q === 'string' ? q : null })
-              }}
-            >
-              <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-3" />
-              <Input
-                key={filter.q ?? ''}
-                name="q"
-                defaultValue={filter.q ?? ''}
-                placeholder="番組名・概要・出演者で検索"
-                className={cn(
-                  BAND_CONTROL,
-                  'rounded-full pl-[calc(34rem/16)] text-ellipsis',
-                )}
-              />
-            </form>
-            <FilterFoldButton
-              open={filtersOpen}
-              onOpenChange={setFiltersOpen}
-              controls={filtersId}
-              narrowed={narrowed}
-              on="handheld"
-            />
+          <div className="flex min-w-[calc(180rem/16)] flex-[1_1_100%] items-center gap-2.5 min-[701px]:flex-[0_1_268px] sideways:hidden">
+            {searchAndFilter}
           </div>
           <div id={filtersId} className={cn('contents', foldedOnAPhone)}>
             <FilterSelect

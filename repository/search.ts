@@ -32,6 +32,8 @@ export type { RawSearchCondition, SearchCondition }
 
 export interface SearchHit {
   id: string
+  /** The channel's `{network}-{service}`, which the series a hit belongs to is asked by. */
+  channelId?: string
   channelName: string
   channelNo?: string
   channelLogo?: StationLogo
@@ -88,6 +90,7 @@ function toHit(
 
   return {
     id: programme.id,
+    channelId,
     channelName: channel?.name || channelId,
     channelNo: channel?.no,
     channelLogo: channel?.logo,

@@ -20,6 +20,7 @@ export function SidewaysPanes({
   return (
     <div
       data-slot="sideways-panes"
+      data-sideways-panes=""
       className={cn(
         '-mx-5 flex min-h-0 flex-1 border-t border-line',
         className,

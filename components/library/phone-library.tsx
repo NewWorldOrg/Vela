@@ -211,6 +211,7 @@ export function PhoneRecordingRows({
               {items.map((recording) => (
                 <li
                   key={recording.id}
+                  data-keep={recording.id}
                   data-recording={recording.id}
                   className="border-b border-dashed border-line last:border-b-0 sideways:odd:border-r sideways:[&:nth-last-child(2):nth-child(odd)]:border-b-0"
                 >

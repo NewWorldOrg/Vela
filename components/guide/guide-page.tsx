@@ -433,7 +433,7 @@ export function GuideView({
           controls={toolsId}
           narrowed={narrowed}
           on="handheld"
-          className="ml-auto phone:hidden"
+          className="ml-auto phone:hidden sideways:hidden"
         />
 
         <div

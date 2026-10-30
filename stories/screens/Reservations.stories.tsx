@@ -1226,3 +1226,41 @@ export const 幅600pxからは表のまま: Story = {
     ).not.toBeVisible()
   },
 }
+
+export const 横向きの電話は予約の一覧と競合を左右に置き押した予約を右で変える: Story =
+  {
+    args: { result: shown(RESERVATION_FIXTURES) },
+    parameters: { screen: { width: 844, height: 390 }, coarse: true },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const bar = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="top-bar"]',
+      )!
+
+      await expect(
+        within(bar).getByRole('link', { name: 'ルール' }),
+      ).toBeVisible()
+      await expect(
+        within(bar).getByRole('link', { name: '予約を追加' }),
+      ).toBeVisible()
+
+      const beside = await canvas.findByRole('region', { name: '予約の詳細' })
+
+      await expect(
+        beside.querySelector('[data-slot="phone-conflict"]'),
+      ).not.toBeNull()
+
+      const row = canvasElement.querySelector<HTMLElement>(
+        '[data-pane="list"] li[data-reservation]',
+      )!
+
+      await userEvent.click(within(row).getAllByRole('button')[0])
+      await waitFor(() => expect(row).toHaveAttribute('data-chosen'))
+      await expect(
+        beside.querySelector('[data-slot="reservation-beside"]'),
+      ).not.toBeNull()
+      await expect(row.textContent).toContain(
+        within(beside).getAllByRole('heading', { level: 2 })[0].textContent,
+      )
+    },
+  }

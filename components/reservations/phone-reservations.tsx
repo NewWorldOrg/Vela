@@ -213,10 +213,18 @@ export function PhoneReservationRows({
   reservations,
   now,
   actions,
+  chosenId,
+  onChoose,
+  className,
 }: {
   reservations: Reservation[]
   now: Date
   actions: ReservationActions
+  /** The reservation whose detail stands beside the list, on a phone held on its side: ringed. */
+  chosenId?: string
+  /** Pressing a row shows its detail and change beside the list rather than under the row. */
+  onChoose?: (reservation: Reservation) => void
+  className?: string
 }) {
   const [open, setOpen] = useState<string>()
   const say = useToast()
@@ -255,7 +263,10 @@ export function PhoneReservationRows({
     })
 
   return (
-    <div data-slot="phone-reservation-rows" className="-mx-3.5">
+    <div
+      data-slot="phone-reservation-rows"
+      className={cn('-mx-3.5', className)}
+    >
       {days.map(({ day, items }) => {
         const heading = day ? dayHeadingOf(day, now) : undefined
 
@@ -280,14 +291,25 @@ export function PhoneReservationRows({
                   <li
                     key={reservation.id}
                     data-reservation={reservation.id}
-                    className="border-b border-dashed border-line last:border-b-0"
+                    data-keep={reservation.id}
+                    data-chosen={reservation.id === chosenId ? '' : undefined}
+                    className={cn(
+                      'border-b border-dashed border-line last:border-b-0',
+                      reservation.id === chosenId &&
+                        'relative z-[1] outline-2 -outline-offset-2 outline-brand-line',
+                    )}
                   >
                     <div className="flex items-stretch pr-1">
                       <button
                         type="button"
-                        aria-expanded={opened}
+                        aria-expanded={onChoose ? undefined : opened}
+                        aria-pressed={
+                          onChoose ? reservation.id === chosenId : undefined
+                        }
                         onClick={() =>
-                          setOpen(opened ? undefined : reservation.id)
+                          onChoose
+                            ? onChoose(reservation)
+                            : setOpen(opened ? undefined : reservation.id)
                         }
                         className={cn(
                           'flex min-h-[calc(68rem/16)] min-w-0 flex-1 items-start gap-2.5 py-2.5 pr-1 pl-4 text-left outline-none focus-visible:shadow-ring',
@@ -345,22 +367,12 @@ export function PhoneReservationRows({
                         <span aria-hidden="true" className="w-11 shrink-0" />
                       )}
                     </div>
-                    {opened && (
+                    {opened && !onChoose && (
                       <div className="border-t border-dashed border-line px-4 pt-4 pb-4">
-                        <EditReservationDialog
-                          inline
-                          open
-                          onOpenChange={(next) => !next && setOpen(undefined)}
-                          onRevise={actions.onRevise}
-                          booking={{
-                            id: reservation.id,
-                            title: reservation.title,
-                            priority: reservation.priority,
-                            marginBeforeSeconds:
-                              reservation.marginBeforeSeconds,
-                            marginAfterSeconds: reservation.marginAfterSeconds,
-                            encodeWhenRecorded: reservation.encodeWhenRecorded,
-                          }}
+                        <ReservationChange
+                          reservation={reservation}
+                          actions={actions}
+                          onDone={() => setOpen(undefined)}
                         />
                       </div>
                     )}
@@ -371,6 +383,79 @@ export function PhoneReservationRows({
           </section>
         )
       })}
+    </div>
+  )
+}
+
+/** The change of one reservation, in the place it opens: its priority, margins and encoding, saved where it stands. */
+function ReservationChange({
+  reservation,
+  actions,
+  onDone,
+}: {
+  reservation: Reservation
+  actions: ReservationActions
+  onDone: () => void
+}) {
+  return (
+    <EditReservationDialog
+      key={reservation.id}
+      inline
+      open
+      onOpenChange={(next) => !next && onDone()}
+      onRevise={actions.onRevise}
+      booking={{
+        id: reservation.id,
+        title: reservation.title,
+        priority: reservation.priority,
+        marginBeforeSeconds: reservation.marginBeforeSeconds,
+        marginAfterSeconds: reservation.marginAfterSeconds,
+        encodeWhenRecorded: reservation.encodeWhenRecorded,
+      }}
+    />
+  )
+}
+
+/** One reservation beside the list on a phone held on its side: its title, channel, time and where it came from, a chip for what needs attention, and its change under them. */
+export function ReservationBeside({
+  reservation,
+  actions,
+  onDone,
+}: {
+  reservation: Reservation
+  actions: ReservationActions
+  onDone: () => void
+}) {
+  const span = spanOf(reservation)
+
+  return (
+    <div data-slot="reservation-beside">
+      <h2 className="heading text-h2 leading-[1.45]">{reservation.title}</h2>
+      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sub text-ink-3">
+        {span && (
+          <span className="font-code tabular-nums">
+            {clockOf(span.startAt)}–{clockOf(span.endAt)}
+          </span>
+        )}
+        <span>{reservation.channelName}</span>
+        <span>
+          {reservation.ruleName
+            ? `${reservation.origin}「${reservation.ruleName}」`
+            : reservation.origin}
+        </span>
+      </p>
+      {reservation.standing !== 'scheduled' && (
+        <p className="mt-2 flex">
+          <ReservationStateChip reservation={reservation} />
+        </p>
+      )}
+      <div className="mt-4 border-t border-dashed border-line pt-4">
+        <ReservationChange
+          reservation={reservation}
+          actions={actions}
+          onDone={onDone}
+        />
+      </div>
     </div>
   )
 }

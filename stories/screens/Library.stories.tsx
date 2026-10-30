@@ -1020,3 +1020,34 @@ export const 幅600pxからは表のまま: Story = {
     await expect(canvas.getByText('すべて選ぶ')).not.toBeVisible()
   },
 }
+
+export const 横向きの電話は検索の欄を上の帯に置く: Story = {
+  args: { result, filter: {} },
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const bar = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="top-bar"]',
+    )!
+    const field = within(bar).getByPlaceholderText('番組名・概要・出演者で検索')
+
+    await expect(field).toBeVisible()
+    await expect(
+      within(bar).getByRole('button', { name: /絞り込み/ }),
+    ).toBeVisible()
+    await expect(
+      within(bar).getByRole('button', { name: '選ぶ' }),
+    ).toBeVisible()
+    await expect(
+      within(canvasElement).getAllByPlaceholderText(
+        '番組名・概要・出演者で検索',
+      ),
+    ).toHaveLength(2)
+    await expect(
+      [
+        ...canvasElement.querySelectorAll<HTMLElement>(
+          'input[placeholder="番組名・概要・出演者で検索"]',
+        ),
+      ].filter((one) => one.getBoundingClientRect().height > 0),
+    ).toHaveLength(1)
+  },
+}

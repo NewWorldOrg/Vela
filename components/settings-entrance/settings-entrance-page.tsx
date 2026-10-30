@@ -204,11 +204,23 @@ function groupsOf(
   ]
 }
 
-function SystemRow({ status }: { status: SystemStatus }) {
+function SystemRow({
+  status,
+  current,
+}: {
+  status: SystemStatus
+  current?: string
+}) {
+  const here = current === '/settings/system'
+
   return (
     <Link
       href="/settings/system"
-      className="flex items-center gap-3 rounded-xl border border-line bg-surface py-3 pr-2 pl-3.5 text-ink no-underline outline-none focus-visible:shadow-ring"
+      aria-current={here ? 'page' : undefined}
+      className={cn(
+        'flex items-center gap-3 rounded-xl border border-line bg-surface py-3 pr-2 pl-3.5 text-ink no-underline outline-none focus-visible:shadow-ring',
+        here && 'border-brand-line bg-brand-soft',
+      )}
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-2">
         <VelaMark className="size-[calc(26rem/16)]" />
@@ -235,14 +247,19 @@ function SystemRow({ status }: { status: SystemStatus }) {
   )
 }
 
-function ItemRow({ item }: { item: Item }) {
+function ItemRow({ item, current }: { item: Item; current?: string }) {
   const Icon = item.icon
+  const here = current?.startsWith(item.href) ?? false
 
   return (
     <li className="border-b border-dashed border-line last:border-b-0">
       <Link
         href={item.href}
-        className="flex h-[calc(54rem/16)] items-center gap-3 pr-2 pl-3 text-ink no-underline outline-none focus-visible:shadow-ring"
+        aria-current={here ? 'page' : undefined}
+        className={cn(
+          'flex h-[calc(54rem/16)] items-center gap-3 pr-2 pl-3 text-ink no-underline outline-none focus-visible:shadow-ring',
+          here && 'bg-brand-soft',
+        )}
       >
         <span
           className={cn(
@@ -266,20 +283,22 @@ function ItemRow({ item }: { item: Item }) {
   )
 }
 
-/** The way into the settings on a phone held upright: the system's state at the head, then each setting with its value, in four groups. */
+/** The way into the settings on a phone: the system's state at the head, then each setting with its value, in four groups. Held upright it is a screen of its own; on its side it stays at the left of the setting open, which it marks (`current`). */
 export function SettingsEntranceView({
   status,
   values,
   hasMigration,
+  current,
 }: {
   status: SystemStatus
   values: SettingsEntranceValues
   hasMigration: boolean
+  current?: string
 }) {
   return (
     <div data-slot="settings-entrance" className="pt-1 pb-4">
-      <h1 className="sr-only">設定</h1>
-      <SystemRow status={status} />
+      {current === undefined && <h1 className="sr-only">設定</h1>}
+      <SystemRow status={status} current={current} />
       {groupsOf(status, values, hasMigration).map((group) => (
         <section key={group.name} aria-labelledby={`settings-${group.name}`}>
           <h2
@@ -290,7 +309,7 @@ export function SettingsEntranceView({
           </h2>
           <ul className="overflow-hidden rounded-xl border border-line bg-surface">
             {group.items.map((item) => (
-              <ItemRow key={item.href} item={item} />
+              <ItemRow key={item.href} item={item} current={current} />
             ))}
           </ul>
         </section>

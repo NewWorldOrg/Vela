@@ -11,6 +11,7 @@ import type { ReservationWrite } from '@/repository/reservations'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ListIcon } from '@/components/vela/icons'
 import { ReserveCircle } from '@/components/guide/reserve-circle'
+import { pressable } from '@/components/vela/tactile'
 
 /** The words a hit is drawn with, the asked-for ones in butter so the eye finds why it was found. */
 export function marked(text: string, words: readonly string[]): ReactNode {
@@ -45,7 +46,15 @@ export function PhoneSearchHits({
   onReserve,
   onCancel,
   onRestore,
+  chosenId,
+  onChoose,
+  className,
 }: {
+  /** The hit whose detail stands beside the list, on a phone held on its side: ringed. */
+  chosenId?: string
+  /** Pressing a row shows its detail beside the list rather than going to it. */
+  onChoose?: (hit: SearchHit) => void
+  className?: string
   hits: SearchHit[]
   total: number
   words: readonly string[]
@@ -70,7 +79,7 @@ export function PhoneSearchHits({
   )
 
   return (
-    <div data-slot="phone-search-hits" className="-mx-3.5">
+    <div data-slot="phone-search-hits" className={cn('-mx-3.5', className)}>
       <div className="flex items-center gap-2 px-4 pt-1 pb-2">
         <span className="text-sub text-ink-3">
           <b className="font-code font-bold text-ink">{total}</b> 件
@@ -95,12 +104,15 @@ export function PhoneSearchHits({
               <li
                 key={hit.id}
                 data-programme={hit.id}
-                className="flex items-stretch border-b border-dashed border-line pr-1 last:border-b-0"
+                data-keep={hit.id}
+                data-chosen={hit.id === chosenId ? '' : undefined}
+                className={cn(
+                  'flex items-stretch border-b border-dashed border-line pr-1 last:border-b-0',
+                  hit.id === chosenId &&
+                    'relative z-[1] outline-2 -outline-offset-2 outline-brand-line',
+                )}
               >
-                <Link
-                  href={`/guide/programs/${hit.id}` as Route}
-                  className="flex min-h-16 min-w-0 flex-1 items-start gap-3 py-3 pr-1.5 pl-4 text-ink no-underline outline-none focus-visible:shadow-ring"
-                >
+                <RowPress hit={hit} onChoose={onChoose}>
                   <span className="flex w-[calc(46rem/16)] shrink-0 flex-col font-code leading-snug tabular-nums">
                     <span className="text-ui font-medium">
                       {hit.startLabel}
@@ -134,7 +146,7 @@ export function PhoneSearchHits({
                       </span>
                     )}
                   </span>
-                </Link>
+                </RowPress>
                 {onReserve && onCancel && (
                   <ReserveCircle
                     programmeId={hit.id}
@@ -151,5 +163,37 @@ export function PhoneSearchHits({
         </section>
       ))}
     </div>
+  )
+}
+
+const ROW_PRESS =
+  'flex min-h-16 min-w-0 flex-1 items-start gap-3 py-3 pr-1.5 pl-4 text-left text-ink no-underline outline-none focus-visible:shadow-ring'
+
+/** What pressing a row does: shows its detail beside the list, or goes to the programme's screen. */
+function RowPress({
+  hit,
+  onChoose,
+  children,
+}: {
+  hit: SearchHit
+  onChoose?: (hit: SearchHit) => void
+  children: ReactNode
+}) {
+  if (onChoose) {
+    return (
+      <button
+        type="button"
+        onClick={() => onChoose(hit)}
+        className={cn(ROW_PRESS, pressable)}
+      >
+        {children}
+      </button>
+    )
+  }
+
+  return (
+    <Link href={`/guide/programs/${hit.id}` as Route} className={ROW_PRESS}>
+      {children}
+    </Link>
   )
 }
