@@ -1,5 +1,5 @@
 import { ListIcon } from '@/components/vela/icons'
-import { TableCell } from '@/components/ui/table'
+import { cardPlace, TableCell } from '@/components/ui/table'
 
 export function OriginCell({
   origin,
@@ -9,7 +9,10 @@ export function OriginCell({
   ruleName?: string
 }) {
   return (
-    <TableCell className="align-top whitespace-normal">
+    <TableCell
+      {...cardPlace('field', '由来')}
+      className="align-top whitespace-normal"
+    >
       {ruleName ? (
         <span className="flex items-start gap-1.5 text-ui text-ink-2">
           <ListIcon className="mt-[calc(4.5rem/16)] size-3 shrink-0" />

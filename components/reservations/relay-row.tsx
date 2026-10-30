@@ -9,7 +9,7 @@ import {
 } from '@/lib/reservations'
 import type { Reservation } from '@/repository/reservations'
 import { Checkbox } from '@/components/ui/checkbox'
-import { TableCell, TableRow } from '@/components/ui/table'
+import { cardPlace, TableCell, TableRow } from '@/components/ui/table'
 import { OriginCell } from '@/components/reservations/origin-cell'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ChannelMark } from '@/components/vela/channel-mark'
@@ -53,7 +53,7 @@ export function RelayRow({
       style={delayOf(rowDelayMs(nth))}
       className={rowArrivesIn(nth)}
     >
-      <TableCell className="h-11 align-top">
+      <TableCell {...cardPlace('select')} className="h-11 align-top">
         <Checkbox
           checked={
             chosen === 0
@@ -74,7 +74,7 @@ export function RelayRow({
             <span key={one.id} id={reservationAnchor(one.id)} />
           ))}
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell {...cardPlace('end')} className="align-top">
         <button
           type="button"
           aria-expanded={open}
@@ -85,13 +85,13 @@ export function RelayRow({
           {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
         </button>
       </TableCell>
-      <TableCell className="align-top whitespace-normal">
+      <TableCell {...cardPlace('lead')} className="align-top whitespace-normal">
         <b className="block text-[calc(13rem/16)] font-bold">{first.title}</b>
         <span className="text-note text-ink-3">
           {relayCountSaying(summary)}
         </span>
       </TableCell>
-      <TableCell className="align-top">
+      <TableCell {...cardPlace('meta')} className="align-top">
         <span className="flex items-center gap-2">
           <ChannelMark
             logo={first.channelLogo}
@@ -101,11 +101,14 @@ export function RelayRow({
           <span className="min-w-0">{first.channelName}</span>
         </span>
       </TableCell>
-      <TableCell className="align-top font-code text-ink-2">
+      <TableCell
+        {...cardPlace('meta')}
+        className="align-top font-code text-ink-2"
+      >
         {formatMomentSpan(summary.startAt, summary.endAt)}
       </TableCell>
       <OriginCell origin={first.origin} ruleName={first.ruleName} />
-      <TableCell className="align-top">
+      <TableCell {...cardPlace('field', '状態')} className="align-top">
         <StatusCell>
           <ReservationStateChip
             reservation={leading}
@@ -114,7 +117,7 @@ export function RelayRow({
           />
         </StatusCell>
       </TableCell>
-      <TableCell />
+      <TableCell {...cardPlace('actions')} />
     </TableRow>
   )
 }

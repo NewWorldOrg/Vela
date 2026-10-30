@@ -17,6 +17,12 @@ import {
   widthOf,
 } from '@/stories/pills-in-a-column'
 import { inTheApp } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 function rowFor(cell: HTMLElement): HTMLElement {
   const row = cell.closest('tr')
@@ -331,5 +337,21 @@ export const 長い由来: Story = {
       await expect(cell.right).toBeLessThanOrEqual(next.left)
       await expect(said.height).toBeGreaterThanOrEqual(line * 2)
     }
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: { result: outcomeLedger(EVERY_KIND_FIXTURES) },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: { result: outcomeLedger(EVERY_KIND_FIXTURES) },
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }
