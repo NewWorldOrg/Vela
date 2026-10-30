@@ -2725,6 +2725,7 @@ export const 電話では送ったあとに残りが届いても見ていた行�
     const list = await phoneList(canvasElement)
 
     await opensAtTheProgrammeOnAir(list)
+    await afterTheArrival(canvasElement)
 
     list.dispatchEvent(new WheelEvent('wheel', { deltaY: 120 }))
     list.scrollTop += 120
