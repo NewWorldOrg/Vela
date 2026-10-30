@@ -25,18 +25,18 @@ function alignToNow(node: HTMLElement): void {
   node.scrollTop = onAir ? Math.max(0, onAir.offsetTop - ROOM_ABOVE_NOW_PX) : 0
 }
 
-/** The row at the top of the list and how far into it the list is scrolled, so the row can be kept in place when rows come in above it. */
-function anchorOf(node: HTMLElement): { id: string; delta: number } | null {
-  for (const row of node.querySelectorAll<HTMLElement>('[data-programme]')) {
-    if (row.offsetTop + row.offsetHeight > node.scrollTop) {
-      return {
-        id: row.dataset.programme!,
-        delta: node.scrollTop - row.offsetTop,
-      }
-    }
-  }
+type RowSpan = { id: string; top: number; bottom: number }
 
-  return null
+/** Where each row lies in the list, read after every change so the row at the top can still be found once rows come in above it. */
+function spansOf(node: HTMLElement): RowSpan[] {
+  return Array.from(
+    node.querySelectorAll<HTMLElement>('[data-programme]'),
+    (row) => ({
+      id: row.dataset.programme!,
+      top: row.offsetTop,
+      bottom: row.offsetTop + row.offsetHeight,
+    }),
+  )
 }
 
 /** One channel's day as rows from the top of the day, opened at the programme on the air; a row opens its detail under itself. */
@@ -61,7 +61,7 @@ export function ChannelDayList({
 }) {
   const list = useRef<HTMLDivElement | null>(null)
   const moved = useRef(false)
-  const anchor = useRef<{ id: string; delta: number } | null>(null)
+  const spans = useRef<RowSpan[]>([])
   const firstId = programs[0]?.id
 
   useLayoutEffect(() => {
@@ -87,7 +87,8 @@ export function ChannelDayList({
       return
     }
 
-    const kept = anchor.current
+    const scrolled = node.scrollTop
+    const kept = spans.current.find((span) => span.bottom > scrolled)
     const row = kept
       ? node.querySelector<HTMLElement>(
           `[data-programme="${CSS.escape(kept.id)}"]`,
@@ -95,9 +96,15 @@ export function ChannelDayList({
       : null
 
     if (kept && row) {
-      node.scrollTop = row.offsetTop + kept.delta
+      node.scrollTop = row.offsetTop + scrolled - kept.top
     }
   }, [programs.length, firstId])
+
+  useLayoutEffect(() => {
+    if (list.current) {
+      spans.current = spansOf(list.current)
+    }
+  })
 
   useEffect(() => {
     const node = list.current
@@ -108,14 +115,12 @@ export function ChannelDayList({
 
     const byHand = (): void => {
       moved.current = true
-      anchor.current = anchorOf(node)
-    }
-    const keep = (): void => {
-      anchor.current = anchorOf(node)
     }
     let shown = node.clientHeight > 0
     const watch = new ResizeObserver(() => {
       const showing = node.clientHeight > 0
+
+      spans.current = spansOf(node)
 
       if (showing && !shown) {
         moved.current = false
@@ -129,7 +134,6 @@ export function ChannelDayList({
       node.addEventListener(input, byHand, { passive: true })
     }
 
-    node.addEventListener('scroll', keep, { passive: true })
     watch.observe(node)
 
     return () => {
@@ -137,7 +141,6 @@ export function ChannelDayList({
         node.removeEventListener(input, byHand)
       }
 
-      node.removeEventListener('scroll', keep)
       watch.disconnect()
     }
   }, [])
@@ -157,7 +160,7 @@ export function ChannelDayList({
     <div
       ref={list}
       data-guide-list
-      className="relative min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface"
+      className="relative min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface [overflow-anchor:none]"
     >
       <ol>
         {programs.map((p) => {
