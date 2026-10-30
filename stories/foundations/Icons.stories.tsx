@@ -75,6 +75,7 @@ const ACTIONS: [string, ComponentType<IconProps>][] = [
   ['CheckIcon', Icons.CheckIcon],
   ['SuccessIcon', Icons.SuccessIcon],
   ['DotIcon', Icons.DotIcon],
+  ['MoreIcon', Icons.MoreIcon],
   ['ChevronLeftIcon', Icons.ChevronLeftIcon],
   ['ChevronRightIcon', Icons.ChevronRightIcon],
   ['ChevronDownIcon', Icons.ChevronDownIcon],

@@ -28,7 +28,6 @@ import { inTheApp } from '@/stories/frames'
 import {
   FROM_600,
   laysRowsAsATable,
-  laysRowsAsCards,
   NARROW_PHONE,
   PHONE,
 } from '@/stories/rows-as-cards'
@@ -834,33 +833,92 @@ export const 絞りの帯: Story = {
   },
 }
 
-export const 電話の幅では一行をカードに組む: Story = {
-  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+function phoneRows(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="phone-recording-rows"]',
+  )
+
+  if (!found) {
+    throw new Error('the phone list is not drawn')
+  }
+
+  return found
+}
+
+const WATCHED: Recording[] = LONG_AND_SHORT.map((one, nth) =>
+  nth === 0 && one.lengthSec
+    ? { ...one, watchedSec: Math.round(one.lengthSec / 2) }
+    : one,
+)
+
+export const 電話の幅では絵の行を日付で区切って並べる: Story = {
+  args: { result: resultOf(WATCHED), filter: {} },
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
 
-    const canvas = within(canvasElement)
+    const rows = await waitFor(() => phoneRows(canvasElement))
 
-    await laysRowsAsCards(canvasElement)
+    await expect(
+      canvasElement.querySelector('[data-slot="table-container"]'),
+    ).not.toBeVisible()
+    await expect(rows.getBoundingClientRect().width).toBe(window.innerWidth)
 
-    const [first] = LONG_AND_SHORT
-    const card = within(
-      canvas.getByRole('row', { name: new RegExp(first.title) }),
+    const [first] = WATCHED
+    const row = rows.querySelector<HTMLElement>(
+      `[data-recording="${first.id}"]`,
+    )!
+
+    await expect(row).toHaveTextContent(first.title)
+    await expect(row).toHaveTextContent(first.channel)
+    await expect(
+      within(row).getByRole('link', { name: new RegExp(first.title) }),
+    ).toHaveAttribute('href', `/recordings/${first.id}`)
+    await expect(rows.querySelectorAll('h2').length).toBeGreaterThan(0)
+
+    const going = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="phone-continue"]',
+    )!
+
+    await expect(going).toBeVisible()
+    await expect(
+      within(going).getByRole('link', { name: new RegExp(first.title) }),
+    ).toHaveAttribute('href', `/recordings/${first.id}`)
+  },
+}
+
+export const 電話の幅では行の点から削除し知らせで元に戻す: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    asked.length = 0
+
+    const rows = await waitFor(() => phoneRows(canvasElement))
+    const done = LONG_AND_SHORT.find((one) => one.outcome !== 'recording')!
+    const row = within(
+      rows.querySelector<HTMLElement>(`[data-recording="${done.id}"]`)!,
     )
 
-    for (const value of [first.title, first.channel, first.recordedAtLabel]) {
-      await expect(card.getByText(value)).toBeVisible()
-    }
+    await userEvent.click(row.getByRole('button', { name: 'この録画の操作' }))
+    await userEvent.click(row.getByRole('button', { name: '削除' }))
 
-    for (const said of card
-      .getAllByRole('cell')
-      .filter((cell) => cell.hasAttribute('data-label'))) {
-      await expect(said).toBeVisible()
-    }
+    await waitFor(() =>
+      expect(rows.querySelector(`[data-recording="${done.id}"]`)).toBeNull(),
+    )
 
-    await expect(card.getByRole('button', { name: '削除' })).toBeVisible()
-    await expect(card.getByRole('link', { name: '録画詳細へ' })).toBeVisible()
+    const toast = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="toast"]',
+    )!
+
+    await userEvent.click(
+      within(toast).getByRole('button', { name: '元に戻す' }),
+    )
+    await waitFor(() =>
+      expect(
+        rows.querySelector(`[data-recording="${done.id}"]`),
+      ).not.toBeNull(),
+    )
+    await expect(asked).toEqual([])
   },
 }
 
@@ -872,25 +930,30 @@ export const 電話の幅で選んで削除する: Story = {
 
     thrownAway.length = 0
 
-    await userEvent.click(canvas.getByText('すべて選ぶ'))
+    await userEvent.click(canvas.getByRole('button', { name: '選ぶ' }))
+
+    const done = LONG_AND_SHORT.filter((one) => one.outcome !== 'recording')
+
+    for (const one of done) {
+      await userEvent.click(
+        canvas.getByRole('checkbox', { name: `${one.title} を選ぶ` }),
+      )
+    }
 
     const bar = within(
       canvas.getByRole('group', { name: '選択した録画の操作' }),
     )
 
-    await expect(bar.getByText(`${LONG_AND_SHORT.length}`)).toBeVisible()
+    await expect(bar.getByText(`${done.length}`)).toBeVisible()
 
     const remove = bar.getByRole('button', { name: '削除' })
 
-    await expect(remove).toBeVisible()
     await userEvent.click(remove)
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
-    await waitFor(() =>
-      expect(thrownAway).toEqual([LONG_AND_SHORT.map((one) => one.id)]),
-    )
+    await waitFor(() => expect(thrownAway).toEqual([done.map((one) => one.id)]))
   },
 }
 
@@ -921,10 +984,10 @@ export const 電話の幅では絞りを畳む: Story = {
     ).toBeVisible()
 
     const panel = canvas.getByRole('group', { name: 'チャンネル' })
-    const list = canvasElement.querySelector('table[data-cards]')
+    const list = phoneRows(canvasElement)
 
     await expect(panel.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-      list?.getBoundingClientRect().top ?? 0,
+      list.getBoundingClientRect().top,
     )
 
     await userEvent.click(fold)

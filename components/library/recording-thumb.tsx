@@ -23,9 +23,11 @@ const ART = {
 export function RecordingThumb({
   recording,
   subTone = 'text-ink-3',
+  className,
 }: {
   recording: Recording
   subTone?: string
+  className?: string
 }) {
   const [reached, setReached] = useState(true)
   const redrawnAt = useRedrawnThumbnail(recording.id)
@@ -44,6 +46,7 @@ export function RecordingThumb({
         recording.thumbnail === 'none' &&
           'border-dashed border-line-strong bg-transparent',
         recording.thumbnail === 'error' && 'border-coral-line bg-coral-soft',
+        className,
       )}
     >
       {drawn ? (
