@@ -110,6 +110,7 @@ import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
   PLAYER_KEPT_AT_THE_TOP,
+  PLAYER_ROW_ON_ITS_SIDE,
   PLAYER_BUTTON,
   PLAYER_CHROME_OVER,
   PLAYER_CHROME_UNDER,
@@ -151,7 +152,9 @@ import type { GearAction } from '@/components/recordings/player-gear'
 import {
   DockFace,
   PlayerDock,
+  PlayerStrip,
   type DockSide,
+  type SideColumn,
 } from '@/components/recordings/player-dock'
 import { CAPTION_GRIP } from '@/components/recordings/player-palette'
 import {
@@ -281,9 +284,15 @@ export function Player({
   autoOpensDataBroadcast = false,
   captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
   lead,
+  side,
+  besideTheTime,
 }: {
   /** What stands at the left of the compact bar's top line, before the gear's company: the way back out of the screen. */
   lead?: ReactNode
+  /** What the screen keeps at the picture's right on a phone held on its side, and the faces it opens there. */
+  side?: SideColumn
+  /** What follows the time on the compact bar's bottom line. */
+  besideTheTime?: ReactNode
   detail: RecordingDetail
   plan: PlaybackPlan
   unaskedProfile?: PlaybackProfile
@@ -380,6 +389,7 @@ export function Player({
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [dock, setDock] = useState<HTMLDivElement | null>(null)
   const dockOpener = useRef<HTMLElement | null>(null)
+  const [screenFace, setScreenFace] = useState<string>()
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const [remoteSlot, setRemoteSlot] = useState<HTMLDivElement | null>(null)
   const wide = useWideWindow()
@@ -1273,6 +1283,7 @@ export function Player({
   const toggleBroadcast = () => {
     if (docked && !broadcast.view.open) {
       setSettingsOpen(false)
+      setScreenFace(undefined)
       dockOpener.current =
         document.activeElement instanceof HTMLElement
           ? document.activeElement
@@ -1284,7 +1295,9 @@ export function Player({
   }
 
   const closeTheDock = () => {
-    if (settingsOpen) {
+    if (screenFaceOpen) {
+      setScreenFace(undefined)
+    } else if (settingsOpen) {
       chooseGear(false)
     } else {
       toggleBroadcast()
@@ -1294,6 +1307,10 @@ export function Player({
   const chooseGear = (next: boolean) => {
     if (next && docked && broadcast.view.open) {
       toggleBroadcast()
+    }
+
+    if (next) {
+      setScreenFace(undefined)
     }
 
     setSettingsOpen(next)
@@ -1387,7 +1404,7 @@ export function Player({
   const faceShown = broadcast.view.open
   const sideways = usePhoneOnItsSide()
   const phone = usePhoneUpright()
-  const fit = usePlayerFit(
+  const measured = usePlayerFit(
     shell,
     wideRowWidth({
       glyphs:
@@ -1404,9 +1421,28 @@ export function Player({
       ? SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD
       : 0,
   )
+  const fit = sideways ? 'compact' : measured
   const roomy = fit === 'wide'
   const docked = !full && !filled && (phone || sideways)
   const dockSide: DockSide = sideways ? 'right' : 'under'
+  const screenFaceOpen =
+    docked &&
+    dockSide === 'right' &&
+    screenFace !== undefined &&
+    side?.faces[screenFace] !== undefined
+  const openScreenFace = (name: string) => {
+    dockOpener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    setSettingsOpen(false)
+
+    if (broadcast.view.open) {
+      broadcast.toggle()
+    }
+
+    setScreenFace(name)
+  }
   const place = bandPlace(full, wide, docked)
   const underTheBox = faceShown && (place === 'under' || place === 'column')
   const compact = fit === 'compact' && !underTheBox
@@ -1418,7 +1454,7 @@ export function Player({
     scrubbingAt !== null ||
     (settingsOpen && !docked) ||
     pip.out
-  const dockOpen = docked && (settingsOpen || faceShown)
+  const dockOpen = docked && (settingsOpen || faceShown || screenFaceOpen)
   const [laidAs, setLaidAs] = useState(compact)
 
   if (laidAs !== compact) {
@@ -1681,6 +1717,7 @@ export function Player({
         'flex items-start justify-center',
         docked && dockSide === 'under' && 'flex-col items-stretch',
         PLAYER_KEPT_AT_THE_TOP,
+        PLAYER_ROW_ON_ITS_SIDE,
       )}
     >
       <section
@@ -1913,7 +1950,7 @@ export function Player({
             {lead && (
               <div
                 className={cn(
-                  'mr-auto flex items-center [[data-fill]_&]:hidden',
+                  'mr-auto flex min-w-0 items-center [[data-fill]_&]:hidden',
                   PLAYER_LAYER_HANDS,
                 )}
               >
@@ -1921,7 +1958,10 @@ export function Player({
               </div>
             )}
             <div
-              className={cn('flex items-center gap-x-1', PLAYER_LAYER_HANDS)}
+              className={cn(
+                'flex shrink-0 items-center gap-x-1',
+                PLAYER_LAYER_HANDS,
+              )}
             >
               {airPlayButton}
               {muteButton}
@@ -2042,6 +2082,7 @@ export function Player({
                 {formatPlayerTime(scrubbingAt ?? position)} /{' '}
                 {formatPlayerTime(duration)}
               </span>
+              {compact && besideTheTime}
               {chapters.length > 0 && !skipInTheRow && (
                 <button
                   type="button"
@@ -2143,6 +2184,26 @@ export function Player({
           )}
       </section>
       {docked && <PlayerDock ref={setDock} side={dockSide} open={dockOpen} />}
+      {docked && dockSide === 'right' && side && (
+        <PlayerStrip hidden={dockOpen} onOpen={openScreenFace}>
+          {side.strip}
+        </PlayerStrip>
+      )}
+      {screenFaceOpen &&
+        screenFace !== undefined &&
+        dock &&
+        createPortal(
+          <DockFace
+            name={screenFace}
+            onClose={() => setScreenFace(undefined)}
+            returnTo={dockOpener}
+            tone="page"
+            flush
+          >
+            {side?.faces[screenFace]}
+          </DockFace>,
+          dock,
+        )}
       {faceShown && wide && <RecordingRemoteColumn slotRef={setRemoteSlot} />}
     </div>
   )

@@ -108,7 +108,7 @@ export type GearAction = {
   onPress: () => void
 }
 
-/** The gear's last row, when the bar has no room for the controls it does not use often: each one by its own name, and pressing it closes the gear. */
+/** The gear's last row, when the bar has no room for the controls it does not use often: each one by its own name, and pressing it closes the gear. Beside the picture of a phone held on its side they stand one under another, each as wide as the face. */
 export function GearActions({
   actions,
   onDone,
@@ -123,7 +123,7 @@ export function GearActions({
   return (
     <div
       data-slot="gear-actions"
-      className="flex flex-wrap items-center gap-2 border-b border-dashed border-white/12 py-3.5 last:border-b-0"
+      className="flex flex-wrap items-center gap-2 border-b border-dashed border-white/12 py-3.5 last:border-b-0 [[data-side=right]_&]:flex-col [[data-side=right]_&]:items-stretch"
     >
       {actions.map((action) => (
         <button
@@ -138,6 +138,7 @@ export function GearActions({
           className={cn(
             PLAYER_BUTTON,
             'inline-flex items-center gap-1.5 [&_svg]:size-4',
+            '[[data-side=right]_&]:h-11 [[data-side=right]_&]:justify-center',
             action.pressed && PLAYER_BUTTON_ON,
           )}
         >

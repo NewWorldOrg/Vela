@@ -97,6 +97,11 @@ import {
   OnAPhone,
 } from '@/components/vela/on-an-upright-phone'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
+import { KeptAcrossTurns } from '@/components/vela/kept-across-turns'
+import {
+  PROGRAMME_FACE,
+  SidewaysChannels,
+} from '@/components/live/sideways-channels'
 import type { CaptionStyle } from '@/lib/caption-style'
 
 const HEADING =
@@ -431,13 +436,31 @@ export function LiveView({
     watching.channel.name,
     watching.channel.now?.title,
   )
+  const programmeInfo = (
+    <PhoneLiveInfo
+      watching={watching}
+      external={<OpenExternally handover={handover} />}
+      record={
+        onRecord &&
+        onTakeTheRecordingBack &&
+        watching.channel.now && (
+          <RecordThisButton
+            programmeId={watching.channel.now.id}
+            onReserve={onRecord}
+            onCancel={onTakeTheRecordingBack}
+          />
+        )
+      }
+    />
+  )
 
   return (
     <ScreenMain
       width="full"
       data-watching=""
-      className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col upright:p-0"
+      className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col upright:p-0 sideways:fixed sideways:inset-0 sideways:z-40 sideways:overflow-hidden sideways:bg-(--pl-video) sideways:p-0"
     >
+      <KeptAcrossTurns />
       <div
         className={cn('min-w-0 flex-1', PLAYER_COLUMN, 'sideways:max-w-none')}
       >
@@ -462,6 +485,20 @@ export function LiveView({
           remoteSlot={remoteSlot}
           onDataBroadcastOpen={setBroadcastOpen}
           onPhase={setPhase}
+          side={{
+            strip: (
+              <SidewaysChannels
+                kind={screen.kind}
+                kinds={screen.kinds}
+                onKind={kind}
+                channels={channels}
+                watchingId={watchingId}
+                preparing={preparing}
+                onSelect={(channel) => choose(channel.id)}
+              />
+            ),
+            faces: { [PROGRAMME_FACE]: programmeInfo },
+          }}
           lead={
             <button
               type="button"
@@ -473,27 +510,16 @@ export function LiveView({
             </button>
           }
         />
-        <NowNext watching={watching} className="upright:hidden" />
-        <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)] upright:hidden">
+        <NowNext
+          watching={watching}
+          className="upright:hidden sideways:hidden"
+        />
+        <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)] upright:hidden sideways:hidden">
           <OpenExternally handover={handover} />
         </div>
         <OnAnUprightPhone>
           <div className="hidden upright:block">
-            <PhoneLiveInfo
-              watching={watching}
-              external={<OpenExternally handover={handover} />}
-              record={
-                onRecord &&
-                onTakeTheRecordingBack &&
-                watching.channel.now && (
-                  <RecordThisButton
-                    programmeId={watching.channel.now.id}
-                    onReserve={onRecord}
-                    onCancel={onTakeTheRecordingBack}
-                  />
-                )
-              }
-            />
+            {programmeInfo}
             <PhoneKinds
               kind={screen.kind}
               kinds={screen.kinds}
@@ -515,7 +541,7 @@ export function LiveView({
         aria-label="チャンネル"
         className={cn(
           PLAYER_SIDE_COLUMN,
-          'upright:hidden',
+          'upright:hidden sideways:hidden',
           'max-[1180px]:static max-[1180px]:max-h-[60svh] max-[1180px]:w-full',
           foldColumn(folded, motion),
         )}

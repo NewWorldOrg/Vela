@@ -90,6 +90,7 @@ import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
   PLAYER_KEPT_AT_THE_TOP,
+  PLAYER_ROW_ON_ITS_SIDE,
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
   PLAYER_CHROME_FADE,
@@ -173,7 +174,9 @@ import type { GearAction } from '@/components/recordings/player-gear'
 import {
   DockFace,
   PlayerDock,
+  PlayerStrip,
   type DockSide,
+  type SideColumn,
 } from '@/components/recordings/player-dock'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
@@ -253,8 +256,11 @@ export function LivePlayer({
   formatChoice: storedFormat = 'auto',
   askBrowser,
   lead,
+  side,
   onPhase,
 }: {
+  /** What the screen keeps at the picture's right on a phone held on its side, and the faces it opens there. */
+  side?: SideColumn
   /** Told each time the picture's phase moves: starting, buffering, playing, paused or faulted. */
   onPhase?: (phase: Phase | undefined) => void
   /** What stands at the left of the compact bar's top line, before the channel's name: the way to put the picture away. */
@@ -308,6 +314,7 @@ export function LivePlayer({
   const [shell, setShell] = useState<HTMLElement | null>(null)
   const [dock, setDock] = useState<HTMLDivElement | null>(null)
   const dockOpener = useRef<HTMLElement | null>(null)
+  const [screenFace, setScreenFace] = useState<string>()
   const [chrome, setChrome] = useState<HTMLDivElement | null>(null)
   const { full, filled, toggle: toggleFullscreen } = useFullscreen(shell)
   const [profile, setProfile] = useState(() => unaskedIn(profiles))
@@ -871,6 +878,7 @@ export function LivePlayer({
   const toggleBroadcast = () => {
     if (docked && !broadcast.view.open) {
       setSettingsOpen(false)
+      setScreenFace(undefined)
       dockOpener.current =
         document.activeElement instanceof HTMLElement
           ? document.activeElement
@@ -882,7 +890,9 @@ export function LivePlayer({
   }
 
   const closeTheDock = () => {
-    if (settingsOpen) {
+    if (screenFaceOpen) {
+      setScreenFace(undefined)
+    } else if (settingsOpen) {
       chooseGear(false)
     } else {
       toggleBroadcast()
@@ -892,6 +902,10 @@ export function LivePlayer({
   const chooseGear = (next: boolean) => {
     if (next && docked && broadcast.view.open) {
       toggleBroadcast()
+    }
+
+    if (next) {
+      setScreenFace(undefined)
     }
 
     setSettingsOpen(next)
@@ -1061,7 +1075,7 @@ export function LivePlayer({
   const opened = broadcast.view.open
   const sideways = usePhoneOnItsSide()
   const phone = usePhoneUpright()
-  const fit = usePlayerFit(
+  const measured = usePlayerFit(
     shell,
     wideRowWidth({
       glyphs:
@@ -1080,9 +1094,28 @@ export function LivePlayer({
       ? SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD
       : 0,
   )
+  const fit = sideways ? 'compact' : measured
   const roomy = fit === 'wide'
   const docked = !full && !filled && (phone || sideways)
   const dockSide: DockSide = sideways ? 'right' : 'under'
+  const screenFaceOpen =
+    docked &&
+    dockSide === 'right' &&
+    screenFace !== undefined &&
+    side?.faces[screenFace] !== undefined
+  const openScreenFace = (name: string) => {
+    dockOpener.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null
+    setSettingsOpen(false)
+
+    if (broadcast.view.open) {
+      broadcast.toggle()
+    }
+
+    setScreenFace(name)
+  }
   const place = bandPlace(full, remoteInTheColumn, docked)
   const underTheBox = opened && (place === 'under' || place === 'column')
   const compact = fit === 'compact' && !underTheBox
@@ -1093,7 +1126,7 @@ export function LivePlayer({
     focused ||
     (settingsOpen && !docked) ||
     pip.out
-  const dockOpen = docked && (settingsOpen || opened)
+  const dockOpen = docked && (settingsOpen || opened || screenFaceOpen)
   const [laidAs, setLaidAs] = useState(compact)
 
   if (laidAs !== compact) {
@@ -1288,10 +1321,8 @@ export function LivePlayer({
       className={cn(
         'w-full',
         PLAYER_KEPT_AT_THE_TOP,
-        docked &&
-          (dockSide === 'under'
-            ? 'flex flex-col'
-            : 'flex items-start justify-center'),
+        PLAYER_ROW_ON_ITS_SIDE,
+        docked && dockSide === 'under' && 'flex flex-col',
       )}
     >
       <section
@@ -1755,6 +1786,26 @@ export function LivePlayer({
           )}
       </section>
       {docked && <PlayerDock ref={setDock} side={dockSide} open={dockOpen} />}
+      {docked && dockSide === 'right' && side && (
+        <PlayerStrip hidden={dockOpen} onOpen={openScreenFace}>
+          {side.strip}
+        </PlayerStrip>
+      )}
+      {screenFaceOpen &&
+        screenFace !== undefined &&
+        dock &&
+        createPortal(
+          <DockFace
+            name={screenFace}
+            onClose={() => setScreenFace(undefined)}
+            returnTo={dockOpener}
+            tone="page"
+            flush
+          >
+            {side?.faces[screenFace]}
+          </DockFace>,
+          dock,
+        )}
     </div>
   )
 }
