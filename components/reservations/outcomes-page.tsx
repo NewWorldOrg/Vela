@@ -111,7 +111,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+      className="flex flex-col px-3.5 pt-6 pb-6 upright:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <ReservationTabs current="outcomes" />
 

@@ -10,8 +10,10 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/components/theme/ThemeProvider'
+import { cn } from '@/lib/utils'
+import { PHONE_BAR_BUTTON } from '@/components/vela/app-shell'
 import { IconButton } from '@/components/vela/icon-button'
-import type { ThemePreference } from '@/lib/theme'
+import { THEME_LABEL, type ThemePreference } from '@/lib/theme'
 import {
   CheckIcon,
   DisplayIcon,
@@ -29,9 +31,9 @@ export const THEME_OPTIONS: {
   label: string
   Icon: ComponentType<IconProps>
 }[] = [
-  { value: 'light', label: 'ライト', Icon: SunIcon },
-  { value: 'dark', label: 'ダーク', Icon: MoonIcon },
-  { value: 'system', label: 'システム', Icon: DisplayIcon },
+  { value: 'light', label: THEME_LABEL.light, Icon: SunIcon },
+  { value: 'dark', label: THEME_LABEL.dark, Icon: MoonIcon },
+  { value: 'system', label: THEME_LABEL.system, Icon: DisplayIcon },
 ]
 
 export function ThemeToggle({ className }: ThemeToggleProps) {
@@ -77,5 +79,21 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         })}
       </DropdownMenuContent>
     </DropdownMenu>
+  )
+}
+
+/** The theme in the bar at the top of a phone held upright: one press turns the page to the other of light and dark, from whichever it is showing. */
+export function PhoneThemeButton({ className }: ThemeToggleProps) {
+  const { mode, setPreference } = useTheme()
+  const Icon = mode === 'dark' ? MoonIcon : SunIcon
+
+  return (
+    <IconButton
+      aria-label="テーマ"
+      className={cn(PHONE_BAR_BUTTON, className)}
+      onClick={() => setPreference(mode === 'dark' ? 'light' : 'dark')}
+    >
+      <Icon />
+    </IconButton>
   )
 }

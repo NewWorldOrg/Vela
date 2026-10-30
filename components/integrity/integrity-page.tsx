@@ -139,7 +139,7 @@ export function IntegrityView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+      className="flex flex-col px-3.5 pt-6 pb-6 upright:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <div className="mb-3">
         <Link
@@ -152,7 +152,7 @@ export function IntegrityView({
       </div>
 
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
-        <h1 className="heading flex items-center gap-2 text-[calc(20rem/16)]">
+        <h1 className="heading upright:sr-only flex items-center gap-2 text-[calc(20rem/16)]">
           <QualityIcon className="size-[calc(18rem/16)] text-brand" />
           整合性チェック
         </h1>

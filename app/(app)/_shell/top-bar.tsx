@@ -4,19 +4,25 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { DESTINATIONS, SETTINGS_HREF, destinationOf } from '@/lib/destinations'
+import { phoneBarOf } from '@/lib/phone-bar'
 import {
   Brand,
   GlobalNav,
   GlobalNavItem,
+  PhoneBarBack,
+  PhoneBarTitle,
   SettingsLink,
   TopBar,
 } from '@/components/vela/app-shell'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { PhoneBarToolsSlot } from '@/components/vela/phone-bar-tools'
+import { PhoneThemeButton, ThemeToggle } from '@/components/theme/ThemeToggle'
 
 const SERVICES = DESTINATIONS.filter(({ href }) => href !== SETTINGS_HREF)
 
 export function AppTopBar() {
-  const current = destinationOf(usePathname())
+  const pathname = usePathname()
+  const current = destinationOf(pathname)
+  const phone = phoneBarOf(pathname)
 
   return (
     <TopBar>
@@ -28,11 +34,21 @@ export function AppTopBar() {
           </GlobalNavItem>
         ))}
       </GlobalNav>
-      <div className="flex items-center gap-[calc(7rem/16)] max-[600px]:ml-auto">
+      <div className="flex items-center gap-[calc(7rem/16)] upright:hidden">
         <ThemeToggle />
         <SettingsLink asChild active={current === SETTINGS_HREF}>
-          <Link href={SETTINGS_HREF}>設定</Link>
+          <Link href="/settings/system">設定</Link>
         </SettingsLink>
+      </div>
+      <div className="hidden min-w-0 flex-1 items-center gap-2 upright:flex">
+        {phone.back && (
+          <PhoneBarBack asChild aria-label={`${phone.back.label}へ`}>
+            <Link href={phone.back.href} />
+          </PhoneBarBack>
+        )}
+        <PhoneBarTitle>{phone.title}</PhoneBarTitle>
+        <PhoneBarToolsSlot />
+        <PhoneThemeButton />
       </div>
     </TopBar>
   )

@@ -81,7 +81,8 @@ import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
 import type { CaptionStyle } from '@/lib/caption-style'
 
-const HEADING = 'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)]'
+const HEADING =
+  'heading mb-4 flex items-center gap-2 text-[calc(20rem/16)] upright:sr-only'
 
 const TICK_MS = 30_000
 

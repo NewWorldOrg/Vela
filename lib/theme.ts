@@ -11,3 +11,9 @@ export function themeOf(said: string | null | undefined): ThemePreference {
     ? said
     : 'system'
 }
+
+export const THEME_LABEL: Record<ThemePreference, string> = {
+  light: 'ライト',
+  dark: 'ダーク',
+  system: 'システム',
+}

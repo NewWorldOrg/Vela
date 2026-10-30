@@ -208,7 +208,9 @@ function SearchScreen({ result }: { result: SearchResult }) {
     <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <div className="mb-4 flex flex-wrap items-start gap-3.5">
         <div className="min-w-0 flex-1">
-          <h1 className="heading text-[calc(20rem/16)]">番組検索</h1>
+          <h1 className="heading upright:sr-only text-[calc(20rem/16)]">
+            番組検索
+          </h1>
         </div>
         <Button variant="watch" size="sm" asChild>
           <Link href="/guide">

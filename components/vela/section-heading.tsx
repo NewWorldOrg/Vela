@@ -51,7 +51,9 @@ export function PageHeading({
       {...props}
     >
       <div className="min-w-0">
-        <h1 className="heading text-h3 leading-[1.45]">{children}</h1>
+        <h1 className="heading text-h3 leading-[1.45] upright:sr-only">
+          {children}
+        </h1>
         {description && (
           <p className="mt-px text-note text-ink-2">{description}</p>
         )}
