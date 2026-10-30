@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useTransition } from 'react'
+import { useCallback, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
@@ -17,9 +17,9 @@ import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
-import { BAND_CONTROL } from '@/components/vela/band'
+import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { FilterSelect } from '@/components/vela/filter-select'
-import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
+import { FilterIcon, LibraryIcon, SearchIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import { RecordingSelection } from '@/components/library/recording-selection'
@@ -39,6 +39,8 @@ export function LibraryView({
   onDeleteAll: (ids: string[]) => Promise<RecordingBatch>
 }) {
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const filtersId = useId()
   const router = useRouter()
   const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
@@ -57,9 +59,11 @@ export function LibraryView({
   )
   const { items, total, channels, years, genres } = result
   const chosen = items.filter((one) => picked.has(one.id))
-  const hasFilter = Boolean(
-    filter.q || filter.year || filter.genre || filter.state || filter.ch,
-  )
+  const narrowed = [filter.year, filter.genre, filter.state, filter.ch].filter(
+    Boolean,
+  ).length
+  const hasFilter = Boolean(filter.q) || narrowed > 0
+  const foldedOnAPhone = !filtersOpen && 'max-[600px]:hidden'
   const clearEveryCondition = (): void =>
     onFiltersChange({
       q: null,
@@ -83,65 +87,105 @@ export function LibraryView({
 
       <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-3">
-          <form
-            className="relative min-w-[calc(180rem/16)] flex-[1_1_100%] min-[701px]:flex-[0_1_268px]"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const q = new FormData(e.currentTarget).get('q')
-              onFiltersChange({ q: typeof q === 'string' ? q : null })
-            }}
-          >
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-3" />
-            <Input
-              key={filter.q ?? ''}
-              name="q"
-              defaultValue={filter.q ?? ''}
-              placeholder="番組名・概要・出演者で検索"
-              className={cn(BAND_CONTROL, 'rounded-full pl-[calc(34rem/16)]')}
+          <div className="flex min-w-[calc(180rem/16)] flex-[1_1_100%] items-center gap-2.5 min-[701px]:flex-[0_1_268px]">
+            <form
+              className="relative min-w-0 flex-1"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const q = new FormData(e.currentTarget).get('q')
+                onFiltersChange({ q: typeof q === 'string' ? q : null })
+              }}
+            >
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-3" />
+              <Input
+                key={filter.q ?? ''}
+                name="q"
+                defaultValue={filter.q ?? ''}
+                placeholder="番組名・概要・出演者で検索"
+                className={cn(
+                  BAND_CONTROL,
+                  'rounded-full pl-[calc(34rem/16)] text-ellipsis',
+                )}
+              />
+            </form>
+            <button
+              type="button"
+              aria-expanded={filtersOpen}
+              aria-controls={filtersId}
+              onClick={() => setFiltersOpen((was) => !was)}
+              className={cn(
+                BAND_CONTROL,
+                BAND_PRESS,
+                'shrink-0 min-[600px]:hidden',
+                filtersOpen &&
+                  'border-brand bg-brand-soft text-brand [&_svg]:text-brand',
+              )}
+            >
+              <FilterIcon />
+              絞り込み
+              {narrowed > 0 && ' '}
+              {narrowed > 0 && (
+                <b className="font-code font-bold text-brand tabular-nums">
+                  {narrowed}
+                </b>
+              )}
+            </button>
+          </div>
+          <div id={filtersId} className={cn('contents', foldedOnAPhone)}>
+            <FilterSelect
+              label="期間"
+              value={filter.year}
+              options={years.map((y) => ({
+                value: String(y),
+                label: `${y} 年`,
+              }))}
+              onChange={(next) => onFiltersChange({ year: next })}
             />
-          </form>
-          <FilterSelect
-            label="期間"
-            value={filter.year}
-            options={years.map((y) => ({ value: String(y), label: `${y} 年` }))}
-            onChange={(next) => onFiltersChange({ year: next })}
-          />
-          <FilterSelect
-            label="ジャンル"
-            value={filter.genre}
-            options={genres.map((g) => ({ value: g, label: g }))}
-            onChange={(next) => onFiltersChange({ genre: next })}
-          />
-          <FilterSelect
-            label="状態"
-            value={filter.state}
-            options={RECORDING_STATE_FILTERS.map((f) => ({
-              value: f,
-              label: f,
-            }))}
-            onChange={(next) => onFiltersChange({ state: next })}
-          />
-          <span className="ml-auto text-sub whitespace-nowrap text-ink-2 max-[900px]:ml-0">
-            {hasFilter ? (
-              <>
-                該当{' '}
-                <b className="font-code font-medium text-ink">{items.length}</b>{' '}
-                件 / 全{' '}
-                <b className="font-code font-medium text-ink">{total}</b> 件
-              </>
-            ) : (
-              <>
-                全 <b className="font-code font-medium text-ink">{total}</b> 件
-              </>
+            <FilterSelect
+              label="ジャンル"
+              value={filter.genre}
+              options={genres.map((g) => ({ value: g, label: g }))}
+              onChange={(next) => onFiltersChange({ genre: next })}
+            />
+            <FilterSelect
+              label="状態"
+              value={filter.state}
+              options={RECORDING_STATE_FILTERS.map((f) => ({
+                value: f,
+                label: f,
+              }))}
+              onChange={(next) => onFiltersChange({ state: next })}
+            />
+            <span className="ml-auto text-sub whitespace-nowrap text-ink-2 max-[900px]:ml-0">
+              {hasFilter ? (
+                <>
+                  該当{' '}
+                  <b className="font-code font-medium text-ink">
+                    {items.length}
+                  </b>{' '}
+                  件 / 全{' '}
+                  <b className="font-code font-medium text-ink">{total}</b> 件
+                </>
+              ) : (
+                <>
+                  全 <b className="font-code font-medium text-ink">{total}</b>{' '}
+                  件
+                </>
+              )}
+            </span>
+            {hasFilter && (
+              <Button variant="halt" size="sm" onClick={clearEveryCondition}>
+                条件を解除
+              </Button>
             )}
-          </span>
-          {hasFilter && (
-            <Button variant="halt" size="sm" onClick={clearEveryCondition}>
-              条件を解除
-            </Button>
-          )}
+          </div>
         </div>
-        <div className="mt-3 border-t border-dashed border-line pt-3">
+        <div
+          className={cn(
+            'mt-3 border-t border-dashed border-line pt-3',
+            foldedOnAPhone,
+          )}
+        >
           <SegmentedControl
             label="チャンネル"
             options={[

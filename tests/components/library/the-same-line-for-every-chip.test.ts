@@ -18,6 +18,8 @@ const CARRIES_A_CHIP = /<[A-Z][A-Za-z]*Chip\b/
 
 const A_CELL = /<td\b([^>]*)>([\s\S]*?)<\/td>/g
 
+const A_CARD_PLACE = /\{\.\.\.cardPlace\([^)]*\)\}/
+
 const SAYS_IT_AS_A_COLUMN = /(^|\s)say(\s|$|=)/
 
 const A_COLUMN_WIDTH = /width:\s*`?(?:calc\(\$\{)?([A-Z_]+_COLUMN)\b/g
@@ -65,7 +67,10 @@ async function cellsThatCarryChips() {
   const source = await readFile(path.join(ROOT, THE_ROW), 'utf8')
 
   return [...source.matchAll(A_CELL)]
-    .map((cell) => ({ declared: cell[1].trim(), body: cell[2] }))
+    .map((cell) => ({
+      declared: cell[1].replace(A_CARD_PLACE, '').trim(),
+      body: cell[2],
+    }))
     .filter((cell) => CARRIES_A_CHIP.test(cell.body))
 }
 

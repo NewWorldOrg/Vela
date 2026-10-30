@@ -25,6 +25,13 @@ import {
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheApp } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  NARROW_PHONE,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 const asked: string[] = []
 
@@ -824,5 +831,129 @@ export const 絞りの帯: Story = {
         .size,
     ).toBe(1)
     await expect(every).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const canvas = within(canvasElement)
+
+    await laysRowsAsCards(canvasElement)
+
+    const [first] = LONG_AND_SHORT
+    const card = within(
+      canvas.getByRole('row', { name: new RegExp(first.title) }),
+    )
+
+    for (const value of [first.title, first.channel, first.recordedAtLabel]) {
+      await expect(card.getByText(value)).toBeVisible()
+    }
+
+    for (const said of card
+      .getAllByRole('cell')
+      .filter((cell) => cell.hasAttribute('data-label'))) {
+      await expect(said).toBeVisible()
+    }
+
+    await expect(card.getByRole('button', { name: '削除' })).toBeVisible()
+    await expect(card.getByRole('link', { name: '録画詳細へ' })).toBeVisible()
+  },
+}
+
+export const 電話の幅で選んで削除する: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    thrownAway.length = 0
+
+    await userEvent.click(canvas.getByText('すべて選ぶ'))
+
+    const bar = within(
+      canvas.getByRole('group', { name: '選択した録画の操作' }),
+    )
+
+    await expect(bar.getByText(`${LONG_AND_SHORT.length}`)).toBeVisible()
+
+    const remove = bar.getByRole('button', { name: '削除' })
+
+    await expect(remove).toBeVisible()
+    await userEvent.click(remove)
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
+    await waitFor(() =>
+      expect(thrownAway).toEqual([LONG_AND_SHORT.map((one) => one.id)]),
+    )
+  },
+}
+
+export const 電話の幅では絞りを畳む: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const search = canvas.getByPlaceholderText('番組名・概要・出演者で検索')
+    const fold = canvas.getByRole('button', { name: '絞り込み' })
+
+    await expect(search).toBeVisible()
+    await expect(fold).toHaveAttribute('aria-expanded', 'false')
+    await expect(
+      Math.abs(
+        search.getBoundingClientRect().top - fold.getBoundingClientRect().top,
+      ),
+    ).toBeLessThanOrEqual(1)
+    await expect(canvas.queryAllByRole('combobox')).toEqual([])
+    await expect(canvas.queryByRole('group', { name: 'チャンネル' })).toBeNull()
+
+    await userEvent.click(fold)
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'true')
+    await expect(canvas.getAllByRole('combobox').length).toBe(3)
+    await expect(
+      canvas.getByRole('group', { name: 'チャンネル' }),
+    ).toBeVisible()
+
+    const panel = canvas.getByRole('group', { name: 'チャンネル' })
+    const list = canvasElement.querySelector('table[data-cards]')
+
+    await expect(panel.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      list?.getBoundingClientRect().top ?? 0,
+    )
+
+    await userEvent.click(fold)
+    await expect(canvas.queryAllByRole('combobox')).toEqual([])
+  },
+}
+
+export const 電話の幅では絞りの数をボタンで言う: Story = {
+  args: {
+    result: resultOf(LONG_AND_SHORT),
+    filter: { year: '2025', state: '完了' },
+  },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: '絞り込み 2' }),
+    ).toBeVisible()
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: { result: resultOf(LONG_AND_SHORT), filter: {} },
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await laysRowsAsATable(canvasElement)
+    await expect(canvas.queryByRole('button', { name: '絞り込み' })).toBeNull()
+    await expect(canvas.getAllByRole('combobox').length).toBe(3)
+    await expect(canvas.getByText('すべて選ぶ')).not.toBeVisible()
   },
 }
