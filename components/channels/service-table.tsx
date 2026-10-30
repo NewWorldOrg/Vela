@@ -13,7 +13,6 @@ import {
   StatusCell,
 } from '@/components/recordings/status-cell'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -22,6 +21,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'

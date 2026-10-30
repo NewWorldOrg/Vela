@@ -15,7 +15,6 @@ import type {
 } from '@/repository/segment-status'
 import { Badge } from '@/components/ui/badge'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableCell,
@@ -23,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { Surface } from '@/components/vela/surface'
 import { ValueRow, ValueRows } from '@/components/segments/value-rows'

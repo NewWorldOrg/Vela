@@ -20,7 +20,6 @@ import { Spinner } from '@/components/vela/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -29,6 +28,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import {

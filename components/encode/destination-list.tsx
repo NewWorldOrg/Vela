@@ -15,7 +15,6 @@ import type {
   EncodeRemoved,
 } from '@/repository/encode-terms'
 import {
-  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -24,6 +23,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
 import { ActionRow } from '@/components/vela/action-row'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'

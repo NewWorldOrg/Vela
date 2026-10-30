@@ -14,6 +14,7 @@ const THE_SUITE = [
   'tests/app/the-frames-stay-on-vela.test.ts',
   'tests/app/the-system-theme-needs-no-script.test.ts',
   'tests/components/a-face-keeps-its-words-while-it-closes.test.ts',
+  'tests/components/a-server-part-only-renders-client-parts.test.ts',
   'tests/components/data-broadcast/bml-mng.test.ts',
   'tests/components/data-broadcast/bml-runtime.test.ts',
   'tests/components/data-broadcast/line-relay.test.ts',

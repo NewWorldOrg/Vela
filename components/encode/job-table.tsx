@@ -16,8 +16,6 @@ import {
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
 import {
-  cardPlace,
-  READABLE_LINE,
   Table,
   TableBody,
   TableColumns,
@@ -26,6 +24,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
+import { cardPlace, READABLE_LINE } from '@/components/ui/table-cards'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InFull } from '@/components/vela/in-full'

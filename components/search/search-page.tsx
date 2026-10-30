@@ -42,7 +42,8 @@ import type {
   SearchViewing,
 } from '@/repository/search-options'
 import { Badge } from '@/components/ui/badge'
-import { cardPlace, READABLE_LINE, TableHead } from '@/components/ui/table'
+import { TableHead } from '@/components/ui/table'
+import { cardPlace, READABLE_LINE } from '@/components/ui/table-cards'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
