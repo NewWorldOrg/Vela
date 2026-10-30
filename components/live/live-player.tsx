@@ -2,11 +2,13 @@
 
 import {
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
   type FocusEvent,
   type KeyboardEvent,
+  type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
 
@@ -87,6 +89,7 @@ import {
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
+  PLAYER_KEPT_AT_THE_TOP,
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
   PLAYER_CHROME_FADE,
@@ -185,7 +188,7 @@ const BACKLOG_EVERY_MS = 2000
 
 const STARTUP_DEADLINE_MS = 45000
 
-type Phase = 'starting' | 'buffering' | 'playing' | 'paused' | 'faulted'
+export type Phase = 'starting' | 'buffering' | 'playing' | 'paused' | 'faulted'
 
 interface Retries {
   of: string
@@ -249,7 +252,13 @@ export function LivePlayer({
   captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
   formatChoice: storedFormat = 'auto',
   askBrowser,
+  lead,
+  onPhase,
 }: {
+  /** Told each time the picture's phase moves: starting, buffering, playing, paused or faulted. */
+  onPhase?: (phase: Phase | undefined) => void
+  /** What stands at the left of the compact bar's top line, before the channel's name: the way to put the picture away. */
+  lead?: ReactNode
   channel?: LiveChannel
   profiles: LiveProfile[]
   returnPath: string
@@ -383,6 +392,11 @@ export function LivePlayer({
     key === null ? null : held && held.key === key ? held : begun(key)
   const phase = running?.phase
   const fault = running?.fault ?? null
+  const tellPhase = useEffectEvent((now: Phase | undefined) => onPhase?.(now))
+
+  useEffect(() => {
+    tellPhase(phase)
+  }, [phase])
   const [autoOpens] = useStoredFlag(
     DATA_BROADCAST_AUTO_OPEN,
     AUTO_OPEN_SPELLING,
@@ -1273,6 +1287,7 @@ export function LivePlayer({
       data-slot="live-player-frame"
       className={cn(
         'w-full',
+        PLAYER_KEPT_AT_THE_TOP,
         docked &&
           (dockSide === 'under'
             ? 'flex flex-col'
@@ -1449,6 +1464,7 @@ export function LivePlayer({
               className={cn(
                 'pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-10',
                 compact && 'pt-4 pr-[calc(184rem/16)] pl-3',
+                compact && lead && 'pl-[calc(52rem/16)] [[data-fill]_&]:pl-3',
                 '-translate-y-2 opacity-0',
                 PLAYER_CHROME_FADE,
                 'data-[up]:translate-y-0 data-[up]:opacity-100',
@@ -1478,6 +1494,7 @@ export function LivePlayer({
               elapsedMs={running.elapsedMs}
               reconnecting={reconnecting}
               brief={compact}
+              channelName={lead ? channel?.name : undefined}
               className={compact ? LIVE_SENDS_PLACE : undefined}
             />
           )}
@@ -1520,10 +1537,21 @@ export function LivePlayer({
             {...chromeHands}
             className={cn(
               PLAYER_LAYER,
-              'top-0 right-0 flex justify-end px-2 pt-1.5',
+              'top-0 flex justify-end px-2 pt-1.5',
+              lead ? 'inset-x-0' : 'right-0',
               '[[data-fill]_&]:top-[env(safe-area-inset-top)] [[data-fill]_&]:right-[env(safe-area-inset-right)]',
             )}
           >
+            {lead && (
+              <div
+                className={cn(
+                  'mr-auto flex items-center [[data-fill]_&]:hidden',
+                  PLAYER_LAYER_HANDS,
+                )}
+              >
+                {lead}
+              </div>
+            )}
             <div
               className={cn('flex items-center gap-x-1', PLAYER_LAYER_HANDS)}
             >

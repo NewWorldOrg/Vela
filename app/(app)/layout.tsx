@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 
 import { AppFrame } from '@/components/vela/app-shell'
 import { Curtain } from '@/components/vela/curtain'
+import { Toasts } from '@/components/vela/toast'
 
 import { ConflictsBadge } from './_shell/conflicts-badge'
 import { AppTabBar } from './_shell/tab-bar'
@@ -14,7 +15,7 @@ export default function AppLayout({
     <AppFrame>
       <Curtain />
       <AppTopBar />
-      {children}
+      <Toasts>{children}</Toasts>
       <AppTabBar
         conflicts={
           <Suspense>

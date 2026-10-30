@@ -982,12 +982,16 @@ test('the clock it reads by default is the one running now', async () => {
   )
 })
 
-test('creating asks with the start the programme is announced for', async () => {
+test('creating asks with the start the programme is announced for, and names the reservation it made so it can be taken back', async () => {
   standing()
 
   const result = await createReservation('131-1310-40001')
 
-  assert.deepEqual(result, { state: 'ok', verdict: 'secured' })
+  assert.deepEqual(result, {
+    state: 'ok',
+    verdict: 'secured',
+    reservationId: 'a1',
+  })
 
   const asked = sent.find(
     (one) => one.path === '/api/reservations' && one.method === 'POST',

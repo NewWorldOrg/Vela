@@ -43,9 +43,12 @@ import { useFormatAnswers } from '@/hooks/useFormatAnswers'
 import { browserProbe } from '@/components/vela/format-answers'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/app-shell'
-import { LiveIcon } from '@/components/vela/icons'
+import { ChevronDownIcon, LiveIcon } from '@/components/vela/icons'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
+import {
+  PLAYER_COLUMN,
+  PLAYER_GLYPH_BUTTON,
+} from '@/components/recordings/player-palette'
 import { OpenExternally } from '@/components/recordings/external-player'
 import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
@@ -79,6 +82,17 @@ import {
 } from '@/components/live/live-wire-ahead'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
+import {
+  PhoneChannelRows,
+  PhoneKinds,
+  PhoneLiveInfo,
+  PhoneWatchedRows,
+  RecordThisButton,
+} from '@/components/live/phone-live'
+import type { Phase } from '@/components/live/live-player'
+import type { ReservationWrite } from '@/repository/reservations'
+import { PHONE_UPRIGHT } from '@/lib/phone'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import type { CaptionStyle } from '@/lib/caption-style'
 
 const HEADING =
@@ -126,9 +140,15 @@ export function LiveView({
   captionStyle,
   formatChoice = 'auto',
   askBrowser,
+  onRecord,
+  onTakeTheRecordingBack,
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
+  /** Reserves the programme on now, from the phone's `この番組を録画`. */
+  onRecord?: (programmeId: string) => Promise<ReservationWrite>
+  /** Takes back the reservation the toast after `この番組を録画` offers. */
+  onTakeTheRecordingBack?: (reservationId: string) => Promise<ReservationWrite>
   clockHeldAt?: Date
   openSocket?: OpenSocket
   openPlaylist?: OpenPlaylist
@@ -296,7 +316,17 @@ export function LiveView({
 
     setChoice({ asked, chosen: id })
     patch({ ch: id })
+
+    if (window.matchMedia(PHONE_UPRIGHT).matches) {
+      window.scrollTo({ top: 0 })
+    }
   }
+  const putThePictureAway = () => {
+    setChoice(undefined)
+    patch({ ch: null })
+  }
+  const [phase, setPhase] = useState<Phase>()
+  const preparing = phase === undefined || phase === 'starting'
   const kind = (value: string) =>
     patch({ kind: value === 'terrestrial' ? null : value })
 
@@ -327,8 +357,13 @@ export function LiveView({
           <LiveIcon className="size-[calc(22rem/16)] text-brand" />
           ライブ
         </h1>
-        <div className="mb-3.5 flex flex-wrap items-center gap-3.5 empty:hidden">
-          <ChannelKinds kind={screen.kind} kinds={screen.kinds} onKind={kind} />
+        <div className="mb-3.5 flex flex-wrap items-center gap-3.5 empty:hidden upright:mb-2.5">
+          <ChannelKinds
+            kind={screen.kind}
+            kinds={screen.kinds}
+            onKind={kind}
+            className="upright:w-full upright:[&>*]:flex-1"
+          />
           {foldable && (
             <SubChannelToggle
               shown={!subsFolded}
@@ -344,10 +379,21 @@ export function LiveView({
             titleLevel={2}
           />
         ) : (
-          <ChannelGrid
-            channels={channels}
-            onSelect={(channel) => choose(channel.id)}
-          />
+          <>
+            <ChannelGrid
+              channels={channels}
+              onSelect={(channel) => choose(channel.id)}
+              className="upright:hidden"
+            />
+            <OnAnUprightPhone>
+              <div className="-mx-3.5 hidden upright:block">
+                <PhoneChannelRows
+                  channels={channels}
+                  onSelect={(channel) => choose(channel.id)}
+                />
+              </div>
+            </OnAnUprightPhone>
+          </>
         )}
         {nothingIsOn && (
           <EmptyState
@@ -366,10 +412,19 @@ export function LiveView({
     )
   }
 
+  const handover = liveHandover(
+    watching.channel.networkId,
+    watching.channel.serviceId,
+    onTakeTicket,
+    watching.channel.name,
+    watching.channel.now?.title,
+  )
+
   return (
     <ScreenMain
       width="full"
-      className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col"
+      data-watching=""
+      className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col upright:p-0"
     >
       <div
         className={cn('min-w-0 flex-1', PLAYER_COLUMN, 'sideways:max-w-none')}
@@ -394,25 +449,61 @@ export function LiveView({
           remoteInTheColumn={wide}
           remoteSlot={remoteSlot}
           onDataBroadcastOpen={setBroadcastOpen}
+          onPhase={setPhase}
+          lead={
+            <button
+              type="button"
+              aria-label="閉じる"
+              onClick={putThePictureAway}
+              className={PLAYER_GLYPH_BUTTON}
+            >
+              <ChevronDownIcon />
+            </button>
+          }
         />
-        <NowNext watching={watching} />
-        <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)]">
-          <OpenExternally
-            handover={liveHandover(
-              watching.channel.networkId,
-              watching.channel.serviceId,
-              onTakeTicket,
-              watching.channel.name,
-              watching.channel.now?.title,
-            )}
-          />
+        <NowNext watching={watching} className="upright:hidden" />
+        <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)] upright:hidden">
+          <OpenExternally handover={handover} />
         </div>
+        <OnAnUprightPhone>
+          <div className="hidden upright:block">
+            <PhoneLiveInfo
+              watching={watching}
+              external={<OpenExternally handover={handover} />}
+              record={
+                onRecord &&
+                onTakeTheRecordingBack &&
+                watching.channel.now && (
+                  <RecordThisButton
+                    programmeId={watching.channel.now.id}
+                    onReserve={onRecord}
+                    onCancel={onTakeTheRecordingBack}
+                  />
+                )
+              }
+            />
+            <PhoneKinds
+              kind={screen.kind}
+              kinds={screen.kinds}
+              onKind={kind}
+              className="sticky top-[calc(100vw*9/16+env(safe-area-inset-top))] z-10"
+            />
+            <PhoneWatchedRows
+              channels={channels}
+              watchingId={watchingId}
+              preparing={preparing}
+              at={clock}
+              onSelect={(channel) => choose(channel.id)}
+            />
+          </div>
+        </OnAnUprightPhone>
       </div>
       <aside
         ref={aside}
         aria-label="チャンネル"
         className={cn(
           PLAYER_SIDE_COLUMN,
+          'upright:hidden',
           'max-[1180px]:static max-[1180px]:max-h-[60svh] max-[1180px]:w-full',
           foldColumn(folded, motion),
         )}

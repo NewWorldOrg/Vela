@@ -87,3 +87,17 @@ function asOf(
     viewers: counted ?? channel.viewers,
   }
 }
+
+/** Whole minutes left of a programme at a moment; none where its end is not known or the moment is not. */
+export function minutesLeft(
+  endsAt: string | undefined,
+  at: Date | undefined,
+): number | undefined {
+  if (!endsAt || !at) {
+    return undefined
+  }
+
+  const left = new Date(endsAt).getTime() - at.getTime()
+
+  return left > 0 ? Math.ceil(left / 60_000) : undefined
+}

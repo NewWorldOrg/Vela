@@ -101,7 +101,12 @@ export interface ReservationRevision {
 }
 
 export type ReservationWrite =
-  | { state: 'ok'; verdict?: AllocationVerdict; displaced?: ConflictEntry[] }
+  | {
+      state: 'ok'
+      verdict?: AllocationVerdict
+      displaced?: ConflictEntry[]
+      reservationId?: string
+    }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string; movedTo?: string }
 
@@ -288,7 +293,7 @@ export async function createReservation(
     return movedElsewhere(refused.primary)
   }
 
-  return toWrite(
+  const written = await toWrite(
     response,
     data?.data,
     {
@@ -298,6 +303,11 @@ export async function createReservation(
     },
     '予約できませんでした。',
   )
+  const made = data?.data?.reservation?.id
+
+  return written.state === 'ok' && made
+    ? { ...written, reservationId: made }
+    : written
 }
 
 async function movedElsewhere(
@@ -486,7 +496,6 @@ async function toWrite(
 
   const verdict = settled?.verdict ?? undefined
   const displaced = await displacedOf(settled?.displaced ?? [])
-
   return displaced
     ? { state: 'ok', verdict, displaced }
     : { state: 'ok', verdict }

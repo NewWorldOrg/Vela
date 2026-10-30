@@ -14,6 +14,12 @@ import type { PlaybackPlan } from '@/repository/videos'
 import { Button } from '@/components/ui/button'
 import { ActionRow } from '@/components/vela/action-row'
 import { TrashIcon } from '@/components/vela/icons'
+import { useToast } from '@/components/vela/toast'
+import { usePhoneUpright } from '@/hooks/usePhone'
+import {
+  holdDeletion,
+  releaseDeletion,
+} from '@/components/recordings/held-deletions'
 import { ExternalPlayerOpener } from '@/components/recordings/external-player'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
@@ -48,6 +54,30 @@ export function RecordingActions({
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
 
+  const say = useToast()
+  const upright = usePhoneUpright()
+
+  const deleteWhenTheToastLeaves = (): void => {
+    const { id } = recording
+
+    holdDeletion(id)
+    router.push('/library')
+    say({
+      text: '録画を削除しました',
+      action: { label: '元に戻す', onPress: () => releaseDeletion(id) },
+      onExpire: () => {
+        void onDelete(id).then((result) => {
+          releaseDeletion(id)
+          router.refresh()
+
+          if (result.state === 'rejected') {
+            say({ text: result.message })
+          }
+        })
+      },
+    })
+  }
+
   const remove = async (id: string): Promise<RecordingDiscarded> => {
     const result = await onDelete(id)
 
@@ -61,7 +91,7 @@ export function RecordingActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
-        <ActionRow className="max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 [&>div]:items-stretch">
+        <ActionRow className="max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 upright:grid-cols-2 upright:[&>[data-slot=encode-action]]:order-2 upright:[&>[data-slot=thumbnail-action]]:order-3 [&>div]:items-stretch">
           {plan && (
             <ExternalPlayerOpener
               recording={recording}
@@ -86,7 +116,10 @@ export function RecordingActions({
             variant="remove"
             disabled={!deletable}
             title={deletable ? undefined : '録画中のため、削除できません。'}
-            onClick={() => setAsked(recording)}
+            onClick={() =>
+              upright ? deleteWhenTheToastLeaves() : setAsked(recording)
+            }
+            className="upright:order-4"
           >
             <TrashIcon />
             削除
