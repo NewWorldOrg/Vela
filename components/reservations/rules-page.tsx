@@ -212,7 +212,7 @@ function RulesScreen({
   }
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
+    <ScreenMain className="px-3.5 pt-6 pb-16 upright:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
       <ReservationTabs
         current="rules"
         action={

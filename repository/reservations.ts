@@ -213,6 +213,31 @@ function isSettled(one: ReservationResponder, now: Date): boolean {
   return new Date(one.window.endAt).getTime() <= now.getTime()
 }
 
+/** How many reservations are left in a conflict that is still to come: the count the phone's reservations tab carries. */
+export async function countConflicts(now: Date = new Date()): Promise<number> {
+  const { data, error } = await carinaClient().GET('/api/reservations', {
+    params: {
+      query: {
+        standing: ['conflict'],
+        sort: 'startAt',
+        descending: false,
+        page: 1,
+        perPage: MOST_PER_PAGE,
+      },
+    },
+  })
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data.items.filter(
+    (one) =>
+      one.standing === 'conflict' &&
+      new Date(one.window.endAt).getTime() > now.getTime(),
+  ).length
+}
+
 export async function listBookings(): Promise<Map<string, ProgramBooking>> {
   const carried = await fetchEveryReservation()
   const bookings = new Map<string, ProgramBooking>()

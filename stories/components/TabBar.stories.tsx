@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, within } from 'storybook/test'
+import { expect, userEvent, within } from 'storybook/test'
 
 import { AppTabBar } from '@/app/(app)/_shell/tab-bar'
 import { AppTopBar } from '@/app/(app)/_shell/top-bar'
-import { AppFrame, ScreenMain } from '@/components/vela/app-shell'
+import { AppFrame, ScreenMain, TabBadge } from '@/components/vela/app-shell'
 import { PageHeading } from '@/components/vela/section-heading'
 import { TintPanel } from '@/components/vela/surface'
 import { Input } from '@/components/ui/input'
@@ -26,7 +26,13 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-function Shell({ homeBar = 0 }: { homeBar?: number }) {
+function Shell({
+  homeBar = 0,
+  conflicts,
+}: {
+  homeBar?: number
+  conflicts?: number
+}) {
   return (
     <div style={{ '--safe-bottom': `${homeBar}px` } as React.CSSProperties}>
       <AppFrame>
@@ -40,7 +46,13 @@ function Shell({ homeBar = 0 }: { homeBar?: number }) {
             <span data-testid="the-last-line">いちばん下の行</span>
           </TintPanel>
         </ScreenMain>
-        <AppTabBar />
+        <AppTabBar
+          conflicts={
+            conflicts ? (
+              <TabBadge count={conflicts} saying={`競合 ${conflicts} 件`} />
+            ) : undefined
+          }
+        />
       </AppFrame>
     </div>
   )
@@ -175,6 +187,78 @@ export const InTheSettingsOnAPhone: Story = {
     await expect(
       within(tabBarOf(canvasElement)).getByRole('link', { current: 'page' }),
     ).toHaveTextContent('設定')
+    await expect(
+      canvasElement.querySelector('[data-slot="phone-bar-title"]'),
+    ).toHaveTextContent('チューナー')
+    await expect(
+      within(canvasElement).getByRole('link', { name: '設定へ' }),
+    ).toHaveAttribute('href', '/settings')
+  },
+}
+
+export const TheBarSaysTheScreenOnAPhone: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: PHONE,
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const title = canvasElement.querySelector('[data-slot="phone-bar-title"]')
+
+    await expect(title).toHaveTextContent('ライブラリ')
+    await expect(parseFloat(getComputedStyle(title!).fontSize)).toBe(22)
+    await expect(
+      canvasElement.querySelector('[data-slot="brand"]'),
+    ).not.toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="phone-bar-back"]'),
+    ).toBeNull()
+
+    const theme = canvas.getByRole('button', { name: 'テーマ' })
+    const box = theme.getBoundingClientRect()
+
+    await expect(box.width).toBeGreaterThanOrEqual(40)
+    await expect(box.right).toBeLessThanOrEqual(window.innerWidth - 12)
+  },
+}
+
+export const TheOpenTabPressedAgainGoesToTheTop: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: PHONE,
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+  },
+  play: async ({ canvasElement }) => {
+    window.scrollTo(0, 600)
+    await expect(window.scrollY).toBeGreaterThan(0)
+
+    await userEvent.click(
+      within(tabBarOf(canvasElement)).getByRole('link', { name: 'ライブラリ' }),
+    )
+
+    await expect(window.scrollY).toBe(0)
+  },
+}
+
+export const TheReservationsTabCountsTheConflicts: Story = {
+  render: () => <Shell conflicts={2} />,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const bar = within(tabBarOf(canvasElement))
+    const reservations = bar.getByRole('link', { name: /予約/ })
+    const badge = reservations.querySelector('[data-slot="tab-badge"]')
+
+    await expect(reservations).toHaveAccessibleName('予約 競合 2 件')
+    await expect(badge).toBeVisible()
+
+    const icon = reservations.querySelector('svg')!.getBoundingClientRect()
+    const mark = badge!.getBoundingClientRect()
+
+    await expect(mark.left).toBeGreaterThan(icon.left)
+    await expect(mark.bottom).toBeLessThanOrEqual(
+      reservations.getBoundingClientRect().top + icon.height + 10,
+    )
   },
 }
 

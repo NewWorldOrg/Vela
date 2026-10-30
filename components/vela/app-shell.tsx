@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from 'react'
 import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
-import { SettingsIcon } from '@/components/vela/icons'
+import { ChevronLeftIcon, SettingsIcon } from '@/components/vela/icons'
 import { VelaMark } from '@/components/vela/marks'
 import { iconTilt } from '@/components/vela/tactile'
 
@@ -47,6 +47,7 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
       className={cn(
         'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[calc(14rem/16)]',
         TOP_BAR_HEIGHT,
+        'upright:h-[calc(52rem/16)] upright:gap-2 upright:border-b-0 upright:bg-bg upright:pr-3 upright:pl-4 upright:dot-grid',
         className,
       )}
       {...props}
@@ -59,7 +60,7 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="brand"
       className={cn(
-        'heading mr-[calc(14rem/16)] flex items-center gap-1.5 text-title',
+        'heading mr-[calc(14rem/16)] flex items-center gap-1.5 text-title upright:hidden',
         className,
       )}
       {...props}
@@ -79,7 +80,7 @@ export function GlobalNav({
     <nav
       data-slot="global-nav"
       aria-label={ariaLabel}
-      className={cn('flex flex-1 gap-0.5 max-[600px]:hidden', className)}
+      className={cn('flex flex-1 gap-0.5 upright:hidden', className)}
       {...props}
     />
   )
@@ -123,7 +124,7 @@ export function SettingsLink({
       data-slot="settings-link"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none max-[600px]:hidden',
+        'tap-target flex items-center gap-1.5 rounded-full border border-transparent px-3 py-[calc(5rem/16)] text-sub font-medium text-ink-2 no-underline outline-none upright:hidden',
         'transition-[background-color,color] duration-150 ease-out',
         'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         active && 'border-brand bg-brand-soft font-bold text-brand',
@@ -150,7 +151,7 @@ export function TabBar({
       className={cn(
         'fixed inset-x-0 bottom-0 z-40 hidden border-t border-line bg-surface',
         'pr-[env(safe-area-inset-right)] pb-(--safe-bottom) pl-[env(safe-area-inset-left)]',
-        'max-[600px]:block [body:has([data-fill])_&]:hidden',
+        'upright:block [body:has([data-fill])_&]:hidden',
         className,
       )}
       {...props}
@@ -165,6 +166,7 @@ export function TabBarItem({
   asChild,
   icon,
   label,
+  badge,
   className,
   children,
   ...props
@@ -173,6 +175,7 @@ export function TabBarItem({
   asChild?: boolean
   icon: ReactNode
   label: string
+  badge?: ReactNode
 }) {
   const Comp = asChild ? Slot.Root : 'a'
 
@@ -182,7 +185,7 @@ export function TabBarItem({
         data-slot="tab-bar-item"
         aria-current={active ? 'page' : undefined}
         className={cn(
-          'group/tab flex min-w-0 flex-1 flex-col items-center justify-center gap-[calc(2rem/16)] text-ink-2 no-underline outline-none',
+          'group/tab relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[calc(2rem/16)] text-ink-2 no-underline outline-none',
           'transition-colors duration-150 ease-out hover:text-ink',
           active && 'text-brand hover:text-brand',
           className,
@@ -207,9 +210,34 @@ export function TabBarItem({
         >
           {label}
         </span>
+        {badge}
         {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : null}
       </Comp>
     </li>
+  )
+}
+
+/** A count a tab carries of things waiting on the person, in lemon over the corner of its icon. Read aloud after the tab's name. */
+export function TabBadge({
+  count,
+  saying,
+  className,
+}: {
+  count: number
+  saying: string
+  className?: string
+}) {
+  return (
+    <span
+      data-slot="tab-badge"
+      className={cn(
+        'absolute top-[calc(3rem/16)] left-[calc(50%+10rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-lemon px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-on-brand',
+        className,
+      )}
+    >
+      <span aria-hidden="true">{count}</span>
+      <span className="sr-only">{saying}</span>
+    </span>
   )
 }
 
@@ -235,7 +263,7 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[11rem] shrink-0 border-r border-dashed border-line px-[calc(9rem/16)] max-[900px]:w-auto',
+        'w-[11rem] shrink-0 border-r border-dashed border-line px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden',
         className,
       )}
       {...props}
@@ -336,7 +364,10 @@ export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
     <ScreenMain
       rises={false}
       data-slot="admin-main"
-      className={cn('min-w-0 px-[calc(18rem/16)] pt-4 pb-5', className)}
+      className={cn(
+        'min-w-0 px-[calc(18rem/16)] pt-4 pb-5 upright:px-4 upright:pt-1',
+        className,
+      )}
       {...props}
     />
   )
@@ -346,7 +377,10 @@ export function Crumb({ className, children, ...props }: ComponentProps<'p'>) {
   return (
     <p
       data-slot="crumb"
-      className={cn('mb-[calc(5rem/16)] text-cap text-ink-3', className)}
+      className={cn(
+        'mb-[calc(5rem/16)] text-cap text-ink-3 upright:hidden',
+        className,
+      )}
       {...props}
     >
       {children}
@@ -356,4 +390,48 @@ export function Crumb({ className, children, ...props }: ComponentProps<'p'>) {
 
 export function CrumbCurrent({ className, ...props }: ComponentProps<'b'>) {
   return <b className={cn('font-medium text-ink-2', className)} {...props} />
+}
+
+/** A tool in the bar at the top of a phone held upright: a round button of 40px. */
+export const PHONE_BAR_BUTTON =
+  "size-10 [&_svg:not([class*='size-'])]:size-[calc(19rem/16)]"
+
+/** The name of the screen in the bar at the top of a phone held upright. Not a heading: the screen keeps its own, read aloud. */
+export function PhoneBarTitle({ className, ...props }: ComponentProps<'p'>) {
+  return (
+    <p
+      data-slot="phone-bar-title"
+      aria-hidden="true"
+      className={cn(
+        'heading min-w-0 flex-1 truncate text-h1 leading-none tracking-[0.02em]',
+        className,
+      )}
+      {...props}
+    />
+  )
+}
+
+/** The arrow back out of a screen pressed into, named for the screen it goes back to. */
+export function PhoneBarBack({
+  asChild,
+  className,
+  children,
+  ...props
+}: ComponentProps<'a'> & { asChild?: boolean; 'aria-label': string }) {
+  const Comp = asChild ? Slot.Root : 'a'
+
+  return (
+    <Comp
+      data-slot="phone-bar-back"
+      className={cn(
+        '-ml-3 flex size-11 shrink-0 items-center justify-center rounded-full text-brand no-underline outline-none',
+        'focus-visible:shadow-ring [&_svg]:size-[calc(22rem/16)]',
+        className,
+      )}
+      {...props}
+    >
+      <ChevronLeftIcon />
+      {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : children}
+    </Comp>
+  )
 }

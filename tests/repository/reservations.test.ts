@@ -243,6 +243,7 @@ mock.module('@/repository/client/carina', {
 const {
   cancelReservation,
   cancelReservations,
+  countConflicts,
   createReservation,
   discardReservation,
   discardReservations,
@@ -1808,4 +1809,29 @@ test('a pushed-out reservation is still named when the channels cannot be read',
       result.displaced?.[0].meta.startsWith('132-1320 · '),
     true,
   )
+})
+
+test('the reservations tab counts the conflicts still to come, asking only for reservations in conflict', async () => {
+  standing([
+    reservation({ id: 'c1', standing: 'conflict' }),
+    reservation({
+      id: 'c2',
+      standing: 'conflict',
+      window: window('2026-08-07T12:10:00Z', '2026-08-07T13:40:00Z'),
+    }),
+    reservation({ id: 'c3', standing: 'conflict' }),
+  ])
+
+  assert.equal(await countConflicts(BEFORE_THEM_ALL), 2)
+  assert.deepEqual(
+    sent.map(({ path, query }) => [path, query.standing]),
+    [['/api/reservations', ['conflict']]],
+  )
+})
+
+test('the reservations tab counts nothing when the reservations cannot be read', async () => {
+  standing()
+  store.listingStatus = 500
+
+  await assert.rejects(countConflicts(BEFORE_THEM_ALL))
 })

@@ -166,11 +166,8 @@ import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
 import { useWideWindow } from '@/hooks/useWideWindow'
-import {
-  usePhoneOnItsSide,
-  usePhoneWidth,
-  usePlayerFit,
-} from '@/hooks/usePlayerFit'
+import { usePhoneOnItsSide, usePhoneUpright } from '@/hooks/usePhone'
+import { usePlayerFit } from '@/hooks/usePlayerFit'
 import {
   SETTLE_WHILE_THE_BAR_SIZES_THE_BOARD,
   wideRowWidth,
@@ -1384,7 +1381,7 @@ export function Player({
 
   const faceShown = broadcast.view.open
   const sideways = usePhoneOnItsSide()
-  const phone = usePhoneWidth()
+  const phone = usePhoneUpright()
   const fit = usePlayerFit(
     shell,
     wideRowWidth({
