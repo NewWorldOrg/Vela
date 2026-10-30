@@ -1,6 +1,13 @@
 'use client'
 
-import { useCallback, useMemo, useRef, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+} from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -32,6 +39,7 @@ import {
   AntennaIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  FilterIcon,
   ProgramGuideIcon,
   SearchIcon,
 } from '@/components/vela/icons'
@@ -108,6 +116,11 @@ export function GuideView({
     : null
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
+  const [toolsOpen, setToolsOpen] = useState(false)
+  const toolsId = useId()
+  const narrowed =
+    (guide.kind === 'terrestrial' ? 0 : 1) + (foldable && folded ? 1 : 0)
+  const foldedOnAPhone = !toolsOpen && 'max-[600px]:hidden sideways:hidden'
 
   const [extras, setExtras] = useState<
     Record<string, ProgramExtras | 'failed'>
@@ -192,17 +205,8 @@ export function GuideView({
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
-      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5">
-        <SegmentedControl
-          aria-label="放送の種別"
-          options={CHANNEL_KINDS}
-          value={guide.kind}
-          onValueChange={(next) =>
-            patch({ kind: next === 'terrestrial' ? null : next })
-          }
-        />
-
-        <div className="flex items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5 max-[600px]:gap-x-2.5 max-[600px]:gap-y-3 max-[600px]:py-2.5 sideways:gap-x-2.5 sideways:py-2">
+        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 sideways:order-first">
           <IconButton
             aria-label="前の日"
             size="sm"
@@ -233,23 +237,67 @@ export function GuideView({
           )}
         </div>
 
-        {foldable && (
-          <SubChannelToggle shown={!folded} onShownChange={(on) => fold(!on)} />
-        )}
-
         <button
           type="button"
-          data-opens="collection"
-          onClick={() => setCollectionOpen(true)}
-          className={cn(BAND_PRESS, BAND_CONTROL, 'ml-auto max-[700px]:ml-0')}
+          aria-expanded={toolsOpen}
+          aria-controls={toolsId}
+          onClick={() => setToolsOpen((was) => !was)}
+          className={cn(
+            BAND_CONTROL,
+            BAND_PRESS,
+            'ml-auto hidden shrink-0 max-[600px]:inline-flex sideways:inline-flex',
+            toolsOpen &&
+              'border-brand bg-brand-soft text-brand [&_svg]:text-brand',
+          )}
         >
-          <AntennaIcon />
-          収集状態
+          <FilterIcon />
+          絞り込み
+          {narrowed > 0 && ' '}
+          {narrowed > 0 && (
+            <b className="font-code font-bold text-brand tabular-nums">
+              {narrowed}
+            </b>
+          )}
         </button>
-        <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
-          <SearchIcon />
-          番組を検索
-        </Link>
+
+        <div
+          id={toolsId}
+          className={cn(
+            'contents max-[600px]:flex max-[600px]:w-full max-[600px]:flex-wrap max-[600px]:items-center max-[600px]:gap-2.5 max-[600px]:border-t max-[600px]:border-dashed max-[600px]:border-line max-[600px]:pt-3 sideways:flex sideways:w-full sideways:flex-wrap sideways:items-center sideways:gap-2.5',
+            foldedOnAPhone,
+          )}
+        >
+          <SegmentedControl
+            aria-label="放送の種別"
+            className="-order-1 max-[600px]:order-none sideways:order-none"
+            options={CHANNEL_KINDS}
+            value={guide.kind}
+            onValueChange={(next) =>
+              patch({ kind: next === 'terrestrial' ? null : next })
+            }
+          />
+
+          {foldable && (
+            <SubChannelToggle
+              shown={!folded}
+              onShownChange={(on) => fold(!on)}
+            />
+          )}
+
+          <button
+            type="button"
+            data-opens="collection"
+            onClick={() => setCollectionOpen(true)}
+            className={cn(BAND_PRESS, BAND_CONTROL, 'ml-auto max-[700px]:ml-0')}
+          >
+            <AntennaIcon />
+            収集状態
+          </button>
+          <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
+            <SearchIcon />
+            番組を検索
+          </Link>
+        </div>
       </div>
 
       {guide.health && (
