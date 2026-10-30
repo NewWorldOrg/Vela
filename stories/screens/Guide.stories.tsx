@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
-import { expect, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   COLUMN_MIN_REM,
@@ -45,6 +45,7 @@ import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
 import { HOUR_REM, hourPxIn } from '@/components/guide/guide-metrics'
 import { GuideView } from '@/components/guide/guide-page'
 import { inTheApp } from '@/stories/frames'
+import { FROM_600, NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 
 const EVENING_MIN = (19 - 4) * 60
 
@@ -2194,5 +2195,446 @@ export const 大きな一日: Story = {
     await expect(
       canvasElement.querySelectorAll('[data-guide-column]'),
     ).toHaveLength(A_FULL_DAY_CHANNELS.length)
+  },
+}
+
+const SIDEWAYS_PHONE = { width: 844, height: 390 }
+
+const A_FULL_DAY_GUIDE = {
+  ...base,
+  ...A_FULL_DAY_WINDOW,
+  channels: A_FULL_DAY_CHANNELS,
+  programs: A_FULL_DAY_PROGRAMS.map(forTheGrid),
+}
+
+const PHONE_BOOKINGS = withBookings.map((program) => ({
+  ...program,
+  startMin: program.startMin + EVENING_MIN,
+}))
+
+function programsOfChannel(programs: Program[], channelId: string): Program[] {
+  return programs
+    .filter((program) => program.channelId === channelId)
+    .sort((a, b) => a.startMin - b.startMin)
+}
+
+async function phoneList(canvasElement: HTMLElement): Promise<HTMLElement> {
+  return waitFor(() => {
+    const list = canvasElement.querySelector<HTMLElement>('[data-guide-list]')
+
+    expect(list).not.toBeNull()
+    expect(list!.getBoundingClientRect().height).toBeGreaterThan(0)
+
+    return list!
+  })
+}
+
+function rowsIn(list: HTMLElement): HTMLElement[] {
+  return Array.from(list.querySelectorAll<HTMLElement>(':scope > ol > li'))
+}
+
+function pressOf(row: HTMLElement): HTMLButtonElement {
+  return row.querySelector<HTMLButtonElement>(':scope > button')!
+}
+
+function chipsIn(canvasElement: HTMLElement): HTMLButtonElement[] {
+  return within(canvasElement)
+    .getByRole('group', { name: 'チャンネル' })
+    .querySelectorAll<HTMLButtonElement>('button')
+    .values()
+    .toArray()
+}
+
+async function opensAtTheProgrammeOnAir(list: HTMLElement): Promise<void> {
+  await waitFor(() => {
+    const onAir = list.querySelector<HTMLElement>('[data-on-air]')
+
+    expect(onAir).not.toBeNull()
+
+    const room = list.getBoundingClientRect()
+    const row = onAir!.getBoundingClientRect()
+    const room_for_the_row_above = Math.min(
+      48,
+      onAir!.offsetTop,
+      list.scrollHeight - list.clientHeight >= onAir!.offsetTop - 48
+        ? 48
+        : onAir!.offsetTop - (list.scrollHeight - list.clientHeight),
+    )
+
+    expect(Math.abs(row.top - room.top - room_for_the_row_above)).toBeLessThan(
+      2,
+    )
+    expect(row.bottom).toBeLessThanOrEqual(room.bottom)
+  })
+}
+
+function aGridIsShown(canvasElement: HTMLElement): void {
+  const grid = canvasElement.querySelector<HTMLElement>('[data-guide-scroll]')
+  const phone = canvasElement.querySelector<HTMLElement>('[data-guide-phone]')
+
+  expect(grid).not.toBeNull()
+  expect(grid!.getBoundingClientRect().height).toBeGreaterThan(0)
+  expect(phone === null || getComputedStyle(phone).display === 'none').toBe(
+    true,
+  )
+}
+
+export const 電話では局ごとの一覧になる: Story = {
+  args: { guide: base },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const first = CHANNEL_FIXTURES[0]
+    const expected = programsOfChannel(base.programs, first.id)
+    const rows = rowsIn(list)
+
+    await expect(canvasElement.querySelector('[data-guide-scroll]')).toBeNull()
+    await expect(rows).toHaveLength(expected.length)
+
+    for (const [index, program] of expected.entries()) {
+      await expect(rows[index]).toHaveTextContent(halfWidthOf(program.title))
+      await expect(rows[index]).toHaveTextContent(program.startLabel)
+      await expect(
+        pressOf(rows[index]).getBoundingClientRect().height,
+      ).toBeGreaterThanOrEqual(44)
+    }
+
+    const chips = chipsIn(canvasElement)
+
+    await expect(chips).toHaveLength(CHANNEL_FIXTURES.length)
+    await expect(chips[0]).toHaveAttribute('aria-pressed', 'true')
+
+    for (const chip of chips.slice(1)) {
+      await expect(chip).toHaveAttribute('aria-pressed', 'false')
+    }
+
+    for (const chip of chips) {
+      await expect(chip.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+        44,
+      )
+    }
+
+    await expect(
+      within(canvasElement).getByRole('button', { name: '絞り込み' }),
+    ).toBeVisible()
+    await expect(
+      within(canvasElement).queryByRole('group', { name: '放送の種別' }),
+    ).toBeNull()
+  },
+}
+
+export const 狭い電話でも局ごとの一覧: Story = {
+  args: { guide: base },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+
+    await expect(list.scrollWidth).toBeLessThanOrEqual(list.clientWidth)
+    await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+      NARROW_PHONE.width,
+    )
+  },
+}
+
+export const 電話では放送中の番組から開く: Story = {
+  args: { guide: A_FULL_DAY_GUIDE },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const programs = programsOfChannel(
+      A_FULL_DAY_GUIDE.programs,
+      A_FULL_DAY_CHANNELS[0].id,
+    )
+    const rows = rowsIn(list)
+
+    await expect(programs.length).toBeGreaterThanOrEqual(30)
+    await expect(rows).toHaveLength(programs.length)
+    await opensAtTheProgrammeOnAir(list)
+
+    const onAirAt = rows.findIndex((row) => row.hasAttribute('data-on-air'))
+
+    await expect(onAirAt).toBe(
+      programs.findIndex((program) =>
+        isOnAir(program, A_FULL_DAY_GUIDE.nowMin),
+      ),
+    )
+    await expect(rows[onAirAt]).toHaveTextContent(A_FULL_DAY_GUIDE.nowLabel!)
+
+    const past = rows.slice(0, onAirAt)
+    const ahead = rows.slice(onAirAt + 1)
+
+    for (const row of past) {
+      await expect(row).toHaveAttribute('data-past')
+    }
+
+    for (const row of ahead) {
+      await expect(row).not.toHaveAttribute('data-past')
+    }
+
+    const groundOf = (row: HTMLElement) => getComputedStyle(row).backgroundColor
+
+    await expect(groundOf(past[0])).not.toBe(groundOf(ahead[0]))
+    await expect(groundOf(past[0])).not.toBe(groundOf(rows[onAirAt]))
+    await expect(groundOf(ahead[0])).not.toBe(groundOf(rows[onAirAt]))
+
+    list.scrollTop = 0
+    await waitFor(() => expect(list.scrollTop).toBe(0))
+    await expect(rows[0].getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      list.getBoundingClientRect().top - 1,
+    )
+
+    list.scrollTop = list.scrollHeight
+    await waitFor(() =>
+      expect(rows.at(-1)!.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+        list.getBoundingClientRect().bottom + 1,
+      ),
+    )
+  },
+}
+
+export const 電話では帯で局が替わる: Story = {
+  args: { guide: A_FULL_DAY_GUIDE },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+
+    list.scrollTop = 0
+
+    const chips = chipsIn(canvasElement)
+    const second = A_FULL_DAY_CHANNELS[1]
+
+    await userEvent.click(chips[1])
+
+    await waitFor(() =>
+      expect(chipsIn(canvasElement)[1]).toHaveAttribute('aria-pressed', 'true'),
+    )
+    await expect(chipsIn(canvasElement)[0]).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+
+    const expected = programsOfChannel(A_FULL_DAY_GUIDE.programs, second.id)
+    const rows = rowsIn(list)
+
+    await expect(rows).toHaveLength(expected.length)
+    await expect(rows[0]).toHaveTextContent(halfWidthOf(expected[0].title))
+    await opensAtTheProgrammeOnAir(list)
+
+    const far = chipsIn(canvasElement).at(-1)!
+
+    await userEvent.click(far)
+    await waitFor(() => expect(far).toHaveAttribute('aria-pressed', 'true'))
+
+    const strip = within(canvasElement).getByRole('group', {
+      name: 'チャンネル',
+    })
+    const shown = far.getBoundingClientRect()
+    const room = strip.getBoundingClientRect()
+
+    await expect(shown.left).toBeGreaterThanOrEqual(room.left - 1)
+    await expect(shown.right).toBeLessThanOrEqual(room.right + 1)
+  },
+}
+
+export const 電話では押した行の下に詳細が開いて閉じる: Story = {
+  args: { guide: base },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const doc = canvasElement.ownerDocument
+    const onAir = list.querySelector<HTMLElement>('[data-on-air]')!
+    const press = pressOf(onAir)
+
+    await userEvent.click(press)
+
+    await waitFor(() => expect(press).toHaveAttribute('aria-expanded', 'true'))
+
+    const detail = press.nextElementSibling as HTMLElement | null
+
+    await expect(detail).not.toBeNull()
+    await expect(detail!.querySelector('[data-program-detail]')).not.toBeNull()
+    await expect(detail!.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+      press.getBoundingClientRect().bottom - 1,
+    )
+    await expect(doc.querySelector('[data-slot="dialog-content"]')).toBeNull()
+    await expect(list.querySelectorAll('[data-program-detail]')).toHaveLength(1)
+
+    const next = pressOf(rowsIn(list)[rowsIn(list).indexOf(onAir) + 1])
+
+    await userEvent.click(next)
+    await waitFor(() => expect(next).toHaveAttribute('aria-expanded', 'true'))
+    await expect(press).toHaveAttribute('aria-expanded', 'false')
+    await expect(list.querySelectorAll('[data-program-detail]')).toHaveLength(1)
+
+    await userEvent.click(next)
+    await waitFor(() => expect(next).toHaveAttribute('aria-expanded', 'false'))
+    await expect(list.querySelector('[data-program-detail]')).toBeNull()
+  },
+}
+
+export const 電話の詳細から予約する: Story = {
+  args: {
+    guide: base,
+    onReserve: fn(async (): Promise<ReservationWrite> => ({ state: 'ok' })),
+  },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement, args }) => {
+    const list = await phoneList(canvasElement)
+    const programs = programsOfChannel(base.programs, CHANNEL_FIXTURES[0].id)
+    const ahead = programs.find(
+      (program) => !program.booking && program.startMin > base.nowMin,
+    )!
+    const row = rowsIn(list)[programs.indexOf(ahead)]
+
+    await userEvent.click(pressOf(row))
+
+    const reserve = await within(row).findByRole('button', {
+      name: '録画予約',
+    })
+
+    await userEvent.click(reserve)
+    await waitFor(() => expect(args.onReserve).toHaveBeenCalledWith(ahead.id))
+  },
+}
+
+const cancelOnAPhone = fn(async (): Promise<ReservationWrite> => ({
+  state: 'ok',
+}))
+
+export const 電話の予約の印: Story = {
+  args: {
+    guide: { ...base, programs: PHONE_BOOKINGS },
+    onCancel: cancelOnAPhone,
+  },
+  parameters: { screen: PHONE },
+  beforeEach: () => {
+    cancelOnAPhone.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const seen = new Set<string>()
+
+    for (const [nth, channel] of CHANNEL_FIXTURES.entries()) {
+      await userEvent.click(chipsIn(canvasElement)[nth])
+      await waitFor(() =>
+        expect(chipsIn(canvasElement)[nth]).toHaveAttribute(
+          'aria-pressed',
+          'true',
+        ),
+      )
+
+      const programs = programsOfChannel(PHONE_BOOKINGS, channel.id)
+      const rows = rowsIn(list)
+
+      for (const [index, program] of programs.entries()) {
+        const expected = bookingMarkOf(program.booking)
+        const mark = rows[index].querySelector<HTMLElement>(
+          '[data-booking-mark]',
+        )
+
+        if (expected === undefined) {
+          await expect(mark).toBeNull()
+          continue
+        }
+
+        await expect(mark).not.toBeNull()
+        await expect(mark!.dataset.bookingMark).toBe(expected)
+        await expect(mark!.getBoundingClientRect().width).toBeGreaterThan(0)
+        seen.add(expected)
+
+        if (expected === 'booked' && cancelOnAPhone.mock.calls.length === 0) {
+          await userEvent.click(pressOf(rows[index]))
+
+          const surface = await waitFor(() => {
+            const found = rows[index].querySelector<HTMLElement>(
+              '[data-booking="scheduled"]',
+            )
+
+            expect(found).not.toBeNull()
+
+            return found!
+          })
+
+          await userEvent.click(
+            within(surface).getByRole('button', { name: '予約を取り消し' }),
+          )
+          await waitFor(() =>
+            expect(cancelOnAPhone).toHaveBeenCalledWith(program.booking!.id),
+          )
+          await userEvent.click(pressOf(rows[index]))
+        }
+
+        if (expected === 'recording') {
+          await userEvent.click(pressOf(rows[index]))
+          await waitFor(() =>
+            expect(
+              rows[index].querySelector('[data-booking="recording"]'),
+            ).not.toBeNull(),
+          )
+          await userEvent.click(pressOf(rows[index]))
+        }
+      }
+    }
+
+    await expect(seen).toEqual(new Set(['booked', 'recording']))
+  },
+}
+
+export const 電話で別の日: Story = {
+  args: {
+    guide: {
+      ...A_FULL_DAY_GUIDE,
+      day: GUIDE_DAYS[2],
+      nowMin: undefined,
+      nowLabel: undefined,
+    },
+  },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+
+    await expect(list.scrollTop).toBe(0)
+    await expect(list.querySelector('[data-on-air]')).toBeNull()
+    await expect(list.querySelector('[data-past]')).toBeNull()
+    await expect(
+      within(canvasElement).getByRole('button', { name: '今日' }),
+    ).toBeVisible()
+  },
+}
+
+export const 横向きの電話は表: Story = {
+  args: { guide: base },
+  parameters: { screen: SIDEWAYS_PHONE, coarse: true },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    aGridIsShown(canvasElement)
+
+    const canvas = within(canvasElement)
+    const tools = canvas.getByRole('button', { name: '絞り込み' })
+
+    await expect(tools).toBeVisible()
+    await expect(canvas.queryByRole('group', { name: '放送の種別' })).toBeNull()
+
+    await userEvent.click(tools)
+    await expect(tools).toHaveAttribute('aria-expanded', 'true')
+    await expect(
+      canvas.getByRole('group', { name: '放送の種別' }),
+    ).toBeVisible()
+  },
+}
+
+export const 幅600pxからは表: Story = {
+  args: { guide: base },
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    aGridIsShown(canvasElement)
+
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryByRole('button', { name: '絞り込み' })).toBeNull()
+    await expect(
+      canvas.getByRole('group', { name: '放送の種別' }),
+    ).toBeVisible()
   },
 }
