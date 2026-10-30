@@ -36,6 +36,17 @@ test('the dark words apply under .dark, and under .system when the device is dar
   assert.doesNotMatch(sheet, /^ {2}\.dark \{/m)
 })
 
+test('a face beside the picture takes the dark words whatever the theme', async () => {
+  const sheet = await read('app/globals.css')
+  const variant = sheet.slice(
+    sheet.indexOf('@custom-variant dark'),
+    sheet.indexOf('@layer base'),
+  )
+
+  assert.match(variant, /&:where\(\[data-ink-face\], \[data-ink-face\] \*\)/)
+  assert.match(sheet, /:root,\n {2}\[data-ink-face\] \{\n {4}@variant dark \{/)
+})
+
 test('choosing a theme swaps the class on html and nothing else', async () => {
   const provider = await read('components/theme/ThemeProvider.tsx')
 

@@ -42,7 +42,11 @@
 
 /* Dark, and inside anything marked `data-ink-face`: the panels beside the picture, which stay on the player's ink whatever the theme. */
 @custom-variant dark {
-  &:where(.dark, .dark *, [data-ink-face], [data-ink-face] *) {
+  &:where(.dark, .dark *) {
+    @slot;
+  }
+
+  &:where([data-ink-face], [data-ink-face] *) {
     @slot;
   }
 
