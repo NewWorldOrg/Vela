@@ -1446,3 +1446,82 @@ export const URL_をコピーできなかったらその場で言う: Story = {
     await expect(copied).toEqual([])
   },
 }
+
+const UPRIGHT = { width: 390, height: 844 }
+
+function drawnAs(canvasElement: HTMLElement, slot: string): HTMLElement {
+  const found = canvasElement.querySelector(`[data-slot="${slot}"]`)
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`nothing is drawn as ${slot}`)
+  }
+
+  return found
+}
+
+export const 電話_観た位置で止めて開き最初からを出す: Story = {
+  args: {
+    detail: detail('1274'),
+    playback: planned({ resumeAtSec: 754 }),
+  },
+  parameters: { screen: UPRIGHT },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const board = drawnAs(canvasElement, 'player')
+    const box = board.getBoundingClientRect()
+
+    await expect(box.left).toBe(0)
+    await expect(box.width).toBe(window.innerWidth)
+    await expect(
+      canvasElement.querySelector('[data-slot="top-bar"]'),
+    ).not.toBeVisible()
+    await expect(
+      canvas.getByRole('link', { name: 'ライブラリへ' }),
+    ).toHaveAttribute('href', '/library')
+
+    const picks = drawnAs(canvasElement, 'picks-up')
+
+    await expect(picks).toBeVisible()
+    await expect(picks).toHaveTextContent('12:34 まで観ました')
+    await expect(
+      within(picks).getByRole('link', { name: '最初から' }),
+    ).toHaveAttribute('href', '/recordings/1274?at=0')
+
+    const video = canvasElement.querySelector('video')
+
+    await expect(video?.paused ?? true).toBe(true)
+  },
+}
+
+export const 電話_値の帯と2列2段の操作: Story = {
+  args: { detail: detail('1274') },
+  parameters: { screen: UPRIGHT },
+  play: async ({ canvasElement }) => {
+    const values = drawnAs(canvasElement, 'phone-values')
+
+    await expect(values).toBeVisible()
+    await expect(
+      [...values.querySelectorAll('dt')].map((one) => one.textContent),
+    ).toEqual(['結果', '品質', 'エンコード'])
+
+    const row = drawnAs(canvasElement, 'action-row')
+    const pressed = [...row.querySelectorAll('button')].filter(
+      (one) => one.getBoundingClientRect().width > 0,
+    )
+    const tops = new Set(
+      pressed.map((one) => Math.round(one.getBoundingClientRect().top)),
+    )
+
+    await expect(tops.size).toBeLessThanOrEqual(2)
+
+    for (const one of pressed) {
+      await expect(one.getBoundingClientRect().right).toBeLessThanOrEqual(
+        window.innerWidth,
+      )
+    }
+
+    await expect(values.getBoundingClientRect().top).toBeLessThan(
+      row.getBoundingClientRect().top,
+    )
+  },
+}
