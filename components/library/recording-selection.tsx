@@ -1,5 +1,6 @@
 'use client'
 
+import { cn } from '@/lib/utils'
 import { useState, useTransition } from 'react'
 
 import { signedOut } from '@/lib/signed-out'
@@ -24,10 +25,12 @@ export function RecordingSelection({
   chosen,
   onClear,
   onDeleteAll,
+  className,
 }: {
   chosen: Recording[]
   onClear: () => void
   onDeleteAll: (ids: string[]) => Promise<RecordingBatch>
+  className?: string
 }) {
   const [pending, startTransition] = useTransition()
   const [outcome, setOutcome] = useState<string>()
@@ -59,7 +62,10 @@ export function RecordingSelection({
     <div
       role="group"
       aria-label="選択した録画の操作"
-      className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[calc(17rem/16)] py-[calc(13rem/16)]"
+      className={cn(
+        'mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[calc(17rem/16)] py-[calc(13rem/16)]',
+        className,
+      )}
     >
       <span className="text-ui font-medium whitespace-nowrap text-ink">
         <b className="font-code font-bold">{chosen.length}</b> 件を選択

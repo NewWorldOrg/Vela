@@ -311,6 +311,16 @@ export function DotIcon(props: IconProps) {
   )
 }
 
+export function MoreIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <circle cx="5.5" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+      <circle cx="18.5" cy="12" r="1.5" fill="currentColor" />
+    </Icon>
+  )
+}
+
 export function SuccessIcon(props: IconProps) {
   return (
     <Icon {...props}>

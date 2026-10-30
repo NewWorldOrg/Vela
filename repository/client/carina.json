@@ -2,8 +2,8 @@
   "openapi": "3.1.1",
   "info": {
     "title": "Carina",
-    "description": "The HTTP surface of the app process. Eight contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server, and what it posts there (`GET` and `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`); the frame has no origin of its own, so these two answer any origin without credentials. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists, and by `format` (`h264`, `h265` or `av1`, `h264` when none is named), one of the formats the same list names, a format this machine does not transcode in being refused before the wire opens; a viewer that is refused is told why on the control channel before the wire is closed.",
-    "version": "0.3.4"
+    "description": "The HTTP surface of the app process. Nine contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and which, opened with the ticket in the path and a name ending in `.m3u8`, answers instead a playlist naming one playlist of a key made for that player, the picture in H.264 at the profile this machine opens at with the main sound, the playlist of a key, its initialisation and its segments (`GET /api/hls/{key}/index.m3u8`, `init.mp4` and `{number}.m4s`), opened by the key alone, which is let go of thirty seconds after nothing is asked with it, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server, and what it posts there (`GET` and `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`); the frame has no origin of its own, so these two answer any origin without credentials. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists, and by `format` (`h264`, `h265` or `av1`, `h264` when none is named), one of the formats the same list names, a format this machine does not transcode in being refused before the wire opens; a viewer that is refused is told why on the control channel before the wire is closed.",
+    "version": "0.3.7"
   },
   "servers": [
     {
@@ -11,6 +11,79 @@
     }
   ],
   "paths": {
+    "/api/live/{networkId}-{serviceId}/hls.m3u8": {
+      "get": {
+        "tags": [
+          "live"
+        ],
+        "summary": "Watches a live channel through a playlist, for a browser that has no media source to append the wire to. Once the first segment is ready it answers a playlist naming one playlist, that of a key made for this browser under /api/hls/{key}/, which opens that playlist, its initialisation and its segments by the key alone. The browser is seated on the session the wire would seat it on, so it takes no transcoder of its own, and the picture is in H.264. A key nothing is asked with for thirty seconds is let go of, and the seat with it. Opened with the reader's own session only, never with a ticket.",
+        "operationId": "getLivePlaylist",
+        "parameters": [
+          {
+            "name": "networkId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "serviceId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "The profile the picture is encoded in. Asking for none opens at what this machine encodes at, which GET /api/live/profiles marks as the unasked one.",
+            "schema": {
+              "enum": [
+                "1080p60",
+                "1080p30",
+                "720p60",
+                "720p30"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sound",
+            "in": "query",
+            "description": "The sound carried with the picture. Asking for none carries the main sound.",
+            "schema": {
+              "enum": [
+                "main",
+                "secondary",
+                "third"
+              ],
+              "type": "string",
+              "default": "main"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          }
+        }
+      }
+    },
     "/api/videos/{id}/play": {
       "get": {
         "tags": [
@@ -131,6 +204,70 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/api/videos/{id}/hls.m3u8": {
+      "get": {
+        "tags": [
+          "videos"
+        ],
+        "summary": "Watches a recording transcoded as it plays through a playlist, for a browser that has no media source to append the picture to. Once the first segment is ready it answers a playlist naming one playlist, that of a key made for this browser under /api/hls/{key}/, which opens that playlist, its initialisation and its segments by the key alone. That playlist is an event listing every segment from the second asked for, and ends once the recording is transcoded to its end; seeking opens a new playlist from another second. The picture is in H.264, transcoded under the same limit as playing the recording. A key nothing is asked with for thirty seconds is let go of, and the transcoder with it. Opened with the reader's own session only, never with a ticket.",
+        "operationId": "getVideoPlaylist",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "description": "The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional. Asking for none starts where this reader last left this recording, and at the beginning where they have not watched it before; asking for zero starts at the beginning whatever was left. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range, and the plan says where the watching got to so that a player can seek there itself.",
+            "schema": {
+              "type": "number",
+              "format": "double"
+            }
+          },
+          {
+            "name": "profile",
+            "in": "query",
+            "description": "The profile the picture is encoded in while it is transcoded as it plays. Asking for none opens at what this machine encodes at, which depends on the encoder it has and so has no fixed default here; GET /api/live/profiles names it, marked as the unasked one, and the answer is the same for a recording as it is for a live channel.",
+            "schema": {
+              "enum": [
+                "1080p60",
+                "1080p30",
+                "720p60",
+                "720p30"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "sound",
+            "in": "query",
+            "description": "The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with.",
+            "schema": {
+              "enum": [
+                "main",
+                "secondary",
+                "third"
+              ],
+              "type": "string",
+              "default": "main"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
           }
         }
       }
@@ -8896,6 +9033,7 @@
           "tooLittleEvidence",
           "noBetterAtBoundaries",
           "heldAfterRollback",
+          "losesOpeningsOrEndings",
           null
         ],
         "type": [
@@ -18080,7 +18218,8 @@
           "leftScrambled",
           "descrambledAt",
           "gaps",
-          "missedMs"
+          "missedMs",
+          "watchedPositionSec"
         ],
         "type": "object",
         "properties": {
@@ -18230,6 +18369,16 @@
               "string"
             ],
             "format": "int64"
+          },
+          "watchedPositionSec": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "description": "How many seconds into the recording the signed-in viewer got to, as the position a player reports keeps it and as the playback plan's resumeAtSec gives it back. Null for a recording this viewer has not watched.",
+            "format": "double"
           }
         }
       },
@@ -22501,6 +22650,9 @@
   },
   "tags": [
     {
+      "name": "live"
+    },
+    {
       "name": "videos"
     },
     {
@@ -22532,9 +22684,6 @@
     },
     {
       "name": "migration"
-    },
-    {
-      "name": "live"
     },
     {
       "name": "health"

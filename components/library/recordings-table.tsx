@@ -74,12 +74,14 @@ export function RecordingsTable({
   picked,
   onPick,
   waiting = false,
+  className,
 }: {
   items: Recording[]
   onDelete: (id: string) => Promise<RecordingDiscarded>
   picked: ReadonlySet<string>
   onPick: (next: ReadonlySet<string>) => void
   waiting?: boolean
+  className?: string
 }) {
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
@@ -94,6 +96,7 @@ export function RecordingsTable({
       className={cn(
         'min-h-0 flex-initial overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring',
         wait.className,
+        className,
       )}
     >
       <table

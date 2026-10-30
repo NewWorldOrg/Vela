@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  '/api/live/{networkId}-{serviceId}/hls.m3u8': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Watches a live channel through a playlist, for a browser that has no media source to append the wire to. Once the first segment is ready it answers a playlist naming one playlist, that of a key made for this browser under /api/hls/{key}/, which opens that playlist, its initialisation and its segments by the key alone. The browser is seated on the session the wire would seat it on, so it takes no transcoder of its own, and the picture is in H.264. A key nothing is asked with for thirty seconds is let go of, and the seat with it. Opened with the reader's own session only, never with a ticket. */
+    get: operations['getLivePlaylist']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/videos/{id}/play': {
     parameters: {
       query?: never
@@ -13,6 +30,23 @@ export interface paths {
     }
     /** Plays a recording. Asked with Accept: application/json it answers the plan alone - how the recording ended, whether it is transcoded as it plays, and whether seeking is a byte range or a restart. Asked for anything else it answers the picture itself. */
     get: operations['playVideo']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/videos/{id}/hls.m3u8': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    /** Watches a recording transcoded as it plays through a playlist, for a browser that has no media source to append the picture to. Once the first segment is ready it answers a playlist naming one playlist, that of a key made for this browser under /api/hls/{key}/, which opens that playlist, its initialisation and its segments by the key alone. That playlist is an event listing every segment from the second asked for, and ends once the recording is transcoded to its end; seeking opens a new playlist from another second. The picture is in H.264, transcoded under the same limit as playing the recording. A key nothing is asked with for thirty seconds is let go of, and the transcoder with it. Opened with the reader's own session only, never with a ticket. */
+    get: operations['getVideoPlaylist']
     put?: never
     post?: never
     delete?: never
@@ -1663,6 +1697,7 @@ export interface components {
       | 'tooLittleEvidence'
       | 'noBetterAtBoundaries'
       | 'heldAfterRollback'
+      | 'losesOpeningsOrEndings'
       | null
     /** @enum {null|string} */
     AllocationVerdict: 'secured' | 'contended' | 'pinned' | 'unreachable' | null
@@ -3833,6 +3868,11 @@ export interface components {
       gaps: components['schemas']['RecordingGapResponder'][]
       /** Format: int64 */
       missedMs: number | string
+      /**
+       * Format: double
+       * @description How many seconds into the recording the signed-in viewer got to, as the position a player reports keeps it and as the playback plan's resumeAtSec gives it back. Null for a recording this viewer has not watched.
+       */
+      watchedPositionSec: null | number | string
     }
     RecordingSegmentResponder: {
       /** Format: double */
@@ -4926,6 +4966,39 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  getLivePlaylist: {
+    parameters: {
+      query?: {
+        /** @description The profile the picture is encoded in. Asking for none opens at what this machine encodes at, which GET /api/live/profiles marks as the unasked one. */
+        profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
+        /** @description The sound carried with the picture. Asking for none carries the main sound. */
+        sound?: 'main' | 'secondary' | 'third'
+      }
+      header?: never
+      path: {
+        networkId: number | string
+        serviceId: number | string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   playVideo: {
     parameters: {
       query?: {
@@ -4974,6 +5047,40 @@ export interface operations {
         content: {
           'application/json': components['schemas']['BaseResponderOfPlaybackPlanResponder']
         }
+      }
+    }
+  }
+  getVideoPlaylist: {
+    parameters: {
+      query?: {
+        /** @description The second of the recording playing starts at, counted from where the recording begins. Seconds may be fractional. Asking for none starts where this reader last left this recording, and at the beginning where they have not watched it before; asking for zero starts at the beginning whatever was left. It moves the picture only where the recording is transcoded as it plays; one handed over as it is, is seeked by a byte range, and the plan says where the watching got to so that a player can seek there itself. */
+        from?: number
+        /** @description The profile the picture is encoded in while it is transcoded as it plays. Asking for none opens at what this machine encodes at, which depends on the encoder it has and so has no fixed default here; GET /api/live/profiles names it, marked as the unasked one, and the answer is the same for a recording as it is for a live channel. */
+        profile?: '1080p60' | '1080p30' | '720p60' | '720p30'
+        /** @description The sound carried with the picture while the recording is transcoded as it plays. Asking for none carries the main sound, as it always did. The plan names the sounds this recording can be asked for; one handed over as it is names none, because it carries the one sound it was encoded with. */
+        sound?: 'main' | 'secondary' | 'third'
+      }
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
       }
     }
   }

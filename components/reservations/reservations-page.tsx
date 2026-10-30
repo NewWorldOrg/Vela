@@ -39,6 +39,12 @@ import { ReservationSelection } from '@/components/reservations/reservation-sele
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { unfoldShows, useUnfolding } from '@/components/vela/unfold'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { PhoneBarLink, PhoneBarTools } from '@/components/vela/phone-bar-tools'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import {
+  PhoneConflict,
+  PhoneReservationRows,
+} from '@/components/reservations/phone-reservations'
 import { cn } from '@/lib/utils'
 import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
@@ -228,10 +234,15 @@ export function ReservationsView({
         <ReservationIcon className="size-[calc(18rem/16)] text-brand" />
         予約
       </h1>
+      <PhoneBarTools>
+        <PhoneBarLink href="/guide" aria-label="予約を追加">
+          <PlusIcon />
+        </PhoneBarLink>
+      </PhoneBarTools>
       <ReservationTabs
         current="reservations"
         action={
-          <Button size="sm" asChild>
+          <Button size="sm" asChild className="upright:hidden">
             <Link href="/guide">
               <PlusIcon />
               予約を追加
@@ -284,6 +295,29 @@ export function ReservationsView({
         <ReservationSelection chosen={chosen} onClear={clear} actions={bulk} />
       )}
 
+      {items.length > 0 && (
+        <OnAnUprightPhone>
+          <div
+            data-slot="phone-reservations"
+            className="-mx-3.5 flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-3.5 pb-6"
+          >
+            {items
+              .filter((one) => one.standing === 'conflict' && one.conflict)
+              .map((one) => (
+                <PhoneConflict
+                  key={one.id}
+                  reservation={one}
+                  onRaise={actions.onRaise}
+                />
+              ))}
+            <PhoneReservationRows
+              reservations={items}
+              now={new Date()}
+              actions={actions}
+            />
+          </div>
+        </OnAnUprightPhone>
+      )}
       {items.length === 0 ? (
         <EmptyState
           title={total === 0 ? '予約がありません' : '未完了の予約がありません'}
@@ -302,7 +336,7 @@ export function ReservationsView({
           cards
           className="table-fixed min-w-[calc(960rem/16)]"
           waiting={waiting}
-          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
+          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1 upright:hidden"
         >
           <TableColumns
             widths={[

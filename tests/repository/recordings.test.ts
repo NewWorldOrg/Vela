@@ -1705,3 +1705,14 @@ test('a recording off a station no longer in the ledger keeps its key and asks f
   assert.equal(result.items[0].channelNo, undefined)
   assert.equal(result.items[0].channelLogo, undefined)
 })
+
+test('a recording says how far the viewer watched it, and nothing where they have not', async () => {
+  assert.equal(
+    (await only([recording({ watchedPositionSec: 754.5 })])).watchedSec,
+    754.5,
+  )
+  assert.equal(
+    'watchedSec' in (await only([recording({ watchedPositionSec: null })])),
+    false,
+  )
+})

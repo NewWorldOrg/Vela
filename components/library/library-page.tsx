@@ -28,6 +28,15 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import { RecordingSelection } from '@/components/library/recording-selection'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { iconButtonVariants } from '@/components/vela/icon-button'
+import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import { goesOnFrom } from '@/lib/library-days'
+import { useHeldDeletions } from '@/components/recordings/held-deletions'
+import {
+  PhoneContinue,
+  PhoneRecordingRows,
+} from '@/components/library/phone-library'
 
 const EVERY_CHANNEL = ''
 
@@ -43,6 +52,8 @@ export function LibraryView({
   onDeleteAll: (ids: string[]) => Promise<RecordingBatch>
 }) {
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
+  const [picking, setPicking] = useState(false)
+  const held = useHeldDeletions()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const filtersId = useId()
   const router = useRouter()
@@ -61,7 +72,8 @@ export function LibraryView({
     },
     [router, pathname, searchParams],
   )
-  const { items, total, channels, years, genres } = result
+  const { total, channels, years, genres } = result
+  const items = result.items.filter((one) => !held.has(one.id))
   const chosen = items.filter((one) => picked.has(one.id))
   const narrowed = [filter.year, filter.genre, filter.state, filter.ch].filter(
     Boolean,
@@ -82,14 +94,31 @@ export function LibraryView({
       scroll="within"
       className="flex flex-col px-3.5 pt-6 pb-6 upright:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
+      <PhoneBarTools>
+        <button
+          type="button"
+          aria-pressed={picking}
+          onClick={() => {
+            setPicking(!picking)
+            setPicked(new Set())
+          }}
+          className={cn(
+            iconButtonVariants(),
+            'h-10 w-auto px-4 text-ui font-bold text-ink-2',
+            picking && 'border-brand-line bg-brand-soft text-brand',
+          )}
+        >
+          選ぶ
+        </button>
+      </PhoneBarTools>
+      <div className="mb-4 flex flex-wrap items-baseline gap-3.5 upright:hidden">
         <h1 className="heading upright:sr-only flex items-center gap-2 text-[calc(20rem/16)]">
           <LibraryIcon className="size-[calc(18rem/16)] text-brand" />
           ライブラリ
         </h1>
       </div>
 
-      <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
+      <div className="mb-3.5 rounded-lg bg-surface px-4 py-3.5 upright:mb-1 upright:bg-transparent upright:px-0 upright:py-2">
         <div className="flex flex-wrap items-center gap-x-3.5 gap-y-3">
           <div className="flex min-w-[calc(180rem/16)] flex-[1_1_100%] items-center gap-2.5 min-[701px]:flex-[0_1_268px]">
             <form
@@ -193,11 +222,32 @@ export function LibraryView({
           chosen={chosen}
           onClear={() => setPicked(new Set())}
           onDeleteAll={onDeleteAll}
+          className="upright:fixed upright:inset-x-3 upright:bottom-[calc(var(--tab-bar-cover)+10rem/16)] upright:z-50 upright:mb-0 upright:shadow-pop-lg"
         />
+      )}
+
+      {items.length > 0 && (
+        <OnAnUprightPhone>
+          <div
+            data-slot="phone-library"
+            className="-mx-3.5 min-h-0 flex-1 overflow-y-auto px-3.5 pb-24"
+          >
+            <PhoneContinue recordings={items.filter(goesOnFrom)} />
+            <PhoneRecordingRows
+              recordings={items}
+              now={new Date()}
+              picking={picking}
+              picked={picked}
+              onPick={setPicked}
+              onDelete={onDelete}
+            />
+          </div>
+        </OnAnUprightPhone>
       )}
 
       {items.length > 0 ? (
         <RecordingsTable
+          className="upright:hidden"
           items={items}
           waiting={waiting}
           onDelete={onDelete}
