@@ -47,6 +47,11 @@ import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
 import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
+import { ProgramBooking } from '@/components/guide/program-booking'
+import { ProgramDetailBody } from '@/components/guide/program-detail'
+import { ChannelStrip } from '@/components/guide/channel-strip'
+import { ChannelDayList } from '@/components/guide/channel-day-list'
+import { usePhoneWidth } from '@/hooks/usePhoneWidth'
 import { ScreenMain } from '@/components/vela/app-shell'
 
 export function GuideView({
@@ -117,6 +122,17 @@ export function GuideView({
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
+  const phone = usePhoneWidth()
+  const [listedId, setListedId] = useState<string>()
+  const listed =
+    shownGuide.channels.find((c) => c.id === listedId) ?? shownGuide.channels[0]
+  const listedPrograms = useMemo(
+    () =>
+      shownGuide.programs
+        .filter((p) => p.channelId === listed?.id)
+        .sort((a, b) => a.startMin - b.startMin),
+    [shownGuide.programs, listed?.id],
+  )
   const toolsId = useId()
   const narrowed =
     (guide.kind === 'terrestrial' ? 0 : 1) + (foldable && folded ? 1 : 0)
@@ -335,20 +351,72 @@ export function GuideView({
         <EmptyState titleLevel={2} title="この日の番組情報がありません" />
       ) : (
         <>
-          <GuideGrid
-            key={guide.kind}
-            channels={shownGuide.channels}
-            programs={shownGuide.programs}
-            dayKey={guide.day.date}
-            windowStartHour={guide.windowStartHour}
-            windowHours={guide.windowHours}
-            nowMin={guide.nowMin}
-            nowLabel={guide.nowLabel}
-            selectedId={panelOpen ? selected?.id : undefined}
-            onSelect={select}
-            glyphLoads={glyphLoads}
-          />
-          {shown && (
+          {phone && listed ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <ChannelStrip
+                channels={shownGuide.channels}
+                shown={new Set([listed.id])}
+                onPick={(c) => {
+                  setListedId(c.id)
+                  setPanelOpen(false)
+                }}
+                className="mb-2.5"
+              />
+              <ChannelDayList
+                channelId={listed.id}
+                programs={listedPrograms}
+                nowMin={guide.nowMin}
+                nowLabel={guide.nowLabel}
+                openId={panelOpen ? selected?.id : undefined}
+                onToggle={(program) =>
+                  panelOpen && selected?.id === program.id
+                    ? setPanelOpen(false)
+                    : select(program)
+                }
+                detailOf={(program) => {
+                  const read =
+                    detailed && detailed.id === program.id ? detailed : program
+
+                  return (
+                    <ProgramDetailBody
+                      program={read}
+                      extras={extrasState ?? 'ready'}
+                      channel={listed}
+                      dayLabel={guide.day.label}
+                      onAir={isOnAir(program, guide.nowMin)}
+                      onReserve={onReserve}
+                      reservation={
+                        read.booking && (
+                          <ProgramBooking
+                            booking={read.booking}
+                            title={read.title}
+                            channel={listed}
+                            onCancel={onCancel}
+                            onRevise={onRevise}
+                          />
+                        )
+                      }
+                    />
+                  )
+                }}
+              />
+            </div>
+          ) : (
+            <GuideGrid
+              key={guide.kind}
+              channels={shownGuide.channels}
+              programs={shownGuide.programs}
+              dayKey={guide.day.date}
+              windowStartHour={guide.windowStartHour}
+              windowHours={guide.windowHours}
+              nowMin={guide.nowMin}
+              nowLabel={guide.nowLabel}
+              selectedId={panelOpen ? selected?.id : undefined}
+              onSelect={select}
+              glyphLoads={glyphLoads}
+            />
+          )}
+          {shown && !phone && (
             <ProgramPanel
               program={detailed ?? shown}
               extras={extrasState}
