@@ -89,74 +89,84 @@ function resolved(from: string, specifier: string): string | undefined {
   )
 }
 
-type Taken = { module: string; names: string[]; whole: boolean }
+type Taken = { from: string; names: string[]; whole: boolean }
 
-function valuesTaken(file: string, source: ts.SourceFile): Taken[] {
-  const taken: Taken[] = []
+function valueNames(
+  elements: readonly (ts.ImportSpecifier | ts.ExportSpecifier)[],
+): string[] {
+  return elements
+    .filter((element) => !element.isTypeOnly)
+    .map((element) => (element.propertyName ?? element.name).text)
+}
 
-  for (const statement of source.statements) {
-    if (
-      (ts.isImportDeclaration(statement) ||
-        ts.isExportDeclaration(statement)) &&
-      statement.moduleSpecifier !== undefined &&
-      ts.isStringLiteral(statement.moduleSpecifier)
-    ) {
-      const module = resolved(file, statement.moduleSpecifier.text)
+function takenByImport(
+  statement: ts.ImportDeclaration,
+): Omit<Taken, 'from'> | undefined {
+  const clause = statement.importClause
 
-      if (module === undefined) {
-        continue
-      }
-
-      if (ts.isImportDeclaration(statement)) {
-        const clause = statement.importClause
-
-        if (clause === undefined) {
-          taken.push({ module, names: [], whole: false })
-          continue
-        }
-
-        if (clause.isTypeOnly) {
-          continue
-        }
-
-        const names: string[] = clause.name ? [clause.name.text] : []
-        const bindings = clause.namedBindings
-
-        if (bindings !== undefined && ts.isNamespaceImport(bindings)) {
-          taken.push({ module, names, whole: true })
-          continue
-        }
-
-        for (const element of bindings?.elements ?? []) {
-          if (!element.isTypeOnly) {
-            names.push((element.propertyName ?? element.name).text)
-          }
-        }
-
-        taken.push({ module, names, whole: false })
-        continue
-      }
-
-      if (statement.isTypeOnly) {
-        continue
-      }
-
-      const clause = statement.exportClause
-
-      taken.push({
-        module,
-        names:
-          clause !== undefined && ts.isNamedExports(clause)
-            ? clause.elements
-                .filter((element) => !element.isTypeOnly)
-                .map((element) => (element.propertyName ?? element.name).text)
-            : [],
-        whole: clause === undefined || !ts.isNamedExports(clause),
-      })
-    }
+  if (clause === undefined) {
+    return { names: [], whole: false }
   }
 
-  return taken
+  if (clause.isTypeOnly) {
+    return undefined
+  }
+
+  const named = clause.name ? [clause.name.text] : []
+  const bindings = clause.namedBindings
+
+  if (bindings === undefined) {
+    return { names: named, whole: false }
+  }
+
+  return ts.isNamespaceImport(bindings)
+    ? { names: named, whole: true }
+    : {
+        names: [...named, ...valueNames(bindings.elements)],
+        whole: false,
+      }
+}
+
+function takenByExport(
+  statement: ts.ExportDeclaration,
+): Omit<Taken, 'from'> | undefined {
+  if (statement.isTypeOnly) {
+    return undefined
+  }
+
+  const clause = statement.exportClause
+
+  if (clause === undefined || !ts.isNamedExports(clause)) {
+    return { names: [], whole: true }
+  }
+
+  return {
+    names: valueNames(clause.elements),
+    whole: false,
+  }
+}
+
+function valuesTaken(file: string, source: ts.SourceFile): Taken[] {
+  return source.statements.flatMap((statement) => {
+    const specifier =
+      ts.isImportDeclaration(statement) || ts.isExportDeclaration(statement)
+        ? statement.moduleSpecifier
+        : undefined
+    const from =
+      specifier !== undefined && ts.isStringLiteral(specifier)
+        ? resolved(file, specifier.text)
+        : undefined
+
+    if (from === undefined) {
+      return []
+    }
+
+    const taken = ts.isImportDeclaration(statement)
+      ? takenByImport(statement)
+      : takenByExport(statement as ts.ExportDeclaration)
+
+    return taken === undefined ? [] : [{ from, ...taken }]
+  })
 }
 
 function serverModules(): Map<string, Taken[]> {
@@ -190,9 +200,9 @@ function serverModules(): Map<string, Taken[]> {
     const taken = valuesTaken(file, read(file))
     reached.set(file, taken)
 
-    for (const { module } of taken) {
-      if (!reached.has(module) && !isClient(read(module))) {
-        waiting.push(module)
+    for (const { from } of taken) {
+      if (!reached.has(from) && !isClient(read(from))) {
+        waiting.push(from)
       }
     }
   }
@@ -200,7 +210,7 @@ function serverModules(): Map<string, Taken[]> {
   return new Map(
     [...reached].map(([file, taken]) => [
       file,
-      taken.filter(({ module }) => isClient(read(module))),
+      taken.filter(({ from }) => isClient(read(from))),
     ]),
   )
 }
@@ -221,11 +231,11 @@ test('the server reaches the screens that draw their rows as cards', () => {
 
 test('a part drawn on the server takes only components from a client module', () => {
   const wrong = [...serverModules()].flatMap(([file, taken]) =>
-    taken.flatMap(({ module, names, whole }) => [
-      ...(whole ? [`${file} takes all of ${module}`] : []),
+    taken.flatMap(({ from, names, whole }) => [
+      ...(whole ? [`${file} takes all of ${from}`] : []),
       ...names
         .filter((name) => !A_COMPONENT.test(name))
-        .map((name) => `${file} takes ${name} from ${module}`),
+        .map((name) => `${file} takes ${name} from ${from}`),
     ]),
   )
 
