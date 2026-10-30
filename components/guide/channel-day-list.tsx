@@ -1,6 +1,8 @@
 'use client'
 
-import { useLayoutEffect, useRef, type ReactNode } from 'react'
+import { useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
+
+import { MOVED_BY_HAND } from '@/lib/arrival'
 
 import { bookingMarkOf, isOnAir } from '@/lib/guide'
 import { genreWordOf, halfWidthOf } from '@/lib/guide-cell'
@@ -13,6 +15,29 @@ import type { Program } from '@/repository/programs'
 import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
 import { ChevronDownIcon, RecordIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
+
+const ROOM_ABOVE_NOW_PX = 48
+
+/** Scrolls the list to the programme on the air with the end of the one before it showing, or to the top of a day with nothing on the air. */
+function alignToNow(node: HTMLElement): void {
+  const onAir = node.querySelector<HTMLElement>('[data-on-air]')
+
+  node.scrollTop = onAir ? Math.max(0, onAir.offsetTop - ROOM_ABOVE_NOW_PX) : 0
+}
+
+/** The row at the top of the list and how far into it the list is scrolled, so the row can be kept in place when rows come in above it. */
+function anchorOf(node: HTMLElement): { id: string; delta: number } | null {
+  for (const row of node.querySelectorAll<HTMLElement>('[data-programme]')) {
+    if (row.offsetTop + row.offsetHeight > node.scrollTop) {
+      return {
+        id: row.dataset.programme!,
+        delta: node.scrollTop - row.offsetTop,
+      }
+    }
+  }
+
+  return null
+}
 
 /** One channel's day as rows from the top of the day, opened at the programme on the air; a row opens its detail under itself. */
 export function ChannelDayList({
@@ -35,15 +60,87 @@ export function ChannelDayList({
   detailOf: (program: Program) => ReactNode
 }) {
   const list = useRef<HTMLDivElement | null>(null)
+  const moved = useRef(false)
+  const anchor = useRef<{ id: string; delta: number } | null>(null)
+  const firstId = programs[0]?.id
 
   useLayoutEffect(() => {
     const node = list.current
-    const onAir = node?.querySelector<HTMLElement>('[data-on-air]')
+
+    moved.current = false
 
     if (node) {
-      node.scrollTop = onAir ? Math.max(0, onAir.offsetTop - 48) : 0
+      alignToNow(node)
     }
   }, [channelId, dayKey])
+
+  useLayoutEffect(() => {
+    const node = list.current
+
+    if (!node) {
+      return
+    }
+
+    if (!moved.current) {
+      alignToNow(node)
+
+      return
+    }
+
+    const kept = anchor.current
+    const row = kept
+      ? node.querySelector<HTMLElement>(
+          `[data-programme="${CSS.escape(kept.id)}"]`,
+        )
+      : null
+
+    if (kept && row) {
+      node.scrollTop = row.offsetTop + kept.delta
+    }
+  }, [programs.length, firstId])
+
+  useEffect(() => {
+    const node = list.current
+
+    if (!node) {
+      return
+    }
+
+    const byHand = (): void => {
+      moved.current = true
+      anchor.current = anchorOf(node)
+    }
+    const keep = (): void => {
+      anchor.current = anchorOf(node)
+    }
+    let shown = node.clientHeight > 0
+    const watch = new ResizeObserver(() => {
+      const showing = node.clientHeight > 0
+
+      if (showing && !shown) {
+        moved.current = false
+        alignToNow(node)
+      }
+
+      shown = showing
+    })
+
+    for (const input of MOVED_BY_HAND) {
+      node.addEventListener(input, byHand, { passive: true })
+    }
+
+    node.addEventListener('scroll', keep, { passive: true })
+    watch.observe(node)
+
+    return () => {
+      for (const input of MOVED_BY_HAND) {
+        node.removeEventListener(input, byHand)
+      }
+
+      node.removeEventListener('scroll', keep)
+      watch.disconnect()
+    }
+  }, [])
 
   useLayoutEffect(() => {
     const node = list.current
@@ -79,6 +176,7 @@ export function ChannelDayList({
           return (
             <li
               key={p.id}
+              data-programme={p.id}
               data-on-air={onAir ? '' : undefined}
               data-past={past ? '' : undefined}
               className={cn(
