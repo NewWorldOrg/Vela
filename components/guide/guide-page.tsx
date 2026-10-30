@@ -201,7 +201,7 @@ export function GuideView({
       scroll="within"
       className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)]">
+      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] sideways:sr-only">
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
