@@ -1,7 +1,14 @@
 import { useSyncExternalStore, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import {
+  expect,
+  screen,
+  spyOn,
+  userEvent,
+  waitFor,
+  within,
+} from 'storybook/test'
 
 import type {
   PlaybackChapter,
@@ -3368,6 +3375,96 @@ export const 指で二度叩いても送る: Story = {
     )
     await expect(canvas.getByText('10:20 / 4:12:38')).toBeVisible()
     await expect(getComputedStyle(area).touchAction).toBe('manipulation')
+  },
+}
+
+export const 指で映像を叩くと操作列が出入りし再生は止まらない: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const area = pressArea(canvasElement)
+    const chrome = canvasElement.querySelector('[data-slot="player-chrome"]')
+
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '一時停止' })).toBeVisible(),
+    )
+    await expect(chrome).toHaveAttribute('data-up', 'true')
+
+    const paused = spyOn(HTMLMediaElement.prototype, 'pause')
+
+    try {
+      await tapAt(area, 1 / 2, 1, 'touch')
+      await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'))
+
+      await new Promise((rest) => setTimeout(rest, 400))
+      await tapAt(area, 1 / 2, 1, 'touch')
+      await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
+
+      await expect(paused).not.toHaveBeenCalled()
+      await expect(
+        canvas.getByRole('button', { name: '一時停止' }),
+      ).toBeInTheDocument()
+      await expect(bezelOn(canvasElement)).toBeNull()
+    } finally {
+      paused.mockRestore()
+    }
+  },
+}
+
+export const 指で一度叩いても再生は始まらない: Story = {
+  args: { detail: detail('1266'), pictureHref: keeping },
+  play: async ({ canvasElement }) => {
+    const area = pressArea(canvasElement)
+
+    asked.length = 0
+
+    await tapAt(area, 1 / 2, 1, 'touch')
+    await new Promise((rest) => setTimeout(rest, 400))
+    await tapAt(area, 5 / 6, 1, 'touch')
+    await new Promise((rest) => setTimeout(rest, 400))
+
+    await expect(asked).toEqual([])
+    await expect(bezelOn(canvasElement)).toBeNull()
+  },
+}
+
+export const 指で飛ばすを押しても映像を叩いたことにはならない: Story = {
+  args: {
+    detail: detail('1266'),
+    plan: MARKED,
+    startAt: 1250,
+    pictureHref: keeping,
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const picture = canvasElement.querySelector('video')
+
+    picture?.dispatchEvent(new Event('playing'))
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: '一時停止' })).toBeVisible(),
+    )
+
+    const paused = spyOn(HTMLMediaElement.prototype, 'pause')
+
+    try {
+      await userEvent.pointer({
+        keys: '[TouchA]',
+        target: canvas.getByRole('button', { name: SKIP_THE_BREAK }),
+      })
+      await waitFor(() =>
+        expect(
+          canvas.queryByRole('button', { name: SKIP_THE_BREAK }),
+        ).toBeNull(),
+      )
+
+      await expect(paused).not.toHaveBeenCalled()
+      await expect(
+        canvas.getByRole('button', { name: '一時停止' }),
+      ).toBeInTheDocument()
+    } finally {
+      paused.mockRestore()
+    }
   },
 }
 
