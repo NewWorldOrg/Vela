@@ -29,7 +29,11 @@ import {
   getPlaybackProfiles,
   getUnaskedPlaybackProfile,
 } from '@/repository/videos'
-import { theHoldAsked, theSourceAsked } from '@/lib/playback-source'
+import {
+  thePlayAsked,
+  theHoldAsked,
+  theSourceAsked,
+} from '@/lib/playback-source'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
@@ -69,11 +73,12 @@ export default async function Page({
   searchParams: Promise<{
     at?: string | string[]
     paused?: string | string[]
+    play?: string | string[]
     source?: string | string[]
   }>
 }) {
   const { id } = await params
-  const { at, paused, source } = await searchParams
+  const { at, paused, play, source } = await searchParams
 
   if (!isRecordingId(id)) {
     notFound()
@@ -129,6 +134,7 @@ export default async function Page({
         formatChoice={formatChoiceOf(jar.get(FORMAT_COOKIE)?.value)}
         startAt={secondsIn(at)}
         startsHeld={theHoldAsked(paused)}
+        startsPlaying={thePlayAsked(play)}
         autoOpensDataBroadcast={autoOpensDataBroadcast}
         captionStyle={captionStyleOf(jar.get(CAPTION_STYLE_COOKIE)?.value)}
         onRemakeThumbnail={redrawThumbnail}

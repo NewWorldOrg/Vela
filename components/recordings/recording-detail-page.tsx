@@ -190,6 +190,7 @@ export function RecordingDetailView({
   onCallOffEncode,
   startAt,
   startsHeld = false,
+  startsPlaying = false,
   autoOpensDataBroadcast = false,
   captionStyle,
   modelVersion,
@@ -221,6 +222,7 @@ export function RecordingDetailView({
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
   startAt?: number
   startsHeld?: boolean
+  startsPlaying?: boolean
   autoOpensDataBroadcast?: boolean
   captionStyle?: CaptionStyle
   modelVersion?: number
@@ -240,6 +242,7 @@ export function RecordingDetailView({
     playback.state === 'planned' ? playback.plan.resumeAtSec : undefined,
     d.lengthSec,
     startsHeld,
+    startsPlaying,
   )
 
   const alarming: 'truncated' | 'failed' | null =
@@ -329,6 +332,7 @@ export function RecordingDetailView({
                 startAt,
                 playback.plan.source,
                 startsHeld,
+                startsPlaying,
               )}
               detail={d}
               plan={playback.plan}
@@ -359,27 +363,32 @@ export function RecordingDetailView({
           </SkipEventsSeat>
         )}
 
-        {watching && opens.at !== undefined && startAt === undefined && (
-          <OnAnUprightPhone>
-            <div
-              data-slot="picks-up"
-              className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
-            >
-              <span className="min-w-0 flex-1">
-                <span className="font-code">{formatPlayerTime(opens.at)}</span>{' '}
-                まで観ました
-              </span>
-              <Link
-                href={`/recordings/${d.id}?at=0` as Route}
-                replace
-                className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+        {watching &&
+          opens.at !== undefined &&
+          opens.at > 0 &&
+          startAt === undefined && (
+            <OnAnUprightPhone>
+              <div
+                data-slot="picks-up"
+                className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
               >
-                <RebuildIcon />
-                最初から
-              </Link>
-            </div>
-          </OnAnUprightPhone>
-        )}
+                <span className="min-w-0 flex-1">
+                  <span className="font-code">
+                    {formatPlayerTime(opens.at)}
+                  </span>{' '}
+                  まで観ました
+                </span>
+                <Link
+                  href={`/recordings/${d.id}?at=0` as Route}
+                  replace
+                  className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+                >
+                  <RebuildIcon />
+                  最初から
+                </Link>
+              </div>
+            </OnAnUprightPhone>
+          )}
 
         <div
           className={cn(

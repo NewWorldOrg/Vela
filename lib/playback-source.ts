@@ -11,7 +11,11 @@ export const SECOND_ASKED_AS = 'at'
 
 export const HOLD_ASKED_AS = 'paused'
 
+export const PLAY_ASKED_AS = 'play'
+
 const HELD = '1'
+
+const PLAYING_ON = '1'
 
 export function theSourceAsked(
   asked: string | string[] | undefined,
@@ -21,6 +25,15 @@ export function theSourceAsked(
 
 export function theHoldAsked(asked: string | string[] | undefined): boolean {
   return asked === HELD
+}
+
+/** Whether the address asks the recording to play on from where it was left as soon as it opens. */
+export function thePlayAsked(asked: string | string[] | undefined): boolean {
+  return asked === PLAYING_ON
+}
+
+export function playingOnHref(id: string): string {
+  return `/recordings/${id}?${PLAY_ASKED_AS}=${PLAYING_ON}`
 }
 
 export function whereThatSourceOpens(
@@ -83,8 +96,9 @@ export function whatOpensThePlayerAnew(
   at: number | undefined,
   source: PlaybackSource | undefined,
   held = false,
+  playingOn = false,
 ): string {
-  return `${id}:${at ?? ''}:${source ?? ''}:${held ? HOLD_ASKED_AS : ''}`
+  return `${id}:${at ?? ''}:${source ?? ''}:${held ? HOLD_ASKED_AS : ''}:${playingOn ? PLAY_ASKED_AS : ''}`
 }
 
 export type WhenTheArtefactMoves = 'stay' | 'learn' | 'reopen' | 'replan'

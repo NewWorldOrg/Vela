@@ -883,7 +883,7 @@ export const 電話の幅では絵の行を日付で区切って並べる: Story
     await expect(going).toBeVisible()
     await expect(
       within(going).getByRole('link', { name: new RegExp(first.title) }),
-    ).toHaveAttribute('href', `/recordings/${first.id}`)
+    ).toHaveAttribute('href', `/recordings/${first.id}?play=1`)
   },
 }
 

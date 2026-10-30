@@ -480,6 +480,13 @@ const meta = {
     frameHref: drawnFrame,
     feedRecording: handedAsItIs,
   },
+  beforeEach: () => {
+    const started = spyOn(HTMLMediaElement.prototype, 'play').mockReturnValue(
+      new Promise<void>(() => {}),
+    )
+
+    return () => started.mockRestore()
+  },
   decorators: [
     (Story) => (
       <div className="bg-bg py-6">
@@ -3247,6 +3254,36 @@ export const アドレスで名指しされた位置から再生する: Story = 
 
     await expect(picture?.getAttribute('src')).not.toBeNull()
     await expect(canvas.getByText('20:50 / 4:12:38')).toBeVisible()
+  },
+}
+
+export const 自動で始められないときは止めたまま再生を待つ: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  beforeEach: () => {
+    const refused = spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(
+      new DOMException('no gesture', 'NotAllowedError'),
+    )
+
+    return () => refused.mockRestore()
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-slot="player-center-standing"]'),
+      ).not.toBeNull(),
+    )
+    await expect(
+      within(
+        canvasElement.querySelector(
+          '[data-slot="player-chrome"]',
+        ) as HTMLElement,
+      ).getByRole('button', { name: '再生' }),
+    ).toBeVisible()
+    await expect(canvas.getByText('10:00 / 4:12:38')).toBeVisible()
+    await expect(canvasElement.querySelector('[role="status"]')).toBeNull()
+    await expect(canvas.queryByRole('alert')).toBeNull()
   },
 }
 

@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  playingOnHref,
+  thePlayAsked,
   theHoldAsked,
   theSourceAsked,
   theAddressStands,
@@ -101,6 +103,24 @@ test('the player is opened anew when a hold is asked at the same second', () => 
   assert.notEqual(
     whatOpensThePlayerAnew('1266', 622, 'artefact', true),
     whatOpensThePlayerAnew('1266', 622, 'artefact', false),
+  )
+})
+
+test('the address is read as asking to play on only when it says so once', () => {
+  assert.equal(thePlayAsked('1'), true)
+  assert.equal(thePlayAsked(undefined), false)
+  assert.equal(thePlayAsked('0'), false)
+  assert.equal(thePlayAsked(['1', '1']), false)
+})
+
+test('playing on is asked for on the address of the recording', () => {
+  assert.equal(playingOnHref('1266'), '/recordings/1266?play=1')
+})
+
+test('the player is opened anew when playing on is asked for', () => {
+  assert.notEqual(
+    whatOpensThePlayerAnew('1266', undefined, 'artefact', false, true),
+    whatOpensThePlayerAnew('1266', undefined, 'artefact', false, false),
   )
 })
 

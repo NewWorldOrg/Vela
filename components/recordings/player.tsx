@@ -474,6 +474,22 @@ export function Player({
         : undefined,
     [d.id, playlistHref, pictureAsked, playlist],
   )
+  const triesAtOnce = useRef(opensPlaying && !holdsAtOnce)
+
+  useEffect(() => {
+    const element = video.current
+
+    if (!triesAtOnce.current || !element || source === undefined) {
+      return
+    }
+
+    triesAtOnce.current = false
+    void element.play().catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        setPhase((was) => (was === 'playing' ? was : 'paused'))
+      }
+    })
+  }, [source])
 
   const poster =
     d.thumbnailHref === undefined
