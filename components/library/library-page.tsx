@@ -19,7 +19,11 @@ import { Button } from '@/components/ui/button'
 import { EmptyState } from '@/components/vela/empty-state'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { FilterSelect } from '@/components/vela/filter-select'
-import { FilterIcon, LibraryIcon, SearchIcon } from '@/components/vela/icons'
+import { LibraryIcon, SearchIcon } from '@/components/vela/icons'
+import {
+  FilterFoldButton,
+  foldedFiltersOf,
+} from '@/components/vela/filter-fold'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import { RecordingSelection } from '@/components/library/recording-selection'
@@ -63,7 +67,7 @@ export function LibraryView({
     Boolean,
   ).length
   const hasFilter = Boolean(filter.q) || narrowed > 0
-  const foldedOnAPhone = !filtersOpen && 'max-[600px]:hidden'
+  const foldedOnAPhone = foldedFiltersOf(filtersOpen)
   const clearEveryCondition = (): void =>
     onFiltersChange({
       q: null,
@@ -108,28 +112,12 @@ export function LibraryView({
                 )}
               />
             </form>
-            <button
-              type="button"
-              aria-expanded={filtersOpen}
-              aria-controls={filtersId}
-              onClick={() => setFiltersOpen((was) => !was)}
-              className={cn(
-                BAND_CONTROL,
-                BAND_PRESS,
-                'shrink-0 min-[600px]:hidden',
-                filtersOpen &&
-                  'border-brand bg-brand-soft text-brand [&_svg]:text-brand',
-              )}
-            >
-              <FilterIcon />
-              絞り込み
-              {narrowed > 0 && ' '}
-              {narrowed > 0 && (
-                <b className="font-code font-bold text-brand tabular-nums">
-                  {narrowed}
-                </b>
-              )}
-            </button>
+            <FilterFoldButton
+              open={filtersOpen}
+              onOpenChange={setFiltersOpen}
+              controls={filtersId}
+              narrowed={narrowed}
+            />
           </div>
           <div id={filtersId} className={cn('contents', foldedOnAPhone)}>
             <FilterSelect
