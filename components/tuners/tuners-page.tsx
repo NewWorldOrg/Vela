@@ -19,6 +19,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -326,6 +327,7 @@ export function TunersView({
       </p>
 
       <Table
+        cards
         className="table-fixed min-w-[calc(1000rem/16)]"
         containerClassName="pb-1"
       >
@@ -340,7 +342,7 @@ export function TunersView({
         <TableBody>
           {tuners.rows.map((row) => (
             <TableRow key={row.id} id={row.id}>
-              <TableCell>
+              <TableCell {...cardPlace('lead')}>
                 <span className="flex items-center gap-2.5">
                   <DeviceIcon row={row} />
                   <b className="font-code text-[calc(13rem/16)] leading-[1.4] font-medium">
@@ -348,12 +350,12 @@ export function TunersView({
                   </b>
                 </span>
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', COLUMNS[1].label)}>
                 <span className="text-ui text-ink-2">
                   {row.kind ?? EMPTY_VALUE}
                 </span>
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', COLUMNS[2].label)}>
                 <TunerEnableSwitch
                   deviceId={row.device}
                   checked={row.enabled && !row.draining}
@@ -365,7 +367,7 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', COLUMNS[3].label)}>
                 {row.session ? (
                   <StatusCell>
                     <InFull
@@ -386,12 +388,12 @@ export function TunersView({
                   </span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', COLUMNS[4].label)}>
                 <StatusCell>
                   <TunerStateChip row={row} say also={row.stateSub} />
                 </StatusCell>
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('meta')}>
                 {row.lastService ? (
                   <span className="font-code text-sub whitespace-nowrap text-ink-2">
                     {row.lastService.at}
@@ -400,7 +402,7 @@ export function TunersView({
                   <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
-              <TableCell>
+              <TableCell {...cardPlace('field', COLUMNS[6].label)}>
                 {row.lnb ? (
                   <LnbPowerSwitch
                     deviceId={row.device}

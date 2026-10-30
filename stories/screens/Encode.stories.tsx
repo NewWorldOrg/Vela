@@ -44,6 +44,12 @@ import {
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheSettings } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
 
@@ -1399,5 +1405,21 @@ export const 行の操作の並び: Story = {
       await expect(one.querySelector('svg')).not.toBeNull()
       await expect(removing[at].querySelector('svg')).not.toBeNull()
     }
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 通常.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }

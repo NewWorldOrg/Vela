@@ -5,6 +5,7 @@ import type { AuthMethod } from '@/repository/auth'
 import type { RevokeResult, SessionRow } from '@/repository/sessions'
 import { Badge } from '@/components/ui/badge'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -50,6 +51,7 @@ export function SessionTable({
 }) {
   return (
     <Table
+      cards
       className="table-fixed"
       containerClassName={cn(
         ADMIN_LIST_HEIGHT_CAP,
@@ -82,19 +84,25 @@ export function SessionTable({
             key={session.id}
             className={session.current ? CURRENT_ROW : undefined}
           >
-            <TableCell>
+            <TableCell {...cardPlace('lead')}>
               <DeviceName session={session} />
             </TableCell>
-            <TableCell>
+            <TableCell {...cardPlace('meta')}>
               <Account session={session} />
             </TableCell>
-            <TableCell className="font-code text-sub tabular-nums">
+            <TableCell
+              {...cardPlace('field', '作成')}
+              className="font-code text-sub tabular-nums"
+            >
               {session.createdAt}
             </TableCell>
-            <TableCell className="font-code text-sub tabular-nums">
+            <TableCell
+              {...cardPlace('field', WHEN_LABELS.taken)}
+              className="font-code text-sub tabular-nums"
+            >
               {session.lastUsedAt}
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell {...cardPlace('actions')} className="text-right">
               {session.current ? (
                 <SignOut method={currentMethod} />
               ) : (

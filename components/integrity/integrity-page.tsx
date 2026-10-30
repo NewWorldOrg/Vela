@@ -20,6 +20,7 @@ import { Spinner } from '@/components/vela/progress'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -243,6 +244,7 @@ export function IntegrityView({
         <EmptyState usher="glad" title="食い違いがありません" titleLevel={2} />
       ) : (
         <Table
+          cards
           className="table-fixed min-w-[calc(760rem/16)]"
           containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
         >
@@ -266,13 +268,19 @@ export function IntegrityView({
           <TableBody>
             {findings.map((finding) => (
               <TableRow key={finding.key}>
-                <TableCell className="align-top whitespace-normal">
+                <TableCell
+                  {...cardPlace('lead')}
+                  className="align-top whitespace-normal"
+                >
                   <b className="block font-code text-sub font-medium break-all">
                     {finding.path}
                   </b>
                   <span className="text-note text-ink-3">{finding.root}</span>
                 </TableCell>
-                <TableCell className="align-top whitespace-normal">
+                <TableCell
+                  {...cardPlace('field', '理由')}
+                  className="align-top whitespace-normal"
+                >
                   <span
                     className={cn(
                       'text-ui',
@@ -282,7 +290,10 @@ export function IntegrityView({
                     {finding.reason}
                   </span>
                 </TableCell>
-                <TableCell className="align-top text-right">
+                <TableCell
+                  {...cardPlace('meta')}
+                  className="align-top text-right"
+                >
                   <span className="font-code tabular-nums">{finding.size}</span>
                   {finding.sizeNote && (
                     <small className="block text-micro text-ink-3">
@@ -290,10 +301,16 @@ export function IntegrityView({
                     </small>
                   )}
                 </TableCell>
-                <TableCell className="align-top font-code tabular-nums text-ink-2">
+                <TableCell
+                  {...cardPlace('field', '検出')}
+                  className="align-top font-code tabular-nums text-ink-2"
+                >
                   {finding.noticedAt}
                 </TableCell>
-                <TableCell className="align-top text-right">
+                <TableCell
+                  {...cardPlace('actions')}
+                  className="align-top text-right"
+                >
                   {REDRAWS_ITS_PICTURE.includes(finding.fault) &&
                     finding.recordingId !== undefined && (
                       <ActionRow>

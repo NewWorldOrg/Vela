@@ -19,6 +19,12 @@ import { AuthenticationView } from '@/components/authentication/authentication-p
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { cellOf, rowsOfTheTableHeaded } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 import { formatMoment } from '@/lib/format'
 
 const meta = {
@@ -280,5 +286,21 @@ export const パスワードを変更する対話: Story = {
     await userEvent.click(showReplacement)
 
     await expect(replacement).toHaveAttribute('type', 'text')
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 通常.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }

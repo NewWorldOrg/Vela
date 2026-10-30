@@ -20,6 +20,7 @@ import {
 } from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -111,6 +112,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
         <EmptyState usher={null} title="まだスキャン履歴がありません" />
       ) : (
         <Table
+          cards
           className="table-fixed min-w-[calc(560rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
@@ -132,20 +134,29 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
           <TableBody>
             {history.map((run) => (
               <TableRow key={run.id}>
-                <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
+                <TableCell
+                  {...cardPlace('lead')}
+                  className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
+                >
                   {run.startedAt}
                 </TableCell>
-                <TableCell>
+                <TableCell {...cardPlace('field', '状態')}>
                   <StatusCell>
                     <StateSay tone={runToneOf(run.state)} bold>
                       {run.stateLabel}
                     </StateSay>
                   </StatusCell>
                 </TableCell>
-                <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
+                <TableCell
+                  {...cardPlace('field', '所要')}
+                  className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
+                >
                   {run.took ?? EMPTY_VALUE}
                 </TableCell>
-                <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
+                <TableCell
+                  {...cardPlace('field', '終了')}
+                  className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
+                >
                   {run.finishedAt ?? EMPTY_VALUE}
                 </TableCell>
               </TableRow>

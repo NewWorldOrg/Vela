@@ -17,6 +17,12 @@ import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { rowsOfTheTableHeaded, tipIn } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 type ChannelsViewProps = ComponentProps<typeof ChannelsView>
 
@@ -615,5 +621,37 @@ export const 受信できるチューナーのない種別は受信不可: Story
     await expect(
       within(ground as HTMLElement).queryByText('受信不可'),
     ).not.toBeInTheDocument()
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 通常.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
+  },
+}
+
+export const 電話の幅では一行をカードに組む_スキャン中: Story = {
+  args: スキャン中.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま_スキャン中: Story = {
+  args: スキャン中.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }

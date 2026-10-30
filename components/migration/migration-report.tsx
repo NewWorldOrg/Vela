@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import type { MigrationResult } from '@/repository/migration'
 import { Badge } from '@/components/ui/badge'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -131,6 +132,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       <section className="mt-5">
         <SectionHeading mark={MarkType}>未取り込みの明細</SectionHeading>
         <Table
+          cards
           className="table-fixed min-w-[calc(860rem/16)]"
           containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
         >
@@ -148,7 +150,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             <TableBody key={group.name}>
               <TableRow className="hover:bg-transparent">
                 <TableCell colSpan={3} className="border-b-0 pt-3.5 pb-1.5">
-                  <span className="flex flex-wrap items-baseline gap-2.5">
+                  <span className="flex flex-wrap items-baseline gap-2.5 max-[600px]:px-3.5 max-[600px]:pt-3.5 max-[600px]:pb-1.5">
                     <b className="text-ui font-bold">{group.name}</b>
                     <span className="font-code text-ui tabular-nums text-brand">
                       {group.count}
@@ -166,15 +168,24 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               </TableRow>
               {group.rows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell className="w-[calc(260rem/16)] align-top whitespace-normal">
+                  <TableCell
+                    {...cardPlace('lead')}
+                    className="w-[calc(260rem/16)] align-top whitespace-normal"
+                  >
                     <b className="text-ui font-bold wrap-anywhere">
                       {row.subject}
                     </b>
                   </TableCell>
-                  <TableCell className="align-top text-ink-2">
+                  <TableCell
+                    {...cardPlace('field', '母集団')}
+                    className="align-top text-ink-2"
+                  >
                     {row.population}
                   </TableCell>
-                  <TableCell className="align-top whitespace-normal">
+                  <TableCell
+                    {...cardPlace('field', '記録内容')}
+                    className="align-top whitespace-normal"
+                  >
                     <span className="font-code text-note tabular-nums text-ink-2">
                       {row.fact}
                     </span>
@@ -187,7 +198,9 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                     colSpan={3}
                     className="whitespace-normal text-ink-3"
                   >
-                    {group.empty}
+                    <span className="max-[600px]:block max-[600px]:px-3.5 max-[600px]:py-3">
+                      {group.empty}
+                    </span>
                   </TableCell>
                 </TableRow>
               )}

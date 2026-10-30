@@ -19,6 +19,7 @@ import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/banner'
 import { Button } from '@/components/ui/button'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -100,6 +101,7 @@ export function ScanAttemptsTable({
 }) {
   return (
     <Table
+      cards
       className="table-fixed min-w-[calc(720rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
@@ -114,19 +116,31 @@ export function ScanAttemptsTable({
       <TableBody>
         {attempts.map((attempt) => (
           <TableRow key={attempt.id}>
-            <TableCell className="font-code text-body font-medium tabular-nums whitespace-nowrap">
+            <TableCell
+              {...cardPlace('lead')}
+              className="font-code text-body font-medium tabular-nums whitespace-nowrap"
+            >
               {attempt.channel}
             </TableCell>
-            <TableCell>
+            <TableCell {...cardPlace('field', '結果')}>
               <AttemptResult attempt={attempt} />
             </TableCell>
-            <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
+            <TableCell
+              {...cardPlace('field', '実測')}
+              className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
+            >
               {attempt.measurement?.value ?? EMPTY_VALUE}
             </TableCell>
-            <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
+            <TableCell
+              {...cardPlace('field', '所要')}
+              className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
+            >
               {attempt.took ?? EMPTY_VALUE}
             </TableCell>
-            <TableCell className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2">
+            <TableCell
+              {...cardPlace('meta')}
+              className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
+            >
               {attempt.at}
             </TableCell>
           </TableRow>

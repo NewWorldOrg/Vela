@@ -13,6 +13,7 @@ import {
   StatusCell,
 } from '@/components/recordings/status-cell'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -85,6 +86,14 @@ const NEEDS_A_LOOK = '要対応'
 
 const A_BETTER_ONE = '実測上位の候補'
 
+function hasStanding(service: ServiceRow): boolean {
+  return (
+    service.unreceivable ||
+    service.currentChannel === undefined ||
+    service.betterChannel !== undefined
+  )
+}
+
 function Standing({ service }: { service: ServiceRow }) {
   if (service.unreceivable) {
     return (
@@ -154,7 +163,7 @@ const ServiceLine = memo(function ServiceLine({
 }) {
   return (
     <TableRow className="has-aria-expanded:bg-transparent">
-      <TableCell className="w-6">
+      <TableCell {...cardPlace('end')} className="w-6">
         <button
           type="button"
           aria-label={`${service.name} の候補チャンネル`}
@@ -170,7 +179,7 @@ const ServiceLine = memo(function ServiceLine({
           />
         </button>
       </TableCell>
-      <TableCell>
+      <TableCell {...cardPlace('lead')}>
         <span className="flex min-w-0 items-center gap-2">
           <ChannelMark logo={service.logo} no={service.no} keepsTheSlot />
           <span className="flex min-w-0 flex-wrap items-baseline gap-x-2">
@@ -181,10 +190,10 @@ const ServiceLine = memo(function ServiceLine({
           </span>
         </span>
       </TableCell>
-      <TableCell>
+      <TableCell {...cardPlace('field', '区分')}>
         <Category service={service} />
       </TableCell>
-      <TableCell>
+      <TableCell {...cardPlace('field', '現在の物理ch')}>
         {service.currentChannel === undefined ? (
           <span className="text-ui font-bold text-lemon">選局先なし</span>
         ) : (
@@ -193,7 +202,7 @@ const ServiceLine = memo(function ServiceLine({
           </span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell {...cardPlace('field', '候補')}>
         <span className="font-code tabular-nums text-ink-2">
           {service.candidateCount}
         </span>
@@ -203,13 +212,18 @@ const ServiceLine = memo(function ServiceLine({
           </span>
         )}
       </TableCell>
-      <TableCell>
+      <TableCell {...cardPlace('meta')}>
         <AbleSay able={service.enabled} />
       </TableCell>
-      <TableCell className="font-code text-sub whitespace-nowrap text-ink-2">
+      <TableCell
+        {...cardPlace('meta')}
+        className="font-code text-sub whitespace-nowrap text-ink-2"
+      >
         {service.lastSeen}
       </TableCell>
-      <TableCell>
+      <TableCell
+        {...cardPlace('field', hasStanding(service) ? '状態' : undefined)}
+      >
         <StatusCell>
           <Standing service={service} />
         </StatusCell>
@@ -229,6 +243,7 @@ export function ServiceTable({
 
   return (
     <Table
+      cards
       className="table-fixed min-w-[calc(860rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >

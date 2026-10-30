@@ -14,6 +14,12 @@ import { afterTheArrival } from '@/stories/after-the-arrival'
 import { IntegrityView } from '@/components/integrity/integrity-page'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheApp } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 const swept = async (): Promise<SweepWrite> => ({ state: 'ok', findings: 5 })
 
@@ -331,5 +337,21 @@ export const 指標タイルの面: Story = {
 
     await expect(grounds[0]).not.toBe(getComputedStyle(behind).backgroundColor)
     await expect(grounds[0]).not.toBe('rgba(0, 0, 0, 0)')
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 食い違いあり.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 食い違いあり.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }

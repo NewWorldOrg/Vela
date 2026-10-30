@@ -16,6 +16,12 @@ import {
   tipIn,
 } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
+import {
+  FROM_600,
+  laysRowsAsATable,
+  laysRowsAsCards,
+  PHONE,
+} from '@/stories/rows-as-cards'
 
 const SESSION_COLUMN = 3
 
@@ -462,5 +468,21 @@ export const サービスが0件の種別を最上部で言う: Story = {
     await expect(
       canvas.getAllByRole('link', { name: 'チャンネルへ' })[0],
     ).toHaveAttribute('href', '/settings/channels#system-isdbSBs')
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  args: 通常.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }

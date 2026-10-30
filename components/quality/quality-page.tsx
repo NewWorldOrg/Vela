@@ -14,6 +14,7 @@ import { TermTip } from '@/components/vela/term-tip'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { Banner } from '@/components/vela/banner'
 import {
+  cardPlace,
   Table,
   TableBody,
   TableColumns,
@@ -285,6 +286,7 @@ export function QualityView({
         <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
         {result.tuners.length > 0 ? (
           <Table
+            cards
             className="table-fixed min-w-[calc(900rem/16)]"
             containerClassName={cn(
               ADMIN_LIST_HEIGHT_CAP,
@@ -304,7 +306,7 @@ export function QualityView({
             <TableBody>
               {result.tuners.map((tuner) => (
                 <TableRow key={tuner.id}>
-                  <TableCell className="align-top">
+                  <TableCell {...cardPlace('lead')} className="align-top">
                     <b className="block text-[calc(13rem/16)] font-bold">
                       {tuner.device}
                     </b>
@@ -312,7 +314,10 @@ export function QualityView({
                       {tuner.hardware}
                     </span>
                   </TableCell>
-                  <TableCell className="align-top whitespace-normal">
+                  <TableCell
+                    {...cardPlace('field', HEALTH_COLUMNS[1].label)}
+                    className="align-top whitespace-normal"
+                  >
                     <StatusCell>
                       <StateTip state={tuner.state}>
                         <QualityChip level={tuner.state.level} say>
@@ -321,10 +326,22 @@ export function QualityView({
                       </StateTip>
                     </StatusCell>
                   </TableCell>
-                  <QualityHealthCell cell={tuner.drop} />
-                  <QualityHealthCell cell={tuner.lock} />
-                  <QualityHealthCell cell={tuner.cnr} />
-                  <QualityHealthCell cell={tuner.ber} />
+                  <QualityHealthCell
+                    cell={tuner.drop}
+                    label={HEALTH_COLUMNS[2].label}
+                  />
+                  <QualityHealthCell
+                    cell={tuner.lock}
+                    label={HEALTH_COLUMNS[3].label}
+                  />
+                  <QualityHealthCell
+                    cell={tuner.cnr}
+                    label={HEALTH_COLUMNS[4].label}
+                  />
+                  <QualityHealthCell
+                    cell={tuner.ber}
+                    label={HEALTH_COLUMNS[5].label}
+                  />
                 </TableRow>
               ))}
             </TableBody>

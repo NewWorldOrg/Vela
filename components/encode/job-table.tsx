@@ -16,6 +16,7 @@ import {
   SWERVE_LABEL,
 } from '@/repository/encode-terms'
 import {
+  cardPlace,
   READABLE_LINE,
   Table,
   TableBody,
@@ -55,7 +56,7 @@ const COLUMNS: Column[] = [
   { label: '操作', width: 'calc(96rem/16)', hidden: true },
 ]
 
-const TABLE_MIN = 'calc(1100rem/16)'
+const TABLE_MIN = 'min-w-[calc(1100rem/16)]'
 
 const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
 
@@ -124,9 +125,9 @@ export function JobTable({
 }) {
   return (
     <Table
+      cards
       waiting={waiting}
-      className="table-fixed"
-      style={{ minWidth: TABLE_MIN }}
+      className={cn('table-fixed', TABLE_MIN)}
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
       <TableColumns widths={COLUMNS.map((column) => column.width)} />
@@ -149,29 +150,33 @@ export function JobTable({
       <TableBody>
         {jobs.map((job) => (
           <TableRow key={job.id}>
-            <TableCell className="whitespace-normal">
+            <TableCell {...cardPlace('lead')} className="whitespace-normal">
               <JobTitle job={job} />
             </TableCell>
-            <TableCell>
+            <TableCell {...cardPlace('field', '状態')}>
               <StatusCell>
                 <Standing job={job} />
               </StatusCell>
             </TableCell>
-            <TableCell>{job.profileLabel ?? <Dash />}</TableCell>
-            <TableCell>
+            <TableCell {...cardPlace('field', 'プロファイル')}>
+              {job.profileLabel ?? <Dash />}
+            </TableCell>
+            <TableCell {...cardPlace('field', '保存先')}>
               <Destination job={job} />
             </TableCell>
-            <TableCell className="text-right">
+            <TableCell {...cardPlace('field', '進捗')} className="text-right">
               <Headway job={job} />
             </TableCell>
-            <TableCell>
+            <TableCell {...cardPlace('field', '経路')}>
               <RouteCell job={job} />
             </TableCell>
-            <TableCell className={STAMP}>
+            <TableCell {...cardPlace('field', '開始')} className={STAMP}>
               <Started job={job} />
             </TableCell>
-            <TableCell className={STAMP}>{job.endedAt ?? <Dash />}</TableCell>
-            <TableCell className="text-right">
+            <TableCell {...cardPlace('field', '終了')} className={STAMP}>
+              {job.endedAt ?? <Dash />}
+            </TableCell>
+            <TableCell {...cardPlace('actions')} className="text-right">
               {job.cancellable && (
                 <CancelJobButton job={job} onCallOff={onCallOff} />
               )}
