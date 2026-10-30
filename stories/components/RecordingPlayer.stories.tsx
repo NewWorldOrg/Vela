@@ -3287,6 +3287,56 @@ export const 自動で始められないときは止めたまま再生を待つ:
   },
 }
 
+const AT_1266 = '/recordings/1266'
+
+export const 始まったら再生の願いをアドレスから外す: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: {
+        pathname: AT_1266,
+        query: { play: '1', source: 'recording' },
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    canvasElement.querySelector('video')?.dispatchEvent(new Event('playing'))
+
+    await waitFor(() =>
+      expect(getRouter().replace).toHaveBeenCalledWith(
+        `${AT_1266}?source=recording`,
+        { scroll: false },
+      ),
+    )
+    await expect(getRouter().replace).toHaveBeenCalledTimes(1)
+  },
+}
+
+export const 自動で始められずに止めても再生の願いを外す: Story = {
+  args: { detail: detail('1266'), startAt: 600, pictureHref: keeping },
+  parameters: {
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: AT_1266, query: { play: '1' } },
+    },
+  },
+  beforeEach: () => {
+    const refused = spyOn(HTMLMediaElement.prototype, 'play').mockRejectedValue(
+      new DOMException('no gesture', 'NotAllowedError'),
+    )
+
+    return () => refused.mockRestore()
+  },
+  play: async () => {
+    await waitFor(() =>
+      expect(getRouter().replace).toHaveBeenCalledWith(AT_1266, {
+        scroll: false,
+      }),
+    )
+  },
+}
+
 export const 見ていた位置を覚える: Story = {
   args: {
     detail: detail('1266'),

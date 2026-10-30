@@ -36,6 +36,17 @@ export function playingOnHref(id: string): string {
   return `/recordings/${id}?${PLAY_ASKED_AS}=${PLAYING_ON}`
 }
 
+/** The address once playing on has been answered, by playing or by the browser refusing to: everything else it asked stays. */
+export function withoutThePlayAsked(pathname: string, asked: string): string {
+  const params = new URLSearchParams(asked)
+
+  params.delete(PLAY_ASKED_AS)
+
+  const query = params.toString()
+
+  return query ? `${pathname}?${query}` : pathname
+}
+
 export function whereThatSourceOpens(
   pathname: string,
   asked: string,
@@ -44,6 +55,8 @@ export function whereThatSourceOpens(
   held = false,
 ): string {
   const params = new URLSearchParams(asked)
+
+  params.delete(PLAY_ASKED_AS)
 
   if (watchingAt !== undefined) {
     params.set(SECOND_ASKED_AS, String(wholeSecond(watchingAt)))
@@ -96,9 +109,8 @@ export function whatOpensThePlayerAnew(
   at: number | undefined,
   source: PlaybackSource | undefined,
   held = false,
-  playingOn = false,
 ): string {
-  return `${id}:${at ?? ''}:${source ?? ''}:${held ? HOLD_ASKED_AS : ''}:${playingOn ? PLAY_ASKED_AS : ''}`
+  return `${id}:${at ?? ''}:${source ?? ''}:${held ? HOLD_ASKED_AS : ''}`
 }
 
 export type WhenTheArtefactMoves = 'stay' | 'learn' | 'reopen' | 'replan'

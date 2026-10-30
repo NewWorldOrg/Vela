@@ -64,6 +64,7 @@ import {
 } from '@/lib/playback-sound'
 import {
   theAddressStands,
+  withoutThePlayAsked,
   whatTheStandingArtefactAsks,
   whereThatSourceOpens,
 } from '@/lib/playback-source'
@@ -475,6 +476,27 @@ export function Player({
     [d.id, playlistHref, pictureAsked, playlist],
   )
   const triesAtOnce = useRef(opensPlaying && !holdsAtOnce)
+  const playAskedLeft = useRef(true)
+
+  const answeredThePlayAsked = () => {
+    if (!playAskedLeft.current) {
+      return
+    }
+
+    playAskedLeft.current = false
+
+    const asked = inTheAddress.toString()
+    const left = withoutThePlayAsked(pathname, asked)
+
+    if (left !== (asked ? `${pathname}?${asked}` : pathname)) {
+      router.replace(left as Route, { scroll: false })
+    }
+  }
+
+  const refusedAtOnce = useEffectEvent(() => {
+    setPhase((was) => (was === 'playing' ? was : 'paused'))
+    answeredThePlayAsked()
+  })
 
   useEffect(() => {
     const element = video.current
@@ -486,7 +508,7 @@ export function Player({
     triesAtOnce.current = false
     void element.play().catch((error: unknown) => {
       if (error instanceof DOMException && error.name === 'NotAllowedError') {
-        setPhase((was) => (was === 'playing' ? was : 'paused'))
+        refusedAtOnce()
       }
     })
   }, [source])
@@ -1793,6 +1815,7 @@ export function Player({
                     )
                   }
                   onPlaying={() => {
+                    answeredThePlayAsked()
                     heldNow.current = false
                     setHolding(false)
                     setPhase('playing')

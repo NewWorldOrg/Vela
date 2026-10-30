@@ -332,7 +332,6 @@ export function RecordingDetailView({
                 startAt,
                 playback.plan.source,
                 startsHeld,
-                startsPlaying,
               )}
               detail={d}
               plan={playback.plan}
