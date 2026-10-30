@@ -7,7 +7,7 @@ import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { FormatChoice } from '@/lib/playback-format'
 import type { LiveProfile } from '@/repository/live'
 import { cn } from '@/lib/utils'
-import { formatLength } from '@/lib/format'
+import { formatLength, formatPlayerTime } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
 import { reservationHref } from '@/lib/reservations'
 import type {
@@ -31,6 +31,7 @@ import {
   ChevronLeftIcon,
   ListIcon,
   OutcomeFailedIcon,
+  RebuildIcon,
   ThumbMissingIcon,
   WarningIcon,
 } from '@/components/vela/icons'
@@ -42,7 +43,11 @@ import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import {
   PLAYER_BUTTON,
   PLAYER_COLUMN,
+  PLAYER_GLYPH_BUTTON,
 } from '@/components/recordings/player-palette'
+import { OutcomeChip } from '@/components/recordings/outcome-chip'
+import { QualityChip } from '@/components/recordings/quality-chip'
+import { EncodeChip } from '@/components/recordings/encode-chip'
 import { PlayerSeat } from '@/components/recordings/player-seat'
 import type { Player } from '@/components/recordings/player'
 import { DetailStat } from '@/components/recordings/detail-stat'
@@ -50,6 +55,7 @@ import { OutcomeMark } from '@/components/recordings/outcome-mark'
 import type { QueueEncode } from '@/components/recordings/encode-button'
 import { RecordingActions } from '@/components/recordings/recording-actions'
 import { RecordingRecord } from '@/components/recordings/recording-record'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import {
   SkipEventsSeat,
   type NoteSeek,
@@ -244,11 +250,17 @@ export function RecordingDetailView({
   return (
     <ScreenMain
       width={watching ? 'full' : 'default'}
-      className={cn(GUTTER, 'pb-16')}
+      data-watching={watching ? '' : undefined}
+      className={cn(GUTTER, 'pb-16', watching && 'upright:px-0')}
     >
       <div className={WATCH_COLUMN}>
-        <div className={ALONG}>
-          <div className="flex items-center pt-[calc(18rem/16)] pb-3">
+        <div className={cn(ALONG, watching && 'upright:px-4')}>
+          <div
+            className={cn(
+              'flex items-center pt-[calc(18rem/16)] pb-3',
+              watching && 'upright:hidden',
+            )}
+          >
             <Link
               href="/library"
               className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
@@ -333,18 +345,55 @@ export function RecordingDetailView({
               holdsAtOnce={opens.held}
               autoOpensDataBroadcast={autoOpensDataBroadcast}
               captionStyle={captionStyle}
+              lead={
+                <Link
+                  href="/library"
+                  aria-label="ライブラリへ"
+                  className={PLAYER_GLYPH_BUTTON}
+                >
+                  <ChevronLeftIcon />
+                </Link>
+              }
               {...standIns}
             />
           </SkipEventsSeat>
         )}
 
-        <div className={cn(ALONG, 'pt-5')}>
-          <h1 className="heading text-[calc(24rem/16)] leading-[1.45]">
+        {watching && opens.at !== undefined && startAt === undefined && (
+          <OnAnUprightPhone>
+            <div
+              data-slot="picks-up"
+              className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="font-code">{formatPlayerTime(opens.at)}</span>{' '}
+                まで観ました
+              </span>
+              <Link
+                href={`/recordings/${d.id}?at=0` as Route}
+                replace
+                className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+              >
+                <RebuildIcon />
+                最初から
+              </Link>
+            </div>
+          </OnAnUprightPhone>
+        )}
+
+        <div
+          className={cn(
+            ALONG,
+            'pt-5',
+            'upright:flex upright:flex-col upright:border-b upright:border-line upright:bg-surface upright:px-4 upright:pt-3.5 upright:pb-4',
+          )}
+        >
+          <h1 className="heading text-[calc(24rem/16)] leading-[1.45] upright:text-h2">
             {d.title}
           </h1>
           <div
             data-slot="watch-meta"
-            className="mt-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2"
+            className="mt-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2 upright:mt-1.5 upright:gap-1.5 upright:text-sub upright:text-ink-3"
           >
             <span className="inline-flex items-center gap-2">
               <ChannelMark logo={d.channelLogo} no={d.channelNo} />
@@ -384,13 +433,34 @@ export function RecordingDetailView({
             </div>
           )}
 
+          <OnAnUprightPhone>
+            <dl
+              data-slot="phone-values"
+              className="mt-3 hidden grid-cols-3 overflow-hidden rounded-lg bg-surface-2 upright:order-1 upright:grid"
+            >
+              {[
+                ['結果', <OutcomeChip key="outcome" recording={d} say />],
+                ['品質', <QualityChip key="quality" recording={d} say />],
+                ['エンコード', <EncodeChip key="encode" recording={d} say />],
+              ].map(([name, value], nth) => (
+                <div
+                  key={nth}
+                  className="min-w-0 border-l border-line px-3 py-[calc(9rem/16)] first:border-l-0"
+                >
+                  <dt className="text-micro font-bold text-ink-3">{name}</dt>
+                  <dd className="truncate text-ui">{value}</dd>
+                </div>
+              ))}
+            </dl>
+          </OnAnUprightPhone>
+
           {d.synopsis && (
-            <p className="mt-3.5 max-w-[calc(660rem/16)] text-[calc(13rem/16)] leading-[1.9] text-ink-2">
+            <p className="mt-3.5 max-w-[calc(660rem/16)] text-[calc(13rem/16)] leading-[1.9] text-ink-2 upright:order-3 upright:text-body upright:leading-[1.8]">
               {d.synopsis}
             </p>
           )}
 
-          <div className="mt-[calc(18rem/16)]">
+          <div className="mt-[calc(18rem/16)] upright:order-2 upright:mt-3.5">
             <RecordingActions
               recording={d}
               onDelete={onDelete}
@@ -407,7 +477,7 @@ export function RecordingDetailView({
           </div>
 
           {d.failureReason && (
-            <div className="mt-[calc(18rem/16)] flex max-w-[calc(900rem/16)] flex-wrap items-start gap-[calc(13rem/16)] rounded-lg bg-surface px-[calc(15rem/16)] py-3">
+            <div className="mt-[calc(18rem/16)] flex upright:order-4 max-w-[calc(900rem/16)] flex-wrap items-start gap-[calc(13rem/16)] rounded-lg bg-surface px-[calc(15rem/16)] py-3">
               <span className="flex size-8 flex-none items-center justify-center rounded-md bg-surface-2 text-ink-2">
                 <WarningIcon className="size-[calc(17rem/16)]" />
               </span>
@@ -430,6 +500,7 @@ export function RecordingDetailView({
           )}
 
           <RecordingRecord
+            className="upright:order-5"
             detail={d}
             plan={playback.state === 'planned' ? playback.plan : undefined}
             encodeJob={encodeJob}

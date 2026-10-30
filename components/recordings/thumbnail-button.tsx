@@ -96,7 +96,10 @@ export function ThumbnailButton({
   }
 
   return (
-    <div className="flex flex-col items-start gap-1.5">
+    <div
+      data-slot="thumbnail-action"
+      className="flex flex-col items-start gap-1.5"
+    >
       <Button
         variant="change"
         disabled={refused !== undefined}
