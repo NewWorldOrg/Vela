@@ -24,7 +24,6 @@ import { inTheApp } from '@/stories/frames'
 import {
   FROM_600,
   laysRowsAsATable,
-  laysRowsAsCards,
   NARROW_PHONE,
   PHONE,
 } from '@/stories/rows-as-cards'
@@ -1060,88 +1059,160 @@ export const 狭い幅での長い由来: Story = {
   },
 }
 
-export const 電話の幅では一行をカードに組む: Story = {
+const raised: [string, number][] = []
+const cancelledHere: string[] = []
+
+function phoneList(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="phone-reservation-rows"]',
+  )
+
+  if (!found) {
+    throw new Error('the phone list is not drawn')
+  }
+
+  return found
+}
+
+export const 電話の幅では時刻の列の行を日付で区切って並べる: Story = {
   args: { result: shown(RESERVATION_FIXTURES) },
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
 
-    const canvas = within(canvasElement)
+    const list = await waitFor(() => phoneList(canvasElement))
 
-    await laysRowsAsCards(canvasElement)
+    await expect(
+      canvasElement.querySelector('[data-slot="table-container"]'),
+    ).not.toBeVisible()
+    await expect(list.getBoundingClientRect().width).toBe(window.innerWidth)
 
-    const [first] = RESERVATION_FIXTURES.filter((one) => !one.relay)
-    const card = within(
-      canvas
-        .getByRole('checkbox', { name: `${first.title} を選ぶ` })
-        .closest('tr') as HTMLElement,
+    const [first] = RESERVATION_FIXTURES.filter(
+      (one) => !one.relay && one.standing === 'scheduled',
+    )
+    const row = within(
+      list.querySelector<HTMLElement>(`[data-reservation="${first.id}"]`)!,
     )
 
-    for (const value of [first.title, first.channelName, first.whenLabel]) {
-      await expect(card.getByText(value)).toBeVisible()
-    }
-
-    for (const said of card
-      .getAllByRole('cell')
-      .filter((cell) => cell.hasAttribute('data-label'))) {
-      await expect(said).toBeVisible()
-    }
+    await expect(row.getByText(first.title)).toBeVisible()
+    await expect(
+      row.getByRole('button', { name: '取り消す' }).getBoundingClientRect()
+        .width,
+    ).toBeGreaterThanOrEqual(44)
+    await expect(list.querySelectorAll('h2').length).toBeGreaterThan(0)
+    await expect(
+      within(
+        canvasElement.querySelector<HTMLElement>('[data-slot="top-bar"]')!,
+      ).getByRole('link', { name: '予約を追加' }),
+    ).toHaveAttribute('href', '/guide')
   },
 }
 
 export const 電話の幅で競合を解く: Story = {
-  args: { result: shown(RESERVATION_FIXTURES) },
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    actions: {
+      onCancel: accept,
+      onRestore: accept,
+      onRaise: async (id: string, priority: number) => {
+        raised.push([id, priority])
+
+        return { state: 'ok' as const }
+      },
+      onRevise: accept,
+      onDiscard: throwing,
+    },
+  },
   parameters: { screen: NARROW_PHONE },
+  beforeEach: () => {
+    raised.length = 0
+  },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
 
-    const canvas = within(canvasElement)
+    const frame = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="phone-conflict"]',
+      )
 
-    for (const name of [
-      'この予約を優先',
-      'この予約を取り消し',
-      'チューナーへ',
-    ]) {
-      const [press] = canvas
-        .getAllByRole(name === 'チューナーへ' ? 'link' : 'button', { name })
-        .filter((one) => one.closest('[data-slot="unfold"][data-open]'))
+      expect(found).not.toBeNull()
 
-      press.scrollIntoView({ block: 'center' })
+      return found!
+    })
+    const list = phoneList(canvasElement)
 
-      const box = press.getBoundingClientRect()
+    await expect(frame.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      list.getBoundingClientRect().top,
+    )
+    await expect(
+      frame.querySelector('[data-slot="conflict-overlap"]'),
+    ).not.toBeNull()
 
-      await expect(press).toBeVisible()
-      await expect(box.height).toBeGreaterThanOrEqual(40)
-      await expect(box.left).toBeGreaterThanOrEqual(0)
-      await expect(box.right).toBeLessThanOrEqual(window.innerWidth)
-      await expect(press.scrollWidth).toBeLessThanOrEqual(press.clientWidth + 1)
-    }
+    const take = within(frame).getByRole('button', { name: 'こちらを録る' })
+
+    await expect(take.getBoundingClientRect().right).toBeLessThanOrEqual(
+      window.innerWidth,
+    )
+    await userEvent.click(take)
+    await waitFor(() => expect(raised).toHaveLength(1))
+    await expect(
+      within(frame).getByRole('link', { name: 'チューナーへ' }),
+    ).toHaveAttribute('href', '/settings/tuners')
   },
 }
 
-export const 電話の幅で選んで取り消す: Story = {
-  args: { result: shown(RESERVATION_FIXTURES) },
+export const 電話の幅で行のばつで取り消し知らせで元に戻す: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    actions: {
+      onCancel: async (id: string) => {
+        cancelledHere.push(id)
+
+        return { state: 'ok' as const }
+      },
+      onRestore: accept,
+      onRaise: accept,
+      onRevise: accept,
+      onDiscard: throwing,
+    },
+  },
   parameters: { screen: NARROW_PHONE },
+  beforeEach: () => {
+    cancelledHere.length = 0
+  },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first, second] = RESERVATION_FIXTURES.filter(
+    const list = await waitFor(() => phoneList(canvasElement))
+    const [first] = RESERVATION_FIXTURES.filter(
       (one) => !one.relay && one.standing === 'scheduled',
     )
-
-    await userEvent.click(
-      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
-    )
-    await userEvent.click(
-      canvas.getByRole('checkbox', { name: `${second.title} を選ぶ` }),
+    const row = within(
+      list.querySelector<HTMLElement>(`[data-reservation="${first.id}"]`)!,
     )
 
-    const bar = canvas.getByRole('group', { name: '選択した予約の操作' })
+    await userEvent.click(row.getByRole('button', { name: '取り消す' }))
+    await waitFor(() => expect(cancelledHere).toEqual([first.id]))
 
-    await expect(bar).toBeVisible()
-    await expect(bar).toHaveTextContent('2 件を選択')
+    const toast = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="toast"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await userEvent.click(
+      within(toast).getByRole('button', { name: '元に戻す' }),
+    )
+    await expect(canvasElement.querySelector('[data-slot="toast"]')).toBeNull()
+
+    await userEvent.click(
+      row.getByRole('button', { name: new RegExp(first.title) }),
+    )
     await expect(
-      within(bar).getByRole('button', { name: '取り消し' }),
-    ).toBeEnabled()
+      list.querySelector('[data-slot="reservation-change"]'),
+    ).not.toBeNull()
   },
 }
 

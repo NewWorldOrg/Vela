@@ -37,6 +37,8 @@ export interface ConflictEntry {
   meta: string
   origin: string
   ruleName?: string
+  /** When the rival's broadcast starts and ends, for the phone's line of the overlap. */
+  span?: { startAt: string; endAt: string }
 }
 
 export interface ReservationConflict {
@@ -75,6 +77,8 @@ export interface Reservation {
   channelNo?: string
   channelLogo?: StationLogo
   whenLabel: string
+  /** When the broadcast starts and ends, for the phone's list by day and its line of an overlap. */
+  span?: { startAt: string; endAt: string }
   origin: OriginLabel
   ruleName?: string
   standing: ReservationStanding
@@ -575,6 +579,7 @@ export function toReservation(
     channelNo: channel?.no,
     channelLogo: channel?.logo,
     whenLabel: formatMomentSpan(r.window.startAt, r.window.endAt),
+    span: { startAt: r.window.startAt, endAt: r.window.endAt },
     origin: formatReservationOrigin(r.origin),
     ruleName: ruleNameOf(r.ruleId, rules),
     standing: r.standing,
@@ -673,7 +678,10 @@ function conflictOf(
   return {
     headline: `同時刻に${KIND_LABEL[kind]}チューナー ${seats.size} 本が録画予定です`,
     body: `${formatMoment(r.window.startAt)} の開始時点で空きがなく、この予約にはチューナーを割り当てられません。`,
-    entries: rivals.map((one) => toConflictEntry(one, known, rules)),
+    entries: rivals.map((one) => ({
+      ...toConflictEntry(one, known, rules),
+      span: { startAt: one.window.startAt, endAt: one.window.endAt },
+    })),
     raiseTo: Math.max(...rivals.map((one) => toInt(one.priority))) + 1,
   }
 }

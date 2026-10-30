@@ -54,7 +54,10 @@ export function EditReservationDialog({
   open,
   onOpenChange,
   onRevise,
+  inline = false,
 }: {
+  /** Drawn in the page's flow under the row it changes, as a phone held upright opens it, rather than as a dialog. */
+  inline?: boolean
   booking: Booking
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -160,6 +163,138 @@ export function EditReservationDialog({
     })
   }
 
+  const ids = inline ? `-${booking.id}` : ''
+  const fields = (
+    <div
+      data-slot="dialog-body"
+      className="flex min-h-0 flex-col gap-4 overflow-y-auto"
+    >
+      <Field>
+        <FieldLabel htmlFor={`reservation-priority${ids}`}>
+          優先度
+          <RequiredMark />
+        </FieldLabel>
+        <Input
+          id={`reservation-priority${ids}`}
+          inputMode="numeric"
+          value={priority}
+          aria-invalid={problem?.field === 'priority' || undefined}
+          aria-describedby={
+            problem?.field === 'priority'
+              ? `reservation-priority-error${ids}`
+              : undefined
+          }
+          onChange={(event) => setPriority(event.target.value)}
+        />
+        <FieldHint>
+          {PRIORITY_RANGE.least} 〜 {PRIORITY_RANGE.most}
+        </FieldHint>
+        <span aria-live="polite">
+          {problem?.field === 'priority' && (
+            <FieldError id={`reservation-priority-error${ids}`}>
+              {problem.text}
+            </FieldError>
+          )}
+        </span>
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor={`reservation-margin-before${ids}`}>
+          前マージン(秒)
+          <RequiredMark />
+        </FieldLabel>
+        <Input
+          id={`reservation-margin-before${ids}`}
+          inputMode="numeric"
+          value={before}
+          aria-invalid={problem?.field === 'before' || undefined}
+          aria-describedby={
+            problem?.field === 'before'
+              ? `reservation-margin-before-error${ids}`
+              : undefined
+          }
+          onChange={(event) => setBefore(event.target.value)}
+        />
+        <FieldHint>
+          {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
+        </FieldHint>
+        <span aria-live="polite">
+          {problem?.field === 'before' && (
+            <FieldError id={`reservation-margin-before-error${ids}`}>
+              {problem.text}
+            </FieldError>
+          )}
+        </span>
+      </Field>
+
+      <Field>
+        <FieldLabel htmlFor={`reservation-margin-after${ids}`}>
+          後マージン(秒)
+          <RequiredMark />
+        </FieldLabel>
+        <Input
+          id={`reservation-margin-after${ids}`}
+          inputMode="numeric"
+          value={after}
+          aria-invalid={problem?.field === 'after' || undefined}
+          aria-describedby={
+            problem?.field === 'after'
+              ? `reservation-margin-after-error${ids}`
+              : undefined
+          }
+          onChange={(event) => setAfter(event.target.value)}
+        />
+        <FieldHint>
+          {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
+        </FieldHint>
+        <span aria-live="polite">
+          {problem?.field === 'after' && (
+            <FieldError id={`reservation-margin-after-error${ids}`}>
+              {problem.text}
+            </FieldError>
+          )}
+        </span>
+      </Field>
+
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Switch
+          id={`reservation-encode${ids}`}
+          checked={encode}
+          onCheckedChange={setEncode}
+        />
+        <FieldLabel htmlFor={`reservation-encode${ids}`}>
+          自動エンコード
+        </FieldLabel>
+      </div>
+
+      <span aria-live="polite">
+        {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+      </span>
+    </div>
+  )
+  const choices = (
+    <>
+      <Button variant="ghost" onClick={() => close(false)}>
+        キャンセル
+      </Button>
+      <Button disabled={pending} onClick={submit}>
+        保存する
+      </Button>
+    </>
+  )
+
+  if (inline) {
+    return open ? (
+      <div
+        data-slot="reservation-change"
+        className="flex flex-col gap-4 [&_input]:h-11"
+      >
+        {fields}
+        <div className="flex flex-wrap justify-end gap-2">{choices}</div>
+      </div>
+    ) : null
+  }
+
   return (
     <Dialog open={open} onOpenChange={close}>
       <DialogContent onInteractOutside={(event) => event.preventDefault()}>
@@ -167,120 +302,8 @@ export function EditReservationDialog({
           <DialogTitle>予約を変更</DialogTitle>
           <DialogDescription>{booking.title}</DialogDescription>
         </DialogHeader>
-
-        <div
-          data-slot="dialog-body"
-          className="flex min-h-0 flex-col gap-4 overflow-y-auto"
-        >
-          <Field>
-            <FieldLabel htmlFor="reservation-priority">
-              優先度
-              <RequiredMark />
-            </FieldLabel>
-            <Input
-              id="reservation-priority"
-              inputMode="numeric"
-              value={priority}
-              aria-invalid={problem?.field === 'priority' || undefined}
-              aria-describedby={
-                problem?.field === 'priority'
-                  ? 'reservation-priority-error'
-                  : undefined
-              }
-              onChange={(event) => setPriority(event.target.value)}
-            />
-            <FieldHint>
-              {PRIORITY_RANGE.least} 〜 {PRIORITY_RANGE.most}
-            </FieldHint>
-            <span aria-live="polite">
-              {problem?.field === 'priority' && (
-                <FieldError id="reservation-priority-error">
-                  {problem.text}
-                </FieldError>
-              )}
-            </span>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="reservation-margin-before">
-              前マージン(秒)
-              <RequiredMark />
-            </FieldLabel>
-            <Input
-              id="reservation-margin-before"
-              inputMode="numeric"
-              value={before}
-              aria-invalid={problem?.field === 'before' || undefined}
-              aria-describedby={
-                problem?.field === 'before'
-                  ? 'reservation-margin-before-error'
-                  : undefined
-              }
-              onChange={(event) => setBefore(event.target.value)}
-            />
-            <FieldHint>
-              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
-            </FieldHint>
-            <span aria-live="polite">
-              {problem?.field === 'before' && (
-                <FieldError id="reservation-margin-before-error">
-                  {problem.text}
-                </FieldError>
-              )}
-            </span>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="reservation-margin-after">
-              後マージン(秒)
-              <RequiredMark />
-            </FieldLabel>
-            <Input
-              id="reservation-margin-after"
-              inputMode="numeric"
-              value={after}
-              aria-invalid={problem?.field === 'after' || undefined}
-              aria-describedby={
-                problem?.field === 'after'
-                  ? 'reservation-margin-after-error'
-                  : undefined
-              }
-              onChange={(event) => setAfter(event.target.value)}
-            />
-            <FieldHint>
-              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
-            </FieldHint>
-            <span aria-live="polite">
-              {problem?.field === 'after' && (
-                <FieldError id="reservation-margin-after-error">
-                  {problem.text}
-                </FieldError>
-              )}
-            </span>
-          </Field>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Switch
-              id="reservation-encode"
-              checked={encode}
-              onCheckedChange={setEncode}
-            />
-            <FieldLabel htmlFor="reservation-encode">自動エンコード</FieldLabel>
-          </div>
-
-          <span aria-live="polite">
-            {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
-          </span>
-        </div>
-
-        <DialogFooter>
-          <Button variant="ghost" onClick={() => close(false)}>
-            キャンセル
-          </Button>
-          <Button disabled={pending} onClick={submit}>
-            保存する
-          </Button>
-        </DialogFooter>
+        {fields}
+        <DialogFooter>{choices}</DialogFooter>
       </DialogContent>
     </Dialog>
   )

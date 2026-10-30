@@ -1,6 +1,61 @@
 import type { Reservation } from '@/repository/reservations'
 
-export const RESERVATION_FIXTURES: Reservation[] = [
+const YEAR = 2026
+
+/** The moment a clock on a listed day says, in Tokyo; 24:00 and the small hours after a late start fall on the next day. */
+function momentOf(
+  month: string,
+  day: string,
+  clock: string,
+  after?: string,
+): string {
+  const [hour, minute] = clock.split(':').map(Number)
+  const base = Date.UTC(YEAR, Number(month) - 1, Number(day), hour - 9, minute)
+  const start = after ? new Date(after).getTime() : undefined
+  const at =
+    start !== undefined && base <= start ? base + 24 * 60 * 60 * 1000 : base
+
+  return new Date(at).toISOString()
+}
+
+/** The broadcast's start and end, read back from the label the list shows, and the same for each rival in a conflict. */
+function spanned(reservation: Reservation): Reservation {
+  const said = /^(\d{2})\/(\d{2})\([^)]+\) (\d{2}:\d{2}) – (\d{2}:\d{2})$/.exec(
+    reservation.whenLabel,
+  )
+
+  if (!said) {
+    return reservation
+  }
+
+  const [, month, day, from, to] = said
+  const startAt = momentOf(month, day, from)
+  const span = { startAt, endAt: momentOf(month, day, to, startAt) }
+  const conflict = reservation.conflict && {
+    ...reservation.conflict,
+    entries: reservation.conflict.entries.map((entry) => {
+      const rival = /(\d{2}:\d{2}) – (\d{2}:\d{2})$/.exec(entry.meta)
+
+      if (!rival) {
+        return entry
+      }
+
+      const rivalStart = momentOf(month, day, rival[1])
+
+      return {
+        ...entry,
+        span: {
+          startAt: rivalStart,
+          endAt: momentOf(month, day, rival[2], rivalStart),
+        },
+      }
+    }),
+  }
+
+  return { ...reservation, span, ...(conflict ? { conflict } : {}) }
+}
+
+const AS_LISTED: Reservation[] = [
   {
     id: 'r-301',
     title: '週末キッチンの手帖',
@@ -112,6 +167,8 @@ export const RESERVATION_FIXTURES: Reservation[] = [
     encodeWhenRecorded: true,
   },
 ]
+
+export const RESERVATION_FIXTURES: Reservation[] = AS_LISTED.map(spanned)
 
 export const SETTLED_RESERVATION_FIXTURES: Reservation[] = [
   {
