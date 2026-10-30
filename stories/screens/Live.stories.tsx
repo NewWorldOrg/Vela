@@ -3827,7 +3827,7 @@ export const 横向きの電話では右の列の局を押すと映像を閉じ�
   parameters: { screen: ON_ITS_SIDE, coarse: true },
   play: async ({ canvasElement }) => {
     const strip = within(sidewaysStrip(canvasElement))
-    const other = strip.getByRole('button', { name: '中央テレビ1' })
+    const other = strip.getByRole('button', { name: /中央テレビ1/ })
 
     await userEvent.click(other)
 

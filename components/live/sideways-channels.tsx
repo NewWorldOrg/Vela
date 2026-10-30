@@ -29,7 +29,7 @@ export function kindAfter(
   return offered[(at + 1) % offered.length] ?? kind
 }
 
-/** The column at the picture's right while a channel is watched on a phone held on its side: the kind, which one press turns to the next, the stations of that kind, one press each to watch, and `番組`, which opens the programme on now in the column's place. The one watched is ringed in the player's accent; while it is being made ready its number gives way to the spinner. */
+/** The column at the picture's right while a channel is watched on a phone held on its side: the kind, which one press turns to the next, the stations of that kind by their mark and name, one press each to watch, and `番組`, which opens the programme on now in the column's place. The name is under the mark because a main channel and its sub channels share one number and most stations have no logo. The one watched is ringed in the player's accent, with the spinner in its corner while it is made ready. */
 export function SidewaysChannels({
   kind,
   kinds,
@@ -84,12 +84,11 @@ export function SidewaysChannels({
               <button
                 ref={on ? watched : undefined}
                 type="button"
-                aria-label={channel.name}
                 aria-pressed={on}
                 aria-busy={on && preparing ? true : undefined}
                 onClick={() => onSelect(channel)}
                 className={cn(
-                  'flex h-[calc(52rem/16)] w-[calc(52rem/16)] flex-col items-center justify-center gap-1 rounded-[calc(12rem/16)] outline-none hover:bg-white/6 focus-visible:shadow-ring',
+                  'relative flex w-[calc(52rem/16)] flex-col items-center gap-1 rounded-md px-0.5 pt-1.5 pb-1 outline-none hover:bg-white/6 focus-visible:shadow-ring',
                   on &&
                     'bg-(--pl-accent)/20 shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--pl-accent)_70%,transparent)] hover:bg-(--pl-accent)/20',
                   pressable,
@@ -97,19 +96,19 @@ export function SidewaysChannels({
                 )}
               >
                 <ChannelMark logo={channel.logo} no={channel.no} keepsTheSlot />
-                {on && preparing ? (
-                  <Spinner size="control" className="text-(--pl-accent)" />
-                ) : (
-                  <span
-                    className={cn(
-                      'font-code text-[calc(10rem/16)] leading-none text-(--pl-ink-3)',
-                      on && 'font-bold text-(--pl-accent-ink)',
-                    )}
-                  >
-                    {channel.logo?.declaration === 'inTheCommonDataTable'
-                      ? channel.no
-                      : ''}
-                  </span>
+                <span
+                  className={cn(
+                    'line-clamp-2 w-full text-center text-[calc(10rem/16)] leading-[1.2] break-all text-(--pl-ink-3)',
+                    on && 'font-bold text-(--pl-accent-ink)',
+                  )}
+                >
+                  {channel.name}
+                </span>
+                {on && preparing && (
+                  <Spinner
+                    size="control"
+                    className="absolute top-0.5 right-0.5 text-(--pl-accent)"
+                  />
                 )}
               </button>
             </li>
