@@ -25,6 +25,7 @@ import {
   boostCollection,
   discardAndRebuildEpg,
   dropProgrammeReservation,
+  restoreProgrammeReservation,
   reserveProgramme,
   readProgramExtras,
   reviseProgrammeReservation,
@@ -71,6 +72,7 @@ export default async function Page({
         onRebuild={discardAndRebuildEpg}
         onReserve={reserveProgramme}
         onCancel={dropProgrammeReservation}
+        onRestore={restoreProgrammeReservation}
         onRevise={reviseProgrammeReservation}
         onReadExtras={readProgramExtras}
         subChannelsFolded={flagOf(

@@ -13,7 +13,11 @@ import {
 import { cn } from '@/lib/utils'
 import type { Program } from '@/repository/programs'
 import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
-import { ChevronDownIcon, RecordIcon } from '@/components/vela/icons'
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  RecordIcon,
+} from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 
 const ROOM_ABOVE_NOW_PX = 48
@@ -49,7 +53,10 @@ export function ChannelDayList({
   openId,
   onToggle,
   detailOf,
+  circleOf,
 }: {
+  /** What stands at the right end of a row that has not ended: the circle that reserves it in one press. */
+  circleOf?: (program: Program) => ReactNode
   channelId: string
   dayKey: string
   programs: Program[]
@@ -157,7 +164,7 @@ export function ChannelDayList({
     <div
       ref={list}
       data-guide-list
-      className="relative min-h-0 flex-1 overflow-y-auto rounded-lg bg-surface"
+      className="relative -mx-3.5 min-h-0 flex-1 overflow-y-auto border-t border-line bg-surface"
     >
       <ol>
         {programs.map((p) => {
@@ -185,85 +192,94 @@ export function ChannelDayList({
                 onAir && 'bg-brand-soft/45',
               )}
             >
-              <button
-                type="button"
-                aria-expanded={open}
-                onClick={() => onToggle(p)}
+              <div
                 className={cn(
-                  pressable,
-                  'flex min-h-14 w-full items-start gap-3 py-3 pr-1.5 pl-3.5 text-left',
+                  'flex items-stretch pr-1',
                   onAir && 'shadow-[inset_3px_0_0_var(--color-brand)]',
                 )}
               >
-                <span className="flex w-[calc(46rem/16)] shrink-0 flex-col font-code tabular-nums">
-                  <span
-                    className={cn(
-                      'text-ui font-medium',
-                      past ? 'text-ink-3' : 'text-ink',
-                    )}
-                  >
-                    {p.startLabel}
-                  </span>
-                  <span className="text-cap text-ink-3">
-                    {p.endUndecided ? '未定' : p.endLabel}
-                  </span>
-                </span>
-
-                <span className="min-w-0 flex-1">
-                  <span
-                    className={cn(
-                      'block text-body leading-snug',
-                      past ? 'text-ink-2' : 'text-ink',
-                      onAir && 'font-bold',
-                    )}
-                  >
-                    {mark && <BookingGlyph mark={mark} />}
-                    {halfWidthOf(p.title)}
-                  </span>
-                  <span
-                    className={cn(
-                      'mt-0.5 line-clamp-2 text-sub',
-                      past ? 'text-ink-3' : 'text-ink-2',
-                    )}
-                  >
+                <button
+                  type="button"
+                  aria-expanded={open}
+                  onClick={() => onToggle(p)}
+                  className={cn(
+                    pressable,
+                    'flex min-h-14 min-w-0 flex-1 items-start gap-3 py-3 pr-1.5 pl-3.5 text-left',
+                  )}
+                >
+                  <span className="flex w-[calc(46rem/16)] shrink-0 flex-col font-code tabular-nums">
                     <span
-                      aria-hidden="true"
                       className={cn(
-                        'guide-cell-genre-dot mr-1.5',
-                        GENRE_MARK_CLASS[p.genre],
+                        'text-ui font-medium',
+                        past ? 'text-ink-3' : 'text-ink',
                       )}
-                    />
-                    <span className="mr-1.5 text-ink-3">
-                      {genreWordOf(p.genreLabel)}
+                    >
+                      {p.startLabel}
                     </span>
-                    {p.description && halfWidthOf(p.description)}
+                    <span className="text-cap text-ink-3">
+                      {p.endUndecided ? '未定' : p.endLabel}
+                    </span>
                   </span>
-                  {onAir && (
-                    <span className="mt-2 flex items-center gap-2">
-                      <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-line">
-                        <span
-                          className="block h-full rounded-full bg-brand"
-                          style={{ width: `${elapsed * 100}%` }}
-                        />
-                      </span>
-                      {nowLabel && (
-                        <span className="rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand">
-                          {nowLabel}
-                        </span>
+
+                  <span className="min-w-0 flex-1">
+                    <span
+                      className={cn(
+                        'block text-body leading-snug',
+                        past ? 'text-ink-2' : 'text-ink',
+                        onAir && 'font-bold',
                       )}
+                    >
+                      {mark && <BookingGlyph mark={mark} />}
+                      {halfWidthOf(p.title)}
+                    </span>
+                    <span
+                      className={cn(
+                        'mt-0.5 line-clamp-2 text-sub',
+                        past ? 'text-ink-3' : 'text-ink-2',
+                      )}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'guide-cell-genre-dot mr-1.5',
+                          GENRE_MARK_CLASS[p.genre],
+                        )}
+                      />
+                      <span className="mr-1.5 text-ink-3">
+                        {genreWordOf(p.genreLabel)}
+                      </span>
+                      {p.description && halfWidthOf(p.description)}
+                    </span>
+                    {onAir && (
+                      <span className="mt-2 flex items-center gap-2">
+                        <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-line">
+                          <span
+                            className="block h-full rounded-full bg-brand"
+                            style={{ width: `${elapsed * 100}%` }}
+                          />
+                        </span>
+                        {nowLabel && (
+                          <span className="rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand">
+                            {nowLabel}
+                          </span>
+                        )}
+                      </span>
+                    )}
+                  </span>
+
+                  {!circleOf && (
+                    <span className="flex size-11 shrink-0 items-center justify-center self-center text-ink-3">
+                      <ChevronDownIcon
+                        className={cn(
+                          'size-[calc(15rem/16)] transition-transform',
+                          open && 'rotate-180',
+                        )}
+                      />
                     </span>
                   )}
-                </span>
-
-                <span className="flex size-11 shrink-0 items-center justify-center self-center text-ink-3">
-                  <ChevronDownIcon
-                    className={cn(
-                      'size-[calc(15rem/16)] transition-transform',
-                      open && 'rotate-180',
-                    )}
-                  />
-                </span>
-              </button>
+                </button>
+                {circleOf && rightEndOf(p, open, past, circleOf, onToggle)}
+              </div>
 
               {open && (
                 <div className="border-t border-dashed border-line px-3.5 pt-3.5 pb-4">
@@ -276,6 +292,39 @@ export function ChannelDayList({
       </ol>
     </div>
   )
+}
+
+/** The right end of a row: the open row's close, nothing on a programme that has ended, the circle on the rest. */
+function rightEndOf(
+  program: Program,
+  open: boolean,
+  past: boolean,
+  circleOf: (program: Program) => ReactNode,
+  onToggle: (program: Program) => void,
+): ReactNode {
+  if (open) {
+    return (
+      <button
+        type="button"
+        aria-label="閉じる"
+        onClick={() => onToggle(program)}
+        className={cn(
+          'flex size-11 shrink-0 items-center justify-center self-center rounded-full outline-none focus-visible:shadow-ring',
+          pressable,
+        )}
+      >
+        <span className="flex size-8 items-center justify-center rounded-full border-[1.5px] border-brand-line bg-brand-soft text-brand [&_svg]:size-4">
+          <ChevronUpIcon />
+        </span>
+      </button>
+    )
+  }
+
+  if (past) {
+    return <span aria-hidden="true" className="w-11 shrink-0" />
+  }
+
+  return circleOf(program)
 }
 
 function BookingGlyph({ mark }: { mark: 'booked' | 'recording' }) {

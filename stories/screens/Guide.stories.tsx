@@ -75,8 +75,12 @@ const meta = {
     collection: COLLECTION_FIXTURES,
     onCollectNow: async () => ({ state: 'started' as const, streams: 7 }),
     onRebuild: async () => ({ state: 'ok' as const, discarded: 3521 }),
-    onReserve: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
-    onCancel: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
+    onReserve: async (_programmeId: string): Promise<ReservationWrite> => ({
+      state: 'ok',
+    }),
+    onCancel: async (_id: string): Promise<ReservationWrite> => ({
+      state: 'ok',
+    }),
     onRevise: async (): Promise<ReservationWrite> => ({ state: 'ok' }),
     onReadExtras: async (
       _kind: string,
@@ -2234,7 +2238,7 @@ function rowsIn(list: HTMLElement): HTMLElement[] {
 }
 
 function pressOf(row: HTMLElement): HTMLButtonElement {
-  return row.querySelector<HTMLButtonElement>(':scope > button')!
+  return row.querySelector<HTMLButtonElement>(':scope > div > button')!
 }
 
 function chipsIn(canvasElement: HTMLElement): HTMLButtonElement[] {
@@ -2447,7 +2451,7 @@ export const 電話では押した行の下に詳細が開いて閉じる: Story
 
     await waitFor(() => expect(press).toHaveAttribute('aria-expanded', 'true'))
 
-    const detail = press.nextElementSibling as HTMLElement | null
+    const detail = press.parentElement!.nextElementSibling as HTMLElement | null
 
     await expect(detail).not.toBeNull()
     await expect(detail!.querySelector('[data-program-detail]')).not.toBeNull()
@@ -2594,6 +2598,10 @@ export const 電話で別の日: Story = {
     await expect(list.scrollTop).toBe(0)
     await expect(list.querySelector('[data-on-air]')).toBeNull()
     await expect(list.querySelector('[data-past]')).toBeNull()
+
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: /日を選ぶ/ }),
+    )
     await expect(
       within(canvasElement).getByRole('button', { name: '今日' }),
     ).toBeVisible()
@@ -2740,7 +2748,7 @@ export const 電話では送ったあとに残りが届いても見ていた行�
 
       return row!
     })
-    const title = looked.querySelector(':scope > button')!.textContent
+    const title = pressOf(looked).textContent
     const was = looked.getBoundingClientRect().top
 
     window.dispatchEvent(new Event(REST_ARRIVES))
@@ -2749,9 +2757,7 @@ export const 電話では送ったあとに残りが届いても見ていた行�
       expect(rowsIn(list)).toHaveLength(firstChannelRows(true)),
     )
 
-    const same = rowsIn(list).find(
-      (one) => one.querySelector(':scope > button')!.textContent === title,
-    )
+    const same = rowsIn(list).find((one) => pressOf(one).textContent === title)
 
     await expect(same).toBeDefined()
     await waitFor(() =>
@@ -2799,5 +2805,130 @@ export const 幅600pxで番組を押すと対話が開く: Story = {
     await expect(
       canvasElement.querySelector('[data-guide-list] [data-program-detail]'),
     ).toBeNull()
+  },
+}
+
+const reserved: string[] = []
+const cancelled: string[] = []
+
+const reserveIt = async (programmeId: string): Promise<ReservationWrite> => {
+  reserved.push(programmeId)
+
+  return { state: 'ok', reservationId: `r-${programmeId}` }
+}
+
+const cancelIt = async (id: string): Promise<ReservationWrite> => {
+  cancelled.push(id)
+
+  return { state: 'ok' }
+}
+
+export const 電話では行の丸で1回で予約し知らせで取り消せる: Story = {
+  args: { guide: base, onReserve: reserveIt, onCancel: cancelIt },
+  parameters: { screen: PHONE },
+  beforeEach: () => {
+    reserved.length = 0
+    cancelled.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const free = [
+      ...list.querySelectorAll<HTMLElement>(
+        '[data-slot="reserve-circle"][data-mark="none"]',
+      ),
+    ][0]
+    const row = free.closest<HTMLElement>('li')!
+
+    await expect(free.getBoundingClientRect().width).toBeGreaterThanOrEqual(44)
+    await expect(
+      pressOf(row).getBoundingClientRect().right,
+    ).toBeLessThanOrEqual(free.getBoundingClientRect().left + 1)
+
+    await userEvent.click(free)
+    await waitFor(() => expect(reserved).toHaveLength(1))
+    await expect(free).toHaveAttribute('data-mark', 'booked')
+    await expect(pressOf(row)).toHaveAttribute('aria-expanded', 'false')
+
+    const toast = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="toast"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(toast).toHaveTextContent('予約しました')
+    await userEvent.click(
+      within(toast).getByRole('button', { name: '取り消す' }),
+    )
+    await expect(cancelled).toEqual([`r-${reserved[0]}`])
+  },
+}
+
+export const 電話では終わった番組に丸を置かず開いた行の右は閉じる: Story = {
+  args: { guide: A_FULL_DAY_GUIDE },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const past = list.querySelector<HTMLElement>('li[data-past]')
+
+    if (past) {
+      await expect(
+        past.querySelector('[data-slot="reserve-circle"]'),
+      ).toBeNull()
+    }
+
+    const live = list.querySelector<HTMLElement>('li[data-on-air]')!
+
+    await userEvent.click(pressOf(live))
+    await expect(pressOf(live)).toHaveAttribute('aria-expanded', 'true')
+
+    const close = within(live).getByRole('button', { name: '閉じる' })
+
+    await userEvent.click(close)
+    await expect(pressOf(live)).toHaveAttribute('aria-expanded', 'false')
+  },
+}
+
+export const 電話では上の帯に日付と番組を検索と絞り込みを置く: Story = {
+  args: { guide: base },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await phoneList(canvasElement)
+
+    const bar = within(
+      canvasElement.querySelector<HTMLElement>('[data-slot="top-bar"]')!,
+    )
+
+    await expect(bar.getByRole('link', { name: '番組を検索' })).toHaveAttribute(
+      'href',
+      '/search',
+    )
+
+    const day = bar.getByRole('button', { name: /日を選ぶ/ })
+
+    await userEvent.click(day)
+
+    const days = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="phone-days"]',
+    )!
+
+    await expect(days).toBeVisible()
+    await expect(
+      within(days).getByRole('button', { pressed: true }),
+    ).toBeVisible()
+
+    const filter = bar.getByRole('button', { name: '絞り込み' })
+
+    await userEvent.click(filter)
+    await expect(filter).toHaveAttribute('aria-expanded', 'true')
+    await expect(
+      within(canvasElement).getByRole('group', { name: '放送の種別' }),
+    ).toBeVisible()
+    await expect(
+      within(canvasElement).queryByRole('link', { name: '番組を検索' }),
+    ).toBe(bar.getByRole('link', { name: '番組を検索' }))
   },
 }

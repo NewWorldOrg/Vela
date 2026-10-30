@@ -33,12 +33,23 @@ import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { IconButton } from '@/components/vela/icon-button'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
+import { pressable } from '@/components/vela/tactile'
+import {
+  PhoneBarButton,
+  PhoneBarLead,
+  PhoneBarLink,
+  PhoneBarTools,
+} from '@/components/vela/phone-bar-tools'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import { ReserveCircle } from '@/components/guide/reserve-circle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import {
   AntennaIcon,
+  ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  FilterIcon,
   ProgramGuideIcon,
   SearchIcon,
 } from '@/components/vela/icons'
@@ -64,10 +75,13 @@ export function GuideView({
   onRebuild,
   onReserve,
   onCancel,
+  onRestore,
   onRevise,
   onReadExtras,
   subChannelsFolded = false,
 }: {
+  /** Puts back a reservation the circle took back, from the toast's `元に戻す`. */
+  onRestore?: (id: string) => Promise<ReservationWrite>
   guide: GuideResult
   collection: CollectionStatus
   onCollectNow: (scope: CollectScope) => Promise<CollectNowResult>
@@ -125,6 +139,7 @@ export function GuideView({
   const [panelOpen, setPanelOpen] = useState(false)
   const [collectionOpen, setCollectionOpen] = useState(false)
   const [toolsOpen, setToolsOpen] = useState(false)
+  const [daysOpen, setDaysOpen] = useState(false)
   const phone = usePhoneUpright()
   const [listedId, setListedId] = useState<string>()
   const listed =
@@ -137,6 +152,7 @@ export function GuideView({
     [shownGuide.programs, listed?.id],
   )
   const toolsId = useId()
+  const daysId = useId()
   const narrowed =
     (guide.kind === 'terrestrial' ? 0 : 1) + (foldable && folded ? 1 : 0)
   const foldedOnAPhone = foldedFiltersOf(toolsOpen, 'handheld')
@@ -218,14 +234,92 @@ export function GuideView({
     <ScreenMain
       width="full"
       scroll="within"
-      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 upright:pb-0"
     >
       <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] sideways:sr-only upright:sr-only">
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
         番組表
       </h1>
-      <div className="mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5 max-[600px]:gap-x-2.5 max-[600px]:gap-y-3 max-[600px]:py-2.5 sideways:gap-x-2.5 sideways:py-2">
-        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 sideways:order-first">
+      <PhoneBarLead>
+        <button
+          type="button"
+          aria-expanded={daysOpen}
+          aria-controls={daysId}
+          onClick={() => setDaysOpen(!daysOpen)}
+          className={cn(
+            'heading flex h-11 min-w-0 items-center gap-1 rounded-full text-h2 whitespace-nowrap outline-none focus-visible:shadow-ring',
+            pressable,
+          )}
+        >
+          {guide.day.isToday && (
+            <span className="mr-1 rounded-full bg-brand-soft px-2 py-px font-body text-note font-bold text-brand">
+              今日
+            </span>
+          )}
+          <span className="truncate">{guide.day.label}</span>
+          <span className="sr-only">日を選ぶ</span>
+          <ChevronDownIcon
+            className={cn(
+              'size-[calc(18rem/16)] shrink-0 text-ink-3 transition-transform',
+              daysOpen && 'rotate-180',
+            )}
+          />
+        </button>
+      </PhoneBarLead>
+      <PhoneBarTools>
+        <PhoneBarLink href="/search" aria-label="番組を検索">
+          <SearchIcon />
+        </PhoneBarLink>
+        <PhoneBarButton
+          aria-label="絞り込み"
+          aria-expanded={toolsOpen}
+          aria-controls={toolsId}
+          open={toolsOpen}
+          count={narrowed}
+          onClick={() => setToolsOpen(!toolsOpen)}
+        >
+          <FilterIcon />
+        </PhoneBarButton>
+      </PhoneBarTools>
+      {daysOpen && (
+        <OnAnUprightPhone>
+          <ul
+            id={daysId}
+            aria-label="日"
+            data-slot="phone-days"
+            className="-mx-3.5 mb-2.5 flex gap-2 overflow-x-auto px-4 pb-1"
+          >
+            {guide.days.map((day) => (
+              <li key={day.date} className="shrink-0">
+                <button
+                  type="button"
+                  aria-pressed={day.date === guide.day.date}
+                  onClick={() => {
+                    setDaysOpen(false)
+                    patch({ date: day.isToday ? null : day.date })
+                  }}
+                  className={cn(
+                    BAND_PRESS,
+                    BAND_CONTROL,
+                    'h-11 font-code',
+                    day.date === guide.day.date &&
+                      'border-brand-line bg-brand-soft font-bold text-brand',
+                  )}
+                >
+                  {day.isToday ? '今日' : day.label}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </OnAnUprightPhone>
+      )}
+      <div
+        className={cn(
+          'mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5 max-[600px]:gap-x-2.5 max-[600px]:gap-y-3 max-[600px]:py-2.5 sideways:gap-x-2.5 sideways:py-2',
+          toolsOpen ? 'upright:mb-2.5' : 'upright:hidden',
+        )}
+      >
+        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 sideways:order-first upright:hidden">
           <IconButton
             aria-label="前の日"
             size="sm"
@@ -262,13 +356,13 @@ export function GuideView({
           controls={toolsId}
           narrowed={narrowed}
           on="handheld"
-          className="ml-auto"
+          className="ml-auto upright:hidden"
         />
 
         <div
           id={toolsId}
           className={cn(
-            'contents max-[600px]:flex max-[600px]:w-full max-[600px]:flex-wrap max-[600px]:items-center max-[600px]:gap-2.5 max-[600px]:border-t max-[600px]:border-dashed max-[600px]:border-line max-[600px]:pt-3 sideways:flex sideways:w-full sideways:flex-wrap sideways:items-center sideways:gap-2.5',
+            'contents max-[600px]:flex max-[600px]:w-full max-[600px]:flex-wrap max-[600px]:items-center max-[600px]:gap-2.5 max-[600px]:border-t max-[600px]:border-dashed max-[600px]:border-line max-[600px]:pt-3 sideways:flex sideways:w-full sideways:flex-wrap sideways:items-center sideways:gap-2.5 upright:border-t-0 upright:pt-0',
             foldedOnAPhone,
           )}
         >
@@ -298,7 +392,10 @@ export function GuideView({
             <AntennaIcon />
             収集状態
           </button>
-          <Link href="/search" className={cn(BAND_PRESS, BAND_CONTROL)}>
+          <Link
+            href="/search"
+            className={cn(BAND_PRESS, BAND_CONTROL, 'upright:hidden')}
+          >
             <SearchIcon />
             番組を検索
           </Link>
@@ -361,6 +458,16 @@ export function GuideView({
                 nowMin={guide.nowMin}
                 nowLabel={guide.nowLabel}
                 openId={phone && panelOpen ? selected?.id : undefined}
+                circleOf={(program) => (
+                  <ReserveCircle
+                    programmeId={program.id}
+                    title={program.title}
+                    booking={program.booking}
+                    onReserve={onReserve}
+                    onCancel={onCancel}
+                    onRestore={onRestore}
+                  />
+                )}
                 onToggle={(program) =>
                   panelOpen && selected?.id === program.id
                     ? setPanelOpen(false)
