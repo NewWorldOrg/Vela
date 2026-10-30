@@ -56,6 +56,8 @@ import {
   pictureTransform,
 } from '@/lib/data-broadcast-view'
 import { PlayerTip } from '@/components/recordings/player-tip'
+import { PlayerPress } from '@/components/recordings/player-press'
+import { whatAPlainPressDoes } from '@/lib/player-taps'
 import { unaskedIn } from '@/lib/live-profiles'
 import {
   FORMAT_COOKIE,
@@ -358,7 +360,6 @@ export function LivePlayer({
     null,
   )
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const dismissing = useRef(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
   const stalls = useRef(0)
 
@@ -846,6 +847,21 @@ export function LivePlayer({
 
     setStirred(true)
     settling.current = setTimeout(() => setStirred(false), RESTS)
+  }
+
+  const showOrHide = (wasUp: boolean) => {
+    if (!wasUp) {
+      stir()
+
+      return
+    }
+
+    if (settling.current) {
+      clearTimeout(settling.current)
+      settling.current = null
+    }
+
+    setStirred(false)
   }
 
   const answer = (what: PlayerBezel) =>
@@ -1445,16 +1461,13 @@ export function LivePlayer({
             </div>
           </div>
           {hasPicture && !pip.out && (
-            <div
-              data-slot="player-press"
-              onMouseDown={(event) => {
-                event.preventDefault()
-                dismissing.current = settingsOpen && !docked
-                shell?.focus({ preventScroll: true })
-              }}
-              onClick={() => {
-                if (dismissing.current) {
-                  dismissing.current = false
+            <PlayerPress
+              up={chromeUp}
+              closesSettings={settingsOpen && !docked}
+              onAim={() => shell?.focus({ preventScroll: true })}
+              onPress={(_, press) => {
+                if (whatAPlainPressDoes(press.means) === 'showOrHide') {
+                  showOrHide(press.wasUp)
 
                   return
                 }
@@ -1462,8 +1475,6 @@ export function LivePlayer({
                 toggle()
               }}
               onDoubleClick={toggleFullscreen}
-              data-up={chromeUp ? 'true' : undefined}
-              className="absolute inset-0 cursor-none select-none data-[up]:cursor-pointer"
             >
               {!opened && !playlist && (
                 <div
@@ -1473,7 +1484,7 @@ export function LivePlayer({
                   className={CAPTION_GRIP}
                 />
               )}
-            </div>
+            </PlayerPress>
           )}
           {hasPicture && (
             <PlayerCenter

@@ -48,6 +48,7 @@ export function howThePlayerOpens(
   resumeAtSec: number | undefined,
   lengthSec: number | undefined,
   held = false,
+  playingOn = false,
 ): WhereItOpens {
   if (askedFor !== undefined) {
     return held
@@ -55,5 +56,9 @@ export function howThePlayerOpens(
       : { at: askedFor, playing: true }
   }
 
-  return { at: whereToPickUp(resumeAtSec, lengthSec), playing: false }
+  const pickedUp = whereToPickUp(resumeAtSec, lengthSec)
+
+  return playingOn
+    ? { at: pickedUp ?? 0, playing: true }
+    : { at: pickedUp, playing: false }
 }

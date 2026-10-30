@@ -57,3 +57,28 @@ export function whatTheTapDoes(
 
   return { answer: 'wait', run: { side: zone, lastAt: at, stepping: false } }
 }
+
+export type PressMeans = 'mouse' | 'touch'
+
+/** A finger or a pen is a touch; a press that names no pointer goes by whether the screen is coarse. */
+export function pressMeansOf(
+  pointerType: string | undefined,
+  coarse: boolean,
+): PressMeans {
+  if (pointerType === 'mouse') {
+    return 'mouse'
+  }
+
+  if (pointerType === 'touch' || pointerType === 'pen') {
+    return 'touch'
+  }
+
+  return coarse ? 'touch' : 'mouse'
+}
+
+/** What a press on the picture does where a mouse would play or pause: a finger only shows or hides the controls. */
+export function whatAPlainPressDoes(
+  means: PressMeans,
+): 'playOrPause' | 'showOrHide' {
+  return means === 'touch' ? 'showOrHide' : 'playOrPause'
+}

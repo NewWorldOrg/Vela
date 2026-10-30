@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
+import { playingOnHref } from '@/lib/playback-source'
 import { formatClock, formatPlayerTime } from '@/lib/format'
 import {
   byDay,
@@ -84,7 +85,7 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
           return (
             <li key={recording.id} className="w-[calc(214rem/16)] shrink-0">
               <Link
-                href={recordingHref(recording.id)}
+                href={playingOnHref(recording.id) as Route}
                 className="block text-ink no-underline outline-none focus-visible:shadow-ring"
               >
                 <span className="relative block">

@@ -3,7 +3,14 @@ import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
 import { SearchParamsContext } from 'next/dist/shared/lib/hooks-client-context.shared-runtime'
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import {
+  expect,
+  screen,
+  spyOn,
+  userEvent,
+  waitFor,
+  within,
+} from 'storybook/test'
 
 import {
   captionCanvasPayload,
@@ -3083,6 +3090,47 @@ export const 停止中は中央に印: Story = {
         canvasElement.querySelector('[data-slot="player-center-bezel"] span'),
       ).not.toBeNull(),
     )
+  },
+}
+
+export const 指で映像を叩くと操作列が出入りし止まらない: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const area = await waitFor(() => {
+      const found = canvasElement.querySelector('[data-slot="player-press"]')
+
+      if (!(found instanceof HTMLElement)) {
+        throw new Error('the picture has nothing to press yet')
+      }
+
+      return found
+    })
+    const chrome = canvasElement.querySelector('[data-slot="player-chrome"]')
+    const video = canvasElement.querySelector('video') as HTMLVideoElement
+
+    video.dispatchEvent(new Event('playing'))
+    await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
+
+    const paused = spyOn(HTMLMediaElement.prototype, 'pause')
+    const played = spyOn(HTMLMediaElement.prototype, 'play')
+
+    try {
+      await userEvent.pointer({ keys: '[TouchA]', target: area })
+      await waitFor(() => expect(chrome).not.toHaveAttribute('data-up'))
+
+      await new Promise((rest) => setTimeout(rest, 400))
+      await userEvent.pointer({ keys: '[TouchA]', target: area })
+      await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
+
+      await expect(paused).not.toHaveBeenCalled()
+      await expect(played).not.toHaveBeenCalled()
+      await expect(
+        canvasElement.querySelector('[data-slot="player-center-bezel"] span'),
+      ).toBeNull()
+    } finally {
+      paused.mockRestore()
+      played.mockRestore()
+    }
   },
 }
 
