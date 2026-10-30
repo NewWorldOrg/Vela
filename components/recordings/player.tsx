@@ -9,6 +9,7 @@ import {
   type FocusEvent,
   type KeyboardEvent,
   type MouseEvent,
+  type ReactNode,
 } from 'react'
 import { createPortal } from 'react-dom'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
@@ -108,6 +109,7 @@ import {
 import { Spinner } from '@/components/vela/progress'
 import {
   PLAYER_BOARD,
+  PLAYER_KEPT_AT_THE_TOP,
   PLAYER_BUTTON,
   PLAYER_CHROME_OVER,
   PLAYER_CHROME_UNDER,
@@ -278,7 +280,10 @@ export function Player({
   readDataBroadcastModule = readTheModule,
   autoOpensDataBroadcast = false,
   captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
+  lead,
 }: {
+  /** What stands at the left of the compact bar's top line, before the gear's company: the way back out of the screen. */
+  lead?: ReactNode
   detail: RecordingDetail
   plan: PlaybackPlan
   unaskedProfile?: PlaybackProfile
@@ -1675,6 +1680,7 @@ export function Player({
       className={cn(
         'flex items-start justify-center',
         docked && dockSide === 'under' && 'flex-col items-stretch',
+        PLAYER_KEPT_AT_THE_TOP,
       )}
     >
       <section
@@ -1904,6 +1910,16 @@ export function Player({
               '[[data-fill]_&]:top-[env(safe-area-inset-top)] [[data-fill]_&]:right-[env(safe-area-inset-right)]',
             )}
           >
+            {lead && (
+              <div
+                className={cn(
+                  'mr-auto flex items-center [[data-fill]_&]:hidden',
+                  PLAYER_LAYER_HANDS,
+                )}
+              >
+                {lead}
+              </div>
+            )}
             <div
               className={cn('flex items-center gap-x-1', PLAYER_LAYER_HANDS)}
             >

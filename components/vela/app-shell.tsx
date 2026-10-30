@@ -48,6 +48,7 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
         'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[calc(14rem/16)]',
         TOP_BAR_HEIGHT,
         'upright:h-[calc(52rem/16)] upright:gap-2 upright:border-b-0 upright:bg-bg upright:pr-3 upright:pl-4 upright:dot-grid',
+        'upright:[body:has([data-watching])_&]:hidden',
         className,
       )}
       {...props}

@@ -52,11 +52,16 @@ export const PLAYER_BUTTON_ON =
 
 /** The picture's column: the window's height less the bar above and the band below, and on a phone held on its side the window's height less only the bar above, which stays. */
 export const PLAYER_COLUMN =
-  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)] sideways:max-w-[calc((100svh-62rem/16)*16/9)]'
+  'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)] sideways:max-w-[calc((100svh-62rem/16)*16/9)] upright:max-w-none'
+
+/** On a phone held upright the picture is the window's width and stays at the top while what is under it is sent past, the top's safe area laid in the picture's ink; it goes with the page while a face is open under it, so the face can be read to its end. */
+export const PLAYER_KEPT_AT_THE_TOP =
+  'upright:sticky upright:top-0 upright:z-20 upright:bg-(--pl-video) upright:pt-[env(safe-area-inset-top)] upright:has-[[data-slot=player-dock]:not([hidden])]:static upright:has-[[data-slot=player-dock]:not([hidden])]:bg-transparent'
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
   'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl outline-none',
+  'upright:rounded-none upright:border-0 upright:shadow-none',
   'data-[full]:flex data-[full]:max-w-none data-[full]:flex-col data-[full]:rounded-none data-[full]:border-0 data-[full]:shadow-none',
   'data-[fill]:fixed data-[fill]:inset-0 data-[fill]:z-[60] data-[fill]:m-0 data-[fill]:pt-[env(safe-area-inset-top)] data-[fill]:pr-[env(safe-area-inset-right)] data-[fill]:pb-[env(safe-area-inset-bottom)] data-[fill]:pl-[env(safe-area-inset-left)]',
 )

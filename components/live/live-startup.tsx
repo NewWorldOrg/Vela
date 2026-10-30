@@ -9,16 +9,21 @@ export function LiveStartupSteps({
   elapsedMs,
   reconnecting,
   brief = false,
+  channelName,
   className,
 }: {
   startup: LiveStartup
   elapsedMs: number
   reconnecting?: number
   brief?: boolean
+  /** The channel being made ready, named in the brief line in place of the word channel. */
+  channelName?: string
   className?: string
 }) {
   const said =
-    reconnecting === undefined ? 'チャンネルを準備しています' : '再接続中'
+    reconnecting === undefined
+      ? `${brief && channelName ? channelName : 'チャンネル'}を準備しています`
+      : '再接続中'
 
   if (brief) {
     return (
