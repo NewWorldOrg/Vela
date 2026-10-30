@@ -11,7 +11,11 @@ export const SECOND_ASKED_AS = 'at'
 
 export const HOLD_ASKED_AS = 'paused'
 
+export const PLAY_ASKED_AS = 'play'
+
 const HELD = '1'
+
+const PLAYING_ON = '1'
 
 export function theSourceAsked(
   asked: string | string[] | undefined,
@@ -23,6 +27,26 @@ export function theHoldAsked(asked: string | string[] | undefined): boolean {
   return asked === HELD
 }
 
+/** Whether the address asks the recording to play on from where it was left as soon as it opens. */
+export function thePlayAsked(asked: string | string[] | undefined): boolean {
+  return asked === PLAYING_ON
+}
+
+export function playingOnHref(id: string): string {
+  return `/recordings/${id}?${PLAY_ASKED_AS}=${PLAYING_ON}`
+}
+
+/** The address once playing on has been answered, by playing or by the browser refusing to: everything else it asked stays. */
+export function withoutThePlayAsked(pathname: string, asked: string): string {
+  const params = new URLSearchParams(asked)
+
+  params.delete(PLAY_ASKED_AS)
+
+  const query = params.toString()
+
+  return query ? `${pathname}?${query}` : pathname
+}
+
 export function whereThatSourceOpens(
   pathname: string,
   asked: string,
@@ -31,6 +55,8 @@ export function whereThatSourceOpens(
   held = false,
 ): string {
   const params = new URLSearchParams(asked)
+
+  params.delete(PLAY_ASKED_AS)
 
   if (watchingAt !== undefined) {
     params.set(SECOND_ASKED_AS, String(wholeSecond(watchingAt)))

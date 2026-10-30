@@ -131,6 +131,27 @@ test('a remembered position the thresholds refuse leaves the recording at the be
   })
 })
 
+test('asked to play on, the remembered position opens playing', () => {
+  assert.deepEqual(howThePlayerOpens(undefined, 600, AN_HOUR, false, true), {
+    at: 600,
+    playing: true,
+  })
+})
+
+test('asked to play on with nothing worth picking up, it plays from the beginning', () => {
+  assert.deepEqual(howThePlayerOpens(undefined, 10, AN_HOUR, false, true), {
+    at: 0,
+    playing: true,
+  })
+})
+
+test('a second named on the address wins over being asked to play on', () => {
+  assert.deepEqual(howThePlayerOpens(90, 600, AN_HOUR, false, true), {
+    at: 90,
+    playing: true,
+  })
+})
+
 test('a whole second is what a reading of the position becomes', () => {
   assert.equal(wholeSecond(612.9), 612)
   assert.equal(wholeSecond(0), 0)

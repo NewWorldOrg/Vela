@@ -4,7 +4,9 @@ import { test } from 'node:test'
 import {
   SECOND_TAP_WITHIN,
   TAPS_RUN_ON_FOR,
+  pressMeansOf,
   tapZone,
+  whatAPlainPressDoes,
   whatTheTapDoes,
   type TapRun,
   type TapZone,
@@ -133,4 +135,23 @@ test('the middle ends a run of steps and plays or pauses at once', () => {
     ]),
     ['wait', 'forward', 'toggle', 'wait'],
   )
+})
+
+test('a finger or a pen is a touch, and a mouse stays a mouse', () => {
+  assert.equal(pressMeansOf('touch', false), 'touch')
+  assert.equal(pressMeansOf('pen', false), 'touch')
+  assert.equal(pressMeansOf('mouse', true), 'mouse')
+})
+
+test('a press that names no pointer goes by whether the screen is coarse', () => {
+  assert.equal(pressMeansOf('', true), 'touch')
+  assert.equal(pressMeansOf(undefined, false), 'mouse')
+})
+
+test('a mouse on the picture plays or pauses', () => {
+  assert.equal(whatAPlainPressDoes('mouse'), 'playOrPause')
+})
+
+test('a finger on the picture only shows or hides the controls', () => {
+  assert.equal(whatAPlainPressDoes('touch'), 'showOrHide')
 })

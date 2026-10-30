@@ -2,6 +2,8 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  playingOnHref,
+  thePlayAsked,
   theHoldAsked,
   theSourceAsked,
   theAddressStands,
@@ -9,6 +11,7 @@ import {
   whatTheStandingArtefactAsks,
   whereThatSourceOpens,
   whichArtefactSeats,
+  withoutThePlayAsked,
 } from '@/lib/playback-source'
 import { BOTH_SOURCES } from '@/repository/playback-sources'
 
@@ -101,6 +104,48 @@ test('the player is opened anew when a hold is asked at the same second', () => 
   assert.notEqual(
     whatOpensThePlayerAnew('1266', 622, 'artefact', true),
     whatOpensThePlayerAnew('1266', 622, 'artefact', false),
+  )
+})
+
+test('the address is read as asking to play on only when it says so once', () => {
+  assert.equal(thePlayAsked('1'), true)
+  assert.equal(thePlayAsked(undefined), false)
+  assert.equal(thePlayAsked('0'), false)
+  assert.equal(thePlayAsked(['1', '1']), false)
+})
+
+test('playing on is asked for on the address of the recording', () => {
+  assert.equal(playingOnHref('1266'), '/recordings/1266?play=1')
+})
+
+test('the player stays as it is when playing on leaves the address', () => {
+  assert.equal(
+    whatOpensThePlayerAnew('1266', undefined, 'artefact'),
+    whatOpensThePlayerAnew('1266', undefined, 'artefact'),
+  )
+  assert.equal(whatOpensThePlayerAnew.length, 3)
+})
+
+test('once playing on has been answered, only it leaves the address', () => {
+  assert.equal(
+    withoutThePlayAsked(WATCHING, 'play=1&source=recording&at=5'),
+    '/recordings/1266?source=recording&at=5',
+  )
+  assert.equal(withoutThePlayAsked(WATCHING, 'play=1'), WATCHING)
+  assert.equal(
+    withoutThePlayAsked(WATCHING, 'source=recording'),
+    '/recordings/1266?source=recording',
+  )
+})
+
+test('a switch of source does not carry playing on to the address it opens', () => {
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'play=1', 'recording'),
+    '/recordings/1266?source=recording',
+  )
+  assert.equal(
+    whereThatSourceOpens(WATCHING, 'play=1', 'recording', 612),
+    '/recordings/1266?at=612&source=recording',
   )
 })
 

@@ -47,6 +47,7 @@ import {
 import {
   SECOND_TAP_WITHIN,
   tapZone,
+  whatAPlainPressDoes,
   whatTheTapDoes,
   type TapRun,
   type TapZone,
@@ -63,6 +64,7 @@ import {
 } from '@/lib/playback-sound'
 import {
   theAddressStands,
+  withoutThePlayAsked,
   whatTheStandingArtefactAsks,
   whereThatSourceOpens,
 } from '@/lib/playback-source'
@@ -137,6 +139,7 @@ import {
 } from '@/lib/player-keys'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { PlayerVolume } from '@/components/recordings/player-volume'
+import { PlayerPress, type Press } from '@/components/recordings/player-press'
 import { PlayerSeek } from '@/components/recordings/player-seek'
 import {
   PlayerCenter,
@@ -472,6 +475,43 @@ export function Player({
         : undefined,
     [d.id, playlistHref, pictureAsked, playlist],
   )
+  const triesAtOnce = useRef(opensPlaying && !holdsAtOnce)
+  const playAskedLeft = useRef(true)
+
+  const answeredThePlayAsked = () => {
+    if (!playAskedLeft.current) {
+      return
+    }
+
+    playAskedLeft.current = false
+
+    const asked = inTheAddress.toString()
+    const left = withoutThePlayAsked(pathname, asked)
+
+    if (left !== (asked ? `${pathname}?${asked}` : pathname)) {
+      router.replace(left as Route, { scroll: false })
+    }
+  }
+
+  const refusedAtOnce = useEffectEvent(() => {
+    setPhase((was) => (was === 'playing' ? was : 'paused'))
+    answeredThePlayAsked()
+  })
+
+  useEffect(() => {
+    const element = video.current
+
+    if (!triesAtOnce.current || !element || source === undefined) {
+      return
+    }
+
+    triesAtOnce.current = false
+    void element.play().catch((error: unknown) => {
+      if (error instanceof DOMException && error.name === 'NotAllowedError') {
+        refusedAtOnce()
+      }
+    })
+  }, [source])
 
   const poster =
     d.thumbnailHref === undefined
@@ -492,7 +532,6 @@ export function Player({
   const [buffered, setBuffered] = useState(0)
   const [said, setSaid] = useState<PlayerSaying | null>(null)
   const [settingsOpen, setSettingsOpen] = useState(false)
-  const dismissing = useRef(false)
   const tapRun = useRef<TapRun | null>(null)
   const tapWaits = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [stretchesLeftAlone, setStretchesLeftAlone] = useState<number[]>([])
@@ -950,7 +989,32 @@ export function Player({
     return tapZone(event.clientX - box.left, box.width)
   }
 
-  const tap = (zone: TapZone, at: number) => {
+  const showOrHide = (wasUp: boolean) => {
+    if (!wasUp) {
+      stir()
+
+      return
+    }
+
+    if (settling.current) {
+      clearTimeout(settling.current)
+      settling.current = null
+    }
+
+    setStirred(false)
+  }
+
+  const pressedOnce = (press: Press) => {
+    if (whatAPlainPressDoes(press.means) === 'showOrHide') {
+      showOrHide(press.wasUp)
+
+      return
+    }
+
+    toggle()
+  }
+
+  const tap = (zone: TapZone, at: number, press: Press) => {
     if (tapWaits.current) {
       clearTimeout(tapWaits.current)
       tapWaits.current = null
@@ -961,7 +1025,7 @@ export function Player({
     tapRun.current = said.run
 
     if (said.answer === 'toggle') {
-      toggle()
+      pressedOnce(press)
 
       return
     }
@@ -970,7 +1034,7 @@ export function Player({
       tapWaits.current = setTimeout(() => {
         tapWaits.current = null
         tapRun.current = null
-        toggle()
+        pressedOnce(press)
       }, SECOND_TAP_WITHIN)
 
       return
@@ -1751,6 +1815,7 @@ export function Player({
                     )
                   }
                   onPlaying={() => {
+                    answeredThePlayAsked()
                     heldNow.current = false
                     setHolding(false)
                     setPhase('playing')
@@ -1819,29 +1884,18 @@ export function Player({
             </div>
           </div>
           {!pip.out && (
-            <div
-              data-slot="player-press"
-              onMouseDown={(event) => {
-                event.preventDefault()
-                dismissing.current = settingsOpen && !docked
-                shell?.focus({ preventScroll: true })
-              }}
-              onClick={(event) => {
-                if (dismissing.current) {
-                  dismissing.current = false
-
-                  return
-                }
-
-                tap(zoneOf(event), event.timeStamp)
-              }}
+            <PlayerPress
+              up={chromeUp}
+              closesSettings={settingsOpen && !docked}
+              onAim={() => shell?.focus({ preventScroll: true })}
+              onPress={(event, press) =>
+                tap(zoneOf(event), event.timeStamp, press)
+              }
               onDoubleClick={(event) => {
                 if (zoneOf(event) === 'middle') {
                   toggleFullscreen()
                 }
               }}
-              data-up={chromeUp ? 'true' : undefined}
-              className="absolute inset-0 cursor-none touch-manipulation select-none data-[up]:cursor-pointer"
             >
               {captioning && !faceShown && (
                 <div
@@ -1851,7 +1905,7 @@ export function Player({
                   className={CAPTION_GRIP}
                 />
               )}
-            </div>
+            </PlayerPress>
           )}
           <PlayerCenter
             standing={
