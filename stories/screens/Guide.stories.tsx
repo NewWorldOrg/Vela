@@ -2709,6 +2709,65 @@ export const 電話では行の丸で1回で予約し知らせで取り消せる
   },
 }
 
+export const PCではこれからの番組の右上の丸で1回で予約し知らせで取り消せる: Story =
+  {
+    args: { guide: base, onReserve: reserveIt, onCancel: cancelIt },
+    parameters: { screen: A_LAPTOP },
+    beforeEach: () => {
+      reserved.length = 0
+      cancelled.length = 0
+    },
+    play: async ({ canvasElement }) => {
+      await columnsFilled(canvasElement)
+
+      for (const gone of canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]:is([data-time="ended"], [data-time="onAir"])',
+      )) {
+        await expect(
+          gone.nextElementSibling?.matches('[data-slot="reserve-plus"]') ??
+            false,
+        ).toBe(false)
+      }
+
+      const plus = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>(
+          '[data-slot="reserve-plus"]',
+        ),
+      ).find((one) => one.getBoundingClientRect().width > 0)!
+      const cell = plus.previousElementSibling as HTMLElement
+
+      await expect(cell).toHaveAttribute('data-time', 'ahead')
+      await expect(plus.getBoundingClientRect().right).toBeLessThanOrEqual(
+        cell.getBoundingClientRect().right,
+      )
+      await expect(plus.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        cell.getBoundingClientRect().top,
+      )
+
+      plus.scrollIntoView({ block: 'center' })
+      await userEvent.click(plus)
+      await waitFor(() => expect(reserved).toHaveLength(1))
+      await expect(plus.isConnected).toBe(false)
+      await expect(cell).toHaveAttribute('aria-pressed', 'false')
+
+      const toast = await waitFor(() => {
+        const found = canvasElement.querySelector<HTMLElement>(
+          '[data-slot="toast"]',
+        )
+
+        expect(found).not.toBeNull()
+
+        return found!
+      })
+
+      await expect(toast).toHaveTextContent('予約しました')
+      await userEvent.click(
+        within(toast).getByRole('button', { name: '取り消す' }),
+      )
+      await expect(cancelled).toEqual([`r-${reserved[0]}`])
+    },
+  }
+
 export const 電話では終わった番組に丸を置かず開いた行の右は閉じる: Story = {
   args: { guide: A_FULL_DAY_GUIDE },
   parameters: { screen: PHONE },

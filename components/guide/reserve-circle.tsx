@@ -1,11 +1,12 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, type CSSProperties } from 'react'
 
 import { cn } from '@/lib/utils'
 import type { ProgramBooking } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import { useToast } from '@/components/vela/toast'
+import { PlusIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 
 export type CircleMark = 'none' | 'booked' | 'recording'
@@ -37,15 +38,14 @@ function said(written: ReservationWrite): string {
     : 'サインインし直してください'
 }
 
-/** The circle at the right of a programme's row: one press reserves it, and one press on a reserved or recording programme takes the reservation back. Either way a toast offers the press that undoes it. */
-export function ReserveCircle({
+/** One press reserves a programme and one press on a reserved or recording programme takes it back, each with a toast whose press undoes it. The mark answers at once and falls back if the write is turned down. */
+export function useOneTapReserve({
   programmeId,
   title,
   booking,
   onReserve,
   onCancel,
   onRestore,
-  className,
 }: {
   programmeId: string
   title: string
@@ -53,8 +53,7 @@ export function ReserveCircle({
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   onCancel: (id: string) => Promise<ReservationWrite>
   onRestore?: (id: string) => Promise<ReservationWrite>
-  className?: string
-}) {
+}): { mark: CircleMark; press: () => void } {
   const say = useToast()
   const [, start] = useTransition()
   const told = markOf(booking)
@@ -105,6 +104,25 @@ export function ReserveCircle({
     })
   }
 
+  return {
+    mark,
+    press: () => {
+      if (mark === 'none') {
+        reserve()
+      } else if (booking) {
+        takeBack(booking.id)
+      }
+    },
+  }
+}
+
+/** The circle at the right of a programme's row, pressed once to reserve or to take the reservation back. */
+export function ReserveCircle({
+  className,
+  ...reserving
+}: Parameters<typeof useOneTapReserve>[0] & { className?: string }) {
+  const { mark, press } = useOneTapReserve(reserving)
+
   return (
     <button
       type="button"
@@ -112,13 +130,7 @@ export function ReserveCircle({
       data-mark={mark}
       aria-label="録画予約"
       aria-pressed={mark !== 'none'}
-      onClick={() => {
-        if (mark === 'none') {
-          reserve()
-        } else if (booking) {
-          takeBack(booking.id)
-        }
-      }}
+      onClick={press}
       className={cn(
         'flex size-11 shrink-0 items-center justify-center self-center rounded-full outline-none focus-visible:shadow-ring',
         pressable,
@@ -136,6 +148,32 @@ export function ReserveCircle({
           className={cn('size-3.5 rounded-full', DOT[mark])}
         />
       </span>
+    </button>
+  )
+}
+
+/** The `+` a pointer finds at the top right of a programme still to come: one click reserves it. A touch screen never shows it, the programme's panel and the phone's row carrying the same press. */
+export function ReservePlus({
+  style,
+  ...reserving
+}: Parameters<typeof useOneTapReserve>[0] & { style?: CSSProperties }) {
+  const { mark, press } = useOneTapReserve(reserving)
+
+  if (mark !== 'none') {
+    return null
+  }
+
+  return (
+    <button
+      type="button"
+      data-slot="reserve-plus"
+      data-tap-exempt="a pointer's shortcut, the panel the cell opens carrying the same press"
+      aria-label={`${reserving.title}を予約`}
+      onClick={press}
+      style={style}
+      className="guide-add"
+    >
+      <PlusIcon className="size-3.5" strokeWidth={2} />
     </button>
   )
 }

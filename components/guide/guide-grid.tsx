@@ -1,6 +1,6 @@
 'use client'
 
-import { memo, useCallback, useMemo, useRef } from 'react'
+import { Fragment, memo, useCallback, useMemo, useRef } from 'react'
 
 import { halfWidthOf } from '@/lib/guide-cell'
 import {
@@ -17,6 +17,7 @@ import {
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
+import type { ReservationWrite } from '@/repository/reservations'
 import {
   HOUR_REM,
   cellTimeOf,
@@ -26,6 +27,7 @@ import {
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { ProgramCell } from '@/components/guide/program-cell'
+import { ReservePlus } from '@/components/guide/reserve-circle'
 import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'
 import { useDrawnRange } from '@/hooks/useDrawnRange'
 import { useFilledSoon } from '@/hooks/useFilledSoon'
@@ -39,6 +41,16 @@ const COLUMN_FLEX = '1 1 0'
 const UNSCHEDULED_LABEL_REM = 3.25
 
 const NOTHING_CARRIED: Program[] = []
+
+/** The shortest programme that keeps a `+` clear of its foot. */
+const PLUS_MIN_DURATION = 15
+
+/** What the `+` on a programme still to come presses through. */
+export type GridReserving = {
+  onReserve: (programmeId: string) => Promise<ReservationWrite>
+  onCancel: (id: string) => Promise<ReservationWrite>
+  onRestore?: (id: string) => Promise<ReservationWrite>
+}
 
 /** Before this minute the line runs along the top of the day, and its time is written under it, clear of the channels' heads. */
 const NOW_LABEL_BELOW_MIN = 6
@@ -88,6 +100,7 @@ const GuideColumn = memo(function GuideColumn({
   nowMin,
   selectedId,
   onSelect,
+  reserving,
 }: {
   channel: Channel
   joined: boolean
@@ -99,6 +112,7 @@ const GuideColumn = memo(function GuideColumn({
   nowMin?: number
   selectedId?: string
   onSelect: (program: Program) => void
+  reserving?: GridReserving
 }) {
   const minutes: MinuteRange = { from, to }
 
@@ -136,20 +150,36 @@ const GuideColumn = memo(function GuideColumn({
 
       {carried
         ?.filter((p) => fallsWithin(minutes, p))
-        .map((p) => (
-          <ProgramCell
-            key={p.id}
-            program={p}
-            time={cellTimeOf(p, nowMin)}
-            splitAt={
-              nowMin !== undefined && cellTimeOf(p, nowMin) === 'onAir'
-                ? remOfMinutes(nowMin - p.startMin)
-                : undefined
-            }
-            selected={p.id === selectedId}
-            onSelect={onSelect}
-          />
-        ))}
+        .map((p) => {
+          const time = cellTimeOf(p, nowMin)
+
+          return (
+            <Fragment key={p.id}>
+              <ProgramCell
+                program={p}
+                time={time}
+                splitAt={
+                  nowMin !== undefined && time === 'onAir'
+                    ? remOfMinutes(nowMin - p.startMin)
+                    : undefined
+                }
+                selected={p.id === selectedId}
+                onSelect={onSelect}
+              />
+              {reserving &&
+                time === 'ahead' &&
+                !p.booking &&
+                p.durationMin >= PLUS_MIN_DURATION && (
+                  <ReservePlus
+                    programmeId={p.id}
+                    title={p.title}
+                    {...reserving}
+                    style={{ top: `calc(${remOfMinutes(p.startMin)} + 8px)` }}
+                  />
+                )}
+            </Fragment>
+          )
+        })}
     </div>
   )
 })
@@ -165,6 +195,7 @@ export function GuideGrid({
   selectedId,
   onSelect,
   glyphLoads,
+  reserving,
 }: {
   channels: Channel[]
   programs: Program[]
@@ -176,6 +207,8 @@ export function GuideGrid({
   selectedId?: string
   onSelect: (program: Program) => void
   glyphLoads: ReadonlyArray<readonly [string, string]>
+  /** Lays a `+` on every programme still to come, a pointer's one-click reservation. */
+  reserving?: GridReserving
 }) {
   const hours = Array.from(
     { length: windowHours },
@@ -318,6 +351,7 @@ export function GuideGrid({
                       : undefined
                   }
                   onSelect={onSelect}
+                  reserving={reserving}
                 />
               )
             })}

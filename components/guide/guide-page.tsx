@@ -223,6 +223,10 @@ export function GuideView({
         ? 'failed'
         : 'waiting'
 
+  const reserving = useMemo(
+    () => ({ onReserve, onCancel, onRestore }),
+    [onReserve, onCancel, onRestore],
+  )
   const circleOf = (program: Program) => (
     <ReserveCircle
       programmeId={program.id}
@@ -567,6 +571,7 @@ export function GuideView({
                 selectedId={panelOpen ? selected?.id : undefined}
                 onSelect={select}
                 glyphLoads={glyphLoads}
+                reserving={reserving}
               />
             </div>
           )}
