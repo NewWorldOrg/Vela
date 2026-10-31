@@ -37,7 +37,7 @@ export const Default: Story = {
 export const Tones: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>ページ上部バナー</SectionHeading>
+      <SectionHeading>ページ上部バナー</SectionHeading>
       <div className="flex flex-col gap-[9px]">
         <Banner tone="info" progress={68}>
           チャンネルスキャンを実行中です
@@ -71,7 +71,7 @@ export const Tones: Story = {
 export const Actions: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>バナーの導線</SectionHeading>
+      <SectionHeading>バナーの導線</SectionHeading>
       <div className="flex flex-col gap-[9px]">
         <Banner
           tone="danger"
@@ -125,7 +125,7 @@ export const Actions: Story = {
 export const Inline: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSlashes}>インライン小型アラート</SectionHeading>
+      <SectionHeading>インライン小型アラート</SectionHeading>
       <div className="flex flex-col gap-2">
         <InlineAlert tone="warn">
           エンコードプリセットの変更は、次回の録画から適用されます。
@@ -135,9 +135,7 @@ export const Inline: Story = {
         </InlineAlert>
       </div>
 
-      <SectionHeading mark={MarkPanel} className="mt-7">
-        適用例
-      </SectionHeading>
+      <SectionHeading className="mt-7">適用例</SectionHeading>
       <Surface>
         <h3 className="heading mb-0.5 text-ui">適用例</h3>
         <p className="mb-[11px] text-sub text-ink-2">

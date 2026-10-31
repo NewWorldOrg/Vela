@@ -95,6 +95,13 @@
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --tab-bar: 0px;
     --tab-bar-cover: 0px;
+    --top-bar: 64px;
+  }
+
+  @media (width < 1366px) {
+    :root {
+      --top-bar: 60px;
+    }
   }
 
   @media (width < 600px) and (pointer: fine),

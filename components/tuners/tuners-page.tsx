@@ -420,7 +420,7 @@ export function TunersView({
 
       {(detection !== undefined || empty) && (
         <section className="mt-9">
-          <SectionHeading mark={MarkAxis}>デバイス検出の差分</SectionHeading>
+          <SectionHeading>デバイス検出の差分</SectionHeading>
           <div
             className={cn(
               'grid items-start gap-[calc(18rem/16)]',

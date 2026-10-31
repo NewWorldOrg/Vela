@@ -40,7 +40,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
   return (
     <>
       <section className="mt-5">
-        <SectionHeading mark={MarkDots}>実行情報</SectionHeading>
+        <SectionHeading>実行情報</SectionHeading>
         <Surface>
           <div className="flex flex-wrap items-center gap-2.5">
             <b className="text-ui font-bold">{run.heading}</b>
@@ -63,7 +63,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkPanel}>母集団サマリ</SectionHeading>
+        <SectionHeading>母集団サマリ</SectionHeading>
         <div className="space-y-2.5">
           {result.populations.map((population) => (
             <Surface
@@ -130,7 +130,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkType}>未取り込みの明細</SectionHeading>
+        <SectionHeading>未取り込みの明細</SectionHeading>
         <Table
           cards
           className="table-fixed min-w-[calc(860rem/16)]"
@@ -210,7 +210,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkSlashes}>移行後の欠落</SectionHeading>
+        <SectionHeading>移行後の欠落</SectionHeading>
         <div className="space-y-2">
           {result.losses.map((loss) => (
             <Surface key={loss.id} className="text-ui">

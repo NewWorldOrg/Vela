@@ -107,7 +107,7 @@ function runToneOf(state: ScanRun['state']): StateTone {
 function ScanHistory({ history }: { history: ScanRun[] }) {
   return (
     <section id="scan-history" className="mt-10">
-      <SectionHeading mark={MarkDots}>スキャン履歴</SectionHeading>
+      <SectionHeading>スキャン履歴</SectionHeading>
       {history.length === 0 ? (
         <EmptyState usher={null} title="まだスキャン履歴がありません" />
       ) : (

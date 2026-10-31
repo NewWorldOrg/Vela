@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>
 export const Surfaces: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkPanel}>Surface(枠なしの面)</SectionHeading>
+      <SectionHeading>Surface(枠なしの面)</SectionHeading>
       <Surface>
         <h3 className="heading mb-0.5 text-ui">枠で囲わない情報のまとまり</h3>
         <p className="text-sub text-ink-2">
@@ -33,9 +33,7 @@ export const Surfaces: Story = {
         </p>
       </Surface>
 
-      <SectionHeading mark={MarkStar} className="mt-7">
-        Tile(押せるタイル)
-      </SectionHeading>
+      <SectionHeading className="mt-7">Tile(押せるタイル)</SectionHeading>
       <div className="flex flex-wrap gap-2.5">
         <Tile>
           <TileTitle>チューナー</TileTitle>
@@ -55,9 +53,7 @@ export const Surfaces: Story = {
         持ち上がり、押すと沈む。
       </p>
 
-      <SectionHeading mark={MarkCup} className="mt-7">
-        TintPanel(パステルの面)
-      </SectionHeading>
+      <SectionHeading className="mt-7">TintPanel(パステルの面)</SectionHeading>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-[9px]">
         <TintPanel tint="lavender">
           <TintMetric label="チューナー" value="3 / 4" unit="稼働中" />

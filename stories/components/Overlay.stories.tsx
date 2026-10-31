@@ -68,7 +68,7 @@ export const ConfirmDialog: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dialog-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={WarningIcon}>確認モーダル(危険操作)</SectionHeading>
+      <SectionHeading>確認モーダル(危険操作)</SectionHeading>
       <Surface>
         <Dialog>
           <DialogTrigger asChild>
@@ -125,7 +125,7 @@ export const DeleteRecording: Story = {
 
     return (
       <div className="mx-auto max-w-[620px] p-6">
-        <SectionHeading mark={TrashIcon}>録画の削除確認</SectionHeading>
+        <SectionHeading>録画の削除確認</SectionHeading>
         <Surface>
           <Button
             variant="danger"
@@ -160,7 +160,7 @@ export const DeleteRecording: Story = {
 export const SidePanel: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSplit}>右サイドパネル(番組詳細)</SectionHeading>
+      <SectionHeading>右サイドパネル(番組詳細)</SectionHeading>
       <Surface>
         <Sheet>
           <SheetTrigger asChild>
@@ -201,7 +201,7 @@ export const SidePanel: Story = {
 export const BottomSheet: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>ボトムシート(モバイル)</SectionHeading>
+      <SectionHeading>ボトムシート(モバイル)</SectionHeading>
       <Surface>
         <Sheet>
           <SheetTrigger asChild>
@@ -233,7 +233,7 @@ export const OpenList: Story = {
   parameters: ONLY_THE_OPEN_LAYER('select-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSplit}>開いた選択肢</SectionHeading>
+      <SectionHeading>開いた選択肢</SectionHeading>
       <Surface>
         <Select defaultValue="ts">
           <SelectTrigger aria-label="録画の画質" className="w-[240px]">
@@ -279,7 +279,7 @@ export const OpenMenu: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dropdown-menu-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>開いたメニュー</SectionHeading>
+      <SectionHeading>開いたメニュー</SectionHeading>
       <Surface>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

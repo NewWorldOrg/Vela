@@ -267,7 +267,7 @@ export function ScanRunPanel({
 
       {progress && progress.attempts.length > 0 && (
         <section className="mt-[calc(22rem/16)]">
-          <SectionHeading mark={MarkAxis}>スキャン結果(順次)</SectionHeading>
+          <SectionHeading>スキャン結果(順次)</SectionHeading>
           <FailureLegend />
           <ScanAttemptsTable attempts={progress.attempts} />
         </section>

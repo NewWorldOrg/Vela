@@ -395,7 +395,7 @@ export function ReservationsView({
               ...COLUMNS.map((column) => column.width),
             ]}
           />
-          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(14rem/16)]">
+          <TableHeader className="[&>tr>th]:py-[calc(14rem/16)]">
             <TableRow>
               <TableHead {...cardPlace('select')} className="w-11">
                 <SelectEvery>
