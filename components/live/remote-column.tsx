@@ -36,7 +36,7 @@ export const PLAYER_SIDE_COLUMN =
 
 /** What the column holds while the data broadcast is open, at the column's open width however narrow the column is drawn, so a fold slides it rather than lays it out again. */
 export const COLUMN_BODY =
-  'flex min-h-0 w-full flex-col min-[1181px]:w-[calc(344rem/16)]'
+  'flex min-h-0 w-full flex-col min-[1181px]:w-[calc(372rem/16)]'
 
 /** The head of the column while the data broadcast is open: what stands at its left, and the fold at its right end, with the remote 14 below. */
 export function ColumnHead({

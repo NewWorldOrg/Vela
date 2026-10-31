@@ -198,12 +198,12 @@
     );
     --pl-break-band: repeating-linear-gradient(
       115deg,
-      rgba(255, 255, 255, 0.34) 0 4px,
-      rgba(255, 255, 255, 0.14) 4px 8px
+      rgba(255, 255, 255, 0.26) 0 4px,
+      rgba(255, 255, 255, 0.1) 4px 8px
     );
     --pl-theme-band: linear-gradient(
-      rgba(255, 255, 255, 0.42),
-      rgba(255, 255, 255, 0.42)
+      rgba(255, 255, 255, 0.22),
+      rgba(255, 255, 255, 0.22)
     );
     --glass: rgba(20, 20, 22, 0.5);
   }
@@ -2662,8 +2662,8 @@
 @utility volume-range {
   --volume-dot: calc(13rem / 16);
   --volume-reach: round(calc(44rem / 16), 2px);
-  --volume-line: rgb(255 255 255 / 0.35);
-  --volume-lit: var(--pl-accent);
+  --volume-line: rgb(255 255 255 / 0.3);
+  --volume-lit: white;
   appearance: none;
   height: var(--volume-reach);
   background: transparent;
@@ -2673,9 +2673,9 @@
     background:
       linear-gradient(var(--volume-lit), var(--volume-lit))
         calc(var(--volume-dot) / 2) 50% /
-        calc((100% - var(--volume-dot)) * var(--volume-ratio, 0)) 2px no-repeat,
+        calc((100% - var(--volume-dot)) * var(--volume-ratio, 0)) 4px no-repeat,
       linear-gradient(var(--volume-line), var(--volume-line))
-        calc(var(--volume-dot) / 2) 50% / calc(100% - var(--volume-dot)) 2px
+        calc(var(--volume-dot) / 2) 50% / calc(100% - var(--volume-dot)) 4px
         no-repeat;
   }
 
@@ -2684,9 +2684,9 @@
     background:
       linear-gradient(var(--volume-lit), var(--volume-lit))
         calc(var(--volume-dot) / 2) 50% /
-        calc((100% - var(--volume-dot)) * var(--volume-ratio, 0)) 2px no-repeat,
+        calc((100% - var(--volume-dot)) * var(--volume-ratio, 0)) 4px no-repeat,
       linear-gradient(var(--volume-line), var(--volume-line))
-        calc(var(--volume-dot) / 2) 50% / calc(100% - var(--volume-dot)) 2px
+        calc(var(--volume-dot) / 2) 50% / calc(100% - var(--volume-dot)) 4px
         no-repeat;
   }
 

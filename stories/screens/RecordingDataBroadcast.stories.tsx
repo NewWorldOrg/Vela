@@ -175,7 +175,7 @@ const GAP = 26
 /** The column's width when it is folded to its rail, and when it holds the remote. */
 const RAIL = 44
 
-const COLUMN = 344
+const COLUMN = 372
 
 async function shrunkTo(canvasElement: HTMLElement, rect?: string) {
   const picture = onTheScreen(canvasElement, 'player-picture')

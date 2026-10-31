@@ -64,10 +64,10 @@ export const PLAYER_ROW_ON_ITS_SIDE =
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
-  'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl outline-none',
-  'upright:rounded-none upright:border-0 upright:shadow-none',
-  'sideways:rounded-none sideways:border-0 sideways:shadow-none',
-  'data-[full]:flex data-[full]:max-w-none data-[full]:flex-col data-[full]:rounded-none data-[full]:border-0 data-[full]:shadow-none',
+  'relative overflow-hidden rounded-[calc(18rem/16)] bg-(--pl-video) outline-none',
+  'upright:rounded-none',
+  'sideways:rounded-none',
+  'data-[full]:flex data-[full]:max-w-none data-[full]:flex-col data-[full]:rounded-none',
   'data-[fill]:fixed data-[fill]:inset-0 data-[fill]:z-[60] data-[fill]:m-0 data-[fill]:pt-[env(safe-area-inset-top)] data-[fill]:pr-[env(safe-area-inset-right)] data-[fill]:pb-[env(safe-area-inset-bottom)] data-[fill]:pl-[env(safe-area-inset-left)]',
 )
 

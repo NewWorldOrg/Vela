@@ -43,8 +43,8 @@ export function RecordingActions({
   plan,
   laid = 'page',
 }: {
-  /** In the page, or in the face a phone held on its side opens at the picture's right, where the buttons stand one under another. */
-  laid?: 'page' | 'face'
+  /** In the page, in the column beside the programme on a wide window, or in the face a phone held on its side opens at the picture's right, where the buttons stand one under another. */
+  laid?: 'page' | 'column' | 'face'
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
@@ -89,6 +89,61 @@ export function RecordingActions({
     }
 
     return result
+  }
+
+  const asking = (
+    <DeleteRecordingDialog
+      recording={asked}
+      onOpenChange={(open) => !open && setAsked(null)}
+      onDelete={remove}
+    />
+  )
+
+  if (laid === 'column') {
+    return (
+      <>
+        <div
+          data-slot="recording-actions"
+          className="flex w-[calc(236rem/16)] flex-col items-stretch gap-2.5 max-[900px]:w-full max-[900px]:max-w-[calc(360rem/16)] upright:grid upright:max-w-none upright:grid-cols-2 upright:gap-[calc(9rem/16)] upright:[&_[data-variant=ghost]]:bg-surface-2 upright:[&_[data-variant=ghost]]:text-ink"
+        >
+          {plan && (
+            <ExternalPlayerOpener
+              recording={recording}
+              plan={plan}
+              onTakeTicket={onTakeTicket}
+              wide
+            />
+          )}
+          {encodes(recording) && (
+            <EncodeButton
+              recording={recording}
+              choices={encodeChoices}
+              onQueue={onQueueEncode}
+              quiet
+            />
+          )}
+          {redrawsThumbnail(recording) && (
+            <ThumbnailButton
+              recording={recording}
+              onRemake={onRemakeThumbnail}
+              quiet
+            />
+          )}
+          <Button
+            variant="danger"
+            disabled={!deletable}
+            title={deletable ? undefined : '録画中のため、削除できません。'}
+            onClick={() =>
+              phone ? deleteWhenTheToastLeaves() : setAsked(recording)
+            }
+          >
+            削除
+          </Button>
+          <UnfinishedDeletionChip recording={recording} />
+        </div>
+        {asking}
+      </>
+    )
   }
 
   return (
@@ -138,11 +193,7 @@ export function RecordingActions({
           <UnfinishedDeletionChip recording={recording} />
         </span>
       </div>
-      <DeleteRecordingDialog
-        recording={asked}
-        onOpenChange={(open) => !open && setAsked(null)}
-        onDelete={remove}
-      />
+      {asking}
     </>
   )
 }

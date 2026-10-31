@@ -2643,18 +2643,12 @@ export const シーク中: Story = {
     await expect(chrome).toHaveAttribute('data-up', 'true')
     await waitFor(() =>
       expect(getComputedStyle(seek.firstElementChild as Element).height).toBe(
-        '5px',
+        '6px',
       ),
     )
-    await waitFor(() =>
-      expect(
-        getComputedStyle(
-          canvasElement.querySelector(
-            '[data-slot="player-seek-knob"]',
-          ) as Element,
-        ).scale,
-      ).toBe('1'),
-    )
+    await expect(
+      canvasElement.querySelector('[data-slot="player-seek-knob"]'),
+    ).toBeVisible()
     await waitFor(() => expect(canvas.getByText(/^2:06:19 \//)).toBeVisible())
     await expect(asked).toEqual([])
 

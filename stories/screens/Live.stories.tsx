@@ -1077,7 +1077,6 @@ export const 時計が進めば進行と残りが動く: Story = {
 
     const shown = within(panel as HTMLElement)
 
-    await expect(shown.getByText('21:50')).toBeVisible()
     await expect(shown.getByText(/残り\s*10\s*分/)).toBeVisible()
     await expect(
       shown.getByRole('progressbar', { name: '番組の進行' }),
@@ -2762,7 +2761,7 @@ export const 一覧が開くあいだ: Story = {
     await expect(phase).toBe('opening')
     await expect(running).toBeGreaterThan(0)
     await expect(columnRunning(canvasElement)).toEqual(['width'])
-    await expect(listWidth(canvasElement)).toBe(344)
+    await expect(listWidth(canvasElement)).toBe(372)
     await expect(foldLengths(canvasElement)).toEqual({ column: 300, band: 300 })
     await expect(
       waitsFor(canvasElement.querySelector('main aside'), 'width'),

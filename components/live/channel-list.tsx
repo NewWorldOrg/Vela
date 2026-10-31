@@ -8,11 +8,7 @@ import type { ChannelKind } from '@/repository/channels'
 import type { LiveChannel } from '@/repository/live'
 import { Button } from '@/components/ui/button'
 import { ChannelsMissing } from '@/components/live/channels-missing'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  LiveIcon,
-} from '@/components/vela/icons'
+import { ChevronLeftIcon, ChevronRightIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
@@ -108,17 +104,6 @@ export function ChannelList({
       </div>
       {shown && (
         <div id={body} inert={folded} className="flex min-h-0 flex-1 flex-col">
-          <div
-            style={{ transitionDelay: foldBandDelay(1, motion) }}
-            className={cn(
-              'flex items-center gap-[calc(7rem/16)] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-2',
-              foldBand(motion),
-            )}
-          >
-            <LiveIcon className="size-3.5 text-brand" />
-            放送中
-            <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
-          </div>
           {channels.length === 0 ? (
             <div
               style={{ transitionDelay: foldBandDelay(2, motion) }}
@@ -127,7 +112,7 @@ export function ChannelList({
               <ChannelsMissing kind={kind} kinds={kinds} onKind={onKind} />
             </div>
           ) : (
-            <ul className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto rounded-lg">
+            <ul className="-mx-[calc(7rem/16)] flex min-h-0 flex-1 flex-col gap-0.5 overflow-x-hidden overflow-y-auto px-[calc(7rem/16)]">
               {channels.map((channel, nth) => {
                 const on = channel.id === watchingId
 
@@ -135,49 +120,54 @@ export function ChannelList({
                   <li
                     key={channel.id}
                     style={{ transitionDelay: foldBandDelay(nth + 2, motion) }}
-                    className={cn(
-                      'border-b border-dashed border-line bg-surface last:border-b-0',
-                      foldBand(motion),
-                    )}
+                    className={foldBand(motion)}
                   >
                     <button
                       type="button"
                       aria-pressed={on}
                       onClick={() => onSelect(channel)}
                       className={cn(
-                        'flex min-h-11 w-full items-start gap-[calc(11rem/16)] rounded-lg px-3 py-2.5 text-left outline-none',
-                        'transition-[background-color] duration-150 ease-out hover:bg-surface-2 focus-visible:shadow-ring',
-                        on && 'bg-brand-soft hover:bg-brand-soft',
+                        'grid min-h-11 w-full grid-cols-[calc(112rem/16)_minmax(0,1fr)] items-center gap-3.5 rounded-[calc(14rem/16)] p-[calc(7rem/16)] text-left outline-none',
+                        'transition-[background-color] duration-(--dur) ease-(--ease) hover:bg-surface focus-visible:shadow-ring',
+                        on && 'bg-surface-2 hover:bg-surface-2',
                         pressable,
                       )}
                     >
-                      <ChannelMark
-                        logo={channel.logo}
-                        no={channel.no}
-                        on={on}
-                        keepsTheSlot
-                        className="mt-0.5"
-                      />
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className={cn(
-                            'block text-ui font-bold [overflow-wrap:anywhere]',
-                            on && 'text-brand',
+                      <span className="relative">
+                        <ChannelMark
+                          logo={channel.logo}
+                          no={channel.no}
+                          shape="tile"
+                          keepsTheSlot
+                        />
+                        {on && (
+                          <i
+                            data-slot="watching-mark"
+                            aria-hidden="true"
+                            className="absolute inset-0 rounded-sm shadow-[inset_0_0_0_2px_var(--ink)] not-italic"
+                          />
+                        )}
+                      </span>
+                      <span className="min-w-0">
+                        <span className="flex items-center gap-1.5 text-sub text-ink-2">
+                          {channel.no && (
+                            <span className="font-code">{channel.no}</span>
                           )}
-                        >
-                          {channel.name}
+                          <span className="[overflow-wrap:anywhere]">
+                            {channel.name}
+                          </span>
                         </span>
                         {channel.now ? (
-                          <span className="block text-sub text-ink-2 [overflow-wrap:anywhere]">
+                          <span className="mt-0.5 block text-[calc(14.5rem/16)] leading-[calc(19rem/16)] font-semibold [overflow-wrap:anywhere]">
                             {channel.now.title}
                           </span>
                         ) : (
-                          <span className="block text-sub text-ink-2">
+                          <span className="mt-0.5 block text-ui text-ink-2">
                             番組情報がありません
                           </span>
                         )}
                         {channel.next && (
-                          <span className="mt-px block text-note text-ink-2 [overflow-wrap:anywhere]">
+                          <span className="mt-0.5 block text-note text-ink-2 [overflow-wrap:anywhere]">
                             次{' '}
                             <span className="font-code">
                               {channel.next.startLabel}
@@ -186,13 +176,6 @@ export function ChannelList({
                           </span>
                         )}
                       </span>
-                      {on && (
-                        <i
-                          data-slot="watching-mark"
-                          aria-hidden="true"
-                          className="mt-2 size-[calc(7rem/16)] shrink-0 rounded-full bg-coral"
-                        />
-                      )}
                     </button>
                   </li>
                 )

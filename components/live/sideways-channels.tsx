@@ -64,7 +64,7 @@ export function SidewaysChannels({
           onClick={() => onKind(kindAfter(kind, kinds))}
           className={cn(
             STRIP_BUTTON,
-            'bg-white/7 text-(--pl-ink) [&_svg]:size-[calc(14rem/16)] [&_svg]:text-(--pl-ink-2)',
+            'rounded-[calc(14rem/16)] bg-white/8 text-(--pl-ink) [&_svg]:size-[calc(14rem/16)] [&_svg]:text-(--pl-ink-2)',
           )}
         >
           <SwapIcon />
@@ -90,7 +90,7 @@ export function SidewaysChannels({
                 className={cn(
                   'relative flex w-[calc(52rem/16)] flex-col items-center gap-1 rounded-md px-0.5 pt-1.5 pb-1 outline-none hover:bg-white/6 focus-visible:shadow-ring',
                   on &&
-                    'bg-(--pl-accent)/20 shadow-[inset_0_0_0_1.5px_color-mix(in_oklab,var(--pl-accent)_70%,transparent)] hover:bg-(--pl-accent)/20',
+                    'bg-white/8 shadow-[inset_0_0_0_2px_var(--pl-accent)] hover:bg-white/8',
                   pressable,
                   still,
                 )}
@@ -99,7 +99,7 @@ export function SidewaysChannels({
                 <span
                   className={cn(
                     'line-clamp-2 w-full text-center text-[calc(10rem/16)] leading-[1.2] break-all text-(--pl-ink-3)',
-                    on && 'font-bold text-(--pl-accent-ink)',
+                    on && 'font-bold text-(--pl-ink)',
                   )}
                 >
                   {channel.name}

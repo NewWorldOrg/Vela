@@ -163,10 +163,12 @@ function WhatHappened({
 function OpenButton({
   tone,
   taking,
+  wide,
   ...pressed
 }: ComponentProps<'button'> & {
   tone: 'page' | 'player'
   taking: boolean
+  wide?: boolean
 }) {
   if (tone === 'player') {
     return (
@@ -183,6 +185,22 @@ function OpenButton({
     )
   }
 
+  if (wide) {
+    return (
+      <Button
+        variant="tone"
+        size="lg"
+        aria-disabled={taking}
+        className="w-full"
+        {...pressed}
+      >
+        {taking && <Spinner size="control" />}
+        {OPEN_EXTERNALLY}
+        <ChevronDownIcon className="size-3.5" />
+      </Button>
+    )
+  }
+
   return (
     <Button variant="tone" aria-disabled={taking} {...pressed}>
       {taking ? <Spinner size="control" /> : <DevicePlayerIcon />}
@@ -196,11 +214,14 @@ function HandoverMenu({
   choices,
   only,
   tone = 'page',
+  wide,
   className,
 }: {
   choices: HandoverChoice[]
   only: Handover
   tone?: 'page' | 'player'
+  /** The large button as wide as the column it stands in, beside the programme under the picture. */
+  wide?: boolean
   className?: string
 }) {
   const apps = usePlayerApps()
@@ -211,10 +232,16 @@ function HandoverMenu({
   const inset = chosen ? true : undefined
 
   return (
-    <div className={cn('flex flex-col items-start gap-1.5', className)}>
+    <div
+      className={cn(
+        'flex flex-col gap-1.5',
+        wide ? 'items-stretch' : 'items-start',
+        className,
+      )}
+    >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <OpenButton tone={tone} taking={taking} />
+          <OpenButton tone={tone} taking={taking} wide={wide} />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
@@ -354,10 +381,12 @@ const NOTHING_TO_CHOOSE: HandoverChoice[] = []
 export function OpenExternally({
   handover,
   tone,
+  wide,
   className,
 }: {
   handover: Handover
   tone?: 'page' | 'player'
+  wide?: boolean
   className?: string
 }) {
   return (
@@ -365,6 +394,7 @@ export function OpenExternally({
       choices={NOTHING_TO_CHOOSE}
       only={handover}
       tone={tone}
+      wide={wide}
       className={className}
     />
   )
@@ -375,11 +405,13 @@ export function ExternalPlayerOpener({
   plan,
   onTakeTicket,
   tone,
+  wide,
 }: {
   recording: { id: string; title: string; sizeBytes?: number | null }
   plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   tone?: 'page' | 'player'
+  wide?: boolean
 }) {
   const choices = recordingHandoverChoices(
     recording.id,
@@ -399,6 +431,7 @@ export function ExternalPlayerOpener({
         recording.title,
       )}
       tone={tone}
+      wide={wide}
     />
   )
 }
