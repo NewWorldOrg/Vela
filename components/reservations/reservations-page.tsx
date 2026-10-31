@@ -44,7 +44,10 @@ import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import {
   PhoneConflict,
   PhoneReservationRows,
+  ReservationBeside,
 } from '@/components/reservations/phone-reservations'
+import { SidewaysPanes } from '@/components/vela/sideways-panes'
+import { usePhoneOnItsSide } from '@/hooks/usePhone'
 import { cn } from '@/lib/utils'
 import { RESERVATION_STATE_COLUMN } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
@@ -146,6 +149,8 @@ export function ReservationsView({
     [],
   )
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
+  const sideways = usePhoneOnItsSide()
+  const [besideId, setBesideId] = useState<string>()
   const pick = useCallback(
     (ids: readonly string[], taken: boolean) =>
       setPicked((prev) => {
@@ -164,6 +169,10 @@ export function ReservationsView({
     [],
   )
   const chosen = items.filter((one) => picked.has(one.id))
+  const pressed = items.find((one) => one.id === besideId)
+  const conflicts = items.filter(
+    (one) => one.standing === 'conflict' && one.conflict,
+  )
   const clear = useCallback(() => setPicked(new Set()), [])
   const router = useRouter()
   const [waiting, startWaiting] = useTransition()
@@ -235,18 +244,14 @@ export function ReservationsView({
         予約
       </h1>
       <PhoneBarTools>
-        <PhoneBarLink
-          href="/guide"
-          aria-label="予約を追加"
-          className="sideways:hidden"
-        >
+        <PhoneBarLink href="/guide" aria-label="予約を追加">
           <PlusIcon />
         </PhoneBarLink>
       </PhoneBarTools>
       <ReservationTabs
         current="reservations"
         action={
-          <Button size="sm" asChild className="upright:hidden">
+          <Button size="sm" asChild className="phone:hidden">
             <Link href="/guide">
               <PlusIcon />
               予約を追加
@@ -299,6 +304,48 @@ export function ReservationsView({
         <ReservationSelection chosen={chosen} onClear={clear} actions={bulk} />
       )}
 
+      {items.length > 0 && sideways && (
+        <SidewaysPanes
+          detailLabel="予約の詳細"
+          list={
+            <PhoneReservationRows
+              reservations={items}
+              now={new Date()}
+              actions={actions}
+              chosenId={besideId}
+              onChoose={(one) => setBesideId(one.id)}
+              className="mx-0 [&>section:first-child>h2]:pt-3"
+            />
+          }
+          detail={
+            pressed ? (
+              <ReservationBeside
+                reservation={pressed}
+                actions={actions}
+                onDone={() => setBesideId(undefined)}
+              />
+            ) : conflicts.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                {conflicts.map((one) => (
+                  <PhoneConflict
+                    key={one.id}
+                    reservation={one}
+                    onRaise={actions.onRaise}
+                  />
+                ))}
+              </div>
+            ) : (
+              items[0] && (
+                <ReservationBeside
+                  reservation={items[0]}
+                  actions={actions}
+                  onDone={() => setBesideId(undefined)}
+                />
+              )
+            )
+          }
+        />
+      )}
       {items.length > 0 && (
         <OnAnUprightPhone>
           <div
@@ -340,7 +387,7 @@ export function ReservationsView({
           cards
           className="table-fixed min-w-[calc(960rem/16)]"
           waiting={waiting}
-          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1 upright:hidden"
+          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1 phone:hidden"
         >
           <TableColumns
             widths={[

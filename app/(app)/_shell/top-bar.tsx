@@ -26,6 +26,7 @@ export function AppTopBar() {
   const pathname = usePathname()
   const current = destinationOf(pathname)
   const phone = phoneBarOf(pathname)
+  const besideTheEntrance = phone.back?.href === '/settings'
 
   return (
     <TopBar>
@@ -45,13 +46,24 @@ export function AppTopBar() {
       </div>
       <div className="hidden min-w-0 flex-1 items-center gap-2 phone:flex">
         {phone.back && (
-          <PhoneBarBack asChild aria-label={`${phone.back.label}へ`}>
+          <PhoneBarBack
+            asChild
+            aria-label={`${phone.back.label}へ`}
+            className={besideTheEntrance ? 'sideways:hidden' : undefined}
+          >
             <Link href={phone.back.href} />
           </PhoneBarBack>
         )}
         <PhoneBarLeadSlot />
-        <PhoneBarTitle className="upright:[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden">
-          {phone.title}
+        <PhoneBarTitle className="phone:[[data-slot=phone-bar-lead]:not(:empty)~&]:hidden sideways:[&:has(~[data-slot=phone-bar-tools]:not(:empty))]:flex-none">
+          {besideTheEntrance ? (
+            <>
+              <span className="sideways:hidden">{phone.title}</span>
+              <span className="hidden sideways:inline">設定</span>
+            </>
+          ) : (
+            phone.title
+          )}
         </PhoneBarTitle>
         <PhoneBarToolsSlot />
         {!phone.withoutTheme && <PhoneThemeButton />}

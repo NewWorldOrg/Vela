@@ -1453,3 +1453,39 @@ export const 電話では上の帯が検索の欄で結果を番組表の行で�
     ).toBeNull()
   },
 }
+
+export const 横向きの電話は結果と詳細を左右に置き条件の札を上の帯に並べる: Story =
+  {
+    args: 検索結果.args,
+    parameters: { screen: { width: 844, height: 390 }, coarse: true },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const bar = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="top-bar"]',
+      )!
+
+      await expect(
+        within(bar).getByRole('searchbox', { name: 'キーワード' }),
+      ).toBeVisible()
+      await expect(
+        within(bar).getByRole('list', { name: '検索条件' }),
+      ).toBeVisible()
+
+      const beside = await canvas.findByRole('region', { name: '番組の詳細' })
+      const list =
+        canvasElement.querySelector<HTMLElement>('[data-pane="list"]')!
+      const rows = list.querySelectorAll<HTMLElement>('li[data-programme]')
+
+      await expect(rows[0]).toHaveAttribute('data-chosen')
+      await expect(
+        within(beside).getAllByRole('heading', { level: 2 })[0],
+      ).toHaveTextContent(SEARCH_HIT_FIXTURES[0].title)
+
+      await userEvent.click(within(rows[1]).getAllByRole('button')[0])
+      await waitFor(() => expect(rows[1]).toHaveAttribute('data-chosen'))
+      await expect(
+        within(beside).getAllByRole('heading', { level: 2 })[0],
+      ).toHaveTextContent(SEARCH_HIT_FIXTURES[1].title)
+      await expect(canvasElement.querySelector('table')).not.toBeVisible()
+    },
+  }

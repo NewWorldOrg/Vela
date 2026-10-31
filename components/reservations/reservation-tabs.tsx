@@ -1,7 +1,11 @@
+'use client'
+
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { LedgerIcon } from '@/components/vela/icons'
+import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
+import { usePhoneOnItsSide } from '@/hooks/usePhone'
 
 const TABS = [
   { key: 'reservations', label: '予約', href: '/reservations' },
@@ -28,6 +32,36 @@ export function ReservationTabs({
   current: ReservationTab
   action?: React.ReactNode
 }) {
+  const sideways = usePhoneOnItsSide()
+
+  if (sideways) {
+    return (
+      <PhoneBarTools>
+        <nav
+          aria-label="予約の種類"
+          data-slot="reservation-tabs-in-the-bar"
+          className="-order-1 mr-auto flex h-11 items-center gap-0.5 rounded-full bg-surface-2 p-1"
+        >
+          {[...TABS, LEDGER].map((t) => (
+            <Link
+              key={t.key}
+              href={t.href}
+              aria-current={t.key === current ? 'page' : undefined}
+              className={cn(
+                TAB_CLASS,
+                'flex h-9 items-center px-4 py-0 hover:bg-surface',
+                t.key === current &&
+                  'border border-brand-line ' + CURRENT_CLASS,
+              )}
+            >
+              {t.label}
+            </Link>
+          ))}
+        </nav>
+      </PhoneBarTools>
+    )
+  }
+
   return (
     <div className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-line pb-2.5">
       {TABS.map((t) => (

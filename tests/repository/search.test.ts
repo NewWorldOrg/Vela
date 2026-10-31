@@ -341,6 +341,7 @@ test('a programme comes back spelled the way the screen shows it', async () => {
     [
       {
         id: '131-1310-40001',
+        channelId: '131-1310',
         channelName: '中央テレビ1',
         channelNo: '1',
         channelLogo: { declaration: 'notYetRead' },
@@ -356,6 +357,7 @@ test('a programme comes back spelled the way the screen shows it', async () => {
       },
       {
         id: '999-9990-40002',
+        channelId: '999-9990',
         channelName: '999-9990',
         channelNo: undefined,
         channelLogo: undefined,

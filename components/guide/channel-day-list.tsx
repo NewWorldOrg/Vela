@@ -51,10 +51,15 @@ export function ChannelDayList({
   nowMin,
   nowLabel,
   openId,
+  chosenId,
   onToggle,
   detailOf,
   circleOf,
+  className,
 }: {
+  /** The row whose detail stands beside the list, on a phone held on its side: ringed, and opened nowhere. */
+  chosenId?: string
+  className?: string
   /** What stands at the right end of a row that has not ended: the circle that reserves it in one press. */
   circleOf?: (program: Program) => ReactNode
   channelId: string
@@ -164,7 +169,10 @@ export function ChannelDayList({
     <div
       ref={list}
       data-guide-list
-      className="relative -mx-3.5 min-h-0 flex-1 overflow-y-auto border-t border-line bg-surface"
+      className={cn(
+        'relative -mx-3.5 min-h-0 flex-1 overflow-y-auto border-t border-line bg-surface',
+        className,
+      )}
     >
       <ol>
         {programs.map((p) => {
@@ -184,12 +192,16 @@ export function ChannelDayList({
             <li
               key={p.id}
               data-programme={p.id}
+              data-keep={p.id}
+              data-chosen={p.id === chosenId ? '' : undefined}
               data-on-air={onAir ? '' : undefined}
               data-past={past ? '' : undefined}
               className={cn(
                 'border-b border-dashed border-line last:border-b-0',
                 past && 'bg-surface-2',
                 onAir && 'bg-brand-soft/45',
+                p.id === chosenId &&
+                  'relative z-[1] outline-2 -outline-offset-2 outline-brand-line',
               )}
             >
               <div

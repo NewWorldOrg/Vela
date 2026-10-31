@@ -24,6 +24,7 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import type { GuideResult, Program, ProgramExtras } from '@/repository/programs'
+import { halfWidthOf } from '@/lib/guide-cell'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -40,7 +41,8 @@ import {
   PhoneBarLink,
   PhoneBarTools,
 } from '@/components/vela/phone-bar-tools'
-import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import { OnAPhone } from '@/components/vela/on-an-upright-phone'
+import { SidewaysPanes } from '@/components/vela/sideways-panes'
 import { ReserveCircle } from '@/components/guide/reserve-circle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
@@ -61,7 +63,7 @@ import { ProgramBooking } from '@/components/guide/program-booking'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
 import { ChannelStrip } from '@/components/guide/channel-strip'
 import { ChannelDayList } from '@/components/guide/channel-day-list'
-import { usePhoneUpright } from '@/hooks/usePhone'
+import { usePhoneOnItsSide, usePhoneUpright } from '@/hooks/usePhone'
 import { ScreenMain } from '@/components/vela/app-shell'
 import {
   FilterFoldButton,
@@ -141,6 +143,8 @@ export function GuideView({
   const [toolsOpen, setToolsOpen] = useState(false)
   const [daysOpen, setDaysOpen] = useState(false)
   const phone = usePhoneUpright()
+  const sideways = usePhoneOnItsSide()
+  const handheld = phone || sideways
   const [listedId, setListedId] = useState<string>()
   const listed =
     shownGuide.channels.find((c) => c.id === listedId) ?? shownGuide.channels[0]
@@ -230,11 +234,58 @@ export function GuideView({
         ? 'failed'
         : 'waiting'
 
+  const circleOf = (program: Program) => (
+    <ReserveCircle
+      programmeId={program.id}
+      title={program.title}
+      booking={program.booking}
+      onReserve={onReserve}
+      onCancel={onCancel}
+      onRestore={onRestore}
+    />
+  )
+  const detailOf = (program: Program) => {
+    const read = detailed && detailed.id === program.id ? detailed : program
+
+    return (
+      <ProgramDetailBody
+        program={read}
+        extras={
+          detailed?.id === program.id ? (extrasState ?? 'ready') : 'ready'
+        }
+        channel={listed}
+        dayLabel={guide.day.label}
+        onAir={isOnAir(program, guide.nowMin)}
+        onReserve={onReserve}
+        reservation={
+          read.booking && (
+            <ProgramBooking
+              booking={read.booking}
+              title={read.title}
+              channel={listed}
+              onCancel={onCancel}
+              onRevise={onRevise}
+            />
+          )
+        }
+      />
+    )
+  }
+  const besideOf = (program: Program | undefined) =>
+    program ? (
+      <>
+        <h2 className="heading mb-3 text-h2 leading-[1.45]">
+          {halfWidthOf(program.title)}
+        </h2>
+        {detailOf(program)}
+      </>
+    ) : null
+
   return (
     <ScreenMain
       width="full"
       scroll="within"
-      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 upright:pb-0"
+      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 upright:pb-0 sideways:pt-0 sideways:pb-0"
     >
       <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] phone:sr-only">
         <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
@@ -280,13 +331,20 @@ export function GuideView({
             今日
           </button>
         )}
+        {sideways && listed && (
+          <ChannelStrip
+            channels={shownGuide.channels}
+            shown={new Set([listed.id])}
+            onPick={(c) => {
+              setListedId(c.id)
+              setPanelOpen(false)
+            }}
+            className="min-w-0 flex-1 [mask-image:linear-gradient(to_right,#000_88%,transparent)]"
+          />
+        )}
       </PhoneBarLead>
       <PhoneBarTools>
-        <PhoneBarLink
-          href="/search"
-          aria-label="番組を検索"
-          className="sideways:hidden"
-        >
+        <PhoneBarLink href="/search" aria-label="番組を検索">
           <SearchIcon />
         </PhoneBarLink>
         <PhoneBarButton
@@ -296,18 +354,17 @@ export function GuideView({
           open={toolsOpen}
           count={narrowed}
           onClick={() => setToolsOpen(!toolsOpen)}
-          className="sideways:hidden"
         >
           <FilterIcon />
         </PhoneBarButton>
       </PhoneBarTools>
       {daysOpen && (
-        <OnAnUprightPhone>
+        <OnAPhone>
           <ul
             id={daysId}
             aria-label="日"
             data-slot="phone-days"
-            className="-mx-3.5 mb-2.5 flex gap-2 overflow-x-auto px-4 pb-1"
+            className="-mx-3.5 mb-2.5 flex gap-2 overflow-x-auto px-4 pb-1 sideways:-mx-5 sideways:px-5"
           >
             {guide.days.map((day) => (
               <li key={day.date} className="shrink-0">
@@ -331,15 +388,15 @@ export function GuideView({
               </li>
             ))}
           </ul>
-        </OnAnUprightPhone>
+        </OnAPhone>
       )}
       <div
         className={cn(
           'mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5 max-[600px]:gap-x-2.5 max-[600px]:gap-y-3 max-[600px]:py-2.5 sideways:gap-x-2.5 sideways:py-2',
-          toolsOpen ? 'upright:mb-2.5' : 'upright:hidden',
+          toolsOpen ? 'phone:mb-2.5' : 'phone:hidden',
         )}
       >
-        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 sideways:order-first upright:hidden">
+        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 phone:hidden">
           <IconButton
             aria-label="前の日"
             size="sm"
@@ -376,13 +433,13 @@ export function GuideView({
           controls={toolsId}
           narrowed={narrowed}
           on="handheld"
-          className="ml-auto upright:hidden"
+          className="ml-auto phone:hidden sideways:hidden"
         />
 
         <div
           id={toolsId}
           className={cn(
-            'contents max-[600px]:flex max-[600px]:w-full max-[600px]:flex-wrap max-[600px]:items-center max-[600px]:gap-2.5 max-[600px]:border-t max-[600px]:border-dashed max-[600px]:border-line max-[600px]:pt-3 sideways:flex sideways:w-full sideways:flex-wrap sideways:items-center sideways:gap-2.5 upright:border-t-0 upright:pt-0',
+            'contents max-[600px]:flex max-[600px]:w-full max-[600px]:flex-wrap max-[600px]:items-center max-[600px]:gap-2.5 max-[600px]:border-t max-[600px]:border-dashed max-[600px]:border-line max-[600px]:pt-3 sideways:flex sideways:w-full sideways:flex-wrap sideways:items-center sideways:gap-2.5 phone:border-t-0 phone:pt-0',
             foldedOnAPhone,
           )}
         >
@@ -414,7 +471,7 @@ export function GuideView({
           </button>
           <Link
             href="/search"
-            className={cn(BAND_PRESS, BAND_CONTROL, 'upright:hidden')}
+            className={cn(BAND_PRESS, BAND_CONTROL, 'phone:hidden')}
           >
             <SearchIcon />
             番組を検索
@@ -478,52 +535,42 @@ export function GuideView({
                 nowMin={guide.nowMin}
                 nowLabel={guide.nowLabel}
                 openId={phone && panelOpen ? selected?.id : undefined}
-                circleOf={(program) => (
-                  <ReserveCircle
-                    programmeId={program.id}
-                    title={program.title}
-                    booking={program.booking}
-                    onReserve={onReserve}
-                    onCancel={onCancel}
-                    onRestore={onRestore}
-                  />
-                )}
+                circleOf={circleOf}
                 onToggle={(program) =>
                   panelOpen && selected?.id === program.id
                     ? setPanelOpen(false)
                     : select(program)
                 }
-                detailOf={(program) => {
-                  const read =
-                    detailed && detailed.id === program.id ? detailed : program
-
-                  return (
-                    <ProgramDetailBody
-                      program={read}
-                      extras={extrasState ?? 'ready'}
-                      channel={listed}
-                      dayLabel={guide.day.label}
-                      onAir={isOnAir(program, guide.nowMin)}
-                      onReserve={onReserve}
-                      reservation={
-                        read.booking && (
-                          <ProgramBooking
-                            booking={read.booking}
-                            title={read.title}
-                            channel={listed}
-                            onCancel={onCancel}
-                            onRevise={onRevise}
-                          />
-                        )
-                      }
-                    />
-                  )
-                }}
+                detailOf={detailOf}
               />
             </div>
           )}
-          {!phone && (
-            <div className="flex min-h-0 flex-1 flex-col upright:hidden">
+          {sideways && listed && (
+            <SidewaysPanes
+              detailLabel="番組の詳細"
+              list={
+                <ChannelDayList
+                  channelId={listed.id}
+                  dayKey={guide.day.date}
+                  programs={listedPrograms}
+                  nowMin={guide.nowMin}
+                  nowLabel={guide.nowLabel}
+                  chosenId={panelOpen ? selected?.id : undefined}
+                  className="mx-0 border-t-0"
+                  circleOf={circleOf}
+                  onToggle={select}
+                  detailOf={detailOf}
+                />
+              }
+              detail={besideOf(
+                panelOpen && detailed?.channelId === listed.id
+                  ? detailed
+                  : firstToShow(listedPrograms, guide.nowMin),
+              )}
+            />
+          )}
+          {!handheld && (
+            <div className="flex min-h-0 flex-1 flex-col phone:hidden">
               <GuideGrid
                 key={guide.kind}
                 channels={shownGuide.channels}
@@ -539,7 +586,7 @@ export function GuideView({
               />
             </div>
           )}
-          {shown && !phone && (
+          {shown && !handheld && (
             <ProgramPanel
               program={detailed ?? shown}
               extras={extrasState}
@@ -566,5 +613,17 @@ export function GuideView({
         onRebuild={onRebuild}
       />
     </ScreenMain>
+  )
+}
+
+/** What the pane beside the list shows before a row is pressed: the programme on the air, or else the next to start, or else the day's first. */
+function firstToShow(
+  programs: readonly Program[],
+  nowMin: number | undefined,
+): Program | undefined {
+  return (
+    programs.find((one) => isOnAir(one, nowMin)) ??
+    programs.find((one) => nowMin === undefined || one.startMin >= nowMin) ??
+    programs[0]
   )
 }

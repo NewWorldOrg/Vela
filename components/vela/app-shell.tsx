@@ -21,6 +21,7 @@ export function AppFrame({ className, ...props }: ComponentProps<'div'>) {
         'pr-[env(safe-area-inset-right)] pb-[calc(var(--safe-bottom)+var(--tab-bar))] pl-[env(safe-area-inset-left)]',
         'sideways:pl-[calc(68rem/16+env(safe-area-inset-left))]',
         'has-[[data-scroll=within]]:h-dvh has-[[data-scroll=within]]:overflow-hidden',
+        'sideways:has-[[data-sideways-panes]]:h-dvh sideways:has-[[data-sideways-panes]]:overflow-hidden sideways:has-[[data-sideways-panes]]:pb-0',
         className,
       )}
       {...props}
@@ -269,7 +270,7 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[11rem] shrink-0 border-r border-dashed border-line px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden',
+        'w-[11rem] shrink-0 border-r border-dashed border-line px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden sideways:hidden',
         className,
       )}
       {...props}
@@ -357,6 +358,7 @@ export function ScreenMain({
       className={cn(
         rises && 'screen-rises',
         'min-h-0 flex-1',
+        'sideways:has-[[data-slot=sideways-panes]]:flex sideways:has-[[data-slot=sideways-panes]]:flex-col sideways:has-[[data-slot=sideways-panes]]:pb-0',
         SCREEN_WIDTHS[width],
         className,
       )}
@@ -372,6 +374,7 @@ export function AdminMain({ className, ...props }: ComponentProps<'main'>) {
       data-slot="admin-main"
       className={cn(
         'min-w-0 px-[calc(18rem/16)] pt-4 pb-5 upright:px-4 upright:pt-1',
+        'sideways:px-5 sideways:pb-[calc(var(--safe-bottom)+16rem/16)]',
         className,
       )}
       {...props}

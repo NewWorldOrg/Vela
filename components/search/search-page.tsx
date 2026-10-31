@@ -86,6 +86,9 @@ import { pressable } from '@/components/vela/tactile'
 import { PhoneBarLead } from '@/components/vela/phone-bar-tools'
 import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import { PhoneSearchHits } from '@/components/search/phone-search-hits'
+import { HitDetail } from '@/components/search/hit-detail'
+import { SidewaysPanes } from '@/components/vela/sideways-panes'
+import { usePhoneOnItsSide } from '@/hooks/usePhone'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 const EVERY_KIND = 'all'
@@ -160,11 +163,11 @@ export function SearchView({
 type PhoneCondition = 'kind' | 'genre' | 'days' | 'channels' | 'fields'
 
 const PHONE_CONDITION_SHOWN: Record<PhoneCondition, string> = {
-  kind: 'upright:[&_[data-condition=kind]]:flex',
-  genre: 'upright:[&_[data-condition=genre]]:flex',
-  days: 'upright:[&_[data-condition=days]]:flex',
-  channels: 'upright:[&_[data-condition=channels]]:flex',
-  fields: 'upright:[&_[data-condition=fields]]:flex',
+  kind: 'phone:[&_[data-condition=kind]]:flex',
+  genre: 'phone:[&_[data-condition=genre]]:flex',
+  days: 'phone:[&_[data-condition=days]]:flex',
+  channels: 'phone:[&_[data-condition=channels]]:flex',
+  fields: 'phone:[&_[data-condition=fields]]:flex',
 }
 
 function SearchScreen({
@@ -174,6 +177,8 @@ function SearchScreen({
   onRestore,
 }: Reserving & { result: SearchResult }) {
   const [phoneCondition, setPhoneCondition] = useState<PhoneCondition>()
+  const sideways = usePhoneOnItsSide()
+  const [chosenId, choose] = useState<string>()
   const formId = useId()
   const router = useRouter()
   const pathname = usePathname()
@@ -282,11 +287,50 @@ function SearchScreen({
     },
   ]
   const words = (found ? condition.q : undefined)?.split(/\s+/) ?? []
+  const chosen =
+    found?.hits.find((hit) => hit.id === chosenId) ?? found?.hits[0]
+
+  const conditionChips = (place: string) => (
+    <ul
+      aria-label="検索条件"
+      data-slot="phone-conditions"
+      className={cn('flex gap-2 overflow-x-auto [scrollbar-width:none]', place)}
+    >
+      {chips.map((chip) => (
+        <li key={chip.name} className="shrink-0">
+          <button
+            type="button"
+            aria-expanded={phoneCondition === chip.name}
+            onClick={() =>
+              setPhoneCondition(
+                phoneCondition === chip.name ? undefined : chip.name,
+              )
+            }
+            className={cn(
+              BAND_PRESS,
+              BAND_CONTROL,
+              'h-11 max-w-[calc(220rem/16)]',
+              (chip.on || phoneCondition === chip.name) &&
+                'border-brand-line bg-brand-soft font-bold text-brand',
+            )}
+          >
+            <span className="truncate">{chip.label}</span>
+            <ChevronDownIcon
+              className={cn(
+                'shrink-0 transition-transform',
+                phoneCondition === chip.name && 'rotate-180',
+              )}
+            />
+          </button>
+        </li>
+      ))}
+    </ul>
+  )
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5">
+    <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 sideways:pt-0">
       <PhoneBarLead>
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full border-[1.5px] border-brand bg-surface pr-1.5 pl-3.5 text-ink-3 shadow-ring">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full sideways:max-w-[calc(240rem/16)] sideways:shrink-0 border-[1.5px] border-brand bg-surface pr-1.5 pl-3.5 text-ink-3 shadow-ring">
           <SearchIcon className="size-[calc(18rem/16)] shrink-0" />
           <input
             form={formId}
@@ -312,44 +356,15 @@ function SearchScreen({
             </button>
           )}
         </label>
+        {sideways &&
+          conditionChips(
+            'min-w-0 flex-1 [mask-image:linear-gradient(to_right,#000_88%,transparent)]',
+          )}
       </PhoneBarLead>
       <OnAnUprightPhone>
-        <ul
-          aria-label="検索条件"
-          data-slot="phone-conditions"
-          className="-mx-3.5 mb-2 flex gap-2 overflow-x-auto px-4 pt-0.5 pb-1"
-        >
-          {chips.map((chip) => (
-            <li key={chip.name} className="shrink-0">
-              <button
-                type="button"
-                aria-expanded={phoneCondition === chip.name}
-                onClick={() =>
-                  setPhoneCondition(
-                    phoneCondition === chip.name ? undefined : chip.name,
-                  )
-                }
-                className={cn(
-                  BAND_PRESS,
-                  BAND_CONTROL,
-                  'h-11 max-w-[calc(220rem/16)]',
-                  (chip.on || phoneCondition === chip.name) &&
-                    'border-brand-line bg-brand-soft font-bold text-brand',
-                )}
-              >
-                <span className="truncate">{chip.label}</span>
-                <ChevronDownIcon
-                  className={cn(
-                    'shrink-0 transition-transform',
-                    phoneCondition === chip.name && 'rotate-180',
-                  )}
-                />
-              </button>
-            </li>
-          ))}
-        </ul>
+        {conditionChips('-mx-3.5 mb-2 px-4 pt-0.5 pb-1')}
       </OnAnUprightPhone>
-      <div className="mb-4 flex flex-wrap items-start gap-3.5 upright:hidden">
+      <div className="mb-4 flex flex-wrap items-start gap-3.5 phone:hidden">
         <div className="min-w-0 flex-1">
           <h1 className="heading phone:sr-only text-[calc(20rem/16)]">
             番組検索
@@ -368,10 +383,10 @@ function SearchScreen({
           'mb-3.5 rounded-lg bg-surface px-4 py-3.5',
           phoneCondition
             ? PHONE_CONDITION_SHOWN[phoneCondition]
-            : 'upright:hidden',
+            : 'phone:hidden',
         )}
       >
-        <div className="flex flex-wrap items-center gap-2.5 upright:hidden">
+        <div className="flex flex-wrap items-center gap-2.5 phone:hidden">
           <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
             <FilterIcon className="size-4 text-brand" />
             検索条件
@@ -389,7 +404,7 @@ function SearchScreen({
 
         <form
           id={formId}
-          className="mt-2.5 upright:mt-0"
+          className="mt-2.5 phone:mt-0"
           // WebKit lets the Enter that settles an IME conversion submit the form; Chromium and Gecko hold it back themselves.
           onKeyDown={(event) => {
             if (event.key === 'Enter' && event.nativeEvent.isComposing) {
@@ -609,7 +624,7 @@ function SearchScreen({
           </div>
         </form>
 
-        <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3 upright:hidden">
+        <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3 phone:hidden">
           <LinkIcon className="size-3.5 shrink-0 text-ink-3" />
           <InFull says={decodeURIComponent(href)}>
             <code className="min-w-0 truncate font-code text-note text-ink-3">
@@ -643,7 +658,7 @@ function SearchScreen({
           </button>
         </div>
 
-        <div className="mt-6 flex justify-end upright:hidden">
+        <div className="mt-6 flex justify-end phone:hidden">
           {narrowing ? (
             <Button size="sm" asChild>
               <Link href={ruleHref}>
@@ -666,8 +681,14 @@ function SearchScreen({
 
       {instead ??
         (found && (
-          <div {...waitsWhile(waiting)}>
-            <div className="mb-2.5 flex flex-wrap items-center gap-2.5 upright:hidden">
+          <div
+            {...waitsWhile(waiting)}
+            className={cn(
+              waitsWhile(waiting).className,
+              'sideways:flex sideways:min-h-0 sideways:flex-1 sideways:flex-col',
+            )}
+          >
+            <div className="mb-2.5 flex flex-wrap items-center gap-2.5 phone:hidden">
               <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
                 <ListIcon className="size-4 text-brand" />
                 検索結果
@@ -760,6 +781,45 @@ function SearchScreen({
               />
             ) : (
               <>
+                {sideways && (
+                  <SidewaysPanes
+                    detailLabel="番組の詳細"
+                    list={
+                      <>
+                        <PhoneSearchHits
+                          hits={found.hits}
+                          total={found.total}
+                          words={words}
+                          ruleHref={narrowing ? ruleHref : undefined}
+                          onReserve={onReserve}
+                          onCancel={onCancel}
+                          onRestore={onRestore}
+                          chosenId={chosen?.id}
+                          onChoose={(hit) => choose(hit.id)}
+                          className="mx-0"
+                        />
+                        {found.lastPage > 1 && (
+                          <Pager
+                            total={found.total}
+                            page={found.page}
+                            lastPage={found.lastPage}
+                            onPage={(page) => show({ page }, true)}
+                            className="mx-4 my-3"
+                          />
+                        )}
+                      </>
+                    }
+                    detail={
+                      chosen && (
+                        <HitDetail
+                          hit={chosen}
+                          words={words}
+                          onReserve={onReserve}
+                        />
+                      )
+                    }
+                  />
+                )}
                 <OnAnUprightPhone>
                   <PhoneSearchHits
                     hits={found.hits}
@@ -776,7 +836,7 @@ function SearchScreen({
                   tabIndex={0}
                   className={cn(
                     ADMIN_LIST_HEIGHT_CAP,
-                    'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring upright:hidden',
+                    'overflow-auto rounded-xl bg-surface pb-1 outline-none focus-visible:shadow-ring phone:hidden',
                   )}
                 >
                   <table
@@ -894,7 +954,7 @@ function SearchScreen({
                   lastPage={found.lastPage}
                   onPage={(page) => show({ page }, true)}
                   className={cn(
-                    'upright:mt-4',
+                    'upright:mt-4 sideways:hidden',
                     found.lastPage <= 1 && 'upright:hidden',
                   )}
                 />
@@ -936,7 +996,7 @@ function ConditionRow({
   return (
     <div
       data-condition={name}
-      className="flex flex-col gap-1.5 border-b border-dashed border-line py-[calc(9rem/16)] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5 upright:hidden upright:border-b-0"
+      className="flex flex-col gap-1.5 border-b border-dashed border-line py-[calc(9rem/16)] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5 phone:hidden phone:border-b-0"
     >
       <span className="text-note font-bold text-ink-3 min-[701px]:w-[calc(92rem/16)] min-[701px]:shrink-0 min-[701px]:pt-2">
         {label}

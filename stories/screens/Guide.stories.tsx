@@ -2611,21 +2611,53 @@ export const 電話で別の日: Story = {
   },
 }
 
-export const 横向きの電話は表: Story = {
+export const 横向きの電話は局の一覧と詳細を左右に置く: Story = {
   args: { guide: base },
   parameters: { screen: SIDEWAYS_PHONE, coarse: true },
   play: async ({ canvasElement }) => {
-    await columnsFilled(canvasElement)
-    aGridIsShown(canvasElement)
-
     const canvas = within(canvasElement)
-    const tools = canvas.getByRole('button', { name: '絞り込み' })
+    const list = await waitFor(() => {
+      const found =
+        canvasElement.querySelector<HTMLElement>('[data-pane="list"]')
 
-    await expect(tools).toBeVisible()
-    await expect(canvas.queryByRole('group', { name: '放送の種別' })).toBeNull()
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const beside = canvas.getByRole('region', { name: '番組の詳細' })
+
+    await expect(canvasElement.querySelector('[data-guide-scroll]')).toBeNull()
+    await expect(list.getBoundingClientRect().right).toBeLessThanOrEqual(
+      beside.getBoundingClientRect().left + 0.5,
+    )
+    const heading = within(beside).getAllByRole('heading', { level: 2 })[0]
+
+    await expect(
+      list.querySelector('[data-on-air]')?.textContent ?? '',
+    ).toContain(heading.textContent ?? '-')
+
+    const bar = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="top-bar"]',
+    )!
+
+    await expect(
+      within(bar).getByRole('group', { name: 'チャンネル' }),
+    ).toBeVisible()
+    await expect(
+      within(bar).getByRole('link', { name: '番組を検索' }),
+    ).toBeVisible()
+
+    const rows = list.querySelectorAll<HTMLElement>('li[data-programme]')
+    const later = rows[rows.length - 1]
+
+    await userEvent.click(within(later).getAllByRole('button')[0])
+    await waitFor(() => expect(later).toHaveAttribute('data-chosen'))
+    await expect(later.querySelector('[data-program-detail]')).toBeNull()
+    await expect(beside.querySelector('[data-program-detail]')).not.toBeNull()
+
+    const tools = within(bar).getByRole('button', { name: '絞り込み' })
 
     await userEvent.click(tools)
-    await expect(tools).toHaveAttribute('aria-expanded', 'true')
     await expect(
       canvas.getByRole('group', { name: '放送の種別' }),
     ).toBeVisible()
