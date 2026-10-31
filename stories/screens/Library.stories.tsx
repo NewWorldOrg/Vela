@@ -25,6 +25,7 @@ import {
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheApp } from '@/stories/frames'
+import { LIBRARY_SHELF } from '@/stories/fixtures/library-shelf'
 import {
   FROM_600,
   laysRowsAsATable,
@@ -1050,4 +1051,198 @@ export const 横向きの電話は検索の欄を上の帯に置く: Story = {
       ].filter((one) => one.getBoundingClientRect().height > 0),
     ).toHaveLength(1)
   },
+}
+
+const shelf = resultOf(LIBRARY_SHELF)
+
+const A_DESKTOP = { width: 1440, height: 900 }
+
+export const 日付の格子: Story = {
+  args: { result: shelf, filter: {} },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const going = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="continue-row"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const shown = [...going.querySelectorAll('li')].filter(
+      (one) => one.getBoundingClientRect().width > 0,
+    )
+
+    await expect(shown).toHaveLength(4)
+    await expect(within(shown[0]).getByRole('link')).toHaveAttribute(
+      'href',
+      '/recordings/2098?play=1',
+    )
+
+    const grid = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="date-grid"]',
+    )!
+    const tiles = [...grid.querySelectorAll<HTMLElement>(':scope > li')]
+
+    await expect(tiles).toHaveLength(LIBRARY_SHELF.length)
+    await expect(
+      new Set(tiles.map((one) => Math.round(one.getBoundingClientRect().top)))
+        .size,
+    ).toBe(2)
+    await expect(
+      grid.querySelectorAll('[data-slot="unwatched-dot"]'),
+    ).toHaveLength(
+      LIBRARY_SHELF.filter((one) => one.watchedSec === undefined).length,
+    )
+    await expect(within(tiles[0]).getByRole('link')).toHaveAttribute(
+      'href',
+      '/recordings/2101',
+    )
+    await expect(tiles[4].querySelector('p')).toHaveClass('invisible')
+    await expect(
+      tiles[3].querySelector('[data-slot="watched-bar"]'),
+    ).not.toBeNull()
+  },
+}
+
+export const 日付の格子_iPad: Story = {
+  args: { result: shelf, filter: {} },
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    const going = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="continue-row"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(
+      [...going.querySelectorAll('li')].filter(
+        (one) => one.getBoundingClientRect().width > 0,
+      ),
+    ).toHaveLength(3)
+  },
+}
+
+export const シリーズ: Story = {
+  args: {
+    result: shelf,
+    filter: {},
+    view: { by: 'series', as: 'grid' },
+  },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const grid = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="series-grid"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const cards = within(grid).getAllByRole('button', { expanded: false })
+    const open = within(grid).getByRole('button', { expanded: true })
+
+    await expect(open).toHaveTextContent('となりの発明王')
+    await expect(open).toHaveTextContent('7 話')
+    await expect(open).toHaveTextContent('未視聴 3')
+    await expect(cards).toHaveLength(2)
+
+    const episodes = grid.querySelector<HTMLElement>(
+      '[data-slot="series-open"]',
+    )!
+
+    await expect(episodes.querySelectorAll('li')).toHaveLength(7)
+    await expect(episodes).toHaveTextContent('「空飛ぶ傘の巻」')
+
+    await userEvent.click(cards[1])
+    await waitFor(() =>
+      expect(
+        grid.querySelector('[data-slot="series-open"]'),
+      ).toHaveAccessibleName('国会の窓'),
+    )
+  },
+}
+
+export const 表: Story = {
+  args: {
+    result: shelf,
+    filter: {},
+    view: { by: 'date', as: 'table' },
+  },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const table = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('table')
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const sorted = within(table).getByRole('columnheader', {
+      name: /録画日時/,
+    })
+
+    await expect(sorted).toHaveAttribute('aria-sort', 'descending')
+    await expect(within(table).getAllByRole('row').length).toBe(
+      LIBRARY_SHELF.length + 1,
+    )
+    await expect(table).toHaveTextContent('未視聴')
+    await expect(table).toHaveTextContent('視聴済み')
+    await expect(table).toHaveTextContent('40%')
+    await expect(table).toHaveTextContent('欠け 3 秒')
+  },
+}
+
+export const 表_iPad: Story = {
+  ...表,
+  parameters: { screen: { width: 1180, height: 820 } },
+}
+
+export const シリーズの表: Story = {
+  args: {
+    result: shelf,
+    filter: {},
+    view: { by: 'series', as: 'table' },
+  },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const table = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('table')
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(
+      within(table)
+        .getAllByRole('rowheader')
+        .map((one) => one.textContent),
+    ).toEqual(['となりの発明王7 話', 'コメット急行2 話', '国会の窓3 話'])
+  },
+}
+
+export const 電話の棚: Story = {
+  args: { result: shelf, filter: {} },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const rows = await waitFor(() => phoneRows(canvasElement))
+
+    await expect(
+      rows.querySelectorAll('[data-slot="unwatched-dot"]'),
+    ).toHaveLength(
+      LIBRARY_SHELF.filter((one) => one.watchedSec === undefined).length,
+    )
+  },
+}
+
+export const 横向きの電話の棚: Story = {
+  args: { result: shelf, filter: {} },
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
 }

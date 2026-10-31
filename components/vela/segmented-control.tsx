@@ -2,7 +2,7 @@
 
 import type { Route } from 'next'
 import Link from 'next/link'
-import { useId, type ComponentProps } from 'react'
+import { useId, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -10,6 +10,8 @@ export interface SegmentedOption {
   value: string
   label: string
   href?: Route
+  /** Drawn in place of the label, which is then only read out. */
+  icon?: ReactNode
 }
 
 export const CHOICE_LABEL =
@@ -31,6 +33,24 @@ const OPTION = cn(
   'transition-[background-color,color,box-shadow,transform] duration-[140ms] ease-toy',
   'enabled:hover:text-ink enabled:active:scale-[0.98] focus-visible:shadow-ring',
 )
+
+const ICON_ONLY = {
+  default: 'w-10 justify-center px-0 [&_svg]:size-4',
+  band: 'w-9 justify-center px-0 [&_svg]:size-4',
+} as const
+
+function Said({ option }: { option: SegmentedOption }) {
+  if (!option.icon) {
+    return option.label
+  }
+
+  return (
+    <>
+      {option.icon}
+      <span className="sr-only">{option.label}</span>
+    </>
+  )
+}
 
 const CHOSEN =
   'bg-raised text-ink shadow-chosen dark:shadow-none hover:text-ink'
@@ -122,9 +142,10 @@ function Segment({
           OPTION_SIZE[size],
           'hover:text-ink',
           selected && CHOSEN,
+          option.icon && ICON_ONLY[size],
         )}
       >
-        {option.label}
+        <Said option={option} />
       </Link>
     )
   }
@@ -135,9 +156,14 @@ function Segment({
       aria-pressed={selected}
       disabled={disabled}
       onClick={onPick}
-      className={cn(OPTION, OPTION_SIZE[size], selected && CHOSEN)}
+      className={cn(
+        OPTION,
+        OPTION_SIZE[size],
+        selected && CHOSEN,
+        option.icon && ICON_ONLY[size],
+      )}
     >
-      {option.label}
+      <Said option={option} />
     </button>
   )
 }
