@@ -1,16 +1,7 @@
 'use client'
 
-import {
-  memo,
-  useCallback,
-  useEffect,
-  useLayoutEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { memo, useCallback, useMemo, useRef } from 'react'
 
-import { MOVED_BY_HAND, delayOf } from '@/lib/arrival'
 import { halfWidthOf } from '@/lib/guide-cell'
 import {
   GUTTER_PX,
@@ -18,12 +9,9 @@ import {
   fallsWithin,
   isDrawn,
   type MinuteRange,
-  type OpeningSeam,
-  nowLabelTopOf,
   nowLineTopOf,
   openingScrollScriptOf,
   openingScrollTopOf,
-  openingSeamOf,
   unscheduledSpansOf,
 } from '@/lib/guide'
 import { cn } from '@/lib/utils'
@@ -31,6 +19,7 @@ import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import {
   HOUR_REM,
+  cellTimeOf,
   hourPxIn,
   remOfMinutes,
 } from '@/components/guide/guide-metrics'
@@ -42,9 +31,6 @@ import { useDrawnRange } from '@/hooks/useDrawnRange'
 import { useFilledSoon } from '@/hooks/useFilledSoon'
 import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
 import { useNewcomers } from '@/hooks/useNewcomers'
-import { useOpensWithAShow } from '@/hooks/useOpensWithAShow'
-import { usePaintedAfter } from '@/hooks/usePaintedAfter'
-import { GuideOpening } from '@/components/guide/guide-opening'
 
 const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
 
@@ -54,7 +40,8 @@ const UNSCHEDULED_LABEL_REM = 3.25
 
 const NOTHING_CARRIED: Program[] = []
 
-const NOW_LABEL_AFTER_OPENING_MS = 420
+/** Before this minute the line runs along the top of the day, and its time is written under it, clear of the channels' heads. */
+const NOW_LABEL_BELOW_MIN = 6
 
 const GuideHeading = memo(function GuideHeading({
   channel: c,
@@ -69,18 +56,22 @@ const GuideHeading = memo(function GuideHeading({
     <div
       data-guide-heading
       style={{ flex: COLUMN_FLEX }}
-      className={cn(
-        joined && 'joins',
-        'flex min-w-0 items-center justify-center gap-1.5 overflow-hidden border-l border-line px-1.5 py-2 text-sub font-bold first-of-type:border-l-0',
-      )}
+      className={cn(joined && 'joins', 'h-11 min-w-0 px-0.5 pb-1')}
     >
       {drawn && (
-        <>
+        <div className="flex h-10 min-w-0 items-center gap-2 overflow-hidden rounded-md bg-surface pr-3 pl-2 text-ui font-semibold">
           <ChannelMark logo={c.logo} no={c.no} />
           <InFull says={halfWidthOf(c.name)}>
-            <span className="min-w-0 truncate">{halfWidthOf(c.name)}</span>
+            <span className="min-w-0 flex-1 truncate">
+              {halfWidthOf(c.name)}
+            </span>
           </InFull>
-        </>
+          <span
+            aria-hidden="true"
+            data-no={c.no}
+            className="ml-auto shrink-0 font-code text-sub font-medium text-ink-2 after:content-[attr(data-no)]"
+          />
+        </div>
       )}
     </div>
   )
@@ -118,8 +109,7 @@ const GuideColumn = memo(function GuideColumn({
       style={{ flex: COLUMN_FLEX }}
       className={cn(
         !filled ? 'invisible' : joined && 'joins',
-        'relative min-w-0 border-l border-dashed border-line [contain:size_layout_style] first-of-type:border-l-0',
-        c.sub && 'bg-surface-2',
+        'relative min-w-0 [contain:size_layout_style]',
       )}
     >
       {c.sub &&
@@ -133,7 +123,7 @@ const GuideColumn = memo(function GuideColumn({
                 top: remOfMinutes(span.startMin),
                 height: remOfMinutes(span.durationMin),
               }}
-              className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
+              className="absolute right-0.5 left-0.5 flex items-center justify-center overflow-hidden rounded-sm"
             >
               {(span.durationMin / 60) * HOUR_REM >= UNSCHEDULED_LABEL_REM && (
                 <span className="text-micro tracking-[0.2em] text-ink-2 [writing-mode:vertical-rl]">
@@ -150,10 +140,11 @@ const GuideColumn = memo(function GuideColumn({
           <ProgramCell
             key={p.id}
             program={p}
-            past={
-              nowMin !== undefined &&
-              !p.endUndecided &&
-              p.startMin + p.durationMin <= nowMin
+            time={cellTimeOf(p, nowMin)}
+            splitAt={
+              nowMin !== undefined && cellTimeOf(p, nowMin) === 'onAir'
+                ? remOfMinutes(nowMin - p.startMin)
+                : undefined
             }
             selected={p.id === selectedId}
             onSelect={onSelect}
@@ -192,16 +183,6 @@ export function GuideGrid({
   )
   const cameWithTheHtml = useCameWithTheHtml()
   const filled = useFilledSoon()
-  const shows = useOpensWithAShow()
-  const painted = usePaintedAfter(filled)
-  const [landed, setLanded] = useState(false)
-  const [done, setDone] = useState(!shows)
-  const [seam, setSeam] = useState<(OpeningSeam & { origin: number }) | null>(
-    null,
-  )
-  const opening = shows && painted && seam !== null && (landed || !seam.line)
-  const markLanded = useCallback(() => setLanded(true), [])
-  const markDone = useCallback(() => setDone(true), [])
   const newcomers = useNewcomers(channels.map((c) => c.id))
   const nowAtOpening = useRef(nowMin)
   const opened = useRef(false)
@@ -210,7 +191,7 @@ export function GuideGrid({
     columns: channels.length,
     windowMin: windowHours * 60,
     filled,
-    settled: done,
+    settled: true,
     day: dayKey,
     nowMin,
   })
@@ -253,77 +234,28 @@ export function GuideGrid({
     )
   }, [])
 
-  useLayoutEffect(() => {
-    const node = scroller.current
-
-    if (!shows || node === null) {
-      return
-    }
-
-    const opens = openingSeamOf({
-      nowMin,
-      hourPx: hourPxIn(node.ownerDocument),
-      scrollTop: node.scrollTop,
-      headingPx:
-        node.querySelector<HTMLElement>('[data-guide-heading]')?.parentElement
-          ?.offsetHeight ?? 0,
-      viewPx: node.clientHeight,
-    })
-
-    setSeam({ ...opens, origin: node.scrollTop + opens.top })
-  }, [shows, nowMin])
-
-  useEffect(() => {
-    if (done) {
-      return
-    }
-
-    for (const input of MOVED_BY_HAND) {
-      window.addEventListener(input, markDone, { capture: true, passive: true })
-    }
-
-    return () => {
-      for (const input of MOVED_BY_HAND) {
-        window.removeEventListener(input, markDone, { capture: true })
-      }
-    }
-  }, [done, markDone])
-
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      {!done && seam !== null && (
-        <GuideOpening
-          seam={seam.top}
-          line={seam.line}
-          open={opening}
-          onLanded={markLanded}
-          onDone={markDone}
-        />
-      )}
       <div
         ref={openAtNow}
         data-guide-scroll
-        className="min-h-0 flex-1 overflow-auto rounded-lg"
+        data-guide-measured={
+          drawn.minutes.from === 0 && drawn.minutes.to === windowHours * 60
+            ? ''
+            : undefined
+        }
+        className="min-h-0 flex-1 overflow-auto"
       >
         <div
           key={dayKey}
-          className={cn(
-            'rounded-lg bg-surface',
-            !done && 'will-change-transform',
-            opening && 'guide-settles',
-          )}
-          style={{
-            minWidth: gridMinWidthOf(channels.length),
-            ...(seam !== null && {
-              transformOrigin: `50% ${seam.origin}px`,
-            }),
-          }}
+          className="bg-bg"
+          style={{ minWidth: gridMinWidthOf(channels.length) }}
         >
-          <div className="sticky top-0 z-10 flex rounded-t-lg border-b border-line bg-surface">
+          <div className="sticky top-0 z-10 flex bg-bg">
             <div
               data-guide-gutter
               style={{ flex: GUTTER_FLEX }}
-              className="sticky left-0 z-[1] rounded-tl-lg border-r border-dashed border-line bg-surface"
+              className="sticky left-0 z-[1] bg-bg"
             />
             {channels.map((c, nth) => (
               <GuideHeading
@@ -336,7 +268,7 @@ export function GuideGrid({
           </div>
 
           <div
-            className="relative flex rounded-b-lg"
+            className="relative flex"
             style={{ height: remOfMinutes(windowHours * 60) }}
           >
             {cameWithTheHtml && nowMin !== undefined && (
@@ -349,30 +281,17 @@ export function GuideGrid({
             <div
               data-guide-gutter
               style={{ flex: GUTTER_FLEX }}
-              className="sticky left-0 z-[4] rounded-bl-lg border-r border-dashed border-line bg-surface"
+              className="sticky left-0 z-[4] bg-bg"
             >
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="flex items-start justify-center pt-1.5 font-code text-cap text-ink-2 first:border-t-0 [&+&]:border-t [&+&]:border-dashed [&+&]:border-line"
+                  className="flex items-start justify-start pt-1 pl-1 font-code text-title font-bold text-ink-2"
                   style={{ height: remOfMinutes(60) }}
                 >
-                  {h % 24}時
+                  {h % 24}
+                  <span className="sr-only">時</span>
                 </div>
-              ))}
-            </div>
-
-            <div
-              className="pointer-events-none absolute top-0 right-0 bottom-0 z-0"
-              style={{ left: `${GUTTER_PX}px` }}
-              aria-hidden="true"
-            >
-              {hours.map((h, i) => (
-                <div
-                  key={h}
-                  className="absolute right-0 left-0 h-0 border-t border-line"
-                  style={{ top: remOfMinutes(i * 60) }}
-                />
               ))}
             </div>
 
@@ -405,14 +324,12 @@ export function GuideGrid({
 
             {filled &&
               nowMin !== undefined &&
-              (done || opening) &&
               (() => {
                 return (
                   <div
                     data-now-line
                     className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-accent"
                     style={{
-                      ...delayOf(opening ? NOW_LABEL_AFTER_OPENING_MS : 0),
                       top: nowLineTopOf(nowMin, HOUR_REM, windowHours),
                     }}
                   >
@@ -432,11 +349,20 @@ export function GuideGrid({
                       />
                     </svg>
                     <span
-                      className="guide-now-pop absolute left-1.5 rounded-full bg-bg px-2 py-px font-code text-micro font-bold text-acc-text"
-                      style={{ top: nowLabelTopOf(nowMin, HOUR_REM) }}
+                      className={cn(
+                        'guide-now-pop absolute left-0 bg-bg py-px pr-0.5 font-code text-micro font-bold text-acc-text',
+                        nowMin < NOW_LABEL_BELOW_MIN
+                          ? 'top-1'
+                          : 'top-1/2 -translate-y-1/2',
+                      )}
                     >
                       {nowLabel}
                     </span>
+                    <span
+                      aria-hidden="true"
+                      className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent"
+                      style={{ left: `${GUTTER_PX}px` }}
+                    />
                   </div>
                 )
               })()}

@@ -56,8 +56,6 @@ export function openingScrollTopOf(
   return Math.max(0, (nowMin / 60) * hourPx - viewPx / 2)
 }
 
-export const NOW_LABEL_GAP_PX = 10
-
 export const NOW_LINE_THICKNESS_PX = 2
 
 /** The now line's top as CSS: where the minute says, but never past the bottom of the day. */
@@ -67,11 +65,6 @@ export function nowLineTopOf(
   windowHours: number,
 ): string {
   return `min(${(nowMin / 60) * hourRem}rem, calc(${windowHours * hourRem}rem - ${NOW_LINE_THICKNESS_PX}px))`
-}
-
-/** The label's top against the line as CSS: ten pixels above it, but never above where the day begins. */
-export function nowLabelTopOf(nowMin: number, hourRem: number): string {
-  return `max(${-NOW_LABEL_GAP_PX}px, ${-(nowMin / 60) * hourRem}rem)`
 }
 
 /** 最初の HTML で番組表の枠の直後に置き、最初の描画の前に今の位置へ送るスクリプト。 */
@@ -346,7 +339,7 @@ export function primaryKeyOfShadow(
 
 export const GUTTER_PX = 46
 
-export const COLUMN_MIN_REM = 15
+export const COLUMN_MIN_REM = 13.75
 
 /** The narrowest the grid is drawn, as CSS: the hour gutter and every column at its narrowest. */
 export function gridMinWidthOf(columns: number): string {
@@ -466,38 +459,4 @@ export function fallsWithin(
   return (
     span.startMin < range.to && span.startMin + span.durationMin > range.from
   )
-}
-
-const SEAM_SLACK_PX = 1
-
-export interface OpeningSeam {
-  top: number
-  line: boolean
-}
-
-/** 番組表の入りで覆いが割れる高さと、そこを今の線として玉が走るかどうか。 */
-export function openingSeamOf({
-  nowMin,
-  hourPx,
-  scrollTop,
-  headingPx,
-  viewPx,
-}: {
-  nowMin: number | undefined
-  hourPx: number
-  scrollTop: number
-  headingPx: number
-  viewPx: number
-}): OpeningSeam {
-  const middle = (headingPx + viewPx) / 2
-
-  if (nowMin !== undefined) {
-    const top = headingPx + (nowMin / 60) * hourPx - scrollTop
-
-    if (Math.abs(top - middle) <= SEAM_SLACK_PX) {
-      return { top, line: true }
-    }
-  }
-
-  return { top: middle, line: false }
 }
