@@ -269,7 +269,7 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[11.5rem] shrink-0 px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden sideways:hidden',
+        'w-[12.5rem] shrink-0 px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden sideways:hidden',
         className,
       )}
       {...props}
