@@ -220,17 +220,12 @@ export function PlayerSeek({
     >
       <div
         ref={rail}
-        className="absolute inset-x-0 top-1/2 h-[3px] -translate-y-1/2 rounded-full bg-white/20 transition-[height] duration-100 ease-out group-hover:h-[5px] group-focus-visible:h-[5px] group-data-[wanted]:h-[5px]"
+        className="absolute inset-x-0 top-1/2 h-1 -translate-y-1/2 rounded-full bg-white/28 transition-[height] duration-100 ease-out group-hover:h-1.5 group-focus-visible:h-1.5 group-data-[wanted]:h-1.5"
       >
         <span
           aria-hidden="true"
           className="absolute inset-y-0 left-0 rounded-full bg-white/40"
           style={{ width: `${loadedPct}%` }}
-        />
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-0 left-0 rounded-full bg-(--pl-accent)"
-          style={{ width: `${playedPct}%` }}
         />
         {duration > 0 &&
           bands.map((one) => (
@@ -238,7 +233,7 @@ export function PlayerSeek({
               key={`${one.kind}-${one.startsAtSec}`}
               aria-hidden="true"
               title={one.name}
-              className="absolute inset-y-0 rounded-full"
+              className="absolute -inset-y-0.5 rounded-[calc(3rem/16)]"
               style={{
                 left: `${share(one.startsAtSec)}%`,
                 width: `${share(one.endsAtSec) - share(one.startsAtSec)}%`,
@@ -246,6 +241,11 @@ export function PlayerSeek({
               }}
             />
           ))}
+        <span
+          aria-hidden="true"
+          className="absolute inset-y-0 left-0 rounded-full bg-white"
+          style={{ width: `${playedPct}%` }}
+        />
       </div>
       {duration > 0 &&
         boundaries.map((second) => (
@@ -270,7 +270,7 @@ export function PlayerSeek({
       <span
         aria-hidden="true"
         data-slot="player-seek-knob"
-        className="absolute top-1/2 -ml-[calc(6.5rem/16)] size-[calc(13rem/16)] origin-center -translate-y-1/2 scale-0 rounded-full bg-(--pl-accent) transition-transform duration-100 ease-out group-hover:scale-100 group-focus-visible:scale-100 group-data-[wanted]:scale-100"
+        className="absolute top-1/2 -ml-[calc(6.5rem/16)] size-[calc(13rem/16)] -translate-y-1/2 rounded-full bg-white"
         style={{ left: `${playedPct}%` }}
       />
       {hover && (

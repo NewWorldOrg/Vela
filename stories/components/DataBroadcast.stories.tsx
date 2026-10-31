@@ -1111,7 +1111,7 @@ async function asTheMock(canvasElement: HTMLElement, place: StripPlace) {
     await near(bar.top, face.bottom)
     await near(box.top, bar.bottom)
     await near(box.bottom - disc.bottom, 12 * u)
-    await expect(getComputedStyle(band).backgroundColor).toBe('rgb(21, 20, 24)')
+    await expect(getComputedStyle(band).backgroundColor).toBe('rgb(14, 14, 16)')
     await expect(
       canvasElement.querySelector('[data-slot="data-broadcast-scrim"]'),
     ).toBeNull()
@@ -1267,7 +1267,7 @@ async function underTheFace(canvasElement: HTMLElement) {
   await expect(band.getBoundingClientRect().top).toBeGreaterThanOrEqual(
     face.bottom - 0.6,
   )
-  await near(board.bottom - 1, band.getBoundingClientRect().bottom)
+  await near(board.bottom, band.getBoundingClientRect().bottom)
   await expect(board.bottom).toBeLessThanOrEqual(window.innerHeight)
 }
 

@@ -29,7 +29,7 @@ const PLAYER_BUTTON_OFF =
   'disabled:border-white/12 disabled:bg-white/3 disabled:text-(--pl-ink-3) disabled:hover:border-white/12 disabled:hover:bg-white/3 disabled:hover:text-(--pl-ink-3)'
 
 export const PLAYER_BUTTON = cn(
-  'tap-target rounded-full border border-white/25 bg-white/5 px-[calc(13rem/16)] py-[calc(5rem/16)] text-note font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none',
+  'tap-target rounded-full border border-white/25 bg-white/5 px-[calc(13rem/16)] py-[calc(5rem/16)] text-note font-bold whitespace-nowrap text-(--pl-ink-2) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-white/15 hover:text-(--pl-ink) focus-visible:shadow-ring focus-visible:outline-none',
   PLAYER_BUTTON_OFF,
   pressable,
   still,
@@ -64,10 +64,10 @@ export const PLAYER_ROW_ON_ITS_SIDE =
 
 export const PLAYER_BOARD = cn(
   PLAYER_COLUMN,
-  'relative overflow-hidden rounded-xl border border-line-strong bg-(--pl-video) shadow-pop-xl outline-none',
-  'upright:rounded-none upright:border-0 upright:shadow-none',
-  'sideways:rounded-none sideways:border-0 sideways:shadow-none',
-  'data-[full]:flex data-[full]:max-w-none data-[full]:flex-col data-[full]:rounded-none data-[full]:border-0 data-[full]:shadow-none',
+  'relative overflow-hidden rounded-[calc(18rem/16)] bg-(--pl-video) outline-none',
+  'upright:rounded-none',
+  'sideways:rounded-none',
+  'data-[full]:flex data-[full]:max-w-none data-[full]:flex-col data-[full]:rounded-none',
   'data-[fill]:fixed data-[fill]:inset-0 data-[fill]:z-[60] data-[fill]:m-0 data-[fill]:pt-[env(safe-area-inset-top)] data-[fill]:pr-[env(safe-area-inset-right)] data-[fill]:pb-[env(safe-area-inset-bottom)] data-[fill]:pl-[env(safe-area-inset-left)]',
 )
 

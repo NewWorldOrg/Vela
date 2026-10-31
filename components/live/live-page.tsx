@@ -350,7 +350,7 @@ export function LiveView({
           titleLevel={2}
           title="チューナーがありません"
           action={
-            <Button variant="watch" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href="/settings/tuners">チューナーへ</Link>
             </Button>
           }
@@ -419,7 +419,7 @@ export function LiveView({
             title="まだ番組情報がありません"
             className="mt-3.5"
             action={
-              <Button variant="watch" size="sm" asChild>
+              <Button variant="tone" size="sm" asChild>
                 <Link href="/guide">番組表へ</Link>
               </Button>
             }
@@ -458,7 +458,7 @@ export function LiveView({
     <ScreenMain
       width="full"
       data-watching=""
-      className="flex items-start gap-[calc(26rem/16)] px-3.5 pt-4 pb-10 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] max-[1180px]:flex-col upright:p-0 sideways:fixed sideways:inset-0 sideways:z-40 sideways:overflow-hidden sideways:bg-(--pl-video) sideways:p-0"
+      className="flex items-start gap-8 px-3.5 pt-2.5 pb-10 min-[701px]:px-6 min-[1366px]:px-10 max-[1180px]:flex-col upright:p-0 sideways:fixed sideways:inset-0 sideways:z-40 sideways:overflow-hidden sideways:bg-(--pl-video) sideways:p-0"
     >
       <KeptAcrossTurns />
       <div
@@ -512,11 +512,23 @@ export function LiveView({
         />
         <NowNext
           watching={watching}
+          onReserve={onRecord}
+          onCancel={onTakeTheRecordingBack}
+          actions={
+            <>
+              {onRecord && onTakeTheRecordingBack && watching.channel.now && (
+                <RecordThisButton
+                  programmeId={watching.channel.now.id}
+                  onReserve={onRecord}
+                  onCancel={onTakeTheRecordingBack}
+                  size="lg"
+                />
+              )}
+              <OpenExternally handover={handover} wide />
+            </>
+          }
           className="upright:hidden sideways:hidden"
         />
-        <div className="mt-[calc(18rem/16)] flex flex-wrap items-start gap-[calc(9rem/16)] upright:hidden sideways:hidden">
-          <OpenExternally handover={handover} />
-        </div>
         <OnAnUprightPhone>
           <div className="hidden upright:block">
             {programmeInfo}
@@ -596,7 +608,7 @@ export function LiveView({
             onSelect={(channel) => choose(channel.id)}
             className={
               motion.shown || swap !== 'still'
-                ? 'w-full min-[1181px]:w-[calc(344rem/16)]'
+                ? 'w-full min-[1181px]:w-[calc(372rem/16)]'
                 : 'w-full'
             }
           />

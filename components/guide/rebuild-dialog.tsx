@@ -63,7 +63,7 @@ export function RebuildEpgDialog({
         </AlertDialogHeader>
 
         <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 text-ui max-[700px]:grid-cols-1">
-          <dt className="pt-0.5 text-sub text-ink-3">削除対象</dt>
+          <dt className="pt-0.5 text-sub text-ink-2">削除対象</dt>
           <dd className="leading-[1.7]">
             いまの番組表のデータ(未来{' '}
             <span className="font-code tabular-nums">8</span> 日+過去{' '}
@@ -113,7 +113,7 @@ export function RebuildEpgDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
-          <Button variant="removeFill" disabled={pending} onClick={run}>
+          <Button variant="dangerFill" disabled={pending} onClick={run}>
             <RebuildIcon />
             すべて削除して再構築する
           </Button>

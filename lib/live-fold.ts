@@ -16,11 +16,11 @@ export function foldColumn(
   motion: FoldMotion | undefined,
 ): string {
   if (motion === undefined || motion.phase === 'still') {
-    return folded ? 'w-11' : 'w-[calc(344rem/16)]'
+    return folded ? 'w-11' : 'w-[calc(372rem/16)]'
   }
 
   if (motion.phase === 'opening') {
-    return 'w-[calc(344rem/16)] transition-[width] duration-300 ease-fold still:transition-none'
+    return 'w-[calc(372rem/16)] transition-[width] duration-300 ease-fold still:transition-none'
   }
 
   if (motion.staggered) {
@@ -31,7 +31,7 @@ export function foldColumn(
 }
 
 /** The gap between the player and a column that stands beside it only while the data broadcast is open. */
-const BESIDE_THE_PLAYER = 'ml-[calc(26rem/16)]'
+const BESIDE_THE_PLAYER = 'ml-8'
 
 /** The column a page without one of its own stands beside the player while the data broadcast is open: the fold's widths after the gap from the player, and on the fold's opening, as the column first stands, its width and the gap growing from nothing together. */
 export function foldColumnBeside(
@@ -39,7 +39,7 @@ export function foldColumnBeside(
   motion: FoldMotion | undefined,
 ): string {
   if (motion?.phase === 'opening') {
-    return `w-[calc(344rem/16)] ${BESIDE_THE_PLAYER} starting:w-0 starting:ml-0 transition-[width,margin-left] duration-300 ease-fold still:transition-none`
+    return `w-[calc(372rem/16)] ${BESIDE_THE_PLAYER} starting:w-0 starting:ml-0 transition-[width,margin-left] duration-300 ease-fold still:transition-none`
   }
 
   return `${foldColumn(folded, motion)} ${BESIDE_THE_PLAYER}`
@@ -52,10 +52,10 @@ export function foldBand(motion: FoldMotion | undefined): string {
   }
 
   if (motion.phase === 'opening') {
-    return 'translate-x-0 starting:translate-x-[calc(min(100%,344rem/16)+14rem/16)] transition-[translate] duration-300 ease-fold still:transition-none'
+    return 'translate-x-0 starting:translate-x-[calc(min(100%,372rem/16)+14rem/16)] transition-[translate] duration-300 ease-fold still:transition-none'
   }
 
-  return 'translate-x-[calc(min(100%,344rem/16)+14rem/16)] transition-[translate] duration-300 ease-fold still:transition-none'
+  return 'translate-x-[calc(min(100%,372rem/16)+14rem/16)] transition-[translate] duration-300 ease-fold still:transition-none'
 }
 
 export function foldBandDelay(

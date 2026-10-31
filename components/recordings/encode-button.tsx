@@ -73,10 +73,13 @@ export function EncodeButton({
   recording,
   choices,
   onQueue,
+  quiet,
 }: {
   recording: Recording
   choices: EncodeChoices
   onQueue: QueueEncode
+  /** A light press as wide as the column it stands in, under the main ones. */
+  quiet?: boolean
 }) {
   const [pending, startTransition] = useTransition()
   const [notice, setNotice] = useState<{ queued: boolean; text: string }>()
@@ -131,10 +134,13 @@ export function EncodeButton({
   return (
     <div
       data-slot="encode-action"
-      className="flex flex-col items-start gap-1.5"
+      className={cn(
+        'flex flex-col gap-1.5',
+        quiet ? 'items-stretch' : 'items-start',
+      )}
     >
       <Button
-        variant="change"
+        variant={quiet ? 'ghost' : 'tone'}
         disabled={refused !== undefined}
         title={refused}
         aria-disabled={pending}

@@ -12,16 +12,20 @@ const ROOT = path.resolve(
 
 const THE_FONT_LINKS = ['app/layout.tsx', '.storybook/preview-head.html']
 
-test('the code face is loaded at the bold weight the screens draw it in', async () => {
+test("no face is downloaded: the screens read the device's own", async () => {
   for (const file of THE_FONT_LINKS) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
-    assert.match(
+    assert.doesNotMatch(
       source,
-      /family=M\+PLUS\+1\+Code:wght@400;500;700/,
-      `${file} leaves bold figures to be smeared into a false bold`,
+      /fonts\.googleapis\.com/,
+      `${file} downloads a face, where the device's own is drawn instead`,
     )
   }
+
+  const sheet = await readFile(path.join(ROOT, 'app/globals.css'), 'utf8')
+
+  assert.match(sheet, /--font-body:\s*'Denpa Font',\s*system-ui/)
 })
 
 test('a weight that was not loaded is never faked by smearing the glyphs', async () => {

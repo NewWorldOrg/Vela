@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-import { LIGHT_BG, LIGHT_SURFACE } from '@/lib/app-colours'
+import { LIGHT_BG } from '@/lib/app-colours'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
@@ -10,7 +10,7 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: '/',
     scope: '/',
     display: 'standalone',
-    theme_color: LIGHT_SURFACE,
+    theme_color: LIGHT_BG,
     background_color: LIGHT_BG,
     icons: [
       { src: '/pwa/icon-192.png', sizes: '192x192', type: 'image/png' },

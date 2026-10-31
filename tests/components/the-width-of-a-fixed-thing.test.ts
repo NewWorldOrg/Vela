@@ -51,7 +51,7 @@ test('the column of screens a setting sits beside is measured in letters', async
     'the side column holds a width in px, which the density steps take past ' +
       'the words it has to hold',
   )
-  assert.match(nav, /w-\[11rem\]/)
+  assert.match(nav, /w-\[12\.5rem\]/)
   assert.match(
     nav,
     /whitespace-nowrap max-\[900px\]:hidden/,
@@ -78,25 +78,19 @@ test('every column of the library table is measured in letters', async () => {
   assert.match(table, /const TABLE_MIN = '\d+(\.\d+)?rem'/)
 })
 
-test('the state columns and the actions after them are held apart', async () => {
+test('the library says a row’s state in its own column on a wide screen and beside the title under that', async () => {
   const table = await read(THE_LIBRARY_TABLE)
   const row = await read(THE_LIBRARY_ROW)
 
+  assert.match(table, /hidden min-\[1366px\]:table-column/)
+  assert.match(table, /hidden min-\[1366px\]:table-cell/)
+  assert.match(row, /hidden min-\[1366px\]:table-cell/)
+  assert.match(row, /min-\[1366px\]:hidden/)
   assert.equal(
-    (table.match(/gap: GAP_BEFORE_STATE/g) ?? []).length,
-    3,
-    'the three state columns do not all carry the room on their left that ' +
-      'the header measured',
+    (row.match(/<AttentionChips\b/g) ?? []).length,
+    2,
+    'the state is said once beside the title and once in its column, one of the two hidden at each width',
   )
-  assert.match(table, /gap: GAP_BEFORE_ACTIONS/)
-  assert.equal(
-    (row.match(/GAP_BEFORE_STATE/g) ?? []).length,
-    4,
-    'the cells under the state headers do not carry the same room the ' +
-      'headers do',
-  )
-  assert.match(row, /export const GAP_BEFORE_STATE = 'pl-4'/)
-  assert.match(row, /export const GAP_BEFORE_ACTIONS = 'pl-5'/)
 })
 
 test('no row says its state with a colour laid under the whole of it', async () => {
@@ -158,13 +152,13 @@ test('the mark on the volume sits on the line it reads against', async () => {
 
     assert.match(
       track,
-      /calc\(var\(--volume-dot\) \/ 2\) 50% \/\s*calc\(100% - var\(--volume-dot\)\) 2px/,
+      /calc\(var\(--volume-dot\) \/ 2\) 50% \/\s*calc\(100% - var\(--volume-dot\)\) 4px/,
       `${part} draws the line past the centres the mark can reach, so at full ` +
         'volume the mark stops short of its end',
     )
     assert.match(
       track,
-      /calc\(\(100% - var\(--volume-dot\)\) \* var\(--volume-ratio, 0\)\) 2px/,
+      /calc\(\(100% - var\(--volume-dot\)\) \* var\(--volume-ratio, 0\)\) 4px/,
       `${part} lights the line past the centre of the mark`,
     )
   }

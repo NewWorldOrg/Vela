@@ -68,11 +68,11 @@ export const ConfirmDialog: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dialog-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={WarningIcon}>確認モーダル(危険操作)</SectionHeading>
+      <SectionHeading>確認モーダル(危険操作)</SectionHeading>
       <Surface>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="remove">番組表を再構築</Button>
+            <Button variant="danger">番組表を再構築</Button>
           </DialogTrigger>
           <DialogContent showCloseButton={false}>
             <DialogHeader>
@@ -87,19 +87,19 @@ export const ConfirmDialog: Story = {
             </DialogHeader>
             <DialogFooter>
               <DialogClose asChild>
-                <Button variant="outline" size="sm">
+                <Button variant="tone" size="sm">
                   キャンセル
                 </Button>
               </DialogClose>
               <DialogClose asChild>
-                <Button variant="removeFill" size="sm">
+                <Button variant="dangerFill" size="sm">
                   すべて削除して再構築する
                 </Button>
               </DialogClose>
             </DialogFooter>
           </DialogContent>
         </Dialog>
-        <p className="mt-[11px] text-cap text-ink-3">
+        <p className="mt-[11px] text-cap text-ink-2">
           危険操作の実行ボタンのみ塗りの danger を使い、キャンセルは常に outline
           で左側に置く。
         </p>
@@ -125,10 +125,10 @@ export const DeleteRecording: Story = {
 
     return (
       <div className="mx-auto max-w-[620px] p-6">
-        <SectionHeading mark={TrashIcon}>録画の削除確認</SectionHeading>
+        <SectionHeading>録画の削除確認</SectionHeading>
         <Surface>
           <Button
-            variant="remove"
+            variant="danger"
             onClick={() => setTarget(RECORDING_FIXTURES[1])}
           >
             <TrashIcon />
@@ -139,7 +139,7 @@ export const DeleteRecording: Story = {
             onOpenChange={(open) => !open && setTarget(null)}
             onDelete={async () => ({ state: 'ok', filesRemoved: 1 })}
           />
-          <p className="mt-[11px] text-cap text-ink-3">
+          <p className="mt-[11px] text-cap text-ink-2">
             取り返しのつかない操作は、消える対象を全て見せてから確認する。番組名だけでなくファイルのパスとサイズまで出す。
           </p>
         </Surface>
@@ -160,11 +160,11 @@ export const DeleteRecording: Story = {
 export const SidePanel: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSplit}>右サイドパネル(番組詳細)</SectionHeading>
+      <SectionHeading>右サイドパネル(番組詳細)</SectionHeading>
       <Surface>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline">番組詳細を開く</Button>
+            <Button variant="tone">番組詳細を開く</Button>
           </SheetTrigger>
           <SheetContent side="right">
             <SheetHeader>
@@ -174,7 +174,7 @@ export const SidePanel: Story = {
               <div className="heading text-title leading-[1.5]">
                 みなと ニュース7
               </div>
-              <div className="mt-[3px] mb-2.5 font-code text-cap tabular-nums text-ink-3">
+              <div className="mt-[3px] mb-2.5 font-code text-cap tabular-nums text-ink-2">
                 みなと総合1 / 8/7(木) 21:00 – 22:00
               </div>
               <SheetDescription>
@@ -189,7 +189,7 @@ export const SidePanel: Story = {
             </SheetFooter>
           </SheetContent>
         </Sheet>
-        <p className="mt-[11px] text-cap text-ink-3">
+        <p className="mt-[11px] text-cap text-ink-2">
           浮いているものは 1px 線 + 大きめの hard
           shadow。開いたら必ず閉じられる。
         </p>
@@ -201,18 +201,18 @@ export const SidePanel: Story = {
 export const BottomSheet: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>ボトムシート(モバイル)</SectionHeading>
+      <SectionHeading>ボトムシート(モバイル)</SectionHeading>
       <Surface>
         <Sheet>
           <SheetTrigger asChild>
-            <Button variant="outline">ボトムシートを開く</Button>
+            <Button variant="tone">ボトムシートを開く</Button>
           </SheetTrigger>
           <SheetContent side="bottom">
             <SheetHeader>
               <SheetTitle>みなと ニュース7</SheetTitle>
             </SheetHeader>
             <SheetBody>
-              <div className="mb-2.5 font-code text-cap tabular-nums text-ink-3">
+              <div className="mb-2.5 font-code text-cap tabular-nums text-ink-2">
                 みなと総合1 / 21:00 – 22:00
               </div>
               <SheetDescription>
@@ -233,7 +233,7 @@ export const OpenList: Story = {
   parameters: ONLY_THE_OPEN_LAYER('select-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSplit}>開いた選択肢</SectionHeading>
+      <SectionHeading>開いた選択肢</SectionHeading>
       <Surface>
         <Select defaultValue="ts">
           <SelectTrigger aria-label="録画の画質" className="w-[240px]">
@@ -248,7 +248,7 @@ export const OpenList: Story = {
             </SelectItem>
           </SelectContent>
         </Select>
-        <p className="mt-[11px] text-cap text-ink-3">
+        <p className="mt-[11px] text-cap text-ink-2">
           選択肢は隣と隙間なく並ぶので、当たり判定ではなく行の高さそのものが
           44px。密度は落ちるが、隣の行が押されるよりはよい。
         </p>
@@ -279,11 +279,11 @@ export const OpenMenu: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dropdown-menu-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>開いたメニュー</SectionHeading>
+      <SectionHeading>開いたメニュー</SectionHeading>
       <Surface>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline">表示する列</Button>
+            <Button variant="tone">表示する列</Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start">
             <DropdownMenuLabel>表示する列</DropdownMenuLabel>
@@ -296,7 +296,7 @@ export const OpenMenu: Story = {
             <DropdownMenuItem>並びを既定に戻す</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-        <p className="mt-[11px] text-cap text-ink-3">
+        <p className="mt-[11px] text-cap text-ink-2">
           メニューの行も同じ 44px。見出しと最初の行の間は、行どうしより
           狭くしない。
         </p>
@@ -326,7 +326,7 @@ function ColumnsMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline">表示する列</Button>
+        <Button variant="tone">表示する列</Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start">
         <DropdownMenuCheckboxItem checked>放送局</DropdownMenuCheckboxItem>

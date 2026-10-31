@@ -1504,7 +1504,7 @@ export function LivePlayer({
               data-up={chromeUp ? 'true' : undefined}
               style={{ backgroundImage: PLAYER_SCRIM_TOP }}
               className={cn(
-                'pointer-events-none absolute inset-x-0 top-0 z-10 px-4 pt-3 pb-10',
+                'pointer-events-none absolute inset-x-0 top-0 z-10 px-[calc(18rem/16)] pt-4 pb-10',
                 compact && 'pt-4 pr-[calc(184rem/16)] pl-3',
                 compact && lead && 'pl-[calc(52rem/16)] [[data-fill]_&]:pl-3',
                 '-translate-y-2 opacity-0',
@@ -1515,10 +1515,18 @@ export function LivePlayer({
               <span
                 className={cn(
                   'text-sub text-white',
-                  compact && 'block truncate',
+                  compact
+                    ? 'block truncate'
+                    : 'inline-flex h-6 items-center gap-1.5 rounded-full bg-(--glass) px-[calc(9rem/16)] text-cap leading-none font-semibold backdrop-blur-md',
                 )}
               >
-                <b className="font-bold">
+                {!compact && phase !== 'starting' && (
+                  <i
+                    aria-hidden="true"
+                    className="size-1.5 rounded-full bg-(--pl-accent) not-italic"
+                  />
+                )}
+                <b className={cn('font-bold', !compact && 'sr-only')}>
                   {channel.no && (
                     <span className="mr-1.5 font-code font-medium">
                       {channel.no}

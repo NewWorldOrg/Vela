@@ -2,48 +2,28 @@
 
 import Link from 'next/link'
 
-import { EMPTY_VALUE } from '@/lib/empty-value'
-
 import { cn } from '@/lib/utils'
-import { Checkbox } from '@/components/ui/checkbox'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
-import { formatBytes, formatLength } from '@/lib/format'
-import { unfinishedDeletionShapeOf } from '@/lib/recordings'
+import { formatLength } from '@/lib/format'
+import { watchedShareOf, watchStateOf } from '@/lib/library-days'
+import { seriesNameOf } from '@/lib/library-series'
 import type { Recording } from '@/repository/recordings'
-import { Button } from '@/components/ui/button'
-import { ChevronRightIcon, TrashIcon } from '@/components/vela/icons'
-import { EncodeChip } from '@/components/recordings/encode-chip'
-import { OutcomeChip } from '@/components/recordings/outcome-chip'
-import { QualityChip } from '@/components/recordings/quality-chip'
-import { cardPlace, READABLE_LINE } from '@/components/ui/table-cards'
-import { StatusCell } from '@/components/recordings/status-cell'
-import { ActionRow } from '@/components/vela/action-row'
-import { ChannelMark } from '@/components/vela/channel-mark'
+import { Checkbox } from '@/components/ui/checkbox'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { MoreIcon, TrashIcon } from '@/components/vela/icons'
 import { InFull } from '@/components/vela/in-full'
+import { EMPTY_VALUE } from '@/lib/empty-value'
 import { RecordingThumb } from '@/components/library/recording-thumb'
+import { AttentionChips } from '@/components/library/attention-chips'
 
-export const DETAIL_CELL = 'pr-1.5 pl-6'
-
-export const GAP_BEFORE_STATE = 'pl-4'
-
-export const GAP_BEFORE_ACTIONS = 'pl-5'
-
-const CELL =
-  'border-b border-dashed border-line px-[calc(13rem/16)] py-3 align-middle text-[calc(13rem/16)] group-last:border-b-0'
-
-const NUMBER = 'font-code text-ui whitespace-nowrap text-right'
-
-const FILE_MISSING = 'ファイル不在'
-
-const NO_FILE_ON_DISK = '実ファイルなし'
-
-function leftOver(r: Recording) {
-  return unfinishedDeletionShapeOf(r)
-}
-
-function Dash() {
-  return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
-}
+/** A cell of the library's table: a hairline under it from the title on, gone under a row a pointer rests on and the row above it. */
+export const CELL =
+  'h-[calc(70rem/16)] border-b border-hair px-[calc(13rem/16)] align-middle text-ui transition-[background-color,border-color] duration-[140ms] ease-toy group-last:border-b-0 group-hover:border-transparent group-hover:bg-surface [tr:has(+tr:hover)>&]:border-transparent'
 
 function Length({ recording: r }: { recording: Recording }) {
   if (r.outcome === 'recording') {
@@ -51,7 +31,7 @@ function Length({ recording: r }: { recording: Recording }) {
   }
 
   if (r.lengthSec == null) {
-    return <Dash />
+    return <span className="text-ink-2">{EMPTY_VALUE}</span>
   }
 
   const said = formatLength(r.lengthSec)
@@ -67,191 +47,171 @@ function Length({ recording: r }: { recording: Recording }) {
   )
 }
 
-function Size({ recording: r }: { recording: Recording }) {
-  const said = r.fileMissing ? (
-    <span className="font-sans text-ink-3">{NO_FILE_ON_DISK}</span>
-  ) : r.sizeBytes == null ? (
-    <Dash />
-  ) : (
-    <>{formatBytes(r.sizeBytes)}</>
-  )
+/** How far a recording was watched: 未視聴 in the ink, the line and its share part-way, 視聴済み quietly. */
+function Watched({ recording }: { recording: Recording }) {
+  const state = watchStateOf(recording)
 
-  if (!r.sizeObservedAt) {
-    return said
+  if (state === 'unwatched') {
+    return <b className="text-note font-semibold text-ink">未視聴</b>
   }
 
+  if (state === 'watched') {
+    return <span className="text-note text-ink-2">視聴済み</span>
+  }
+
+  const share = Math.round((watchedShareOf(recording) ?? 0) * 100)
+
   return (
-    <InFull says={r.sizeObservedAt}>
-      <span>{said}</span>
-    </InFull>
+    <span className="flex items-center gap-2.5">
+      <span
+        aria-hidden="true"
+        className="h-[3px] w-11 overflow-hidden rounded-full bg-surface-2"
+      >
+        <span
+          className="block h-full rounded-full bg-ink"
+          style={{ width: `${share}%` }}
+        />
+      </span>
+      <span className="font-code text-note text-ink-2">{share}%</span>
+    </span>
   )
 }
 
 export function RecordingRow({
   recording: r,
   nth,
-  onOpen,
-  onDelete,
+  picking,
   selected,
   onSelect,
+  onOpen,
+  onDelete,
 }: {
   recording: Recording
   nth: number
-  onOpen: () => void
-  onDelete: () => void
+  picking: boolean
   selected: boolean
   onSelect: (chosen: boolean) => void
+  onOpen: () => void
+  onDelete: () => void
 }) {
   const deletable = r.outcome !== 'recording'
-  const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-3'
+  const state = watchStateOf(r)
+  const series = seriesNameOf(r.title)
+  const under = series !== r.title.normalize('NFKC').trim() ? series : r.genre
 
   return (
     <tr
       role="row"
       data-pressable-row
+      data-recording={r.id}
       data-state={selected ? 'selected' : undefined}
-      onClick={onOpen}
+      onClick={picking ? () => onSelect(!selected) : onOpen}
       style={delayOf(rowDelayMs(nth))}
       className={cn(rowArrivesIn(nth), 'group cursor-pointer')}
     >
+      {picking && (
+        <td
+          role="cell"
+          className={cn(CELL, 'rounded-l-md border-transparent pr-0 pl-3')}
+          onClick={(event) => event.stopPropagation()}
+        >
+          <Checkbox
+            checked={selected}
+            onCheckedChange={(next) => onSelect(next === true)}
+            aria-label={`${r.title} を選ぶ`}
+          />
+        </td>
+      )}
       <td
         role="cell"
-        {...cardPlace('select')}
-        className={CELL}
-        onClick={(event) => event.stopPropagation()}
+        className={cn(
+          CELL,
+          'border-transparent pr-1 pl-2.5',
+          !picking && 'rounded-l-md',
+        )}
       >
-        <Checkbox
-          checked={selected}
-          onCheckedChange={(next) => onSelect(next === true)}
-          aria-label={`${r.title} を選ぶ`}
-        />
+        <RecordingThumb recording={r} />
       </td>
-      <td role="cell" {...cardPlace('lead')} className={CELL}>
-        <span className="flex min-w-0 items-center gap-3">
-          <RecordingThumb recording={r} subTone={subTone} />
-          <span className={cn('min-w-0', READABLE_LINE)}>
-            <InFull says={r.title}>
-              <b className="line-clamp-2 text-body leading-[1.4] font-bold transition-colors duration-150 [font-feature-settings:'palt'] group-hover:text-brand">
-                {r.title}
-              </b>
-            </InFull>
-            <span className={cn('block truncate text-note', subTone)}>
-              {r.segments && (
-                <span className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[calc(9rem/16)] text-micro font-bold text-ink-2">
-                  {r.segments} セグメント
+      <td role="cell" className={CELL}>
+        <span className="flex min-w-0 items-center gap-2.5">
+          <span className="min-w-0">
+            <Link
+              href={`/recordings/${r.id}`}
+              onClick={(event) => event.stopPropagation()}
+              tabIndex={picking ? -1 : undefined}
+              className={cn(
+                'tap-target flex min-w-0 items-center gap-1.5 text-[calc(14.5rem/16)] leading-5 font-semibold tracking-[-0.008em] no-underline outline-none focus-visible:shadow-ring',
+                state === 'watched' ? 'text-ink-2' : 'text-ink',
+              )}
+            >
+              {state === 'unwatched' && (
+                <span
+                  data-slot="unwatched-dot"
+                  className="size-1.5 shrink-0 rounded-full bg-accent"
+                >
+                  <span className="sr-only">未視聴</span>
                 </span>
               )}
-              {r.gap && (
-                <InFull says={r.gap.detail}>
-                  <span
-                    data-slot="gap-mark"
-                    className="mr-1.5 inline-flex items-center rounded-full bg-tint-butter px-[calc(9rem/16)] text-micro font-bold text-ink-2"
-                  >
-                    {r.gap.label}
-                  </span>
-                </InFull>
-              )}
-              {r.note && (
-                <InFull says={r.note}>
-                  <span>{r.note}</span>
-                </InFull>
-              )}
-            </span>
+              <InFull says={r.title}>
+                <span className="truncate">{r.title}</span>
+              </InFull>
+            </Link>
+            {under && (
+              <span className="mt-0.5 block truncate text-sub text-ink-2">
+                {under}
+              </span>
+            )}
           </span>
+          <AttentionChips
+            recording={r}
+            className="shrink-0 flex-nowrap min-[1366px]:hidden"
+          />
         </span>
       </td>
-      <td role="cell" {...cardPlace('meta')} className={cn(CELL, 'text-ui')}>
-        <span className="flex items-center gap-2">
-          <ChannelMark logo={r.channelLogo} no={r.channelNo} keepsTheSlot />
-          <span className="min-w-0 leading-[1.4]">{r.channel}</span>
-        </span>
+      <td role="cell" className={cn(CELL, 'truncate')}>
+        {r.channel}
       </td>
       <td
         role="cell"
-        {...cardPlace('meta')}
-        className={cn(CELL, 'font-code text-ui whitespace-nowrap text-ink-2')}
+        className={cn(CELL, 'font-code whitespace-nowrap text-ink-2')}
       >
         {r.recordedAtLabel}
       </td>
-      <td role="cell" {...cardPlace('meta')} className={cn(CELL, NUMBER)}>
+      <td role="cell" className={cn(CELL, 'font-code whitespace-nowrap')}>
         <Length recording={r} />
       </td>
-      <td role="cell" {...cardPlace('meta')} className={cn(CELL, NUMBER)}>
-        <Size recording={r} />
+      <td role="cell" className={CELL}>
+        <Watched recording={r} />
+      </td>
+      <td role="cell" className={cn(CELL, 'hidden min-[1366px]:table-cell')}>
+        <AttentionChips recording={r} />
       </td>
       <td
         role="cell"
-        {...cardPlace('field', '結果')}
-        className={cn(CELL, GAP_BEFORE_STATE)}
+        className={cn(CELL, 'rounded-r-md pr-2 pl-0 text-right')}
+        onClick={(event) => event.stopPropagation()}
       >
-        <StatusCell>
-          <OutcomeChip
-            recording={r}
-            say
-            also={[
-              r.outcomeDetail,
-              r.fileMissing && FILE_MISSING,
-              leftOver(r)?.label,
-              leftOver(r)?.detail,
-            ]}
-          />
-        </StatusCell>
-      </td>
-      <td
-        role="cell"
-        {...cardPlace('field', '品質')}
-        className={cn(CELL, GAP_BEFORE_STATE)}
-      >
-        <StatusCell>
-          <QualityChip recording={r} say also={[r.quality.detail]} />
-        </StatusCell>
-      </td>
-      <td
-        role="cell"
-        {...cardPlace('field', 'エンコード')}
-        className={cn(CELL, GAP_BEFORE_STATE)}
-      >
-        <StatusCell>
-          <EncodeChip recording={r} say />
-        </StatusCell>
-      </td>
-      <td
-        role="cell"
-        {...cardPlace('actions')}
-        className={cn(CELL, GAP_BEFORE_ACTIONS, 'text-right whitespace-nowrap')}
-      >
-        <ActionRow onClick={(e) => e.stopPropagation()}>
-          <Button
-            variant="remove"
-            size="sm"
-            title={deletable ? undefined : '録画中のため、削除できません。'}
-            disabled={!deletable}
-            onClick={onDelete}
-          >
-            <TrashIcon />
-            削除
-          </Button>
-        </ActionRow>
-      </td>
-      <td
-        role="cell"
-        {...cardPlace('end')}
-        className={cn(
-          CELL,
-          'p-0 text-ink-3 transition-colors duration-150 group-hover:text-brand',
+        {!picking && (
+          <DropdownMenu>
+            <DropdownMenuTrigger
+              aria-label="この録画の操作"
+              className="tap-target inline-grid size-9 cursor-pointer place-items-center rounded-full text-ink-2 outline-none transition-[background-color,color,opacity] duration-[140ms] ease-toy hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring data-[state=open]:bg-surface-2 data-[state=open]:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:opacity-0 [@media(hover:hover)_and_(pointer:fine)]:group-hover:opacity-100 [@media(hover:hover)_and_(pointer:fine)]:focus-visible:opacity-100"
+            >
+              <MoreIcon className="size-[calc(18rem/16)]" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                variant="destructive"
+                disabled={!deletable}
+                title={deletable ? undefined : '録画中のため、削除できません。'}
+                onSelect={onDelete}
+              >
+                <TrashIcon />
+                削除
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
-      >
-        <Link
-          href={`/recordings/${r.id}`}
-          aria-label="録画詳細へ"
-          onClick={(event) => event.stopPropagation()}
-          className={cn(
-            DETAIL_CELL,
-            'tap-target flex h-full w-full items-center justify-end outline-none focus-visible:shadow-ring',
-          )}
-        >
-          <ChevronRightIcon className="size-[calc(15rem/16)]" />
-        </Link>
       </td>
     </tr>
   )

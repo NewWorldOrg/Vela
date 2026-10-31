@@ -56,7 +56,7 @@ function Row({
     <div className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0">
       <ChannelMark logo={logo} no={no === '' ? undefined : no} on={on} />
       <span className="min-w-0 flex-1 truncate text-ui font-bold">{name}</span>
-      {note && <span className="shrink-0 text-note text-ink-3">{note}</span>}
+      {note && <span className="shrink-0 text-note text-ink-2">{note}</span>}
     </div>
   )
 }
@@ -64,19 +64,19 @@ function Row({
 export const States: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
-      <SectionHeading mark={MarkPill}>読み取れている局</SectionHeading>
+      <SectionHeading>読み取れている局</SectionHeading>
       <Surface className="py-0.5">
         {READ.map(([no, name, logo]) => (
           <Row key={no} no={no} name={name} logo={logo} />
         ))}
       </Surface>
-      <SectionHeading mark={MarkPill}>絵のない局</SectionHeading>
+      <SectionHeading>絵のない局</SectionHeading>
       <Surface className="py-0.5">
         {STANDING_IN.map(([no, name, note, logo]) => (
           <Row key={name} no={no} name={name} note={note} logo={logo} />
         ))}
       </Surface>
-      <SectionHeading mark={MarkPill}>選んでいる行</SectionHeading>
+      <SectionHeading>選んでいる行</SectionHeading>
       <Surface className="py-0.5">
         <Row no="151" name="みなと総合1" logo={LOGO_SOLID_BLOCK} on />
         <Row no="181" name="第一テレビ1" logo={LOGO_NOT_YET_READ} on />
@@ -105,7 +105,7 @@ const LOGO_AT: Partial<Record<number, StationLogo>> = {
 export const ManyMissing: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
-      <SectionHeading mark={MarkPill}>27 列のうち 3 局</SectionHeading>
+      <SectionHeading>27 列のうち 3 局</SectionHeading>
       <Surface className="py-0.5">
         {Array.from({ length: 27 }, (_, nth) => {
           const no = String(11 + nth * 10).padStart(3, '0')

@@ -21,27 +21,18 @@ const NOT_SOURCE = new Set([
 
 const THE_BUTTON = 'components/ui/button.tsx'
 
-const THE_VARIANTS = [
-  'default',
-  'outline',
-  'ghost',
-  'watch',
-  'change',
-  'halt',
-  'remove',
-  'removeFill',
-]
+const THE_VARIANTS = ['default', 'tone', 'ghost', 'danger', 'dangerFill']
 
-const BY_MEANING: Record<string, string> = {
-  watch: 'brand',
-  change: 'sky',
-  halt: 'lemon',
-  remove: 'coral',
+/** The ground and the word each kind of press is drawn in, as the canon's table of buttons pairs them. */
+const BY_KIND: Record<string, [string, string]> = {
+  default: ['bg-btn', 'text-on-ink'],
+  tone: ['bg-surface-2', 'text-ink'],
+  ghost: ['bg-transparent', 'text-ink-2'],
+  danger: ['bg-transparent', 'text-acc-text'],
+  dangerFill: ['bg-accent-soft', 'text-acc-text'],
 }
 
 const THE_GROUPS = ['ActionRow', 'AlertDialogFooter', 'DialogFooter']
-
-const DOES_NOTHING = ['閉じる', 'キャンセル']
 
 const A_VARIANT_KEY = /^\s{8}([A-Za-z]+):/gm
 
@@ -141,74 +132,58 @@ test('the colours an action can wear are declared in one place', async () => {
   )
 })
 
-test('a colour is a ground, a word and an outline of the same hue', async () => {
+test('each kind of press is drawn on its ground in its word', async () => {
   const declared = variantsIn(await theButton())
 
-  for (const [name, hue] of Object.entries(BY_MEANING)) {
+  for (const [name, [ground, word]] of Object.entries(BY_KIND)) {
     const drawn = declared.get(name) ?? ''
 
-    assert.ok(
-      drawn.includes(`bg-${hue}-soft`),
-      `${name} is not drawn on the pale ${hue} ground`,
-    )
-    assert.ok(
-      drawn.includes(`text-${hue}`),
-      `${name} does not say its word in ${hue}`,
-    )
-    assert.ok(
-      drawn.includes(`border-${hue}-line`),
-      `${name} has no outline of its own hue`,
-    )
+    assert.ok(drawn.includes(ground), `${name} is not drawn on ${ground}`)
+    assert.ok(drawn.includes(word), `${name} does not say its word in ${word}`)
   }
-
-  const fill = declared.get('removeFill') ?? ''
-
-  assert.ok(fill.includes('bg-coral'), 'the confirming button is not filled')
-  assert.ok(fill.includes('text-on-coral'))
 })
 
-test('the colour of a state is never the colour of an action', async () => {
+test('the accent is never the ground of a press', async () => {
   const declared = variantsIn(await theButton())
 
   for (const [name, drawn] of declared) {
-    assert.ok(
-      !drawn.includes('mint'),
-      `${name} wears mint, which is a state colour (good, complete, well) ` +
-        'and not something a press does',
+    assert.doesNotMatch(
+      drawn,
+      /(^|\s)bg-accent(\s|$)/u,
+      `${name} fills a press with the accent, which only marks things`,
+    )
+    assert.doesNotMatch(
+      drawn,
+      /border-/u,
+      `${name} draws an outline, and v4 draws none`,
     )
   }
 })
 
-test('no group of actions holds a colourless press', async () => {
-  const bare: string[] = []
+test('a group of actions holds one primary press at most', async () => {
+  const crowded: string[] = []
   let groups = 0
 
   for (const { file, source } of await everySource()) {
     for (const group of groupsIn(source)) {
       groups++
 
-      if (group.body.includes('variant="outline"')) {
-        bare.push(`${file}: a ${group.kind} holds an outline press`)
-      }
+      const primaries = [
+        ...group.body.matchAll(/<(Button|AlertDialogAction)\b([^>]*)>/gu),
+      ].filter((one) => one[1] === 'Button' && !/variant=/u.test(one[2])).length
 
-      if (
-        group.body.includes('variant="ghost"') &&
-        !DOES_NOTHING.some((word) => group.body.includes(word))
-      ) {
-        bare.push(
-          `${file}: a ${group.kind} holds a ghost press next to coloured ones`,
-        )
+      if (primaries > 1) {
+        crowded.push(`${file}: a ${group.kind} holds ${primaries} primaries`)
       }
     }
   }
 
   assert.ok(groups > 10, `only ${groups} groups of actions were read`)
   assert.deepEqual(
-    bare,
+    crowded,
     [],
-    'a group of actions mixes a colourless press in with coloured ones. ' +
-      'Every press that does something takes the colour of its meaning; only ' +
-      '閉じる and キャンセル stay colourless',
+    'a group of actions offers more than one primary press. One press in a ' +
+      'group is the main one; the rest are tone, ghost or danger',
   )
 })
 
@@ -224,7 +199,7 @@ test('the orphan variants are gone from the button', async () => {
   for (const { file, source } of await everySource()) {
     assert.doesNotMatch(
       source,
-      /<Button\b[^>]*variant="(link|destructive|destructiveFill)"/u,
+      /<Button\b[^>]*variant="(link|destructive|destructiveFill|outline|watch|change|halt|remove|removeFill)"/u,
       `${file} wears a colour the canon no longer names`,
     )
   }

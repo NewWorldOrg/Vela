@@ -60,10 +60,10 @@ export function SessionTable({
     >
       <TableColumns
         widths={[
-          'calc(260rem/16)',
+          'calc(228rem/16)',
           'calc(220rem/16)',
-          'calc(148rem/16)',
-          'calc(148rem/16)',
+          'calc(164rem/16)',
+          'calc(164rem/16)',
           'calc(140rem/16)',
         ]}
       />
@@ -127,7 +127,7 @@ function DeviceName({ session }: { session: SessionRow }) {
         className={
           session.current
             ? 'flex size-8 shrink-0 items-center justify-center rounded-md bg-surface text-brand'
-            : 'flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-ink-3'
+            : 'flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-ink-2'
         }
       >
         <Glyph className="size-[calc(17rem/16)]" />
@@ -143,7 +143,7 @@ function DeviceName({ session }: { session: SessionRow }) {
           {session.device.name}
         </b>
         {session.device.kind && (
-          <span className="block text-cap text-ink-3">
+          <span className="block text-cap text-ink-2">
             {session.device.kind}
           </span>
         )}
@@ -162,7 +162,7 @@ function Account({ session }: { session: SessionRow }) {
   return (
     <span className="block min-w-[calc(160rem/16)] whitespace-normal wrap-anywhere">
       <b className="heading block text-ui">{session.displayName}</b>
-      <small className="block text-cap text-ink-3">
+      <small className="block text-cap text-ink-2">
         {wordFor(METHOD_LABEL, session.method)}
       </small>
     </span>

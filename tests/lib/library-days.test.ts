@@ -8,6 +8,7 @@ import {
   goesOnFrom,
   minutesLeftOf,
   watchedShareOf,
+  watchStateOf,
 } from '@/lib/library-days'
 
 const NOW = new Date('2026-10-30T12:04:00Z')
@@ -61,4 +62,12 @@ test('the minutes left and the share watched come from where it was left', () =>
   assert.equal(minutesLeftOf({ lengthSec: 1798 }), undefined)
   assert.equal(watchedShareOf({ watchedSec: 900, lengthSec: 1800 }), 0.5)
   assert.equal(watchedShareOf({ watchedSec: 900 }), undefined)
+})
+
+test('a recording is unwatched until it is watched past its first moments, and watched once it is as good as through', () => {
+  assert.equal(watchStateOf({ lengthSec: 600 }), 'unwatched')
+  assert.equal(watchStateOf({ watchedSec: 12, lengthSec: 600 }), 'unwatched')
+  assert.equal(watchStateOf({ watchedSec: 240, lengthSec: 600 }), 'partway')
+  assert.equal(watchStateOf({ watchedSec: 580, lengthSec: 600 }), 'watched')
+  assert.equal(watchStateOf({ watchedSec: 240 }), 'partway')
 })

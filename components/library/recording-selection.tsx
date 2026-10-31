@@ -71,7 +71,7 @@ export function RecordingSelection({
         <b className="font-code font-bold">{chosen.length}</b> 件を選択
       </span>
       <Button
-        variant="remove"
+        variant="danger"
         size="sm"
         disabled={pending || !deletable}
         onClick={() => setRemoving(true)}
@@ -79,7 +79,7 @@ export function RecordingSelection({
         <TrashIcon />
         削除
       </Button>
-      <Button variant="halt" size="sm" disabled={pending} onClick={onClear}>
+      <Button variant="tone" size="sm" disabled={pending} onClick={onClear}>
         選択を解除
       </Button>
       {outcome && (
@@ -113,7 +113,7 @@ export function RecordingSelection({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="removeFill"
+              variant="dangerFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

@@ -430,7 +430,7 @@ export const MORE_CHANNELS_THAN_FIT: ChannelsResult = {
         }
       : group,
   ),
-  history: Array.from({ length: 10 }, (_, round) =>
+  history: Array.from({ length: 13 }, (_, round) =>
     CHANNELS.history.map((run) => ({
       ...run,
       id: `${run.id}-${round}`,

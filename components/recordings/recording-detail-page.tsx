@@ -7,14 +7,17 @@ import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { FormatChoice } from '@/lib/playback-format'
 import type { LiveProfile } from '@/repository/live'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { formatLength, formatPlayerTime } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
 import { reservationHref } from '@/lib/reservations'
 import type {
+  Recording,
   RecordingDetail,
   RecordingDiscarded,
   ThumbnailWrite,
 } from '@/repository/recordings'
+import { seriesNameOf } from '@/lib/library-series'
 import type {
   PlaybackRead,
   PlaybackRefusal,
@@ -68,9 +71,10 @@ import {
 } from '@/components/recordings/skip-events-seat'
 import type { SendSeekWhileLeaving } from '@/components/recordings/send-seek-while-leaving'
 import { ScreenMain } from '@/components/vela/app-shell'
+import { SeriesEpisodes } from '@/components/recordings/series-episodes'
 import type { CaptionStyle } from '@/lib/caption-style'
 
-const GUTTER = 'px-[calc(30rem/16)] max-[1060px]:px-5 max-[700px]:px-3.5'
+const GUTTER = 'px-10 max-[1365px]:px-6 max-[700px]:px-3.5'
 
 /** The page's one column, which the link back, the player and the programme's information share: as wide as the picture the window's height allows, centred. While the data broadcast's remote stands beside the player, it is as wide as the box, the gap and the remote's column, still centred, so everything above and below starts at the box's left edge. On a phone held on its side the column takes the page's width, so the dock can open beside the picture. */
 const WATCH_COLUMN = cn(
@@ -202,7 +206,7 @@ function PicksUpOnTheBar({ at, id }: { at: number; id: string }) {
 }
 
 function Dot({ className }: { className?: string }) {
-  return <span className={cn('text-ink-3', className)}>・</span>
+  return <span className={cn('text-ink-2', className)}>・</span>
 }
 
 export function RecordingDetailView({
@@ -231,9 +235,12 @@ export function RecordingDetailView({
   onNoteSkip,
   onNoteSeek,
   onSeekWhileLeaving,
+  episodes = [],
   ...standIns
 }: PlayerStandIns & {
   detail: RecordingDetail
+  /** The other recordings of the series this one belongs to, newest first. */
+  episodes?: readonly Recording[]
   playback: PlaybackRead
   unaskedProfile?: PlaybackProfile
   profiles?: readonly LiveProfile[]
@@ -283,232 +290,249 @@ export function RecordingDetailView({
     d.outcome === 'truncated' || d.outcome === 'failed' ? d.outcome : null
 
   const banded = alarming ?? (d.leftScrambled ? 'failed' : null)
+  const sided = episodes.length > 0
 
   return (
     <ScreenMain
-      width={watching ? 'full' : 'default'}
+      width={watching || sided ? 'full' : 'default'}
       data-watching={watching ? '' : undefined}
       className={cn(
         GUTTER,
-        'pb-16',
+        'pt-2.5 pb-16',
         watching && 'upright:px-0',
         watching &&
           'sideways:fixed sideways:inset-0 sideways:z-40 sideways:overflow-hidden sideways:bg-(--pl-video) sideways:p-0',
       )}
     >
       {watching && <KeptAcrossTurns />}
-      <div className={WATCH_COLUMN}>
-        <div
-          className={cn(
-            ALONG,
-            watching && 'upright:px-4',
-            watching && 'sideways:hidden',
-          )}
-        >
+      <div
+        className={cn(
+          sided &&
+            'flex items-start gap-8 max-[1180px]:flex-col max-[1180px]:items-stretch has-[[data-remote=beside]]:[&>[data-slot=series-episodes]]:hidden',
+        )}
+      >
+        <div className={cn(WATCH_COLUMN, sided && 'min-w-0 flex-1')}>
           <div
             className={cn(
-              'flex items-center pt-[calc(18rem/16)] pb-3',
-              watching && 'upright:hidden',
+              ALONG,
+              watching && 'upright:px-4',
+              watching && 'sideways:hidden',
             )}
           >
-            <Link
-              href="/library"
-              className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+            <div
+              className={cn(
+                'flex items-center pt-2 pb-3 min-[701px]:hidden',
+                watching && 'upright:hidden',
+              )}
             >
-              <ChevronLeftIcon className="size-[calc(15rem/16)]" />
-              ライブラリへ
-            </Link>
+              <Link
+                href="/library"
+                className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink"
+              >
+                <ChevronLeftIcon className="size-[calc(15rem/16)]" />
+                ライブラリへ
+              </Link>
+            </div>
+
+            {banded && (
+              <div
+                data-slot="recording-outcome"
+                className={cn(
+                  'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[calc(18rem/16)] py-[calc(13rem/16)]',
+                  OUTCOME_STYLE[banded],
+                )}
+              >
+                <OutcomeMark outcome={banded} />
+                <h2 className="heading text-title whitespace-nowrap">
+                  {alarming ? OUTCOME_LABEL[alarming] : LEFT_SCRAMBLED_IN_FULL}
+                </h2>
+                {d.fileMissing && <FileMissingChip />}
+                {alarming && d.leftScrambled && <LeftScrambledChip />}
+                {d.outcomeBody && (
+                  <p className="min-w-[calc(200rem/16)] flex-1 font-code text-note text-ink-2">
+                    {d.outcomeBody}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {d.outcome === 'recording' && d.live && (
+              <div className="mb-3.5 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
+                <section className="rounded-xl bg-surface px-[calc(19rem/16)] py-[calc(17rem/16)]">
+                  <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
+                    <RecordingInProgressChip mark="ledger" />
+                  </div>
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(128rem/16),1fr))] gap-2.5">
+                    <DetailStat label="経過" value={d.live.elapsed} />
+                    <DetailStat label="書き込み済み" value={d.live.written} />
+                    <DetailStat label="進行中のドロップ" value={d.live.drops} />
+                    <DetailStat label="残り" value={d.live.rest} />
+                  </div>
+                  <p className="mt-2.5 text-note text-ink-2">
+                    最終更新{' '}
+                    <span className="font-code">{d.live.updatedAt}</span>
+                  </p>
+                </section>
+              </div>
+            )}
+
+            {whyNothingPlays(d, playback)}
           </div>
 
-          {banded && (
-            <div
-              data-slot="recording-outcome"
-              className={cn(
-                'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[calc(18rem/16)] py-[calc(13rem/16)]',
-                OUTCOME_STYLE[banded],
-              )}
+          {watching && (
+            <SkipEventsSeat
+              key={d.id}
+              recordingId={d.id}
+              modelVersion={modelVersion}
+              onNoteSkip={onNoteSkip}
+              onNoteSeek={onNoteSeek}
+              onSeekWhileLeaving={onSeekWhileLeaving}
             >
-              <OutcomeMark outcome={banded} />
-              <h2 className="heading text-[calc(15rem/16)] whitespace-nowrap">
-                {alarming ? OUTCOME_LABEL[alarming] : LEFT_SCRAMBLED_IN_FULL}
-              </h2>
-              {d.fileMissing && <FileMissingChip />}
-              {alarming && d.leftScrambled && <LeftScrambledChip />}
-              {d.outcomeBody && (
-                <p className="min-w-[calc(200rem/16)] flex-1 font-code text-note text-ink-2">
-                  {d.outcomeBody}
-                </p>
-              )}
-            </div>
-          )}
-
-          {d.outcome === 'recording' && d.live && (
-            <div className="mb-3.5 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
-              <section className="rounded-xl bg-surface px-[calc(19rem/16)] py-[calc(17rem/16)]">
-                <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-                  <RecordingInProgressChip mark="ledger" />
-                </div>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(128rem/16),1fr))] gap-2.5">
-                  <DetailStat label="経過" value={d.live.elapsed} />
-                  <DetailStat label="書き込み済み" value={d.live.written} />
-                  <DetailStat label="進行中のドロップ" value={d.live.drops} />
-                  <DetailStat label="残り" value={d.live.rest} />
-                </div>
-                <p className="mt-2.5 text-note text-ink-3">
-                  最終更新 <span className="font-code">{d.live.updatedAt}</span>
-                </p>
-              </section>
-            </div>
-          )}
-
-          {whyNothingPlays(d, playback)}
-        </div>
-
-        {watching && (
-          <SkipEventsSeat
-            key={d.id}
-            recordingId={d.id}
-            modelVersion={modelVersion}
-            onNoteSkip={onNoteSkip}
-            onNoteSeek={onNoteSeek}
-            onSeekWhileLeaving={onSeekWhileLeaving}
-          >
-            <PlayerSeat
-              key={whatOpensThePlayerAnew(
-                d.id,
-                startAt,
-                playback.plan.source,
-                startsHeld,
-              )}
-              detail={d}
-              plan={playback.plan}
-              unaskedProfile={unaskedProfile}
-              profiles={profiles}
-              formatChoice={formatChoice}
-              onTakeTicket={onTakeTicket}
-              onAskForTheSound={onAskForTheSound}
-              onKeepPosition={onKeepPosition}
-              artefact={artefact}
-              onAskWhichArtefact={onAskWhichArtefact}
-              startAt={opens.at}
-              playsAtOnce={opens.playing}
-              holdsAtOnce={opens.held}
-              autoOpensDataBroadcast={autoOpensDataBroadcast}
-              captionStyle={captionStyle}
-              lead={
-                <>
-                  <Link
-                    href="/library"
-                    aria-label="ライブラリへ"
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <ChevronLeftIcon />
-                  </Link>
-                  <span className="hidden min-w-0 truncate pl-1 text-sub font-bold text-white sideways:block">
-                    {d.title}
-                  </span>
-                </>
-              }
-              besideTheTime={
-                opens.at !== undefined &&
-                startAt === undefined && (
-                  <PicksUpOnTheBar at={opens.at} id={d.id} />
-                )
-              }
-              side={{
-                strip: (
+              <PlayerSeat
+                key={whatOpensThePlayerAnew(
+                  d.id,
+                  startAt,
+                  playback.plan.source,
+                  startsHeld,
+                )}
+                detail={d}
+                plan={playback.plan}
+                unaskedProfile={unaskedProfile}
+                profiles={profiles}
+                formatChoice={formatChoice}
+                onTakeTicket={onTakeTicket}
+                onAskForTheSound={onAskForTheSound}
+                onKeepPosition={onKeepPosition}
+                artefact={artefact}
+                onAskWhichArtefact={onAskWhichArtefact}
+                startAt={opens.at}
+                playsAtOnce={opens.playing}
+                holdsAtOnce={opens.held}
+                autoOpensDataBroadcast={autoOpensDataBroadcast}
+                captionStyle={captionStyle}
+                lead={
                   <>
-                    <StripFaceButton
-                      face={PROGRAMME_FACE}
-                      glyph={<InfoIcon />}
-                    />
-                    <StripFaceButton
-                      face={OUTSIDE_FACE}
-                      glyph={<DevicePlayerIcon />}
-                    />
+                    <Link
+                      href="/library"
+                      aria-label="ライブラリへ"
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <ChevronLeftIcon />
+                    </Link>
+                    <span className="hidden min-w-0 truncate pl-1 text-sub font-bold text-white sideways:block">
+                      {d.title}
+                    </span>
                   </>
-                ),
-                faces: {
-                  [PROGRAMME_FACE]: (
-                    <div className="flex flex-col px-4 pt-3.5 pb-4">
-                      <RecordingInfo
-                        detail={d}
-                        playback={playback}
-                        laid="face"
-                        onDelete={onDelete}
-                        onRemakeThumbnail={onRemakeThumbnail}
-                        onTakeTicket={onTakeTicket}
-                        onQueueEncode={onQueueEncode}
-                        encodeChoices={encodeChoices}
-                        encodeJob={encodeJob}
-                        onCallOffEncode={onCallOffEncode}
+                }
+                besideTheTime={
+                  opens.at !== undefined &&
+                  startAt === undefined && (
+                    <PicksUpOnTheBar at={opens.at} id={d.id} />
+                  )
+                }
+                side={{
+                  strip: (
+                    <>
+                      <StripFaceButton
+                        face={PROGRAMME_FACE}
+                        glyph={<InfoIcon />}
                       />
-                    </div>
-                  ),
-                  [OUTSIDE_FACE]: (
-                    <div className="px-4">
-                      <RecordingHandoverList
-                        recording={d}
-                        plan={playback.plan}
-                        onTakeTicket={onTakeTicket}
+                      <StripFaceButton
+                        face={OUTSIDE_FACE}
+                        glyph={<DevicePlayerIcon />}
                       />
-                    </div>
+                    </>
                   ),
-                },
-              }}
-              {...standIns}
-            />
-          </SkipEventsSeat>
-        )}
+                  faces: {
+                    [PROGRAMME_FACE]: (
+                      <div className="flex flex-col px-4 pt-3.5 pb-4">
+                        <RecordingInfo
+                          detail={d}
+                          playback={playback}
+                          laid="face"
+                          onDelete={onDelete}
+                          onRemakeThumbnail={onRemakeThumbnail}
+                          onTakeTicket={onTakeTicket}
+                          onQueueEncode={onQueueEncode}
+                          encodeChoices={encodeChoices}
+                          encodeJob={encodeJob}
+                          onCallOffEncode={onCallOffEncode}
+                        />
+                      </div>
+                    ),
+                    [OUTSIDE_FACE]: (
+                      <div className="px-4">
+                        <RecordingHandoverList
+                          recording={d}
+                          plan={playback.plan}
+                          onTakeTicket={onTakeTicket}
+                        />
+                      </div>
+                    ),
+                  },
+                }}
+                {...standIns}
+              />
+            </SkipEventsSeat>
+          )}
 
-        {watching &&
-          opens.at !== undefined &&
-          opens.at > 0 &&
-          startAt === undefined && (
-            <OnAnUprightPhone>
-              <div
-                data-slot="picks-up"
-                className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="font-code">
-                    {formatPlayerTime(opens.at)}
-                  </span>{' '}
-                  まで観ました
-                </span>
-                <Link
-                  href={`/recordings/${d.id}?at=0` as Route}
-                  replace
-                  className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+          {watching &&
+            opens.at !== undefined &&
+            opens.at > 0 &&
+            startAt === undefined && (
+              <OnAnUprightPhone>
+                <div
+                  data-slot="picks-up"
+                  className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
                 >
-                  <RebuildIcon />
-                  最初から
-                </Link>
-              </div>
-            </OnAnUprightPhone>
-          )}
+                  <span className="min-w-0 flex-1">
+                    <span className="font-code">
+                      {formatPlayerTime(opens.at)}
+                    </span>{' '}
+                    まで観ました
+                  </span>
+                  <Link
+                    href={`/recordings/${d.id}?at=0` as Route}
+                    replace
+                    className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+                  >
+                    <RebuildIcon />
+                    最初から
+                  </Link>
+                </div>
+              </OnAnUprightPhone>
+            )}
 
-        <div
-          className={cn(
-            ALONG,
-            'pt-5',
-            'upright:flex upright:flex-col upright:border-b upright:border-line upright:bg-surface upright:px-4 upright:pt-3.5 upright:pb-4',
-            watching && 'sideways:hidden',
-          )}
-        >
-          <RecordingInfo
-            detail={d}
-            playback={playback}
-            laid="page"
-            onDelete={onDelete}
-            onRemakeThumbnail={onRemakeThumbnail}
-            onTakeTicket={onTakeTicket}
-            onQueueEncode={onQueueEncode}
-            encodeChoices={encodeChoices}
-            encodeJob={encodeJob}
-            onCallOffEncode={onCallOffEncode}
-          />
+          <div
+            className={cn(
+              ALONG,
+              'pt-[calc(22rem/16)]',
+              'upright:flex upright:flex-col upright:border-b upright:border-line upright:bg-surface upright:px-4 upright:pt-3.5 upright:pb-4',
+              watching && 'sideways:hidden',
+            )}
+          >
+            <RecordingInfo
+              detail={d}
+              playback={playback}
+              laid="page"
+              onDelete={onDelete}
+              onRemakeThumbnail={onRemakeThumbnail}
+              onTakeTicket={onTakeTicket}
+              onQueueEncode={onQueueEncode}
+              encodeChoices={encodeChoices}
+              encodeJob={encodeJob}
+              onCallOffEncode={onCallOffEncode}
+            />
+          </div>
         </div>
+        {sided && (
+          <SeriesEpisodes
+            name={seriesNameOf(d.title)}
+            current={d}
+            episodes={episodes}
+            className="phone:hidden"
+          />
+        )}
       </div>
     </ScreenMain>
   )
@@ -517,39 +541,13 @@ export function RecordingDetailView({
 /** How the recording's information is laid: in the page under the player, or in the face a phone held on its side opens at the picture's right, which is as narrow as an upright phone and lays it the same way. */
 type InfoLaid = 'page' | 'face'
 
-const INFO_CLASSES: Record<
-  InfoLaid,
-  {
-    title: string
-    meta: string
-    synopsis: string
-    actions: string
-    failure: string
-    record: string
-    dot: string
-  }
-> = {
-  page: {
-    title: 'heading text-[calc(24rem/16)] leading-[1.45] upright:text-h2',
-    meta: 'mt-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2 upright:mt-1.5 upright:gap-1.5 upright:text-sub upright:text-ink-3',
-    synopsis:
-      'mt-3.5 max-w-[calc(660rem/16)] text-[calc(13rem/16)] leading-[1.9] text-ink-2 upright:order-3 upright:text-body upright:leading-[1.8]',
-    actions: 'mt-[calc(18rem/16)] upright:order-2 upright:mt-3.5',
-    failure:
-      'mt-[calc(18rem/16)] flex upright:order-4 max-w-[calc(900rem/16)] flex-wrap items-start gap-[calc(13rem/16)] rounded-lg bg-surface px-[calc(15rem/16)] py-3',
-    record: 'upright:order-5',
-    dot: '',
-  },
-  face: {
-    title: 'heading text-h2 leading-[1.45]',
-    meta: 'mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sub text-ink-3 [&>a]:basis-full [&>span:first-child]:basis-full',
-    synopsis: 'order-3 mt-3.5 text-body leading-[1.8] text-ink-2',
-    actions: 'order-2 mt-3.5',
-    failure:
-      'order-4 mt-3.5 flex flex-wrap items-start gap-[calc(13rem/16)] rounded-lg bg-surface-2 px-[calc(15rem/16)] py-3',
-    record: 'order-5 mt-3.5 rounded-lg bg-surface-2 px-4',
-    dot: 'hidden',
-  },
+function Sep() {
+  return (
+    <i
+      aria-hidden="true"
+      className="size-[3px] shrink-0 rounded-full bg-ink-3 not-italic"
+    />
+  )
 }
 
 function RecordingInfo({
@@ -575,7 +573,7 @@ function RecordingInfo({
   encodeJob?: EncodeJob
   onCallOffEncode: (id: string) => Promise<EncodeWrite>
 }) {
-  const classes = INFO_CLASSES[laid]
+  const face = laid === 'face'
   const plan =
     !d.fileMissing &&
     playback.state === 'planned' &&
@@ -587,9 +585,7 @@ function RecordingInfo({
       data-slot="phone-values"
       className={cn(
         'mt-3 grid-cols-3 overflow-hidden rounded-lg bg-surface-2',
-        laid === 'face'
-          ? 'order-1 grid'
-          : 'hidden upright:order-1 upright:grid',
+        face ? 'order-1 grid' : 'hidden upright:order-1 upright:grid',
       )}
     >
       {[
@@ -601,104 +597,176 @@ function RecordingInfo({
           key={nth}
           className="min-w-0 border-l border-line px-3 py-[calc(9rem/16)] first:border-l-0"
         >
-          <dt className="text-micro font-bold text-ink-3">{name}</dt>
+          <dt className="text-micro font-bold text-ink-2">{name}</dt>
           <dd className="truncate text-ui">{value}</dd>
         </div>
       ))}
     </dl>
   )
+  const reservationLink = d.reservationId && (
+    <Link
+      href={reservationHref(d.reservationId) as Route}
+      className="tap-target font-semibold text-ink underline-offset-[3px] hover:underline"
+    >
+      この録画の予約へ
+    </Link>
+  )
+  const length =
+    d.lengthSec != null && d.lengthSec > 0 ? (
+      <span className="font-code">{formatLength(d.lengthSec)}</span>
+    ) : null
+  const failure = d.failureReason && (
+    <div
+      className={cn(
+        'flex flex-wrap items-start gap-[calc(13rem/16)] rounded-lg px-[calc(15rem/16)] py-3',
+        face
+          ? 'order-4 mt-3.5 bg-surface-2'
+          : 'mt-[calc(18rem/16)] max-w-[calc(900rem/16)] bg-surface upright:order-4',
+      )}
+    >
+      <span className="flex size-8 flex-none items-center justify-center rounded-md bg-surface-2 text-ink-2">
+        <WarningIcon className="size-[calc(17rem/16)]" />
+      </span>
+      <div className="min-w-[calc(170rem/16)] flex-1">
+        <b className="heading block text-body">{d.failureReason.title}</b>
+        {d.failureReason.body && (
+          <p className="mt-0.5 text-sub leading-relaxed text-ink-2">
+            {d.failureReason.body}
+          </p>
+        )}
+        {d.failureReason.noticedAt && (
+          <p className="mt-1 font-code text-note tabular-nums text-ink-2">
+            {d.failureReason.noticedAt}
+          </p>
+        )}
+      </div>
+    </div>
+  )
+  const record = (
+    <RecordingRecord
+      className={
+        face ? 'order-5 mt-3.5 rounded-lg bg-surface-2 px-4' : 'upright:order-5'
+      }
+      detail={d}
+      plan={playback.state === 'planned' ? playback.plan : undefined}
+      encodeJob={encodeJob}
+      onCallOffEncode={onCallOffEncode}
+    />
+  )
+
+  if (face) {
+    return (
+      <>
+        <h2 className="heading text-section leading-[1.45]">{d.title}</h2>
+        <div
+          data-slot="watch-meta"
+          className="mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sub text-ink-2 [&>a]:basis-full [&>span:first-child]:basis-full"
+        >
+          <span className="inline-flex items-center gap-2">
+            <ChannelMark logo={d.channelLogo} no={d.channelNo} />
+            <span>{d.channel}</span>
+          </span>
+          <span className="font-code">{d.recordedRange}</span>
+          {length && (
+            <>
+              <Dot />
+              {length}
+            </>
+          )}
+          {reservationLink}
+        </div>
+        {d.genres && (
+          <div className="mt-2.5 flex flex-wrap gap-1.5">
+            {d.genres.map((g) => (
+              <Badge key={g} variant="ok">
+                {g}
+              </Badge>
+            ))}
+          </div>
+        )}
+        {values}
+        {d.synopsis && (
+          <p className="order-3 mt-3.5 text-body leading-[1.8] text-ink-2">
+            {d.synopsis}
+          </p>
+        )}
+        <div className="order-2 mt-3.5">
+          <RecordingActions
+            recording={d}
+            onDelete={onDelete}
+            onRemakeThumbnail={onRemakeThumbnail}
+            onTakeTicket={onTakeTicket}
+            onQueueEncode={onQueueEncode}
+            encodeChoices={encodeChoices}
+            laid="face"
+          />
+        </div>
+        {failure}
+        {record}
+      </>
+    )
+  }
 
   return (
     <>
-      {laid === 'face' ? (
-        <h2 className={classes.title}>{d.title}</h2>
-      ) : (
-        <h1 className={classes.title}>{d.title}</h1>
-      )}
-      <div data-slot="watch-meta" className={classes.meta}>
-        <span className="inline-flex items-center gap-2">
-          <ChannelMark logo={d.channelLogo} no={d.channelNo} />
-          <span>{d.channel}</span>
-        </span>
-        <Dot className={classes.dot} />
-        <span className="font-code">{d.recordedRange}</span>
-        {d.lengthSec != null && d.lengthSec > 0 && (
-          <>
-            <Dot />
-            <span className="font-code">{formatLength(d.lengthSec)}</span>
-          </>
-        )}
-        {d.reservationId && (
-          <>
-            <Dot className={classes.dot} />
-            <Link
-              href={reservationHref(d.reservationId) as Route}
-              className="tap-target font-bold text-brand underline-offset-[3px] hover:underline"
-            >
-              この録画の予約へ
-            </Link>
-          </>
-        )}
-      </div>
-
-      {d.genres && (
-        <div className="mt-2.5 flex flex-wrap gap-1.5">
-          {d.genres.map((g) => (
-            <span
-              key={g}
-              className="inline-block rounded-full border border-line bg-surface px-[calc(11rem/16)] py-0.5 text-note font-medium text-ink-2"
-            >
-              {g}
+      <div
+        data-slot="recording-info"
+        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 max-[900px]:grid-cols-1 upright:contents"
+      >
+        <div className="flex min-w-0 flex-col upright:contents">
+          <h1 className="heading text-display-s [overflow-wrap:anywhere] upright:text-section upright:leading-[1.45]">
+            {d.title}
+          </h1>
+          <div
+            data-slot="watch-meta"
+            className="-order-1 mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-ui text-ink-2 upright:order-none upright:mt-1.5 upright:mb-0 upright:text-sub"
+          >
+            <span className="inline-flex items-center gap-2">
+              <ChannelMark logo={d.channelLogo} no={d.channelNo} />
+              <span>{d.channel}</span>
             </span>
-          ))}
-        </div>
-      )}
-
-      {laid === 'face' ? values : <OnAnUprightPhone>{values}</OnAnUprightPhone>}
-
-      {d.synopsis && <p className={classes.synopsis}>{d.synopsis}</p>}
-
-      <div className={classes.actions}>
-        <RecordingActions
-          recording={d}
-          onDelete={onDelete}
-          onRemakeThumbnail={onRemakeThumbnail}
-          onTakeTicket={onTakeTicket}
-          onQueueEncode={onQueueEncode}
-          encodeChoices={encodeChoices}
-          plan={laid === 'face' ? undefined : plan}
-          laid={laid}
-        />
-      </div>
-
-      {d.failureReason && (
-        <div className={classes.failure}>
-          <span className="flex size-8 flex-none items-center justify-center rounded-md bg-surface-2 text-ink-2">
-            <WarningIcon className="size-[calc(17rem/16)]" />
-          </span>
-          <div className="min-w-[calc(170rem/16)] flex-1">
-            <b className="heading block text-body">{d.failureReason.title}</b>
-            {d.failureReason.body && (
-              <p className="mt-0.5 text-sub leading-relaxed text-ink-2">
-                {d.failureReason.body}
-              </p>
-            )}
-            {d.failureReason.noticedAt && (
-              <p className="mt-1 font-code text-note tabular-nums text-ink-3">
-                {d.failureReason.noticedAt}
-              </p>
+            <span aria-hidden="true">·</span>
+            <span className="font-code">{d.recordedRange}</span>
+            {reservationLink && (
+              <>
+                <span aria-hidden="true">·</span>
+                {reservationLink}
+              </>
             )}
           </div>
+          {(length || d.genres) && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-ui text-ink-2">
+              {length}
+              {length && d.genres && d.genres.length > 0 && <Sep />}
+              {d.genres?.map((g) => (
+                <Badge key={g} variant="ok">
+                  {g}
+                </Badge>
+              ))}
+            </div>
+          )}
+          <OnAnUprightPhone>{values}</OnAnUprightPhone>
+          {d.synopsis && (
+            <p className="mt-3.5 max-w-[calc(640rem/16)] text-body leading-[calc(22rem/16)] text-ink-2 upright:order-3 upright:leading-[1.8]">
+              {d.synopsis}
+            </p>
+          )}
         </div>
-      )}
-
-      <RecordingRecord
-        className={classes.record}
-        detail={d}
-        plan={playback.state === 'planned' ? playback.plan : undefined}
-        encodeJob={encodeJob}
-        onCallOffEncode={onCallOffEncode}
-      />
+        <div className="pt-1 max-[900px]:mt-4 upright:order-2 upright:mt-3.5 upright:pt-0">
+          <RecordingActions
+            recording={d}
+            onDelete={onDelete}
+            onRemakeThumbnail={onRemakeThumbnail}
+            onTakeTicket={onTakeTicket}
+            onQueueEncode={onQueueEncode}
+            encodeChoices={encodeChoices}
+            plan={plan}
+            laid="column"
+          />
+        </div>
+      </div>
+      {failure}
+      {record}
     </>
   )
 }

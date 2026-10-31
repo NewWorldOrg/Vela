@@ -24,7 +24,6 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import type { GuideResult, Program, ProgramExtras } from '@/repository/programs'
-import { halfWidthOf } from '@/lib/guide-cell'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -32,7 +31,6 @@ import type {
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
-import { IconButton } from '@/components/vela/icon-button'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { pressable } from '@/components/vela/tactile'
 import {
@@ -42,28 +40,25 @@ import {
   PhoneBarTools,
 } from '@/components/vela/phone-bar-tools'
 import { OnAPhone } from '@/components/vela/on-an-upright-phone'
-import { SidewaysPanes } from '@/components/vela/sideways-panes'
 import { ReserveCircle } from '@/components/guide/reserve-circle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
 import {
   AntennaIcon,
   ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   FilterIcon,
-  ProgramGuideIcon,
   SearchIcon,
 } from '@/components/vela/icons'
 import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
+import { hourPxIn } from '@/components/guide/guide-metrics'
 import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { ProgramBooking } from '@/components/guide/program-booking'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
 import { ChannelStrip } from '@/components/guide/channel-strip'
 import { ChannelDayList } from '@/components/guide/channel-day-list'
-import { usePhoneOnItsSide, usePhoneUpright } from '@/hooks/usePhone'
+import { usePhoneUpright } from '@/hooks/usePhone'
 import { ScreenMain } from '@/components/vela/app-shell'
 import {
   FilterFoldButton,
@@ -143,8 +138,6 @@ export function GuideView({
   const [toolsOpen, setToolsOpen] = useState(false)
   const [daysOpen, setDaysOpen] = useState(false)
   const phone = usePhoneUpright()
-  const sideways = usePhoneOnItsSide()
-  const handheld = phone || sideways
   const [listedId, setListedId] = useState<string>()
   const listed =
     shownGuide.channels.find((c) => c.id === listedId) ?? shownGuide.channels[0]
@@ -220,10 +213,6 @@ export function GuideView({
     [router, pathname, searchParams],
   )
 
-  const dayIndex = guide.days.findIndex((d) => d.date === guide.day.date)
-  const prev = guide.days[dayIndex - 1]
-  const next = guide.days[dayIndex + 1]
-
   const loaded = shown ? extras[extrasKeyOf(shown)] : undefined
   const detailed =
     shown && typeof loaded === 'object' ? { ...shown, ...loaded } : shown
@@ -234,6 +223,10 @@ export function GuideView({
         ? 'failed'
         : 'waiting'
 
+  const reserving = useMemo(
+    () => ({ onReserve, onCancel, onRestore }),
+    [onReserve, onCancel, onRestore],
+  )
   const circleOf = (program: Program) => (
     <ReserveCircle
       programmeId={program.id}
@@ -271,26 +264,94 @@ export function GuideView({
       />
     )
   }
-  const besideOf = (program: Program | undefined) =>
-    program ? (
-      <>
-        <h2 className="heading mb-3 text-h2 leading-[1.45]">
-          {halfWidthOf(program.title)}
-        </h2>
-        {detailOf(program)}
-      </>
-    ) : null
-
   return (
     <ScreenMain
       width="full"
       scroll="within"
-      className="flex flex-col px-3.5 pt-4 pb-4 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 upright:pb-0 sideways:pt-0 sideways:pb-0"
+      className="flex flex-col px-3.5 pt-3.5 pb-4 min-[701px]:px-6 min-[1366px]:px-10 upright:pt-0.5 upright:pb-0 sideways:px-3 sideways:pt-0 sideways:pb-0"
     >
-      <h1 className="heading mb-3.5 flex items-center gap-2 text-[calc(20rem/16)] phone:sr-only">
-        <ProgramGuideIcon className="size-[calc(18rem/16)] text-brand" />
-        番組表
-      </h1>
+      <h1 className="sr-only">番組表</h1>
+      <div
+        data-slot="guide-tools"
+        className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2 phone:hidden"
+      >
+        <SegmentedControl
+          aria-label="放送の種別"
+          options={CHANNEL_KINDS}
+          value={guide.kind}
+          onValueChange={(next) =>
+            patch({ kind: next === 'terrestrial' ? null : next })
+          }
+        />
+        <ul aria-label="日" className="flex items-center gap-0.5">
+          {guide.days.map((day) => {
+            const [date, weekday] = dayPartsOf(day.label)
+
+            return (
+              <li key={day.date}>
+                <button
+                  type="button"
+                  aria-pressed={day.date === guide.day.date}
+                  onClick={() => patch({ date: day.isToday ? null : day.date })}
+                  className={cn(
+                    'tap-target flex h-10 items-baseline gap-1 rounded-full px-2.5 pt-[calc(9rem/16)] font-code text-title font-bold whitespace-nowrap text-ink-2 outline-none transition-[background-color,color] duration-[140ms] ease-toy hover:text-ink focus-visible:shadow-ring',
+                    pressable,
+                    day.date === guide.day.date && 'bg-surface text-ink',
+                  )}
+                >
+                  {date}
+                  {weekday && (
+                    <span className="text-note font-medium">{weekday}</span>
+                  )}
+                </button>
+              </li>
+            )
+          })}
+        </ul>
+        <span aria-hidden="true" className="h-6 w-px bg-hair" />
+        <div role="group" aria-label="時刻へ送る" className="flex items-center">
+          {JUMPS.map((jump) => (
+            <button
+              key={jump.label}
+              type="button"
+              onClick={() =>
+                jump.label === '今' && !guide.day.isToday
+                  ? patch({ date: null })
+                  : scrollGuideTo(
+                      jump.label === '今'
+                        ? guide.nowMin === undefined
+                          ? undefined
+                          : guide.nowMin - 30
+                        : (jump.hour - guide.windowStartHour) * 60,
+                    )
+              }
+              className={cn(
+                'tap-target flex h-9 min-w-11 items-center justify-center rounded-full px-2.5 text-ui font-semibold text-ink outline-none transition-[background-color] duration-[140ms] ease-toy hover:bg-surface focus-visible:shadow-ring',
+                pressable,
+              )}
+            >
+              {jump.label}
+            </button>
+          ))}
+        </div>
+        <div className="ml-auto flex items-center gap-2">
+          {foldable && (
+            <SubChannelToggle
+              shown={!folded}
+              onShownChange={(on) => fold(!on)}
+            />
+          )}
+          <button
+            type="button"
+            data-opens="collection"
+            onClick={() => setCollectionOpen(true)}
+            className={cn(BAND_PRESS, 'h-9')}
+          >
+            <AntennaIcon />
+            収集状態
+          </button>
+        </div>
+      </div>
       <PhoneBarLead>
         <button
           type="button"
@@ -298,7 +359,7 @@ export function GuideView({
           aria-controls={daysId}
           onClick={() => setDaysOpen(!daysOpen)}
           className={cn(
-            'heading flex h-11 min-w-0 items-center gap-1 rounded-full text-h2 whitespace-nowrap outline-none focus-visible:shadow-ring',
+            'heading flex h-11 min-w-0 items-center gap-1 rounded-full text-section whitespace-nowrap outline-none focus-visible:shadow-ring',
             pressable,
           )}
         >
@@ -311,7 +372,7 @@ export function GuideView({
           <span className="sr-only">日を選ぶ</span>
           <ChevronDownIcon
             className={cn(
-              'size-[calc(18rem/16)] shrink-0 text-ink-3 transition-transform',
+              'size-[calc(18rem/16)] shrink-0 text-ink-2 transition-transform',
               daysOpen && 'rotate-180',
             )}
           />
@@ -330,17 +391,6 @@ export function GuideView({
           >
             今日
           </button>
-        )}
-        {sideways && listed && (
-          <ChannelStrip
-            channels={shownGuide.channels}
-            shown={new Set([listed.id])}
-            onPick={(c) => {
-              setListedId(c.id)
-              setPanelOpen(false)
-            }}
-            className="min-w-0 flex-1 [mask-image:linear-gradient(to_right,#000_88%,transparent)]"
-          />
         )}
       </PhoneBarLead>
       <PhoneBarTools>
@@ -392,41 +442,10 @@ export function GuideView({
       )}
       <div
         className={cn(
-          'mb-3 flex flex-wrap items-center gap-3.5 rounded-lg bg-surface px-[calc(18rem/16)] py-[calc(9rem/16)] max-[700px]:px-3.5 max-[600px]:gap-x-2.5 max-[600px]:gap-y-3 max-[600px]:py-2.5 sideways:gap-x-2.5 sideways:py-2',
-          toolsOpen ? 'phone:mb-2.5' : 'phone:hidden',
+          'hidden flex-wrap items-center gap-x-2.5 gap-y-3 rounded-lg bg-surface px-3.5 py-2.5 sideways:py-2',
+          toolsOpen && 'phone:mb-2.5 phone:flex',
         )}
       >
-        <div className="flex items-center gap-2 max-[600px]:order-first max-[600px]:min-w-0 max-[600px]:flex-1 phone:hidden">
-          <IconButton
-            aria-label="前の日"
-            size="sm"
-            disabled={!prev}
-            onClick={() => prev && patch({ date: prev.date })}
-          >
-            <ChevronLeftIcon />
-          </IconButton>
-          <span className="min-w-[7em] text-center font-code text-ui font-medium">
-            {guide.day.label}
-          </span>
-          <IconButton
-            aria-label="次の日"
-            size="sm"
-            disabled={!next}
-            onClick={() => next && patch({ date: next.date })}
-          >
-            <ChevronRightIcon />
-          </IconButton>
-          {!guide.day.isToday && (
-            <button
-              type="button"
-              onClick={() => patch({ date: null })}
-              className={cn(BAND_PRESS, BAND_CONTROL)}
-            >
-              今日
-            </button>
-          )}
-        </div>
-
         <FilterFoldButton
           open={toolsOpen}
           onOpenChange={setToolsOpen}
@@ -469,13 +488,6 @@ export function GuideView({
             <AntennaIcon />
             収集状態
           </button>
-          <Link
-            href="/search"
-            className={cn(BAND_PRESS, BAND_CONTROL, 'phone:hidden')}
-          >
-            <SearchIcon />
-            番組を検索
-          </Link>
         </div>
       </div>
 
@@ -505,7 +517,7 @@ export function GuideView({
           titleLevel={2}
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
-            <Button variant="watch" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href="/settings/channels">チャンネルへ</Link>
             </Button>
           }
@@ -545,32 +557,8 @@ export function GuideView({
               />
             </div>
           )}
-          {sideways && listed && (
-            <SidewaysPanes
-              detailLabel="番組の詳細"
-              list={
-                <ChannelDayList
-                  channelId={listed.id}
-                  dayKey={guide.day.date}
-                  programs={listedPrograms}
-                  nowMin={guide.nowMin}
-                  nowLabel={guide.nowLabel}
-                  chosenId={panelOpen ? selected?.id : undefined}
-                  className="mx-0 border-t-0"
-                  circleOf={circleOf}
-                  onToggle={select}
-                  detailOf={detailOf}
-                />
-              }
-              detail={besideOf(
-                panelOpen && detailed?.channelId === listed.id
-                  ? detailed
-                  : firstToShow(listedPrograms, guide.nowMin),
-              )}
-            />
-          )}
-          {!handheld && (
-            <div className="flex min-h-0 flex-1 flex-col phone:hidden">
+          {!phone && (
+            <div className="flex min-h-0 flex-1 flex-col upright:hidden">
               <GuideGrid
                 key={guide.kind}
                 channels={shownGuide.channels}
@@ -583,10 +571,11 @@ export function GuideView({
                 selectedId={panelOpen ? selected?.id : undefined}
                 onSelect={select}
                 glyphLoads={glyphLoads}
+                reserving={reserving}
               />
             </div>
           )}
-          {shown && !handheld && (
+          {shown && !phone && (
             <ProgramPanel
               program={detailed ?? shown}
               extras={extrasState}
@@ -616,14 +605,32 @@ export function GuideView({
   )
 }
 
-/** What the pane beside the list shows before a row is pressed: the programme on the air, or else the next to start, or else the day's first. */
-function firstToShow(
-  programs: readonly Program[],
-  nowMin: number | undefined,
-): Program | undefined {
-  return (
-    programs.find((one) => isOnAir(one, nowMin)) ??
-    programs.find((one) => nowMin === undefined || one.startMin >= nowMin) ??
-    programs[0]
-  )
+const JUMPS = [
+  { label: '今', hour: 0 },
+  { label: '朝', hour: 6 },
+  { label: '昼', hour: 12 },
+  { label: '夜', hour: 19 },
+  { label: '深夜', hour: 23 },
+] as const
+
+/** A day's label cut into its date and its day of the week: 8/8(金) is 8/8 and 金. */
+function dayPartsOf(label: string): [string, string | undefined] {
+  const parts = label.match(/^(.*)\((.)\)$/u)
+
+  return parts ? [parts[1], parts[2]] : [label, undefined]
+}
+
+/** Sends the guide to a minute of its day, that minute at the top under the channels' heads. */
+function scrollGuideTo(minute: number | undefined): void {
+  const scroller = document.querySelector<HTMLElement>('[data-guide-scroll]')
+
+  if (!scroller || minute === undefined) {
+    return
+  }
+
+  scroller.scrollTo({
+    top: Math.max(0, (minute / 60) * hourPxIn(document)),
+    behavior:
+      document.documentElement.dataset.motion === 'still' ? 'auto' : 'smooth',
+  })
 }

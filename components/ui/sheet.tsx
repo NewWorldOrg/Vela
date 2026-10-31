@@ -61,15 +61,15 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot="sheet-content"
         className={cn(
-          'fixed z-50 flex flex-col bg-surface text-ink data-[state=closed]:disappears data-[state=open]:appears',
+          'fixed z-50 flex flex-col bg-raised text-ink data-[state=closed]:disappears data-[state=open]:appears',
           side === 'right' &&
-            'inset-y-0 right-0 h-full w-3/4 border-l border-line-strong shadow-panel [--from-x:8px] sm:max-w-[calc(300rem/16)]',
+            'inset-y-0 right-0 h-full w-3/4 shadow-panel [--from-x:8px] sm:max-w-[calc(300rem/16)]',
           side === 'left' &&
-            'inset-y-0 left-0 h-full w-3/4 border-r border-line-strong shadow-pop-xl [--from-x:-8px] sm:max-w-[calc(300rem/16)]',
+            'inset-y-0 left-0 h-full w-3/4 shadow-lift [--from-x:-8px] sm:max-w-[calc(300rem/16)]',
           side === 'top' &&
-            'inset-x-0 top-0 h-auto rounded-b-xl border border-t-0 border-line-strong shadow-pop-xl [--from-y:-8px]',
+            'inset-x-0 top-0 h-auto rounded-b-xl shadow-lift [--from-y:-8px]',
           side === 'bottom' &&
-            'inset-x-0 bottom-0 h-auto rounded-t-xl border border-b-0 border-line-strong shadow-sheet [--from-y:8px]',
+            'inset-x-0 bottom-0 h-auto rounded-t-xl shadow-sheet [--from-y:8px]',
           className,
         )}
         {...props}
@@ -109,7 +109,7 @@ function SheetHeader({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="sheet-header"
       className={cn(
-        'flex items-center justify-between gap-2 border-b border-dashed border-line py-[calc(9rem/16)] pr-2.5 pl-[calc(15rem/16)]',
+        'flex items-center justify-between gap-2 border-b border-hair py-[calc(9rem/16)] pr-2.5 pl-[calc(15rem/16)]',
         className,
       )}
       {...props}
@@ -122,7 +122,7 @@ function SheetFooter({ className, ...props }: React.ComponentProps<'div'>) {
     <div
       data-slot="sheet-footer"
       className={cn(
-        'mt-auto flex gap-[calc(9rem/16)] border-t border-dashed border-line px-[calc(15rem/16)] py-[calc(11rem/16)]',
+        'mt-auto flex gap-[calc(9rem/16)] border-t border-hair px-[calc(15rem/16)] py-[calc(11rem/16)]',
         className,
       )}
       {...props}
@@ -137,7 +137,7 @@ function SheetTitle({
   return (
     <SheetPrimitive.Title
       data-slot="sheet-title"
-      className={cn('heading text-ui', className)}
+      className={cn('heading text-heading', className)}
       {...props}
     />
   )

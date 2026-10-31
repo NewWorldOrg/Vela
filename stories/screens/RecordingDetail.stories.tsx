@@ -43,6 +43,7 @@ import {
   whereItLeftFor,
 } from '@/stories/handed-over'
 import { inTheApp } from '@/stories/frames'
+import { LIBRARY_SHELF } from '@/stories/fixtures/library-shelf'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -51,6 +52,31 @@ function detail(id: string) {
   }
   return found
 }
+
+const KITCHEN_DISHES = [
+  '夏野菜の作り置き',
+  '保存瓶の煮沸',
+  '常備菜の段取り',
+  '朝ごはんの台所',
+  'ぬか床のはじめ方',
+  '秋の干し野菜',
+  '台所の片付け',
+]
+
+/** Seven more weeks of the kitchen programme the stories open, on the same channel, some watched, some part-way, some not. */
+const KITCHEN_EPISODES = LIBRARY_SHELF.filter((one) =>
+  one.title.startsWith('となりの発明王'),
+).map((one, nth) => ({
+  ...one,
+  id: `27${nth}0`,
+  title: `週末キッチンの手帖「${KITCHEN_DISHES[nth]}」`,
+  channel: '中央テレビ1',
+  channelNo: '041',
+  genre: 'バラエティ',
+  lengthSec: 30 * 60,
+  watchedSec:
+    one.watchedSec === undefined ? undefined : (one.watchedSec / 600) * 1800,
+}))
 
 function withoutAnArtefact(id: string) {
   return { ...detail(id), encode: 'notEncoded' as const }
@@ -196,7 +222,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 export const 完全: Story = {
-  args: { detail: detail('1274') },
+  args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -268,6 +294,39 @@ export const 追記で再開した録画は欠けを言う: Story = {
       canvas.getByRole('link', { name: 'この時間帯を再生' }),
     ).toHaveAttribute('href', '/recordings/1274?at=312')
     await expect(canvas.queryByText('良好')).toBeNull()
+  },
+}
+
+export const 同じシリーズのほかの回を右に並べる: Story = {
+  args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
+  play: async ({ canvasElement }) => {
+    const column = within(
+      await waitFor(() =>
+        expect(
+          canvasElement.querySelector('[data-slot="series-episodes"]'),
+        ).toBeVisible(),
+      ).then(
+        () =>
+          canvasElement.querySelector(
+            '[data-slot="series-episodes"]',
+          ) as HTMLElement,
+      ),
+    )
+
+    await expect(
+      column.getByRole('heading', { name: /週末キッチンの手帖/ }),
+    ).toHaveTextContent('8 話 · 未視聴 4')
+    await expect(column.getAllByRole('link')).toHaveLength(7)
+    await expect(column.getAllByRole('link')[0]).toHaveAttribute(
+      'href',
+      '/recordings/2700',
+    )
+    await expect(column.getByText(/夏野菜の作り置き/)).toBeVisible()
+    await expect(
+      canvasElement.querySelectorAll(
+        '[data-slot="series-episodes"] [data-slot="unwatched-dot"]',
+      ),
+    ).toHaveLength(3)
   },
 }
 
@@ -1198,7 +1257,10 @@ export const 操作の並び: Story = {
     await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
       1,
     )
-    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
+    await expect(new Set(drawn.map((box) => Math.round(box.left))).size).toBe(1)
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(
+      THE_ACTIONS.length,
+    )
 
     for (const name of THE_ACTIONS) {
       await expect(
@@ -1208,7 +1270,7 @@ export const 操作の並び: Story = {
 
     await expect(canvas.getByRole('button', { name: '削除' })).toHaveAttribute(
       'data-variant',
-      'remove',
+      'danger',
     )
   },
 }
@@ -1263,8 +1325,7 @@ export const 記録の値は札で言う: Story = {
     for (const pill of said.map(pillOf)) {
       const drawn = getComputedStyle(pill)
 
-      await expect(drawn.borderTopStyle).not.toBe('none')
-      await expect(parseFloat(drawn.borderTopWidth)).toBeGreaterThan(0)
+      await expect(drawn.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
     }
 
     const measured = said.map((words) => {
@@ -1504,7 +1565,7 @@ export const 電話_値の帯と2列2段の操作: Story = {
       [...values.querySelectorAll('dt')].map((one) => one.textContent),
     ).toEqual(['結果', '品質', 'エンコード'])
 
-    const row = drawnAs(canvasElement, 'action-row')
+    const row = drawnAs(canvasElement, 'recording-actions')
     const pressed = [...row.querySelectorAll('button')].filter(
       (one) => one.getBoundingClientRect().width > 0,
     )
