@@ -212,7 +212,8 @@ export function TabBarItem({
         className={cn(
           'group/tab relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[calc(2rem/16)] text-ink-2 no-underline outline-none',
           'transition-colors duration-[140ms] ease-toy hover:text-ink',
-          active && 'text-ink',
+          'sideways:mx-1.5 sideways:rounded-xl',
+          active && 'text-ink sideways:bg-surface-2',
           className,
         )}
         {...props}
@@ -238,7 +239,7 @@ export function TabBarItem({
           <span
             aria-hidden="true"
             data-slot="tab-bar-dot"
-            className="absolute bottom-[calc(3rem/16)] left-1/2 size-[5px] -translate-x-1/2 rounded-full bg-accent sideways:bottom-[calc(2rem/16)]"
+            className="absolute bottom-[calc(3rem/16)] left-1/2 size-[5px] -translate-x-1/2 rounded-full bg-accent sideways:hidden"
           />
         )}
         {badge}
