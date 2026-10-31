@@ -381,6 +381,16 @@ export function InfoIcon(props: IconProps) {
   )
 }
 
+/** Two arrows, down and up: the next of a few, in turn. */
+export function SwapIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M8.5 5v13.5M5 15l3.5 3.5L12 15" />
+      <path d="M15.5 19V5.5M12 9l3.5-3.5L19 9" />
+    </Icon>
+  )
+}
+
 export function WarningIcon(props: IconProps) {
   return (
     <Icon {...props}>

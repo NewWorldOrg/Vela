@@ -3830,27 +3830,104 @@ export const 縦の電話では歯車を開いて送っても下のタブが見�
   },
 }
 
-export const 横向きの電話では送っても上の帯と行き先の列が見えている: Story = {
+const ON_ITS_SIDE = { width: 844, height: 390 }
+
+function sidewaysStrip(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('[data-slot="player-strip"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error("the column at the picture's right is not on the screen")
+  }
+
+  return found
+}
+
+export const 横向きの電話では観ている間は上の帯も行き先の列も出さず映像を窓の高さいっぱいにする: Story =
+  {
+    args: { openSocket: withAPicture },
+    parameters: { screen: ON_ITS_SIDE, coarse: true },
+    play: async ({ canvasElement }) => {
+      await waitFor(() => expect(liveFit(canvasElement)).toBe('compact'))
+      await expect(seen(document.querySelector('[data-slot="top-bar"]'))).toBe(
+        false,
+      )
+      await expect(seen(document.querySelector('[data-slot="tab-bar"]'))).toBe(
+        false,
+      )
+
+      const board = livePlayer(canvasElement).getBoundingClientRect()
+      const strip = sidewaysStrip(canvasElement).getBoundingClientRect()
+
+      await expect(Math.abs(board.height - window.innerHeight)).toBeLessThan(1)
+      await expect(board.right).toBeLessThanOrEqual(strip.left + 0.5)
+      await expect(Math.abs(strip.right - window.innerWidth)).toBeLessThan(1)
+      await expect(strip.height).toBe(window.innerHeight)
+      await expect(
+        within(sidewaysStrip(canvasElement)).getByRole('button', {
+          name: '番組',
+        }),
+      ).toBeVisible()
+    },
+  }
+
+export const 横向きの電話では右の列の局を押すと映像を閉じずに替える: Story = {
   args: { openSocket: withAPicture },
-  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  parameters: { screen: ON_ITS_SIDE, coarse: true },
   play: async ({ canvasElement }) => {
-    for (const down of [0, 300, 4000]) {
-      window.scrollTo(0, down)
-      await waitFor(() => {
-        const bar = document.querySelector('[data-slot="top-bar"]')
+    const strip = within(sidewaysStrip(canvasElement))
+    const other = strip.getByRole('button', { name: /中央テレビ1/ })
 
-        expect(seen(bar)).toBe(true)
-        expect(bar?.getBoundingClientRect().top).toBe(0)
-        expect(
-          within(
-            document.querySelector<HTMLElement>('[data-slot="tab-bar"]')!,
-          ).getByRole('link', { name: 'ライブ' }),
-        ).toBeVisible()
-      })
-    }
+    await userEvent.click(other)
 
-    window.scrollTo(0, 0)
-    await waitFor(() => expect(liveFit(canvasElement)).not.toBeNull())
+    await expect(other).toHaveAttribute('aria-pressed', 'true')
+    await expect(livePlayer(canvasElement)).toBeVisible()
+    await expect(strip.getAllByRole('button', { pressed: true })).toHaveLength(
+      1,
+    )
+  },
+}
+
+export const 横向きの電話では番組を右の列の場所に開き映像は残りに縮む: Story = {
+  args: { openSocket: withAPicture },
+  parameters: { screen: ON_ITS_SIDE, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const wide = livePlayer(canvasElement).getBoundingClientRect().width
+
+    await userEvent.click(
+      within(sidewaysStrip(canvasElement)).getByRole('button', {
+        name: '番組',
+      }),
+    )
+
+    const face = await canvas.findByRole('region', { name: '番組' })
+    const dock = canvasElement.querySelector('[data-slot="player-dock"]')!
+    const box = dock.getBoundingClientRect()
+    const board = livePlayer(canvasElement).getBoundingClientRect()
+
+    await expect(dock.contains(face)).toBe(true)
+    await expect(sidewaysStrip(canvasElement)).not.toBeVisible()
+    await expect(within(face).getByRole('heading')).toHaveTextContent(
+      'ニュースの視点9',
+    )
+    await expect(Math.abs(box.width - 300)).toBeLessThan(1)
+    await expect(box.height).toBe(window.innerHeight)
+    await expect(board.right).toBeLessThanOrEqual(box.left - 11.5)
+    await expect(board.width).toBeLessThan(wide)
+
+    livePlayer(canvasElement).dispatchEvent(
+      new PointerEvent('pointermove', { bubbles: true }),
+    )
+    await userEvent.click(canvas.getByRole('button', { name: '設定' }))
+    await canvas.findByRole('region', { name: '設定' })
+    await expect(canvas.queryByRole('region', { name: '番組' })).toBeNull()
+
+    await userEvent.click(
+      within(canvas.getByRole('region', { name: '設定' })).getByRole('button', {
+        name: '閉じる',
+      }),
+    )
+    await waitFor(() => expect(sidewaysStrip(canvasElement)).toBeVisible())
   },
 }
 

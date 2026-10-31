@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { ActionRow } from '@/components/vela/action-row'
 import { TrashIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'
-import { usePhoneUpright } from '@/hooks/usePhone'
+import { useOnAPhone } from '@/hooks/usePhone'
 import {
   holdDeletion,
   releaseDeletion,
@@ -41,7 +41,10 @@ export function RecordingActions({
   onQueueEncode,
   encodeChoices,
   plan,
+  laid = 'page',
 }: {
+  /** In the page, or in the face a phone held on its side opens at the picture's right, where the buttons stand one under another. */
+  laid?: 'page' | 'face'
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
@@ -55,7 +58,7 @@ export function RecordingActions({
   const [asked, setAsked] = useState<Recording | null>(null)
 
   const say = useToast()
-  const upright = usePhoneUpright()
+  const phone = useOnAPhone()
 
   const deleteWhenTheToastLeaves = (): void => {
     const { id } = recording
@@ -91,7 +94,13 @@ export function RecordingActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
-        <ActionRow className="max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 upright:grid-cols-2 upright:[&>[data-slot=encode-action]]:order-2 upright:[&>[data-slot=thumbnail-action]]:order-3 [&>div]:items-stretch">
+        <ActionRow
+          className={
+            laid === 'face'
+              ? 'w-full grid-flow-row grid-cols-1 [&>div]:items-stretch'
+              : 'max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 upright:grid-cols-2 upright:[&>[data-slot=encode-action]]:order-2 upright:[&>[data-slot=thumbnail-action]]:order-3 [&>div]:items-stretch'
+          }
+        >
           {plan && (
             <ExternalPlayerOpener
               recording={recording}
@@ -117,7 +126,7 @@ export function RecordingActions({
             disabled={!deletable}
             title={deletable ? undefined : '録画中のため、削除できません。'}
             onClick={() =>
-              upright ? deleteWhenTheToastLeaves() : setAsked(recording)
+              phone ? deleteWhenTheToastLeaves() : setAsked(recording)
             }
             className="upright:order-4"
           >

@@ -5925,11 +5925,13 @@ async function opensBesideThePicture(
 
   await expect(dock.contains(face)).toBe(true)
   await expect(dock).toHaveAttribute('data-side', 'right')
-  await expect(box.left).toBeGreaterThanOrEqual(shell.right - 0.5)
-  await expect(Math.abs(box.top - shell.top)).toBeLessThan(1)
-  await expect(box.right).toBeLessThanOrEqual(window.innerWidth)
+  await expect(box.left).toBeGreaterThanOrEqual(shell.right + 11.5)
+  await expect(Math.abs(box.height - window.innerHeight)).toBeLessThan(1)
+  await expect(Math.abs(box.width - 300)).toBeLessThan(1)
   await expect(shell.width).toBeGreaterThan(400)
-  await expect(shell.height).toBeLessThanOrEqual(window.innerHeight)
+  await expect(
+    Math.abs(shell.top + shell.height / 2 - (box.top + box.height / 2)),
+  ).toBeLessThan(1)
 }
 
 const ON_A_PHONE = { width: 390, height: 844 }

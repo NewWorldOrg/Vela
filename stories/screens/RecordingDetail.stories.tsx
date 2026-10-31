@@ -1525,3 +1525,111 @@ export const 電話_値の帯と2列2段の操作: Story = {
     )
   },
 }
+
+const ON_ITS_SIDE = { width: 844, height: 390 }
+
+export const 横向きの電話_映像を窓の高さいっぱいにして右に番組と外部を置く: Story =
+  {
+    args: {
+      detail: detail('1274'),
+      playback: planned({ resumeAtSec: 754 }),
+    },
+    parameters: { screen: ON_ITS_SIDE, coarse: true },
+    play: async ({ canvasElement }) => {
+      const board = drawnAs(canvasElement, 'player').getBoundingClientRect()
+      const strip = drawnAs(canvasElement, 'player-strip')
+
+      await expect(Math.abs(board.height - window.innerHeight)).toBeLessThan(1)
+      await expect(board.right).toBeLessThanOrEqual(
+        strip.getBoundingClientRect().left + 0.5,
+      )
+      await expect(
+        canvasElement.querySelector('[data-slot="top-bar"]'),
+      ).not.toBeVisible()
+      await expect(
+        canvasElement.querySelector('[data-slot="tab-bar"]'),
+      ).not.toBeVisible()
+      await expect(
+        within(strip)
+          .getAllByRole('button')
+          .map((one) => one.textContent),
+      ).toEqual(['番組', '外部'])
+
+      const picks = drawnAs(canvasElement, 'picks-up-on-the-bar')
+
+      await expect(picks).toBeVisible()
+      await expect(picks).toHaveTextContent('12:34 まで観ました')
+      await expect(
+        within(picks).getByRole('link', { name: '最初から' }),
+      ).toHaveAttribute('href', '/recordings/1274?at=0')
+      await expect(
+        canvasElement.querySelector('[data-slot="picks-up"]'),
+      ).toBeNull()
+    },
+  }
+
+export const 横向きの電話_番組の面に題と値と操作を縦に並べる: Story = {
+  args: { detail: detail('1274') },
+  parameters: { screen: ON_ITS_SIDE, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      within(drawnAs(canvasElement, 'player-strip')).getByRole('button', {
+        name: '番組',
+      }),
+    )
+
+    const face = await canvas.findByRole('region', { name: '番組' })
+    const dock = drawnAs(canvasElement, 'player-dock')
+
+    await expect(dock.contains(face)).toBe(true)
+    await expect(
+      within(face).getAllByRole('heading', { level: 2 })[0],
+    ).toHaveTextContent(detail('1274').title)
+
+    const values = face.querySelector('[data-slot="phone-values"]')!
+
+    await expect(values).toBeVisible()
+
+    const buttons = [
+      ...face.querySelectorAll('[data-slot="action-row"] button'),
+    ].filter((one) => one.getBoundingClientRect().width > 0)
+    const lefts = new Set(
+      buttons.map((one) => Math.round(one.getBoundingClientRect().left)),
+    )
+
+    await expect(lefts.size).toBe(1)
+
+    for (const one of buttons) {
+      await expect(one.getBoundingClientRect().right).toBeLessThanOrEqual(
+        dock.getBoundingClientRect().right,
+      )
+    }
+
+    await userEvent.click(within(face).getByRole('button', { name: '閉じる' }))
+    await waitFor(() =>
+      expect(drawnAs(canvasElement, 'player-strip')).toBeVisible(),
+    )
+  },
+}
+
+export const 横向きの電話_外部の面にURLのコピーを出す: Story = {
+  args: { detail: detail('1274') },
+  parameters: { screen: ON_ITS_SIDE, coarse: true },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(drawnAs(canvasElement, 'player-strip')).getByRole('button', {
+        name: '外部',
+      }),
+    )
+
+    const face = await within(canvasElement).findByRole('region', {
+      name: '外部',
+    })
+
+    await expect(
+      within(face).getByRole('button', { name: 'URL をコピー' }),
+    ).toBeVisible()
+  },
+}

@@ -49,7 +49,7 @@ export function TopBar({ className, ...props }: ComponentProps<'header'>) {
         'sticky top-0 z-30 flex items-center gap-1 border-b border-line bg-surface px-[calc(14rem/16)]',
         TOP_BAR_HEIGHT,
         'phone:h-[calc(52rem/16)] phone:gap-2 phone:border-b-0 phone:bg-bg phone:pr-3 phone:pl-4 phone:dot-grid',
-        'upright:[body:has([data-watching])_&]:hidden',
+        'upright:[body:has([data-watching])_&]:hidden sideways:[body:has([data-watching])_&]:hidden',
         className,
       )}
       {...props}
@@ -155,6 +155,7 @@ export function TabBar({
         'pr-[env(safe-area-inset-right)] pb-(--safe-bottom) pl-[env(safe-area-inset-left)]',
         'upright:block [body:has([data-fill])_&]:hidden',
         'sideways:block sideways:top-0 sideways:right-auto sideways:w-[calc(68rem/16+env(safe-area-inset-left))] sideways:border-t-0 sideways:border-r sideways:pr-0 sideways:pb-0',
+        'sideways:[body:has([data-watching])_&]:hidden',
         className,
       )}
       {...props}
