@@ -19,16 +19,16 @@ function markOf(booking: ProgramBooking | undefined): CircleMark {
 }
 
 const RING: Record<CircleMark, string> = {
-  none: 'border-line-strong bg-surface',
-  booked: 'border-mint-line bg-mint-soft',
-  recording: 'border-coral-line bg-coral-soft',
+  none: 'bg-black/6 dark:bg-white/10',
+  booked: 'bg-black/6 dark:bg-white/10',
+  recording: 'bg-black/6 dark:bg-white/10',
 }
 
+/** Not yet: a hollow ring. Booked or recording: the accent's ring, filled. */
 const DOT: Record<CircleMark, string> = {
-  none: 'bg-coral opacity-85',
-  booked: 'bg-mint',
-  recording:
-    'bg-coral shadow-[0_0_0_4px_color-mix(in_oklab,var(--coral)_25%,transparent)]',
+  none: 'border-[1.5px] border-ink-2',
+  booked: 'border-[1.5px] border-accent bg-accent bg-clip-content p-[2px]',
+  recording: 'border-[1.5px] border-accent bg-accent bg-clip-content p-[2px]',
 }
 
 function said(written: ReservationWrite): string {
@@ -127,13 +127,13 @@ export function ReserveCircle({
     >
       <span
         className={cn(
-          'flex size-8 items-center justify-center rounded-full border-[1.5px]',
+          'flex size-9 items-center justify-center rounded-full',
           RING[mark],
         )}
       >
         <i
           aria-hidden="true"
-          className={cn('size-[calc(11rem/16)] rounded-full', DOT[mark])}
+          className={cn('size-3.5 rounded-full', DOT[mark])}
         />
       </span>
     </button>
