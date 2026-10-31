@@ -110,7 +110,7 @@ export const Default: Story = {
           </TableRow>
         </TableFooter>
       </Table>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         ヘッダ行は surface-2
         の帯で、外枠は付けない。行間は破線、ホバーは面の色だけ。
       </p>

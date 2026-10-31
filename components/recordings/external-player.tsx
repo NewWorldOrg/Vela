@@ -184,7 +184,7 @@ function OpenButton({
   }
 
   return (
-    <Button variant="watch" aria-disabled={taking} {...pressed}>
+    <Button variant="tone" aria-disabled={taking} {...pressed}>
       {taking ? <Spinner size="control" /> : <DevicePlayerIcon />}
       {OPEN_EXTERNALLY}
       <ChevronDownIcon className="size-3.5" />
@@ -237,7 +237,7 @@ function HandoverMenu({
                   >
                     <span>{choice.label}</span>
                     {choice.size && (
-                      <span className="text-note text-ink-3 tabular-nums">
+                      <span className="text-note text-ink-2 tabular-nums">
                         {choice.size}
                       </span>
                     )}
@@ -299,7 +299,7 @@ function HandoverList({
       {apps.map((app) => (
         <Button
           key={app}
-          variant="outline"
+          variant="tone"
           aria-disabled={taking}
           onClick={() => void open(app, handover)}
         >
@@ -308,7 +308,7 @@ function HandoverList({
         </Button>
       ))}
       <Button
-        variant="outline"
+        variant="tone"
         aria-disabled={taking}
         onClick={() => void copy(handover)}
       >

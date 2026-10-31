@@ -72,7 +72,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             >
               <div>
                 <b className="text-ui font-bold">{population.name}</b>
-                <span className="ml-2 font-code text-note break-keep text-ink-3">
+                <span className="ml-2 font-code text-note break-keep text-ink-2">
                   {population.source}
                 </span>
                 <span className="mt-0.5 block text-note text-ink-2">
@@ -154,12 +154,12 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                     <b className="text-ui font-bold">{group.name}</b>
                     <span className="font-code text-ui tabular-nums text-brand">
                       {group.count}
-                      <em className="ml-0.5 font-sans text-note text-ink-3 not-italic">
+                      <em className="ml-0.5 font-sans text-note text-ink-2 not-italic">
                         {group.unit}
                       </em>
                     </span>
                     {group.reason && (
-                      <span className="text-note text-ink-3">
+                      <span className="text-note text-ink-2">
                         {group.reason}
                       </span>
                     )}
@@ -196,7 +196,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                 <TableRow>
                   <TableCell
                     colSpan={3}
-                    className="whitespace-normal text-ink-3"
+                    className="whitespace-normal text-ink-2"
                   >
                     <span className="max-[600px]:block max-[600px]:px-3.5 max-[600px]:py-3">
                       {group.empty}
@@ -219,7 +219,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             </Surface>
           ))}
           {result.losses.length === 0 && (
-            <Surface className="text-ui text-ink-3">{NO_LOSSES}</Surface>
+            <Surface className="text-ui text-ink-2">{NO_LOSSES}</Surface>
           )}
         </div>
       </section>

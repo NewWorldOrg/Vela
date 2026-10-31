@@ -101,7 +101,7 @@ export function LibraryView({
           onFiltersChange({ q: typeof q === 'string' ? q : null })
         }}
       >
-        <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-3" />
+        <SearchIcon className="pointer-events-none absolute top-1/2 left-[calc(13rem/16)] z-10 size-[calc(15rem/16)] -translate-y-1/2 text-ink-2" />
         <Input
           key={filter.q ?? ''}
           name="q"
@@ -210,7 +210,7 @@ export function LibraryView({
               )}
             </span>
             {hasFilter && (
-              <Button variant="halt" size="sm" onClick={clearEveryCondition}>
+              <Button variant="tone" size="sm" onClick={clearEveryCondition}>
                 条件を解除
               </Button>
             )}
@@ -223,6 +223,7 @@ export function LibraryView({
           )}
         >
           <SegmentedControl
+            size="band"
             label="チャンネル"
             options={[
               { value: EVERY_CHANNEL, label: 'すべて' },
@@ -280,13 +281,13 @@ export function LibraryView({
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
-              <Button variant="halt" size="sm" onClick={clearEveryCondition}>
+              <Button variant="tone" size="sm" onClick={clearEveryCondition}>
                 条件を解除
               </Button>
               {filter.q &&
                 (filter.year || filter.genre || filter.state || filter.ch) && (
                   <Button
-                    variant="change"
+                    variant="tone"
                     size="sm"
                     onClick={() =>
                       onFiltersChange({
@@ -310,10 +311,10 @@ export function LibraryView({
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <div className="flex flex-wrap justify-center gap-2.5">
-              <Button variant="watch" size="sm" asChild>
+              <Button variant="tone" size="sm" asChild>
                 <Link href="/guide">番組表へ</Link>
               </Button>
-              <Button variant="watch" size="sm" asChild>
+              <Button variant="tone" size="sm" asChild>
                 <Link href="/reservations">予約へ</Link>
               </Button>
             </div>

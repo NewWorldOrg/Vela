@@ -3,12 +3,11 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
-import { iconTilt, pressable, still, tactile } from '@/components/vela/tactile'
+import { pressable, still, tactile } from '@/components/vela/tactile'
 
 const buttonVariants = cva(
   cn(
-    "tap-target inline-flex shrink-0 items-center justify-center gap-[calc(7rem/16)] rounded-full font-bold whitespace-nowrap outline-none disabled:border-dashed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3 disabled:shadow-pop-none disabled:hover:no-underline [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-[calc(15rem/16)]",
-    iconTilt,
+    "tap-target inline-flex shrink-0 items-center justify-center gap-2 rounded-full font-semibold whitespace-nowrap outline-none focus-visible:shadow-ring disabled:opacity-40 aria-disabled:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
     tactile,
     pressable,
     still,
@@ -17,26 +16,20 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'border border-btn-fill bg-btn-fill text-on-btn shadow-pop hover:border-btn-fill-hover hover:bg-btn-fill-hover hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        outline:
-          'border border-edge bg-surface text-ink shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+          'bg-btn text-on-ink not-disabled:not-aria-disabled:hover:bg-btn-hover',
+        tone: 'bg-surface-2 text-ink not-disabled:not-aria-disabled:hover:bg-surface-3',
         ghost:
-          'border border-edge bg-transparent font-medium text-ink-2 hover:translate-x-0 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
-        watch:
-          'border border-brand-line bg-brand-soft text-brand shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        change:
-          'border border-sky-line bg-sky-soft text-sky shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        halt: 'border border-lemon-line bg-lemon-soft text-lemon shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        remove:
-          'border border-coral-line bg-coral-soft text-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        removeFill:
-          'border border-coral bg-coral text-on-coral shadow-pop hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+          'bg-transparent text-ink-2 not-disabled:not-aria-disabled:hover:bg-surface not-disabled:not-aria-disabled:hover:text-ink',
+        danger:
+          'bg-transparent text-acc-text not-disabled:not-aria-disabled:hover:bg-accent-soft',
+        dangerFill:
+          'bg-accent-soft text-acc-text not-disabled:not-aria-disabled:hover:bg-accent/20',
       },
       size: {
-        default: 'h-[calc(34rem/16)] px-[calc(17rem/16)] text-ui',
-        sm: "h-7 px-[calc(13rem/16)] text-sub [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",
-        lg: 'h-10 px-6 text-body',
-        icon: 'size-[calc(34rem/16)] px-0',
+        default: 'h-10 px-[18px] text-body',
+        sm: "h-[34px] px-3 text-sub [&_svg:not([class*='size-'])]:size-[15px]",
+        lg: 'h-11 px-[22px] text-title',
+        icon: 'size-10 px-0',
       },
     },
     defaultVariants: {

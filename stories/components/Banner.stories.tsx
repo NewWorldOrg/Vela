@@ -60,7 +60,7 @@ export const Tones: Story = {
           この端末は次のリクエストから 401 になります。
         </Banner>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         ページ先頭のバナーは1枚まで。重要でも点滅・グローは使わず、色+アイコンで静的に
         示す。進行中の表示も点滅させず、割合の数値と静的なバーで伝える。
       </p>
@@ -110,7 +110,7 @@ export const Actions: Story = {
           <b>進行中の録画はありません。</b>
         </Banner>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         見に行く導線は帯の色のままの太字+下線のテキストリンク。状態を変える操作は
         Button
         のまま帯に載る(1枚に1個まで。色面の規則は帯に掛かるのであって、導線
@@ -148,7 +148,7 @@ export const Inline: Story = {
             <Label htmlFor="lnb" className="text-ui font-medium">
               LNB 給電
             </Label>
-            <div className="text-note text-ink-3">アンテナへ電源を供給する</div>
+            <div className="text-note text-ink-2">アンテナへ電源を供給する</div>
           </div>
           <Switch id="lnb" defaultChecked />
         </div>
@@ -156,7 +156,7 @@ export const Inline: Story = {
           給電を停止すると BS/CS 全チューナーの受信が止まります。
         </InlineAlert>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         複数の事象が同時に起きた場合は、重大度が最も高い1件へ集約し、残りは件数で示す。
       </p>
     </div>

@@ -39,10 +39,7 @@ export function FilterSelect({
         <SelectTrigger
           size="sm"
           aria-label={label}
-          className={cn(
-            BAND_CONTROL,
-            'w-fit rounded-full shadow-pop transition-[translate,box-shadow] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:shadow-pop-lg',
-          )}
+          className={cn(BAND_CONTROL, 'w-fit rounded-full font-medium')}
         >
           {current}
         </SelectTrigger>

@@ -45,7 +45,7 @@ export function DatePager({
         aria-hidden="true"
         className="mx-0.5 h-[calc(22rem/16)] w-px border-l border-dashed border-line-strong"
       />
-      <Button variant="change" size="sm" onClick={onToday}>
+      <Button variant="tone" size="sm" onClick={onToday}>
         {todayLabel}
       </Button>
     </div>

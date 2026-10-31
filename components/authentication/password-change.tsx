@@ -63,7 +63,7 @@ export function ChangePassword({
   return (
     <>
       <Button
-        variant="change"
+        variant="tone"
         onClick={() => {
           setRefusal(undefined)
           setOpen(true)
@@ -124,7 +124,7 @@ export function ChangePassword({
             <Button variant="ghost" disabled={pending} onClick={close}>
               キャンセル
             </Button>
-            <Button variant="remove" disabled={pending || !ready} onClick={run}>
+            <Button variant="danger" disabled={pending || !ready} onClick={run}>
               <LockIcon />
               変更する
             </Button>

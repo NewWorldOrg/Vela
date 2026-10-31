@@ -2,30 +2,25 @@ import type { ComponentProps } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
-import { iconTilt, pressable, still, tactile } from '@/components/vela/tactile'
+import { pressable, still, tactile } from '@/components/vela/tactile'
 
 const iconButtonVariants = cva(
   cn(
-    "tap-target inline-flex shrink-0 items-center justify-center rounded-full outline-none disabled:opacity-45 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-[calc(15rem/16)]",
-    iconTilt,
+    "tap-target inline-flex shrink-0 items-center justify-center rounded-full outline-none focus-visible:shadow-ring disabled:opacity-40 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4",
+    tactile,
     pressable,
     still,
   ),
   {
     variants: {
       variant: {
-        pop: cn(
-          'border border-edge bg-surface text-ink-2 shadow-pop',
-          'hover:text-ink hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-          'disabled:hover:text-ink-2 disabled:hover:shadow-pop',
-          tactile,
-        ),
+        pop: 'bg-surface text-ink-2 not-disabled:hover:bg-surface-2 not-disabled:hover:text-ink',
         quiet:
-          'border border-edge bg-transparent text-ink-2 transition-[background-color,color] duration-150 ease-toy hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring disabled:hover:bg-transparent disabled:hover:text-ink-2',
+          'bg-transparent text-ink-2 not-disabled:hover:bg-surface-2 not-disabled:hover:text-ink',
       },
       size: {
-        sm: "size-[calc(27rem/16)] [&_svg:not([class*='size-'])]:size-[calc(13rem/16)]",
-        default: 'size-8',
+        sm: "size-7 [&_svg:not([class*='size-'])]:size-[14px]",
+        default: 'size-[34px]',
       },
     },
     defaultVariants: { variant: 'pop', size: 'default' },

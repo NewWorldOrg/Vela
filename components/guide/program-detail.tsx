@@ -100,7 +100,7 @@ export function ProgramDetailBody({
         {program.dateLabel ?? dayLabel} {program.startLabel} –{' '}
         {program.endUndecided ? '終了未定' : program.endLabel}
         {program.durationLabel && (
-          <span className="ml-[calc(9rem/16)] text-sub text-ink-3">
+          <span className="ml-[calc(9rem/16)] text-sub text-ink-2">
             {program.durationLabel}
           </span>
         )}
@@ -147,7 +147,7 @@ export function ProgramDetailBody({
         ))}
         <dl className="grid grid-cols-3 gap-5 border-t border-dashed border-line pt-4 max-[700px]:grid-cols-2 max-[480px]:grid-cols-1">
           <div>
-            <dt className="text-cap font-bold tracking-[.04em] text-ink-3">
+            <dt className="text-cap font-bold tracking-[.04em] text-ink-2">
               字幕
             </dt>
             <dd className="mt-0.5 text-body font-medium">
@@ -157,7 +157,7 @@ export function ProgramDetailBody({
         </dl>
 
         <div className="mt-4 flex">
-          <Button variant="watch" size="sm" className="ml-auto" asChild>
+          <Button variant="tone" size="sm" className="ml-auto" asChild>
             <Link
               href={`/search?q=${encodeURIComponent(mainTitleOf(program.title))}`}
             >
@@ -170,7 +170,7 @@ export function ProgramDetailBody({
       <div className="mt-[calc(22rem/16)] border-t border-dashed border-line pt-[calc(17rem/16)]">
         {onAir && (
           <div className="mb-[calc(13rem/16)] flex flex-wrap gap-[calc(9rem/16)]">
-            <Button variant="watch" asChild>
+            <Button variant="tone" asChild>
               <Link
                 href={liveScreenHref(program.channelId, channel?.kind) as Route}
               >

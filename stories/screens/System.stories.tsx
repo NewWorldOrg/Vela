@@ -35,8 +35,8 @@ type Tone = 'ok' | 'warn' | 'err' | 'off'
 
 const GROUND: Record<Tone, string> = {
   ok: 'bg-surface',
-  warn: 'bg-lemon-soft',
-  err: 'bg-coral-soft',
+  warn: 'bg-accent-soft',
+  err: 'bg-accent-soft',
   off: 'bg-surface-2',
 }
 
@@ -64,7 +64,7 @@ async function tonesAre(
     groundOf(canvasElement, one),
   )
 
-  await expect(new Set(grounds).size).toBe(grounds.length)
+  await expect(new Set(grounds).size).toBe(new Set(Object.values(GROUND)).size)
 
   for (const name of PARTS) {
     const [tone, head] = heads[name] ?? ['ok', '']

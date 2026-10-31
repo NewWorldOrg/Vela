@@ -12,18 +12,28 @@ export interface SegmentedOption {
   href?: Route
 }
 
-export const CHOICE_LABEL = 'text-ui font-medium whitespace-nowrap text-ink-2'
+export const CHOICE_LABEL =
+  'text-sub font-semibold whitespace-nowrap text-ink-2'
 
-const TRACK =
-  'inline-flex min-w-0 flex-wrap gap-x-0.5 gap-y-[calc(18rem/16)] rounded-lg bg-surface-2 p-[calc(3rem/16)]'
+const TRACK = {
+  default:
+    'inline-flex min-w-0 flex-wrap gap-x-0.5 gap-y-3 rounded-xl bg-surface p-1',
+  band: 'inline-flex min-w-0 flex-wrap gap-x-0.5 gap-y-4 rounded-xl bg-surface p-0.5',
+} as const
+
+const OPTION_SIZE = {
+  default: 'h-8 px-4 text-body',
+  band: 'h-7 px-3 text-ui',
+} as const
 
 const OPTION = cn(
-  'tap-target inline-flex h-[calc(26rem/16)] cursor-pointer items-center rounded-full border border-transparent px-[calc(14rem/16)] text-sub font-medium whitespace-nowrap text-ink-2 outline-none disabled:cursor-not-allowed',
-  'transition-[background-color,color,transform] duration-150 ease-toy',
-  'enabled:hover:text-ink enabled:active:translate-x-px enabled:active:translate-y-px focus-visible:shadow-ring',
+  'tap-target inline-flex cursor-pointer items-center rounded-full font-semibold whitespace-nowrap text-ink-2 outline-none disabled:cursor-not-allowed',
+  'transition-[background-color,color,box-shadow,transform] duration-[140ms] ease-toy',
+  'enabled:hover:text-ink enabled:active:scale-[0.98] focus-visible:shadow-ring',
 )
 
-const CHOSEN = 'border-brand bg-brand-soft font-bold text-brand'
+const CHOSEN =
+  'bg-raised text-ink shadow-chosen dark:shadow-none hover:text-ink'
 
 type Naming =
   | { label: string; 'aria-label'?: string }
@@ -39,6 +49,7 @@ export function SegmentedControl({
   onValueChange,
   disabled,
   label,
+  size = 'default',
   className,
   ...props
 }: Omit<
@@ -50,6 +61,8 @@ export function SegmentedControl({
     value?: string
     onValueChange?: (value: string) => void
     disabled?: boolean
+    /** `band` sits among the 32px controls of a filter band. */
+    size?: keyof typeof TRACK
   }) {
   const labelId = useId()
 
@@ -58,13 +71,14 @@ export function SegmentedControl({
       data-slot="segmented-control"
       role="group"
       aria-labelledby={label ? labelId : undefined}
-      className={cn(TRACK, disabled && 'opacity-55', !label && className)}
+      className={cn(TRACK[size], disabled && 'opacity-55', !label && className)}
       {...props}
     >
       {options.map((option) => (
         <Segment
           key={option.value}
           option={option}
+          size={size}
           selected={option.value === value}
           disabled={disabled}
           onPick={() => onValueChange?.(option.value)}
@@ -87,11 +101,13 @@ export function SegmentedControl({
 
 function Segment({
   option,
+  size,
   selected,
   disabled,
   onPick,
 }: {
   option: SegmentedOption
+  size: keyof typeof TRACK
   selected: boolean
   disabled?: boolean
   onPick: () => void
@@ -101,7 +117,12 @@ function Segment({
       <Link
         href={option.href}
         aria-current={selected ? 'page' : undefined}
-        className={cn(OPTION, 'hover:text-ink', selected && CHOSEN)}
+        className={cn(
+          OPTION,
+          OPTION_SIZE[size],
+          'hover:text-ink',
+          selected && CHOSEN,
+        )}
       >
         {option.label}
       </Link>
@@ -114,7 +135,7 @@ function Segment({
       aria-pressed={selected}
       disabled={disabled}
       onClick={onPick}
-      className={cn(OPTION, selected && CHOSEN)}
+      className={cn(OPTION, OPTION_SIZE[size], selected && CHOSEN)}
     >
       {option.label}
     </button>

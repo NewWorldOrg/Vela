@@ -101,18 +101,18 @@ function Part({
       <span className="heading flex items-center gap-[calc(7rem/16)] text-note text-ink-2">
         <Mark className="size-[calc(15rem/16)] text-brand" />
         {name}
-        {href && <ChevronRightIcon className="ml-auto size-3.5 text-ink-3" />}
+        {href && <ChevronRightIcon className="ml-auto size-3.5 text-ink-2" />}
       </span>
       <span
         className={cn(
-          'heading mt-1.5 flex items-baseline gap-2.5 text-h2',
+          'heading mt-1.5 flex items-baseline gap-2.5 text-section',
           HEAD_TONE[tone],
         )}
       >
         <StatusDot tone={tone} className="size-2.5 self-center" />
         {head}
         {unit && (
-          <small className="font-sans text-note font-medium text-ink-3">
+          <small className="font-sans text-note font-medium text-ink-2">
             {unit}
           </small>
         )}
@@ -212,13 +212,13 @@ function DetailRow({
 }) {
   return (
     <>
-      <dt className="text-ink-3">{label}</dt>
+      <dt className="text-ink-2">{label}</dt>
       <dd className="min-w-0">{children}</dd>
     </>
   )
 }
 
-const NOTHING = <span className="text-ink-3">{EMPTY_VALUE}</span>
+const NOTHING = <span className="text-ink-2">{EMPTY_VALUE}</span>
 
 export function SystemView({
   status,
