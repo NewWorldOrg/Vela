@@ -110,8 +110,8 @@ export function NowNext({
               {restMin !== undefined && (
                 <>
                   <Dot />
-                  <span className="whitespace-nowrap">
-                    残り <span className="font-code">{restMin}</span> 分
+                  <span className="font-code whitespace-nowrap">
+                    残り {restMin} 分
                   </span>
                 </>
               )}

@@ -1257,7 +1257,10 @@ export const 操作の並び: Story = {
     await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
       1,
     )
-    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
+    await expect(new Set(drawn.map((box) => Math.round(box.left))).size).toBe(1)
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(
+      THE_ACTIONS.length,
+    )
 
     for (const name of THE_ACTIONS) {
       await expect(
@@ -1562,7 +1565,7 @@ export const 電話_値の帯と2列2段の操作: Story = {
       [...values.querySelectorAll('dt')].map((one) => one.textContent),
     ).toEqual(['結果', '品質', 'エンコード'])
 
-    const row = drawnAs(canvasElement, 'action-row')
+    const row = drawnAs(canvasElement, 'recording-actions')
     const pressed = [...row.querySelectorAll('button')].filter(
       (one) => one.getBoundingClientRect().width > 0,
     )

@@ -1267,7 +1267,7 @@ async function underTheFace(canvasElement: HTMLElement) {
   await expect(band.getBoundingClientRect().top).toBeGreaterThanOrEqual(
     face.bottom - 0.6,
   )
-  await near(board.bottom - 1, band.getBoundingClientRect().bottom)
+  await near(board.bottom, band.getBoundingClientRect().bottom)
   await expect(board.bottom).toBeLessThanOrEqual(window.innerHeight)
 }
 

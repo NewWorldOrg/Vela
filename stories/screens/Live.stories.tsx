@@ -2632,7 +2632,9 @@ function rowTravelOf(canvasElement: HTMLElement): number {
   }
 
   return Math.round(
-    row.getBoundingClientRect().left - listed.getBoundingClientRect().left,
+    row.getBoundingClientRect().left -
+      listed.getBoundingClientRect().left -
+      parseFloat(getComputedStyle(listed).paddingLeft),
   )
 }
 

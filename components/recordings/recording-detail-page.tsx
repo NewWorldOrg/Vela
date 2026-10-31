@@ -722,11 +722,7 @@ function RecordingInfo({
             className="-order-1 mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-ui text-ink-2 upright:order-none upright:mt-1.5 upright:mb-0 upright:text-sub"
           >
             <span className="inline-flex items-center gap-2">
-              <ChannelMark
-                logo={d.channelLogo}
-                no={d.channelNo}
-                className="hidden upright:inline-flex"
-              />
+              <ChannelMark logo={d.channelLogo} no={d.channelNo} />
               <span>{d.channel}</span>
             </span>
             <span aria-hidden="true">·</span>

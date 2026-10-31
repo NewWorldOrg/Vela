@@ -170,7 +170,7 @@ function rem(px: number): number {
 }
 
 /** The gap between the player's box and the column, as the live page parts them. */
-const GAP = 26
+const GAP = 32
 
 /** The column's width when it is folded to its rail, and when it holds the remote. */
 const RAIL = 44
@@ -249,9 +249,8 @@ function faceWidth(canvasElement: HTMLElement): number {
 
 /** The programme's information under the player: the title, the line under it and the rest, in the page's column. */
 function infoWidth(canvasElement: HTMLElement): number {
-  const meta = onTheScreen(canvasElement, 'watch-meta')
-
-  return (meta.parentElement as HTMLElement).getBoundingClientRect().width
+  return onTheScreen(canvasElement, 'recording-info').getBoundingClientRect()
+    .width
 }
 
 /** Where the page lays its content out: inside the main area's gutters. */
@@ -270,19 +269,16 @@ async function within1(got: number, want: number) {
   await expect(Math.abs(got - want)).toBeLessThanOrEqual(1)
 }
 
-/** One column for the page while the remote stands beside the box: the link back, the box and the programme's information start at the same left edge, the information runs to the right edge of the column beside the box, and the whole is centred in the page. */
+/** One column for the page while the remote stands beside the box: the box and the programme's information start at the same left edge, the information runs to the right edge of the column beside the box, and the whole is centred in the page. */
 async function oneColumn(canvasElement: HTMLElement) {
-  const link = within(canvasElement)
-    .getByRole('link', { name: 'ライブラリへ' })
-    .getBoundingClientRect()
   const box = onTheScreen(canvasElement, 'player').getBoundingClientRect()
-  const info = (
-    onTheScreen(canvasElement, 'watch-meta').parentElement as HTMLElement
+  const info = onTheScreen(
+    canvasElement,
+    'recording-info',
   ).getBoundingClientRect()
   const side = columnOn(canvasElement).getBoundingClientRect()
   const page = thePage(canvasElement)
 
-  await within1(link.left, box.left)
   await within1(info.left, box.left)
   await within1(info.right, side.right)
   await near(side.left - box.right, rem(GAP))

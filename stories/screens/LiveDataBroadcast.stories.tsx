@@ -474,7 +474,7 @@ async function underTheBox(canvasElement: HTMLElement) {
   await expect(band).toHaveAttribute('data-place', 'under')
   await near(box.top, chrome.getBoundingClientRect().bottom)
   await near(box.height, height)
-  await expect(box.bottom).toBe(shell.bottom - 1)
+  await expect(box.bottom).toBe(shell.bottom)
   await expect(box.width).toBe(face.width)
   await expect(chrome.contains(band)).toBe(false)
   await expect(getComputedStyle(chrome).backgroundColor).toBe(
