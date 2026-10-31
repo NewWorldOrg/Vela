@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 export const ScanProgress: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={SearchIcon}>スキャン進捗</SectionHeading>
+      <SectionHeading>スキャン進捗</SectionHeading>
       <Surface>
         <div className="mb-[13px] flex items-start justify-between gap-3">
           <div>
@@ -28,12 +28,12 @@ export const ScanProgress: Story = {
               地上デジタル 全50ch を走査しています
             </p>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="tone" size="sm">
             キャンセル
           </Button>
         </div>
         <ProgressBar value={68} label="チャンネルスキャンの進捗" />
-        <div className="mt-[9px] flex items-baseline justify-between font-code text-sub tabular-nums text-ink-3">
+        <div className="mt-[9px] flex items-baseline justify-between font-code text-sub tabular-nums text-ink-2">
           <span>
             <b className="text-ui font-medium text-ink">34 / 50ch</b>
             <span className="mx-1.5">・</span>経過 04:12
@@ -48,7 +48,7 @@ export const ScanProgress: Story = {
 export const Meters: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={TunerIcon}>信号品質メーター(CNR)</SectionHeading>
+      <SectionHeading>信号品質メーター(CNR)</SectionHeading>
       <Surface className="flex flex-col gap-3.5">
         <SignalMeter
           channel="みなと総合1(27ch)"
@@ -72,7 +72,7 @@ export const Meters: Story = {
           tone="err"
         />
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         バーは高さ 4px・単色塗りのみ。CNR は 0–40 dB
         を幅に対応させ、値は必ずテキストで併記する。
       </p>
@@ -83,7 +83,7 @@ export const Meters: Story = {
 export const BarAndSpinner: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={EncodeIcon}>細プログレスとスピナー</SectionHeading>
+      <SectionHeading>細プログレスとスピナー</SectionHeading>
       <Surface>
         <div className="mb-[7px] flex items-baseline justify-between gap-3">
           <span className="truncate text-ui">
@@ -99,7 +99,7 @@ export const BarAndSpinner: Story = {
           EPG を取得しています…
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         動くのはスピナーの回転と width
         のトランジションだけ。点滅・パルスは使わない。
       </p>

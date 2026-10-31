@@ -221,7 +221,7 @@ export function ResidencePanel({
             <Button
               key="change"
               type="button"
-              variant="change"
+              variant="tone"
               size="sm"
               autoFocus={returned}
               onClick={edit}

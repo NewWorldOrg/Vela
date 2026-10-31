@@ -14,20 +14,22 @@ import {
 } from '@/components/vela/icons'
 
 const ART = {
-  shot: <ThumbShotIcon className="size-[calc(19rem/16)] text-sky" />,
-  pending: <ThumbPendingIcon className="size-[calc(19rem/16)] text-ink-3" />,
-  none: <ThumbMissingIcon className="size-[calc(19rem/16)] text-ink-3" />,
-  error: <ThumbErrorIcon className="size-[calc(19rem/16)] text-coral" />,
+  shot: <ThumbShotIcon className="size-[calc(19rem/16)]" />,
+  pending: <ThumbPendingIcon className="size-[calc(19rem/16)]" />,
+  none: <ThumbMissingIcon className="size-[calc(19rem/16)]" />,
+  error: <ThumbErrorIcon className="size-[calc(19rem/16)]" />,
 }
 
+/** A recording's picture, or where it has none yet the mark of why, on the quiet ground of a picture still to come. */
 export function RecordingThumb({
   recording,
-  subTone = 'text-ink-3',
   className,
+  pictureClassName,
 }: {
   recording: Recording
-  subTone?: string
   className?: string
+  /** Laid on the picture itself, so it can grow under a pointer without its frame. */
+  pictureClassName?: string
 }) {
   const [reached, setReached] = useState(true)
   const redrawnAt = useRedrawnThumbnail(recording.id)
@@ -38,14 +40,10 @@ export function RecordingThumb({
 
   return (
     <span
+      data-thumbnail={recording.thumbnail}
       className={cn(
-        'flex h-[calc(52rem/16)] w-[calc(92rem/16)] shrink-0 flex-col items-center justify-center gap-px overflow-hidden rounded-md border',
-        recording.thumbnail === 'shot' && 'border-line bg-tint-sky',
-        recording.thumbnail === 'pending' &&
-          'border-dashed border-line bg-surface-2',
-        recording.thumbnail === 'none' &&
-          'border-dashed border-line-strong bg-transparent',
-        recording.thumbnail === 'error' && 'border-coral-line bg-coral-soft',
+        'flex h-[calc(54rem/16)] w-[calc(96rem/16)] shrink-0 flex-col items-center justify-center gap-px overflow-hidden rounded-sm bg-surface-2 text-ink-2',
+        recording.thumbnail === 'error' && 'bg-accent-soft text-acc-text',
         className,
       )}
     >
@@ -57,18 +55,16 @@ export function RecordingThumb({
           loading="lazy"
           decoding="async"
           onError={() => setReached(false)}
-          className="size-full object-cover"
+          className={cn(
+            'size-full object-cover transition-transform duration-[160ms] ease-toy',
+            pictureClassName,
+          )}
         />
       ) : (
         <>
           {ART[recording.thumbnail]}
           {recording.thumbnailLabel && (
-            <span
-              className={cn(
-                'text-center text-[calc(9rem/16)] leading-tight',
-                recording.thumbnail === 'error' ? 'text-coral' : subTone,
-              )}
-            >
+            <span className="text-center text-[calc(9rem/16)] leading-tight">
               {recording.thumbnailLabel}
             </span>
           )}

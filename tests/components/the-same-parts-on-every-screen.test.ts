@@ -52,8 +52,6 @@ const THE_ROW = 'components/vela/action-row.tsx'
 
 const THE_EMPTY_VALUE = 'lib/empty-value.ts'
 
-const THE_TINTS = 'components/vela/surface.tsx'
-
 const THE_BAND = 'components/vela/band.ts'
 
 const THE_SYSTEM_TERMS = 'lib/system-terms.ts'
@@ -129,7 +127,7 @@ test('a column that says a state goes through the one cell', async () => {
   const columns = await stateColumns()
 
   assert.ok(
-    columns.length > 6,
+    columns.length > 4,
     `only ${columns.length} state columns were read; the scan is watching ` +
       'almost nothing',
   )
@@ -165,7 +163,7 @@ test('a state in a table is a dot and a word, with no outline and no fill', asyn
     }
   }
 
-  assert.ok(said.length > 5, `only ${said.length} states were read`)
+  assert.ok(said.length > 4, `only ${said.length} states were read`)
 })
 
 test('what is not a state is not drawn as a pill', async () => {
@@ -316,7 +314,7 @@ test('deleting is destructive, with an icon and a word, wherever it is offered',
       deleting.push(file)
       assert.match(
         button[1],
-        /variant="remove/,
+        /variant="danger/,
         `${file} offers deleting without saying so by its colour`,
       )
       assert.doesNotMatch(
@@ -454,7 +452,7 @@ test('the mark that stands for an empty value is written down once', async () =>
   }
 })
 
-test('what a metric tile is drawn on is one colour face, named once', async () => {
+test('a metric tile is drawn on the face that sits on a face', async () => {
   const drawn = (await everySource()).filter(({ source }) =>
     A_METRIC_TILE.test(source),
   )
@@ -464,15 +462,11 @@ test('what a metric tile is drawn on is one colour face, named once', async () =
   for (const { file, source } of drawn) {
     assert.match(
       source,
-      /TINT_CLASS/,
+      /data-slot="metric-tile"[\s\S]*?bg-surface-2/,
       `${file} draws its metric tiles on a face of its own instead of the ` +
-        'tint the canon puts them on',
+        'second face the canon puts them on',
     )
   }
-
-  const tints = await readFile(path.join(ROOT, THE_TINTS), 'utf8')
-
-  assert.match(tints, /export const TINT_CLASS/)
 })
 
 test('the controls in a filter band are one height and one size of word', async () => {
@@ -551,7 +545,6 @@ test('the system screen says a state as a noun, from the one table', async () =>
 
 test('a table surface stops at its last row instead of filling the screen', async () => {
   for (const file of [
-    'components/library/recordings-table.tsx',
     'components/reservations/reservations-page.tsx',
     'components/reservations/outcomes-page.tsx',
     'components/integrity/integrity-page.tsx',

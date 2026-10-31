@@ -59,7 +59,7 @@ export function CancelJobButton({
   return (
     <span className="inline-flex flex-col items-end gap-1">
       <Button
-        variant="halt"
+        variant="tone"
         size="sm"
         className="aria-disabled:hover:bg-transparent aria-disabled:hover:text-ink-2"
         aria-disabled={pending}

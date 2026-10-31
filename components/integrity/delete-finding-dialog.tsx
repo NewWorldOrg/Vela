@@ -62,13 +62,13 @@ export function DeleteFindingDialog({
           {shown && (
             <AlertDialogDescription asChild>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
-                <dt className="text-ink-3">ファイル</dt>
+                <dt className="text-ink-2">ファイル</dt>
                 <dd className="font-code break-all text-ink">{shown.path}</dd>
-                <dt className="text-ink-3">保存先</dt>
+                <dt className="text-ink-2">保存先</dt>
                 <dd className="font-code text-ink-2">{shown.root}</dd>
-                <dt className="text-ink-3">サイズ</dt>
+                <dt className="text-ink-2">サイズ</dt>
                 <dd className="font-code text-ink-2">{shown.size}</dd>
-                <dt className="text-ink-3">検出</dt>
+                <dt className="text-ink-2">検出</dt>
                 <dd className="font-code text-ink-2">{shown.noticedAt}</dd>
               </dl>
             </AlertDialogDescription>
@@ -84,7 +84,7 @@ export function DeleteFindingDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="removeFill"
+            variant="dangerFill"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()

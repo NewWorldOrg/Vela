@@ -1,3 +1,4 @@
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import type { Program } from '@/repository/programs'
 
 export const HOUR_REM = 9
@@ -14,41 +15,74 @@ export function hourPxIn(document: Document): number {
   return HOUR_REM * (rootPx > 0 ? rootPx : 16)
 }
 
-export const GENRE_CLASS: Record<Program['genre'], string> = {
-  news: 'bg-genre-news border-genre-news-line',
-  sports: 'bg-genre-sports border-genre-sports-line',
-  info: 'bg-genre-info border-genre-info-line',
-  drama: 'bg-genre-drama border-genre-drama-line',
-  music: 'bg-genre-music border-genre-music-line',
-  variety: 'bg-genre-variety border-genre-variety-line',
-  movie: 'bg-genre-movie border-genre-movie-line',
-  anime: 'bg-genre-anime border-genre-anime-line',
-  doc: 'bg-genre-doc border-genre-doc-line',
-  other: 'bg-genre-other border-genre-other-line',
+type Genre = Program['genre']
+
+/** The v4 tint each genre is drawn in. 劇場・趣味/教育・福祉・その他 take the news row. */
+const TINT_OF: Record<Genre, string> = {
+  news: 'news',
+  sports: 'sports',
+  info: 'info',
+  drama: 'drama',
+  music: 'music',
+  variety: 'variety',
+  movie: 'movie',
+  anime: 'anime',
+  doc: 'doc',
+  other: 'news',
 }
 
-export const GENRE_MARK_CLASS: Record<Program['genre'], string> = {
-  news: 'bg-genre-news-mark',
-  sports: 'bg-genre-sports-mark',
-  info: 'bg-genre-info-mark',
-  drama: 'bg-genre-drama-mark',
-  music: 'bg-genre-music-mark',
-  variety: 'bg-genre-variety-mark',
-  movie: 'bg-genre-movie-mark',
-  anime: 'bg-genre-anime-mark',
-  doc: 'bg-genre-doc-mark',
-  other: 'bg-genre-other-mark',
+export const GENRE_MARK_CLASS: Record<Genre, string> = {
+  news: 'bg-g-news-dot',
+  sports: 'bg-g-sports-dot',
+  info: 'bg-g-info-dot',
+  drama: 'bg-g-drama-dot',
+  music: 'bg-g-music-dot',
+  variety: 'bg-g-variety-dot',
+  movie: 'bg-g-movie-dot',
+  anime: 'bg-g-anime-dot',
+  doc: 'bg-g-doc-dot',
+  other: 'bg-g-news-dot',
 }
 
-export const GENRE_CLASS_PAST: Record<Program['genre'], string> = {
-  news: 'border-dashed bg-surface-2 border-genre-news-line',
-  sports: 'border-dashed bg-surface-2 border-genre-sports-line',
-  info: 'border-dashed bg-surface-2 border-genre-info-line',
-  drama: 'border-dashed bg-surface-2 border-genre-drama-line',
-  music: 'border-dashed bg-surface-2 border-genre-music-line',
-  variety: 'border-dashed bg-surface-2 border-genre-variety-line',
-  movie: 'border-dashed bg-surface-2 border-genre-movie-line',
-  anime: 'border-dashed bg-surface-2 border-genre-anime-line',
-  doc: 'border-dashed bg-surface-2 border-genre-doc-line',
-  other: 'border-dashed bg-surface-2 border-genre-other-line',
+export type CellTime = 'ended' | 'onAir' | 'ahead'
+
+/** Where a programme stands against now: over, on the air, or still to come. A programme with no end is never over. */
+export function cellTimeOf(
+  program: Pick<Program, 'startMin' | 'durationMin' | 'endUndecided'>,
+  nowMin: number | undefined,
+): CellTime {
+  if (nowMin === undefined || nowMin < program.startMin) {
+    return 'ahead'
+  }
+
+  if (
+    !program.endUndecided &&
+    program.startMin + program.durationMin <= nowMin
+  ) {
+    return 'ended'
+  }
+
+  return 'onAir'
+}
+
+/**
+ * The ground of a programme in the guide: neutral once it is over, the deep tint of its genre while it is to come,
+ * and on the air the two tints split at `splitAt` — the light above, aired, the deep below.
+ */
+export function groundOf(
+  genre: Genre,
+  time: CellTime,
+  splitAt?: string,
+): string {
+  const tint = shapeFor(TINT_OF, genre, 'news')
+
+  if (time === 'ended') {
+    return 'var(--g-neutral)'
+  }
+
+  if (time === 'ahead' || splitAt === undefined) {
+    return `var(--g-${tint}-deep)`
+  }
+
+  return `linear-gradient(to bottom, var(--g-${tint}-light) 0 ${splitAt}, var(--g-${tint}-deep) ${splitAt} 100%)`
 }

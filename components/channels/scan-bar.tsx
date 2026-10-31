@@ -84,7 +84,7 @@ export function ScanBar({
             inputAreaClassName="w-[calc(192rem/16)]"
           />
         )}
-        <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-3">
+        <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-2">
           {lastScan}
         </span>
         <Button

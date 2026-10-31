@@ -81,7 +81,7 @@ export function PhoneSearchHits({
   return (
     <div data-slot="phone-search-hits" className={cn('-mx-3.5', className)}>
       <div className="flex items-center gap-2 px-4 pt-1 pb-2">
-        <span className="text-sub text-ink-3">
+        <span className="text-sub text-ink-2">
           <b className="font-code font-bold text-ink">{total}</b> 件
         </span>
         {ruleHref && (
@@ -96,7 +96,7 @@ export function PhoneSearchHits({
       </div>
       {days.map(({ day, hits: onTheDay }) => (
         <section key={day} aria-label={day}>
-          <h3 className="px-4 pt-3 pb-1.5 font-code text-note font-bold tracking-[0.06em] text-ink-3">
+          <h3 className="px-4 pt-3 pb-1.5 font-code text-note font-bold tracking-[0.06em] text-ink-2">
             {day}
           </h3>
           <ol className="border-y border-line bg-surface">
@@ -117,7 +117,7 @@ export function PhoneSearchHits({
                     <span className="text-ui font-medium">
                       {hit.startLabel}
                     </span>
-                    <span className="text-cap text-ink-3">
+                    <span className="text-cap text-ink-2">
                       {hit.endUndecided ? '未定' : hit.endLabel}
                     </span>
                   </span>
@@ -125,7 +125,7 @@ export function PhoneSearchHits({
                     <span className="block text-body leading-snug font-medium">
                       {marked(hit.title, words)}
                     </span>
-                    <span className="mt-1 flex items-center gap-1.5 text-note text-ink-3">
+                    <span className="mt-1 flex items-center gap-1.5 text-note text-ink-2">
                       <ChannelMark
                         logo={hit.channelLogo}
                         no={hit.channelNo}
@@ -134,7 +134,7 @@ export function PhoneSearchHits({
                       <span className="truncate">{hit.channelName}</span>
                     </span>
                     {hit.description && (
-                      <span className="mt-0.5 line-clamp-2 text-note text-ink-3">
+                      <span className="mt-0.5 line-clamp-2 text-note text-ink-2">
                         <span
                           aria-hidden="true"
                           className={cn(

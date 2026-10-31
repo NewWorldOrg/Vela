@@ -193,9 +193,7 @@ export function ViewingView({
       </Surface>
 
       <section className="mt-6 max-w-[calc(640rem/16)]">
-        <SectionHeading mark={MarkDoubleCircle}>
-          {RESIDENCE_HEADING}
-        </SectionHeading>
+        <SectionHeading>{RESIDENCE_HEADING}</SectionHeading>
         {residence.state === 'ok' ? (
           <ResidencePanel
             residence={residence.value}

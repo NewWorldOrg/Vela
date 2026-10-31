@@ -68,7 +68,7 @@ const ROWS = [
 export const Default: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
-      <SectionHeading mark={ListIcon}>チャンネル一覧</SectionHeading>
+      <SectionHeading>チャンネル一覧</SectionHeading>
       <Table>
         <TableCaption>直近のチャンネルスキャンの結果</TableCaption>
         <TableHeader>
@@ -110,7 +110,7 @@ export const Default: Story = {
           </TableRow>
         </TableFooter>
       </Table>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         ヘッダ行は surface-2
         の帯で、外枠は付けない。行間は破線、ホバーは面の色だけ。
       </p>
@@ -121,7 +121,7 @@ export const Default: Story = {
 export const Empty: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
-      <SectionHeading mark={MarkStar}>空状態</SectionHeading>
+      <SectionHeading>空状態</SectionHeading>
       <Table>
         <TableHeader>
           <TableRow>

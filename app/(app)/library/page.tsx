@@ -6,6 +6,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
+import { libraryViewOf } from '@/lib/library-view'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { LibraryView } from '@/components/library/library-page'
 import {
@@ -38,6 +39,7 @@ export default async function Page({
       <LibraryView
         result={result}
         filter={result.filter}
+        view={libraryViewOf(params)}
         onDelete={throwRecordingAway}
         onDeleteAll={throwRecordingsAway}
       />

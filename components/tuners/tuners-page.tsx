@@ -199,13 +199,13 @@ function DetectionPanel({
               {diff.tag}
             </Badge>
             <span className="font-code text-sub">{diff.device}</span>
-            <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-3">
+            <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-2">
               {diff.note}
             </small>
           </div>
         ))}
       </div>
-      <p className="px-[calc(19rem/16)] text-note leading-[1.7] text-ink-3">
+      <p className="px-[calc(19rem/16)] text-note leading-[1.7] text-ink-2">
         {notes.filter(Boolean).join('')}
       </p>
     </DetectionCard>
@@ -383,7 +383,7 @@ export function TunersView({
                     </InFull>
                   </StatusCell>
                 ) : (
-                  <span className="text-ui text-ink-3">
+                  <span className="text-ui text-ink-2">
                     {row.idleLabel ?? EMPTY_VALUE}
                   </span>
                 )}
@@ -399,7 +399,7 @@ export function TunersView({
                     {row.lastService.at}
                   </span>
                 ) : (
-                  <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+                  <span className="font-sans text-ink-2">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
               <TableCell {...cardPlace('field', COLUMNS[6].label)}>
@@ -410,7 +410,7 @@ export function TunersView({
                     onSave={onSaveLnb}
                   />
                 ) : (
-                  <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+                  <span className="font-sans text-ink-2">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
             </TableRow>
@@ -420,7 +420,7 @@ export function TunersView({
 
       {(detection !== undefined || empty) && (
         <section className="mt-9">
-          <SectionHeading mark={MarkAxis}>デバイス検出の差分</SectionHeading>
+          <SectionHeading>デバイス検出の差分</SectionHeading>
           <div
             className={cn(
               'grid items-start gap-[calc(18rem/16)]',

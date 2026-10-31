@@ -367,8 +367,8 @@ export const TextOnAWideWindow: Story = {
   render: () => <Steps />,
   parameters: { screen: { width: 1280, height: 800 } },
   play: async ({ canvasElement }) => {
-    await expect(stepSize(canvasElement, 'body')).toBe(13.5)
-    await expect(stepSize(canvasElement, 'micro')).toBe(10.5)
+    await expect(stepSize(canvasElement, 'body')).toBe(14)
+    await expect(stepSize(canvasElement, 'micro')).toBe(11)
   },
 }
 
