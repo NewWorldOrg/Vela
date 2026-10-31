@@ -28,12 +28,12 @@ export const ScanProgress: Story = {
               地上デジタル 全50ch を走査しています
             </p>
           </div>
-          <Button variant="outline" size="sm">
+          <Button variant="tone" size="sm">
             キャンセル
           </Button>
         </div>
         <ProgressBar value={68} label="チャンネルスキャンの進捗" />
-        <div className="mt-[9px] flex items-baseline justify-between font-code text-sub tabular-nums text-ink-3">
+        <div className="mt-[9px] flex items-baseline justify-between font-code text-sub tabular-nums text-ink-2">
           <span>
             <b className="text-ui font-medium text-ink">34 / 50ch</b>
             <span className="mx-1.5">・</span>経過 04:12
@@ -72,7 +72,7 @@ export const Meters: Story = {
           tone="err"
         />
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         バーは高さ 4px・単色塗りのみ。CNR は 0–40 dB
         を幅に対応させ、値は必ずテキストで併記する。
       </p>
@@ -99,7 +99,7 @@ export const BarAndSpinner: Story = {
           EPG を取得しています…
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         動くのはスピナーの回転と width
         のトランジションだけ。点滅・パルスは使わない。
       </p>

@@ -638,7 +638,7 @@ export const 現れ方: Story = {
     const first = getComputedStyle(cards[0])
 
     await expect(first.animationName).toBe('swell')
-    await expect(first.animationDuration).toBe('0.56s')
+    await expect(first.animationDuration).toBe('0.16s')
     await expect(Number.parseFloat(first.animationDelay)).toBe(0)
 
     const delays = cards.map((card) =>

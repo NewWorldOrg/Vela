@@ -66,7 +66,7 @@ export const しるし: Story = {
 
       await expect(keel.getAttribute('stroke-width')).toBe(thick)
       await expect(getComputedStyle(keel).stroke).toBe(tokenOf('--sky'))
-      await expect(getComputedStyle(sail).stroke).toBe(tokenOf('--accent'))
+      await expect(getComputedStyle(sail).stroke).toBe(tokenOf('--brand'))
       await expect(getComputedStyle(star).stroke).toBe(tokenOf('--spark'))
       await expect(star.getAttribute('mask')).toMatch(/^url\(#vela-mark-/)
       await expect(mark).toHaveAttribute('aria-hidden', 'true')
@@ -85,7 +85,7 @@ export const 案内役: Story = {
         {MOODS.map(([mood, label]) => (
           <div key={mood} className="flex flex-col items-center gap-1.5">
             <Usher mood={mood} className="size-[140px]" />
-            <span className="text-note text-ink-3">{label}</span>
+            <span className="text-note text-ink-2">{label}</span>
           </div>
         ))}
       </Surface>
@@ -111,8 +111,8 @@ export const 案内役: Story = {
 
       await expect(getComputedStyle(star!).fill).toBe(tokenOf('--spark'))
       await expect(getComputedStyle(hull!).fill).toBe(tokenOf('--sky'))
-      await expect(getComputedStyle(sail!).stroke).toBe(tokenOf('--accent'))
-      await expect(getComputedStyle(antenna!).stroke).toBe(tokenOf('--accent'))
+      await expect(getComputedStyle(sail!).stroke).toBe(tokenOf('--brand'))
+      await expect(getComputedStyle(antenna!).stroke).toBe(tokenOf('--brand'))
       await expect(sail!.getAttribute('mask')).toMatch(/^url\(#vela-usher-/)
       await expect(usher).toHaveAttribute('aria-hidden', 'true')
       antennas.add(antenna!.getAttribute('d'))
@@ -208,7 +208,7 @@ function ArrivingThree() {
           className="flex flex-col items-center gap-3 rounded-xl border border-dashed border-line-strong bg-surface px-5 pt-14 pb-6"
         >
           <AnsweringUsher mood={mood} className="usher-arrives size-[140px]" />
-          <span className="text-note text-ink-3">{label}</span>
+          <span className="text-note text-ink-2">{label}</span>
           <div data-standing="" aria-hidden="true" className="opacity-0">
             <Usher mood={mood} className="size-[140px]" />
           </div>
