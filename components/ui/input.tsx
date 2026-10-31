@@ -17,14 +17,14 @@ function Input({
         type={type}
         data-slot="input"
         className={cn(
-          'h-9 w-full min-w-0 rounded-md border border-line-strong bg-surface px-[calc(13rem/16)] text-[calc(13rem/16)] text-ink outline-none',
-          'transition-[border-color,box-shadow,background-color] duration-150 ease-out',
-          'placeholder:text-ink-3 selection:bg-brand selection:text-on-brand',
+          'h-10 w-full min-w-0 rounded-md bg-surface px-3 text-body text-ink outline-none',
+          'transition-[box-shadow,background-color] duration-[140ms] ease-toy',
+          'placeholder:text-ink-3 selection:bg-accent-soft',
           'file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sub file:font-medium file:text-ink',
-          'enabled:hover:border-ink-3',
-          'focus-visible:border-brand focus-visible:shadow-ring',
-          'aria-invalid:border-coral aria-invalid:bg-coral-soft',
-          'disabled:cursor-not-allowed disabled:border-line disabled:bg-surface-2 disabled:text-ink-3',
+          'enabled:hover:bg-surface-2',
+          'focus-visible:bg-surface focus-visible:shadow-ring',
+          'aria-invalid:bg-accent-soft',
+          'disabled:cursor-not-allowed disabled:opacity-40',
           className,
         )}
         {...props}

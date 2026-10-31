@@ -30,19 +30,19 @@ const tabsListVariants = cva(
   {
     variants: {
       variant: {
-        line: 'border-b border-dashed border-line group-data-[orientation=vertical]/tabs:border-r group-data-[orientation=vertical]/tabs:border-b-0',
+        track: 'rounded-full bg-surface p-1',
         plain: 'border-none',
       },
     },
     defaultVariants: {
-      variant: 'line',
+      variant: 'track',
     },
   },
 )
 
 function TabsList({
   className,
-  variant = 'line',
+  variant = 'track',
   ...props
 }: React.ComponentProps<typeof TabsPrimitive.List> &
   VariantProps<typeof tabsListVariants>) {
@@ -64,12 +64,11 @@ function TabsTrigger({
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
-        'tap-target -mb-px rounded-t-md border-b-2 border-transparent px-[calc(13rem/16)] pt-1.5 pb-[calc(9rem/16)] text-[calc(13rem/16)] font-medium whitespace-nowrap text-ink-2 outline-none',
-        'transition-[background-color,color,border-color] duration-150 ease-out',
-        'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
-        'cursor-pointer disabled:cursor-not-allowed disabled:opacity-45',
-        'disabled:hover:bg-transparent disabled:hover:text-ink-2',
-        'data-[state=active]:border-b-brand data-[state=active]:bg-brand-soft data-[state=active]:font-bold data-[state=active]:text-brand',
+        'tap-target inline-flex h-8 items-center gap-1.5 rounded-full px-4 text-body font-semibold whitespace-nowrap text-ink-2 outline-none',
+        'transition-[background-color,color,box-shadow] duration-[140ms] ease-toy',
+        'not-disabled:hover:text-ink focus-visible:shadow-ring',
+        'cursor-pointer disabled:cursor-not-allowed disabled:opacity-40',
+        'data-[state=active]:bg-raised data-[state=active]:text-ink data-[state=active]:shadow-chosen dark:data-[state=active]:shadow-none',
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}

@@ -258,7 +258,7 @@ function measureTapTargets(): Findings {
         over !== null &&
         !control.contains(over) &&
         over.closest(
-          '[role="dialog"], [role="menu"], [data-radix-popper-content-wrapper], [data-state="open"][data-slot$="-content"]',
+          '[role="dialog"], [role="menu"], [data-radix-popper-content-wrapper], [data-state="open"][data-slot$="-content"], [data-slot="toast"]',
         ) !== null
       )
     })
