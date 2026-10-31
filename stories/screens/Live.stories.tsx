@@ -564,6 +564,8 @@ const meta = {
     openSocket: starting,
     askSignedOut: stillSignedIn,
     askBacklog: uncounted,
+    onRecord: recordIt,
+    onTakeTheRecordingBack: takeItBack,
   },
   decorators: [inTheApp],
   beforeEach: () => {
@@ -3589,6 +3591,32 @@ export const AirPlay_はライブに描かない: Story = {
   },
 }
 
+export const 広い画面では番組の右から録画し次の番組も1回で予約する: Story = {
+  args: { openSocket: withAPicture },
+  beforeEach: () => {
+    recorded.length = 0
+  },
+  play: async ({ canvasElement }) => {
+    const panel = within(slotted(canvasElement, 'now-next'))
+
+    await userEvent.click(panel.getByRole('button', { name: 'この番組を録画' }))
+    await expect(await screen.findByText('録画予約しました')).toBeVisible()
+    await expect(recorded).toHaveLength(1)
+
+    const next = slotted(canvasElement, 'live-next')
+
+    await expect(next).toHaveTextContent('クローズアップ列島')
+    await userEvent.click(
+      within(next).getByRole('button', { name: 'クローズアップ列島を予約' }),
+    )
+    await waitFor(() => expect(recorded).toHaveLength(2))
+    await expect(recorded[1]).not.toBe(recorded[0])
+    await expect(
+      panel.getByRole('button', { name: /外部プレイヤーで再生/ }),
+    ).toBeVisible()
+  },
+}
+
 export const 観ている番組の説明を読める: Story = {
   args: { screen: LONG_WORDS, openSocket: withAPicture },
   play: async ({ canvasElement }) => {
@@ -3936,13 +3964,13 @@ const NARROW_UPRIGHT = { width: 360, height: 800 }
 const recorded: string[] = []
 const takenBack: string[] = []
 
-const recordIt = async (programmeId: string) => {
+async function recordIt(programmeId: string) {
   recorded.push(programmeId)
 
   return { state: 'ok' as const, reservationId: 'r-made' }
 }
 
-const takeItBack = async (reservationId: string) => {
+async function takeItBack(reservationId: string) {
   takenBack.push(reservationId)
 
   return { state: 'ok' as const }

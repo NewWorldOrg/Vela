@@ -11,14 +11,13 @@ export type ChannelMarkShape = 'chip' | 'square' | 'tile'
 const SLOT: Record<ChannelMarkShape, string> = {
   chip: 'box-content inline-flex h-6 w-9 shrink-0 items-center justify-center overflow-hidden rounded-md border align-middle',
   square:
-    'inline-flex size-[calc(52rem/16)] shrink-0 items-center justify-center overflow-hidden rounded-[calc(14rem/16)] align-middle',
+    'inline-flex size-[calc(52rem/16)] shrink-0 items-center justify-center overflow-hidden rounded-md align-middle',
   tile: 'inline-flex aspect-video w-full shrink-0 items-center justify-center overflow-hidden rounded-sm align-middle',
 }
 
 const NUMBER: Record<ChannelMarkShape, string> = {
   chip: 'border-line bg-surface-2 font-code text-cap leading-none font-medium text-ink-2',
-  square:
-    'bg-surface-2 font-code text-section leading-none font-bold text-ink',
+  square: 'bg-surface-2 font-code text-section leading-none font-bold text-ink',
   tile: 'bg-surface-2 font-code text-section leading-none font-bold text-ink-2',
 }
 
@@ -81,7 +80,7 @@ export function ChannelMark({
     <span
       className={cn(
         SLOT[shape],
-        chip ? 'border-line bg-logo-plate' : 'bg-surface-2',
+        chip ? 'border-line bg-logo-plate' : 'bg-logo-plate',
         chip && on && 'border-brand-line',
         className,
       )}

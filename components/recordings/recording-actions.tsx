@@ -137,6 +137,7 @@ export function RecordingActions({
               phone ? deleteWhenTheToastLeaves() : setAsked(recording)
             }
           >
+            <TrashIcon />
             削除
           </Button>
           <UnfinishedDeletionChip recording={recording} />

@@ -181,7 +181,7 @@ export function PhoneWatchedRows({
               onClick={() => onSelect(channel)}
               className={cn(
                 ROW,
-                'relative min-h-[calc(62rem/16)] rounded-[calc(14rem/16)] py-2.5 pl-2.5',
+                'relative min-h-[calc(62rem/16)] rounded-md py-2.5 pl-2.5',
                 on && 'bg-surface hover:bg-surface',
                 pressable,
               )}
@@ -191,7 +191,7 @@ export function PhoneWatchedRows({
                 no={channel.no}
                 shape="square"
                 keepsTheSlot
-                className="size-10 rounded-[calc(12rem/16)] text-title"
+                className="size-10 rounded-md text-title"
               />
               <span className="min-w-0 flex-1">
                 <span

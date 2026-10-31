@@ -270,7 +270,7 @@ export function PlayerSeek({
       <span
         aria-hidden="true"
         data-slot="player-seek-knob"
-        className="absolute top-1/2 -ml-[calc(6.5rem/16)] size-[calc(13rem/16)] -translate-y-1/2 rounded-full bg-white shadow-[0_1px_4px_rgba(0,0,0,.4)]"
+        className="absolute top-1/2 -ml-[calc(6.5rem/16)] size-[calc(13rem/16)] -translate-y-1/2 rounded-full bg-white"
         style={{ left: `${playedPct}%` }}
       />
       {hover && (

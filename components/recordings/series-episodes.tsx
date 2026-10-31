@@ -58,7 +58,7 @@ export function SeriesEpisodes({
             <li key={episode.id}>
               <Link
                 href={`/recordings/${episode.id}` as Route}
-                className="group grid grid-cols-[calc(128rem/16)_minmax(0,1fr)] items-center gap-3.5 rounded-[calc(14rem/16)] p-[calc(7rem/16)] text-ink no-underline outline-none transition-[background-color] duration-(--dur) ease-(--ease) hover:bg-surface focus-visible:shadow-ring"
+                className="group grid grid-cols-[calc(128rem/16)_minmax(0,1fr)] items-center gap-3.5 rounded-md p-[calc(7rem/16)] text-ink no-underline outline-none transition-[background-color] duration-(--dur) ease-(--ease) hover:bg-surface focus-visible:shadow-ring"
               >
                 <Picture
                   recording={episode}

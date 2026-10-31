@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 import type { LiveWatching } from '@/repository/live'
 import type { ReservationWrite } from '@/repository/reservations'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { saysSubtitled } from '@/lib/program-title'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ProgressBar } from '@/components/vela/progress'
@@ -13,19 +14,7 @@ import {
   ProgramDescription,
   ProgramExtended,
 } from '@/components/guide/program-description'
-import {
-  ReserveRing,
-  useRecordInOnePress,
-} from '@/components/live/phone-live'
-
-/** A fact about the programme in a small square chip: subtitled, its genre. */
-function Fact({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex h-[calc(22rem/16)] items-center rounded-[calc(6rem/16)] bg-surface-2 px-2 text-note font-semibold whitespace-nowrap text-ink">
-      {children}
-    </span>
-  )
-}
+import { ReserveRing, useRecordInOnePress } from '@/components/live/phone-live'
 
 function Dot() {
   return (
@@ -127,8 +116,10 @@ export function NowNext({
                 </>
               )}
               {(subtitled || programme.genreLabel) && <Dot />}
-              {subtitled && <Fact>字幕あり</Fact>}
-              {programme.genreLabel && <Fact>{programme.genreLabel}</Fact>}
+              {subtitled && <Badge variant="ok">字幕あり</Badge>}
+              {programme.genreLabel && (
+                <Badge variant="ok">{programme.genreLabel}</Badge>
+              )}
             </div>
           )}
           {next && (

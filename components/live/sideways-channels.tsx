@@ -64,7 +64,7 @@ export function SidewaysChannels({
           onClick={() => onKind(kindAfter(kind, kinds))}
           className={cn(
             STRIP_BUTTON,
-            'rounded-[calc(14rem/16)] bg-white/8 text-(--pl-ink) [&_svg]:size-[calc(14rem/16)] [&_svg]:text-(--pl-ink-2)',
+            'rounded-md bg-white/8 text-(--pl-ink) [&_svg]:size-[calc(14rem/16)] [&_svg]:text-(--pl-ink-2)',
           )}
         >
           <SwapIcon />

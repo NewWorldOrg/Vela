@@ -7,6 +7,7 @@ import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { FormatChoice } from '@/lib/playback-format'
 import type { LiveProfile } from '@/repository/live'
 import { cn } from '@/lib/utils'
+import { Badge } from '@/components/ui/badge'
 import { formatLength, formatPlayerTime } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
 import { reservationHref } from '@/lib/reservations'
@@ -310,227 +311,228 @@ export function RecordingDetailView({
             'flex items-start gap-8 max-[1180px]:flex-col max-[1180px]:items-stretch has-[[data-remote=beside]]:[&>[data-slot=series-episodes]]:hidden',
         )}
       >
-      <div className={cn(WATCH_COLUMN, sided && 'min-w-0 flex-1')}>
-        <div
-          className={cn(
-            ALONG,
-            watching && 'upright:px-4',
-            watching && 'sideways:hidden',
-          )}
-        >
+        <div className={cn(WATCH_COLUMN, sided && 'min-w-0 flex-1')}>
           <div
             className={cn(
-              'flex items-center pt-2 pb-3 min-[701px]:hidden',
-              watching && 'upright:hidden',
+              ALONG,
+              watching && 'upright:px-4',
+              watching && 'sideways:hidden',
             )}
           >
-            <Link
-              href="/library"
-              className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink"
+            <div
+              className={cn(
+                'flex items-center pt-2 pb-3 min-[701px]:hidden',
+                watching && 'upright:hidden',
+              )}
             >
-              <ChevronLeftIcon className="size-[calc(15rem/16)]" />
-              ライブラリへ
-            </Link>
+              <Link
+                href="/library"
+                className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink"
+              >
+                <ChevronLeftIcon className="size-[calc(15rem/16)]" />
+                ライブラリへ
+              </Link>
+            </div>
+
+            {banded && (
+              <div
+                data-slot="recording-outcome"
+                className={cn(
+                  'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[calc(18rem/16)] py-[calc(13rem/16)]',
+                  OUTCOME_STYLE[banded],
+                )}
+              >
+                <OutcomeMark outcome={banded} />
+                <h2 className="heading text-title whitespace-nowrap">
+                  {alarming ? OUTCOME_LABEL[alarming] : LEFT_SCRAMBLED_IN_FULL}
+                </h2>
+                {d.fileMissing && <FileMissingChip />}
+                {alarming && d.leftScrambled && <LeftScrambledChip />}
+                {d.outcomeBody && (
+                  <p className="min-w-[calc(200rem/16)] flex-1 font-code text-note text-ink-2">
+                    {d.outcomeBody}
+                  </p>
+                )}
+              </div>
+            )}
+
+            {d.outcome === 'recording' && d.live && (
+              <div className="mb-3.5 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
+                <section className="rounded-xl bg-surface px-[calc(19rem/16)] py-[calc(17rem/16)]">
+                  <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
+                    <RecordingInProgressChip mark="ledger" />
+                  </div>
+                  <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(128rem/16),1fr))] gap-2.5">
+                    <DetailStat label="経過" value={d.live.elapsed} />
+                    <DetailStat label="書き込み済み" value={d.live.written} />
+                    <DetailStat label="進行中のドロップ" value={d.live.drops} />
+                    <DetailStat label="残り" value={d.live.rest} />
+                  </div>
+                  <p className="mt-2.5 text-note text-ink-2">
+                    最終更新{' '}
+                    <span className="font-code">{d.live.updatedAt}</span>
+                  </p>
+                </section>
+              </div>
+            )}
+
+            {whyNothingPlays(d, playback)}
           </div>
 
-          {banded && (
-            <div
-              data-slot="recording-outcome"
-              className={cn(
-                'mb-3.5 flex flex-wrap items-center gap-3.5 rounded-lg px-[calc(18rem/16)] py-[calc(13rem/16)]',
-                OUTCOME_STYLE[banded],
-              )}
+          {watching && (
+            <SkipEventsSeat
+              key={d.id}
+              recordingId={d.id}
+              modelVersion={modelVersion}
+              onNoteSkip={onNoteSkip}
+              onNoteSeek={onNoteSeek}
+              onSeekWhileLeaving={onSeekWhileLeaving}
             >
-              <OutcomeMark outcome={banded} />
-              <h2 className="heading text-title whitespace-nowrap">
-                {alarming ? OUTCOME_LABEL[alarming] : LEFT_SCRAMBLED_IN_FULL}
-              </h2>
-              {d.fileMissing && <FileMissingChip />}
-              {alarming && d.leftScrambled && <LeftScrambledChip />}
-              {d.outcomeBody && (
-                <p className="min-w-[calc(200rem/16)] flex-1 font-code text-note text-ink-2">
-                  {d.outcomeBody}
-                </p>
-              )}
-            </div>
-          )}
-
-          {d.outcome === 'recording' && d.live && (
-            <div className="mb-3.5 grid grid-cols-2 gap-4 max-[900px]:grid-cols-1">
-              <section className="rounded-xl bg-surface px-[calc(19rem/16)] py-[calc(17rem/16)]">
-                <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-                  <RecordingInProgressChip mark="ledger" />
-                </div>
-                <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(128rem/16),1fr))] gap-2.5">
-                  <DetailStat label="経過" value={d.live.elapsed} />
-                  <DetailStat label="書き込み済み" value={d.live.written} />
-                  <DetailStat label="進行中のドロップ" value={d.live.drops} />
-                  <DetailStat label="残り" value={d.live.rest} />
-                </div>
-                <p className="mt-2.5 text-note text-ink-2">
-                  最終更新 <span className="font-code">{d.live.updatedAt}</span>
-                </p>
-              </section>
-            </div>
-          )}
-
-          {whyNothingPlays(d, playback)}
-        </div>
-
-        {watching && (
-          <SkipEventsSeat
-            key={d.id}
-            recordingId={d.id}
-            modelVersion={modelVersion}
-            onNoteSkip={onNoteSkip}
-            onNoteSeek={onNoteSeek}
-            onSeekWhileLeaving={onSeekWhileLeaving}
-          >
-            <PlayerSeat
-              key={whatOpensThePlayerAnew(
-                d.id,
-                startAt,
-                playback.plan.source,
-                startsHeld,
-              )}
-              detail={d}
-              plan={playback.plan}
-              unaskedProfile={unaskedProfile}
-              profiles={profiles}
-              formatChoice={formatChoice}
-              onTakeTicket={onTakeTicket}
-              onAskForTheSound={onAskForTheSound}
-              onKeepPosition={onKeepPosition}
-              artefact={artefact}
-              onAskWhichArtefact={onAskWhichArtefact}
-              startAt={opens.at}
-              playsAtOnce={opens.playing}
-              holdsAtOnce={opens.held}
-              autoOpensDataBroadcast={autoOpensDataBroadcast}
-              captionStyle={captionStyle}
-              lead={
-                <>
-                  <Link
-                    href="/library"
-                    aria-label="ライブラリへ"
-                    className={PLAYER_GLYPH_BUTTON}
-                  >
-                    <ChevronLeftIcon />
-                  </Link>
-                  <span className="hidden min-w-0 truncate pl-1 text-sub font-bold text-white sideways:block">
-                    {d.title}
-                  </span>
-                </>
-              }
-              besideTheTime={
-                opens.at !== undefined &&
-                startAt === undefined && (
-                  <PicksUpOnTheBar at={opens.at} id={d.id} />
-                )
-              }
-              side={{
-                strip: (
+              <PlayerSeat
+                key={whatOpensThePlayerAnew(
+                  d.id,
+                  startAt,
+                  playback.plan.source,
+                  startsHeld,
+                )}
+                detail={d}
+                plan={playback.plan}
+                unaskedProfile={unaskedProfile}
+                profiles={profiles}
+                formatChoice={formatChoice}
+                onTakeTicket={onTakeTicket}
+                onAskForTheSound={onAskForTheSound}
+                onKeepPosition={onKeepPosition}
+                artefact={artefact}
+                onAskWhichArtefact={onAskWhichArtefact}
+                startAt={opens.at}
+                playsAtOnce={opens.playing}
+                holdsAtOnce={opens.held}
+                autoOpensDataBroadcast={autoOpensDataBroadcast}
+                captionStyle={captionStyle}
+                lead={
                   <>
-                    <StripFaceButton
-                      face={PROGRAMME_FACE}
-                      glyph={<InfoIcon />}
-                    />
-                    <StripFaceButton
-                      face={OUTSIDE_FACE}
-                      glyph={<DevicePlayerIcon />}
-                    />
+                    <Link
+                      href="/library"
+                      aria-label="ライブラリへ"
+                      className={PLAYER_GLYPH_BUTTON}
+                    >
+                      <ChevronLeftIcon />
+                    </Link>
+                    <span className="hidden min-w-0 truncate pl-1 text-sub font-bold text-white sideways:block">
+                      {d.title}
+                    </span>
                   </>
-                ),
-                faces: {
-                  [PROGRAMME_FACE]: (
-                    <div className="flex flex-col px-4 pt-3.5 pb-4">
-                      <RecordingInfo
-                        detail={d}
-                        playback={playback}
-                        laid="face"
-                        onDelete={onDelete}
-                        onRemakeThumbnail={onRemakeThumbnail}
-                        onTakeTicket={onTakeTicket}
-                        onQueueEncode={onQueueEncode}
-                        encodeChoices={encodeChoices}
-                        encodeJob={encodeJob}
-                        onCallOffEncode={onCallOffEncode}
+                }
+                besideTheTime={
+                  opens.at !== undefined &&
+                  startAt === undefined && (
+                    <PicksUpOnTheBar at={opens.at} id={d.id} />
+                  )
+                }
+                side={{
+                  strip: (
+                    <>
+                      <StripFaceButton
+                        face={PROGRAMME_FACE}
+                        glyph={<InfoIcon />}
                       />
-                    </div>
-                  ),
-                  [OUTSIDE_FACE]: (
-                    <div className="px-4">
-                      <RecordingHandoverList
-                        recording={d}
-                        plan={playback.plan}
-                        onTakeTicket={onTakeTicket}
+                      <StripFaceButton
+                        face={OUTSIDE_FACE}
+                        glyph={<DevicePlayerIcon />}
                       />
-                    </div>
+                    </>
                   ),
-                },
-              }}
-              {...standIns}
-            />
-          </SkipEventsSeat>
-        )}
+                  faces: {
+                    [PROGRAMME_FACE]: (
+                      <div className="flex flex-col px-4 pt-3.5 pb-4">
+                        <RecordingInfo
+                          detail={d}
+                          playback={playback}
+                          laid="face"
+                          onDelete={onDelete}
+                          onRemakeThumbnail={onRemakeThumbnail}
+                          onTakeTicket={onTakeTicket}
+                          onQueueEncode={onQueueEncode}
+                          encodeChoices={encodeChoices}
+                          encodeJob={encodeJob}
+                          onCallOffEncode={onCallOffEncode}
+                        />
+                      </div>
+                    ),
+                    [OUTSIDE_FACE]: (
+                      <div className="px-4">
+                        <RecordingHandoverList
+                          recording={d}
+                          plan={playback.plan}
+                          onTakeTicket={onTakeTicket}
+                        />
+                      </div>
+                    ),
+                  },
+                }}
+                {...standIns}
+              />
+            </SkipEventsSeat>
+          )}
 
-        {watching &&
-          opens.at !== undefined &&
-          opens.at > 0 &&
-          startAt === undefined && (
-            <OnAnUprightPhone>
-              <div
-                data-slot="picks-up"
-                className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
-              >
-                <span className="min-w-0 flex-1">
-                  <span className="font-code">
-                    {formatPlayerTime(opens.at)}
-                  </span>{' '}
-                  まで観ました
-                </span>
-                <Link
-                  href={`/recordings/${d.id}?at=0` as Route}
-                  replace
-                  className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+          {watching &&
+            opens.at !== undefined &&
+            opens.at > 0 &&
+            startAt === undefined && (
+              <OnAnUprightPhone>
+                <div
+                  data-slot="picks-up"
+                  className="hidden h-[calc(46rem/16)] items-center gap-2.5 border-b border-line bg-surface-2 pr-1.5 pl-4 text-sub text-ink-2 upright:flex"
                 >
-                  <RebuildIcon />
-                  最初から
-                </Link>
-              </div>
-            </OnAnUprightPhone>
-          )}
+                  <span className="min-w-0 flex-1">
+                    <span className="font-code">
+                      {formatPlayerTime(opens.at)}
+                    </span>{' '}
+                    まで観ました
+                  </span>
+                  <Link
+                    href={`/recordings/${d.id}?at=0` as Route}
+                    replace
+                    className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+                  >
+                    <RebuildIcon />
+                    最初から
+                  </Link>
+                </div>
+              </OnAnUprightPhone>
+            )}
 
-        <div
-          className={cn(
-            ALONG,
-            'pt-[calc(22rem/16)]',
-            'upright:flex upright:flex-col upright:border-b upright:border-line upright:bg-surface upright:px-4 upright:pt-3.5 upright:pb-4',
-            watching && 'sideways:hidden',
-          )}
-        >
-          <RecordingInfo
-            detail={d}
-            playback={playback}
-            laid="page"
-            onDelete={onDelete}
-            onRemakeThumbnail={onRemakeThumbnail}
-            onTakeTicket={onTakeTicket}
-            onQueueEncode={onQueueEncode}
-            encodeChoices={encodeChoices}
-            encodeJob={encodeJob}
-            onCallOffEncode={onCallOffEncode}
-          />
+          <div
+            className={cn(
+              ALONG,
+              'pt-[calc(22rem/16)]',
+              'upright:flex upright:flex-col upright:border-b upright:border-line upright:bg-surface upright:px-4 upright:pt-3.5 upright:pb-4',
+              watching && 'sideways:hidden',
+            )}
+          >
+            <RecordingInfo
+              detail={d}
+              playback={playback}
+              laid="page"
+              onDelete={onDelete}
+              onRemakeThumbnail={onRemakeThumbnail}
+              onTakeTicket={onTakeTicket}
+              onQueueEncode={onQueueEncode}
+              encodeChoices={encodeChoices}
+              encodeJob={encodeJob}
+              onCallOffEncode={onCallOffEncode}
+            />
+          </div>
         </div>
-      </div>
-      {sided && (
-        <SeriesEpisodes
-          name={seriesNameOf(d.title)}
-          current={d}
-          episodes={episodes}
-          className="phone:hidden"
-        />
-      )}
+        {sided && (
+          <SeriesEpisodes
+            name={seriesNameOf(d.title)}
+            current={d}
+            episodes={episodes}
+            className="phone:hidden"
+          />
+        )}
       </div>
     </ScreenMain>
   )
@@ -538,15 +540,6 @@ export function RecordingDetailView({
 
 /** How the recording's information is laid: in the page under the player, or in the face a phone held on its side opens at the picture's right, which is as narrow as an upright phone and lays it the same way. */
 type InfoLaid = 'page' | 'face'
-
-/** A fact about the recording in a small square chip: a genre. */
-function Fact({ children }: { children: ReactNode }) {
-  return (
-    <span className="inline-flex h-[calc(22rem/16)] items-center rounded-[calc(6rem/16)] bg-surface-2 px-2 text-note font-semibold whitespace-nowrap text-ink">
-      {children}
-    </span>
-  )
-}
 
 function Sep() {
   return (
@@ -685,7 +678,9 @@ function RecordingInfo({
         {d.genres && (
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {d.genres.map((g) => (
-              <Fact key={g}>{g}</Fact>
+              <Badge key={g} variant="ok">
+                {g}
+              </Badge>
             ))}
           </div>
         )}
@@ -748,7 +743,9 @@ function RecordingInfo({
               {length}
               {length && d.genres && d.genres.length > 0 && <Sep />}
               {d.genres?.map((g) => (
-                <Fact key={g}>{g}</Fact>
+                <Badge key={g} variant="ok">
+                  {g}
+                </Badge>
               ))}
             </div>
           )}

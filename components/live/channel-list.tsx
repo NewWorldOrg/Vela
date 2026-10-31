@@ -127,7 +127,7 @@ export function ChannelList({
                       aria-pressed={on}
                       onClick={() => onSelect(channel)}
                       className={cn(
-                        'grid min-h-11 w-full grid-cols-[calc(112rem/16)_minmax(0,1fr)] items-center gap-3.5 rounded-[calc(14rem/16)] p-[calc(7rem/16)] text-left outline-none',
+                        'grid min-h-11 w-full grid-cols-[calc(112rem/16)_minmax(0,1fr)] items-center gap-3.5 rounded-md p-[calc(7rem/16)] text-left outline-none',
                         'transition-[background-color] duration-(--dur) ease-(--ease) hover:bg-surface focus-visible:shadow-ring',
                         on && 'bg-surface-2 hover:bg-surface-2',
                         pressable,
