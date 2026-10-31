@@ -51,7 +51,7 @@ test('the column of screens a setting sits beside is measured in letters', async
     'the side column holds a width in px, which the density steps take past ' +
       'the words it has to hold',
   )
-  assert.match(nav, /w-\[11\.5rem\]/)
+  assert.match(nav, /w-\[12\.5rem\]/)
   assert.match(
     nav,
     /whitespace-nowrap max-\[900px\]:hidden/,
