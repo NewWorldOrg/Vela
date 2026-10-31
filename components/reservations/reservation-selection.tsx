@@ -75,7 +75,7 @@ export function ReservationSelection({
         <b className="font-code font-bold">{chosen.length}</b> 件を選択
       </span>
       <Button
-        variant="halt"
+        variant="tone"
         size="sm"
         disabled={pending || !cancellable}
         onClick={() =>
@@ -85,7 +85,7 @@ export function ReservationSelection({
         取り消し
       </Button>
       <Button
-        variant="remove"
+        variant="danger"
         size="sm"
         disabled={pending || !discardable}
         onClick={() => setRemoving(true)}
@@ -93,7 +93,7 @@ export function ReservationSelection({
         <TrashIcon />
         削除
       </Button>
-      <Button variant="halt" size="sm" disabled={pending} onClick={onClear}>
+      <Button variant="tone" size="sm" disabled={pending} onClick={onClear}>
         選択を解除
       </Button>
       {outcome && (
@@ -131,7 +131,7 @@ export function ReservationSelection({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="removeFill"
+              variant="dangerFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

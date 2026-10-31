@@ -98,7 +98,7 @@ function DriftButton({
 }) {
   return (
     <Button
-      variant="outline"
+      variant="tone"
       size="sm"
       aria-pressed={pressed}
       onClick={onClick}
@@ -376,7 +376,7 @@ export function ReservationsView({
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
             total === 0 ? undefined : (
-              <Button variant="halt" size="sm" onClick={onClearFilters}>
+              <Button variant="tone" size="sm" onClick={onClearFilters}>
                 条件を解除
               </Button>
             )
@@ -395,7 +395,7 @@ export function ReservationsView({
               ...COLUMNS.map((column) => column.width),
             ]}
           />
-          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(13rem/16)]">
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10 [&>tr>th]:py-[calc(14rem/16)]">
             <TableRow>
               <TableHead {...cardPlace('select')} className="w-11">
                 <SelectEvery>

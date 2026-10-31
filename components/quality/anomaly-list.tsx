@@ -39,7 +39,7 @@ function AnomalyRow({ anomaly }: { anomaly: QualityAnomaly }) {
           {CLASSIFIED} {anomaly.classification}
         </span>
       )}
-      <span className="mt-1 block font-code text-note tabular-nums text-ink-3">
+      <span className="mt-1 block font-code text-note tabular-nums text-ink-2">
         {anomaly.when}
       </span>
     </div>

@@ -111,7 +111,7 @@ export function ChannelList({
           <div
             style={{ transitionDelay: foldBandDelay(1, motion) }}
             className={cn(
-              'flex items-center gap-[calc(7rem/16)] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-3',
+              'flex items-center gap-[calc(7rem/16)] px-1 pb-2 text-cap font-bold tracking-[0.06em] text-ink-2',
               foldBand(motion),
             )}
           >
@@ -172,12 +172,12 @@ export function ChannelList({
                             {channel.now.title}
                           </span>
                         ) : (
-                          <span className="block text-sub text-ink-3">
+                          <span className="block text-sub text-ink-2">
                             番組情報がありません
                           </span>
                         )}
                         {channel.next && (
-                          <span className="mt-px block text-note text-ink-3 [overflow-wrap:anywhere]">
+                          <span className="mt-px block text-note text-ink-2 [overflow-wrap:anywhere]">
                             次{' '}
                             <span className="font-code">
                               {channel.next.startLabel}

@@ -34,7 +34,7 @@ function Caption({
   return (
     <div
       className={cn(
-        'mt-[calc(18rem/16)] mb-1.5 flex items-center gap-[calc(7rem/16)] text-cap font-bold tracking-[0.05em] text-ink-3 first:mt-0',
+        'mt-[calc(18rem/16)] mb-1.5 flex items-center gap-[calc(7rem/16)] text-cap font-bold tracking-[0.05em] text-ink-2 first:mt-0',
         className,
       )}
     >
@@ -119,7 +119,7 @@ export function RecordingRecord({
         </div>
         {spots.length > 0 && (
           <>
-            <div className="mt-3.5 mb-1 flex items-center gap-[calc(7rem/16)] text-cap font-bold tracking-[0.05em] text-ink-3">
+            <div className="mt-3.5 mb-1 flex items-center gap-[calc(7rem/16)] text-cap font-bold tracking-[0.05em] text-ink-2">
               発生時間帯の内訳
               <i className="h-px flex-1 border-t border-dashed border-line not-italic" />
             </div>
@@ -238,7 +238,7 @@ function SourceRow({
 
   return (
     <div className="flex flex-wrap items-baseline gap-3 border-b border-dashed border-line py-[calc(9rem/16)] text-ui last:border-b-0">
-      <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-3 max-[900px]:w-[calc(130rem/16)] max-[700px]:w-full">
+      <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-2 max-[900px]:w-[calc(130rem/16)] max-[700px]:w-full">
         再生ソース
       </span>
       <span
@@ -254,7 +254,7 @@ function SourceRow({
               key={label}
               aria-current={inUse ? 'true' : undefined}
               className={cn(
-                'rounded-full px-[calc(11rem/16)] py-[calc(3rem/16)] font-code text-note font-medium whitespace-nowrap text-ink-3',
+                'rounded-full px-[calc(11rem/16)] py-[calc(3rem/16)] font-code text-note font-medium whitespace-nowrap text-ink-2',
                 inUse && 'bg-brand-soft font-bold text-brand',
               )}
             >

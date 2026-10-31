@@ -4,7 +4,6 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { ChevronLeftIcon, SettingsIcon } from '@/components/vela/icons'
 import { VelaMark } from '@/components/vela/marks'
-import { iconTilt } from '@/components/vela/tactile'
 
 const TOP_BAR_HEIGHT = 'h-[calc(46rem/16)]'
 const BELOW_TOP_BAR = 'top-[calc(46rem/16)]'
@@ -270,14 +269,14 @@ export function AdminSideNav({
       data-slot="admin-side-nav"
       aria-label={ariaLabel ?? caption}
       className={cn(
-        'w-[11rem] shrink-0 border-r border-dashed border-line px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden sideways:hidden',
+        'w-[11.5rem] shrink-0 px-[calc(9rem/16)] max-[900px]:w-auto upright:hidden sideways:hidden',
         className,
       )}
       {...props}
     >
       <div className={cn('sticky py-3.5', BELOW_TOP_BAR)}>
         {caption && (
-          <div className="mb-[calc(11rem/16)] px-2.5 font-code text-[calc(9.5rem/16)] tracking-[0.14em] text-ink-3 max-[900px]:hidden">
+          <div className="mb-[calc(11rem/16)] px-2.5 font-code text-[calc(9.5rem/16)] tracking-[0.14em] text-ink-2 max-[900px]:hidden">
             {caption}
           </div>
         )}
@@ -309,11 +308,10 @@ export function AdminSideNavItem({
       aria-current={active ? 'page' : undefined}
       aria-label={label}
       className={cn(
-        'tap-target mb-[calc(11rem/16)] flex items-center gap-2 rounded-full px-2.5 py-1.5 text-sub font-medium text-ink-2 no-underline outline-none max-[900px]:mb-[calc(18rem/16)]',
+        'tap-target mb-[calc(11rem/16)] flex items-center gap-2 rounded-full px-2.5 py-2 text-sub font-medium text-ink-2 no-underline outline-none max-[900px]:mb-[calc(18rem/16)]',
         'transition-[background-color,color,transform] duration-150 ease-toy',
-        'hover:translate-x-0.5 hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
+        'hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring',
         '[&_svg]:size-3.5',
-        iconTilt,
         active && 'bg-brand-soft font-bold text-brand',
         className,
       )}
@@ -387,7 +385,7 @@ export function Crumb({ className, children, ...props }: ComponentProps<'p'>) {
     <p
       data-slot="crumb"
       className={cn(
-        'mb-[calc(5rem/16)] text-cap text-ink-3 phone:hidden',
+        'mb-[calc(5rem/16)] text-cap text-ink-2 phone:hidden',
         className,
       )}
       {...props}
@@ -411,7 +409,7 @@ export function PhoneBarTitle({ className, ...props }: ComponentProps<'p'>) {
       data-slot="phone-bar-title"
       aria-hidden="true"
       className={cn(
-        'heading min-w-0 flex-1 truncate text-h1 leading-none tracking-[0.02em]',
+        'heading min-w-0 flex-1 truncate text-section leading-none tracking-[0.02em]',
         className,
       )}
       {...props}

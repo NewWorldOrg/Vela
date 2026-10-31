@@ -74,7 +74,7 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
     <section aria-labelledby="library-continue" data-slot="phone-continue">
       <h2
         id="library-continue"
-        className="px-0.5 pt-3 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-3"
+        className="px-0.5 pt-3 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2"
       >
         続きから
       </h2>
@@ -104,7 +104,7 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
                 <span className="mt-1.5 block truncate text-ui font-bold">
                   {recording.title}
                 </span>
-                <span className="block text-note text-ink-3">
+                <span className="block text-note text-ink-2">
                   {recording.channel}
                   {left !== undefined && (
                     <>
@@ -204,7 +204,7 @@ export function PhoneRecordingRows({
 
         return (
           <section key={day} aria-label={heading.near ?? heading.date}>
-            <h2 className="flex items-center gap-2 px-4 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-3">
+            <h2 className="flex items-center gap-2 px-4 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2">
               {heading.near}
               <span className="font-code font-medium">{heading.date}</span>
             </h2>
@@ -251,7 +251,7 @@ export function PhoneRecordingRows({
                         <span className="line-clamp-2 text-ui leading-normal font-bold">
                           {recording.title}
                         </span>
-                        <span className="mt-0.5 block text-sub text-ink-3">
+                        <span className="mt-0.5 block text-sub text-ink-2">
                           {recording.channel} ·{' '}
                           <span className="font-code">
                             {formatClock(
@@ -273,7 +273,7 @@ export function PhoneRecordingRows({
                           )
                         }
                         className={cn(
-                          'mt-1 mr-1 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring [&_svg]:size-5',
+                          'mt-1 mr-1 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-2 outline-none focus-visible:shadow-ring [&_svg]:size-5',
                           pressable,
                         )}
                       >
@@ -288,7 +288,7 @@ export function PhoneRecordingRows({
                   {open === recording.id && (
                     <div className="flex flex-wrap gap-2 border-t border-dashed border-line px-4 pt-3 pb-3.5">
                       <Button
-                        variant="remove"
+                        variant="danger"
                         size="sm"
                         disabled={recording.outcome === 'recording'}
                         title={

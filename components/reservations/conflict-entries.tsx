@@ -17,7 +17,7 @@ export function ConflictEntries({
         >
           <span className="min-w-0 flex-1 font-medium">{entry.title}</span>
           <span className="font-code text-ink-2">{entry.meta}</span>
-          <span className="text-ink-3">{entry.ruleName ?? entry.origin}</span>
+          <span className="text-ink-2">{entry.ruleName ?? entry.origin}</span>
         </div>
       ))}
     </div>

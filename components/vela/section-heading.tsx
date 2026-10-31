@@ -51,7 +51,7 @@ export function PageHeading({
       {...props}
     >
       <div className="min-w-0">
-        <h1 className="heading text-h3 leading-[1.45] phone:sr-only">
+        <h1 className="heading text-heading leading-[1.45] phone:sr-only">
           {children}
         </h1>
         {description && (

@@ -101,7 +101,7 @@ function ChannelMeters({
           <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
             <span className="text-ui font-bold">{channel.name}</span>
             {channel.no && (
-              <span className="font-code text-note text-ink-3">
+              <span className="font-code text-note text-ink-2">
                 {channel.no}
               </span>
             )}
@@ -137,7 +137,7 @@ function ChannelMeters({
               />
             )}
           </div>
-          <p className="mt-1 font-code text-note tabular-nums text-ink-3">
+          <p className="mt-1 font-code text-note tabular-nums text-ink-2">
             {channel.note}
           </p>
         </div>
@@ -218,7 +218,7 @@ export function QualityView({
                 <>
                   {stat.value}
                   {stat.unit && (
-                    <small className="ml-1 font-sans text-note font-medium text-ink-3">
+                    <small className="ml-1 font-sans text-note font-medium text-ink-2">
                       {stat.unit}
                     </small>
                   )}
@@ -236,7 +236,7 @@ export function QualityView({
                 <QualityChip level={stat.level}>{stat.levelLabel}</QualityChip>
               )}
               {notesOf(stat).map((note) => (
-                <span key={note} className="text-note text-ink-3">
+                <span key={note} className="text-note text-ink-2">
                   {note}
                 </span>
               ))}
@@ -310,7 +310,7 @@ export function QualityView({
                     <b className="block text-[calc(13rem/16)] font-bold">
                       {tuner.device}
                     </b>
-                    <span className="text-note text-ink-3">
+                    <span className="text-note text-ink-2">
                       {tuner.hardware}
                     </span>
                   </TableCell>
@@ -375,9 +375,9 @@ export function QualityView({
                     <b className="min-w-0 flex-1 text-ui font-bold">
                       {recording.title}
                     </b>
-                    <ChevronRightIcon className="size-4 shrink-0 text-ink-3" />
+                    <ChevronRightIcon className="size-4 shrink-0 text-ink-2" />
                   </div>
-                  <span className="block text-note text-ink-3">
+                  <span className="block text-note text-ink-2">
                     {recording.where}
                   </span>
                   <span className="mt-1 grid grid-cols-[auto_auto] items-center justify-start justify-items-start gap-x-2.5 gap-y-1">

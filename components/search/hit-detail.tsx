@@ -31,10 +31,10 @@ export function HitDetail({
 
   return (
     <div data-slot="hit-detail">
-      <h2 className="heading text-h2 leading-[1.45]">
+      <h2 className="heading text-section leading-[1.45]">
         {marked(hit.title, words)}
       </h2>
-      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-code text-sub text-ink-3 tabular-nums">
+      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 font-code text-sub text-ink-2 tabular-nums">
         <span>
           {hit.dayLabel} {hit.startLabel}
           {SPAN_DASH}
@@ -68,7 +68,7 @@ export function HitDetail({
             onReserve={onReserve}
           />
         )}
-        <Button variant="watch" size="sm" className="mt-3" asChild>
+        <Button variant="tone" size="sm" className="mt-3" asChild>
           <Link href={`/guide/programs/${hit.id}` as Route}>
             番組の詳細へ
             <ChevronRightIcon />

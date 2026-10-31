@@ -94,7 +94,7 @@ export function TileTitle({ className, ...props }: ComponentProps<'span'>) {
 export function TileMeta({ className, ...props }: ComponentProps<'span'>) {
   return (
     <span
-      className={cn('font-code text-note tabular-nums text-ink-3', className)}
+      className={cn('font-code text-note tabular-nums text-ink-2', className)}
       {...props}
     />
   )

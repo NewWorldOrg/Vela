@@ -136,7 +136,7 @@ const GuideColumn = memo(function GuideColumn({
               className="absolute right-0 left-0 flex items-center justify-center overflow-hidden border-y border-dashed border-line"
             >
               {(span.durationMin / 60) * HOUR_REM >= UNSCHEDULED_LABEL_REM && (
-                <span className="text-micro tracking-[0.2em] text-ink-3 [writing-mode:vertical-rl]">
+                <span className="text-micro tracking-[0.2em] text-ink-2 [writing-mode:vertical-rl]">
                   編成なし
                 </span>
               )}
@@ -354,7 +354,7 @@ export function GuideGrid({
               {hours.map((h) => (
                 <div
                   key={h}
-                  className="flex items-start justify-center pt-1.5 font-code text-cap text-ink-3 first:border-t-0 [&+&]:border-t [&+&]:border-dashed [&+&]:border-line"
+                  className="flex items-start justify-center pt-1.5 font-code text-cap text-ink-2 first:border-t-0 [&+&]:border-t [&+&]:border-dashed [&+&]:border-line"
                   style={{ height: remOfMinutes(60) }}
                 >
                   {h % 24}時
@@ -410,7 +410,7 @@ export function GuideGrid({
                 return (
                   <div
                     data-now-line
-                    className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-brand"
+                    className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-accent"
                     style={{
                       ...delayOf(opening ? NOW_LABEL_AFTER_OPENING_MS : 0),
                       top: nowLineTopOf(nowMin, HOUR_REM, windowHours),
@@ -432,7 +432,7 @@ export function GuideGrid({
                       />
                     </svg>
                     <span
-                      className="guide-now-pop absolute left-1.5 rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand"
+                      className="guide-now-pop absolute left-1.5 rounded-full bg-bg px-2 py-px font-code text-micro font-bold text-acc-text"
                       style={{ top: nowLabelTopOf(nowMin, HOUR_REM) }}
                     >
                       {nowLabel}

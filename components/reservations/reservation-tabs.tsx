@@ -63,7 +63,7 @@ export function ReservationTabs({
   }
 
   return (
-    <div className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-line pb-2.5">
+    <div className="mb-3.5 flex flex-wrap items-center gap-2.5 border-b border-line pt-1 pb-2.5">
       {TABS.map((t) => (
         <Link
           key={t.key}

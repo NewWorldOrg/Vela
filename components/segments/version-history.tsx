@@ -116,7 +116,7 @@ export function VersionHistory({
         {byHand && (
           <Button
             type="button"
-            variant="halt"
+            variant="tone"
             size="sm"
             aria-disabled={pending}
             onClick={leave}
@@ -260,7 +260,7 @@ function SwitchVersionButton({
       <AlertDialogTrigger asChild>
         <Button
           type="button"
-          variant="change"
+          variant="tone"
           size="sm"
           aria-label={`${label}に切り替え`}
         >

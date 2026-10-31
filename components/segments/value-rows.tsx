@@ -34,7 +34,7 @@ export function ValueRow({
 }) {
   return (
     <>
-      <dt className="text-ink-3">{name}</dt>
+      <dt className="text-ink-2">{name}</dt>
       <dd className="min-w-0 font-code tabular-nums text-ink-2">{children}</dd>
     </>
   )

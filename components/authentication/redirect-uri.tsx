@@ -14,7 +14,7 @@ export function RedirectUri({ value }: { value: string }) {
         {value}
       </code>
       <Button
-        variant="outline"
+        variant="tone"
         size="sm"
         onClick={async () => {
           await navigator.clipboard.writeText(value)
