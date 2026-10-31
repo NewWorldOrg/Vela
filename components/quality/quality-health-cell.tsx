@@ -26,7 +26,7 @@ export function QualityHealthCell({
           <span className="ml-2.5 font-code text-ui font-medium tabular-nums">
             {cell.value}
             {cell.unit && (
-              <em className="ml-0.5 font-sans text-note text-ink-3 not-italic">
+              <em className="ml-0.5 font-sans text-note text-ink-2 not-italic">
                 {cell.unit}
               </em>
             )}

@@ -51,7 +51,7 @@ export function RevokeSession({
   return (
     <>
       <Button
-        variant="remove"
+        variant="danger"
         size="sm"
         onClick={() => {
           setRefusal(undefined)
@@ -75,18 +75,18 @@ export function RevokeSession({
           </AlertDialogHeader>
 
           <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-1.5 text-ui max-[700px]:grid-cols-1">
-            <dt className="text-sub text-ink-3">端末</dt>
+            <dt className="text-sub text-ink-2">端末</dt>
             <dd className="min-w-0 break-words">
               {session.device.name}
               {session.device.kind && `(${session.device.kind})`}
             </dd>
-            <dt className="text-sub text-ink-3">アカウント</dt>
+            <dt className="text-sub text-ink-2">アカウント</dt>
             <dd className="min-w-0 wrap-anywhere">{session.displayName}</dd>
-            <dt className="text-sub text-ink-3">認証方式</dt>
+            <dt className="text-sub text-ink-2">認証方式</dt>
             <dd>{wordFor(METHOD_LABEL, session.method)}</dd>
-            <dt className="text-sub text-ink-3">作成</dt>
+            <dt className="text-sub text-ink-2">作成</dt>
             <dd className="font-code tabular-nums">{session.createdAt}</dd>
-            <dt className="text-sub text-ink-3">{WHEN_LABELS.taken}</dt>
+            <dt className="text-sub text-ink-2">{WHEN_LABELS.taken}</dt>
             <dd className="font-code tabular-nums">{session.lastUsedAt}</dd>
           </dl>
 
@@ -106,7 +106,7 @@ export function RevokeSession({
             >
               キャンセル
             </Button>
-            <Button variant="remove" disabled={pending} onClick={run}>
+            <Button variant="danger" disabled={pending} onClick={run}>
               <CloseIcon />
               失効させる
             </Button>

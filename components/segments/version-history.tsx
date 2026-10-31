@@ -110,13 +110,13 @@ export function VersionHistory({
   return (
     <>
       <div className="mb-[calc(11rem/16)] flex items-center gap-3">
-        <SectionHeading mark={MarkAxis} className="mb-0 min-w-0 flex-1">
+        <SectionHeading className="mb-0 min-w-0 flex-1">
           {VERSIONS_HEADING}
         </SectionHeading>
         {byHand && (
           <Button
             type="button"
-            variant="halt"
+            variant="tone"
             size="sm"
             aria-disabled={pending}
             onClick={leave}
@@ -260,7 +260,7 @@ function SwitchVersionButton({
       <AlertDialogTrigger asChild>
         <Button
           type="button"
-          variant="change"
+          variant="tone"
           size="sm"
           aria-label={`${label}に切り替え`}
         >

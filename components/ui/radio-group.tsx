@@ -26,12 +26,12 @@ function RadioGroupItem({
     <RadioGroupPrimitive.Item
       data-slot="radio-group-item"
       className={cn(
-        'tap-target inline-flex aspect-square size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full border border-line-strong bg-surface outline-none',
-        'transition-[background-color,border-color,transform,box-shadow] duration-150 ease-toy',
-        'enabled:hover:-translate-x-px enabled:hover:-translate-y-px',
-        'data-[state=checked]:border-brand data-[state=checked]:bg-brand',
-        'focus-visible:shadow-ring aria-invalid:border-coral',
-        'disabled:cursor-not-allowed disabled:opacity-45',
+        'tap-target inline-flex aspect-square size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface-2 shadow-[inset_0_0_0_1.5px_var(--hair-strong)] outline-none',
+        'transition-[background-color,box-shadow] duration-[140ms] ease-toy',
+        'enabled:hover:bg-surface-3',
+        'data-[state=checked]:bg-btn data-[state=checked]:shadow-none enabled:data-[state=checked]:hover:bg-btn-hover',
+        'focus-visible:shadow-ring aria-invalid:bg-accent-soft',
+        'disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}
       {...props}
@@ -40,7 +40,7 @@ function RadioGroupItem({
         data-slot="radio-group-indicator"
         className="flex items-center justify-center"
       >
-        <span className="size-1.5 rounded-full bg-on-brand" />
+        <span className="size-2 rounded-full bg-on-ink" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )

@@ -18,7 +18,6 @@ import {
 import { PageHeading } from '@/components/vela/section-heading'
 import { TintPanel } from '@/components/vela/surface'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import {
   ChannelIcon,
   EncodeIcon,
@@ -54,7 +53,6 @@ function ServiceTopBar({ settingsActive }: { settingsActive?: boolean }) {
         ))}
       </GlobalNav>
       <div className="flex items-center gap-[7px]">
-        <ThemeToggle />
         <SettingsLink href="#" active={settingsActive} />
       </div>
     </TopBar>
@@ -66,11 +64,11 @@ export const Service: Story = {
     <div className="p-6">
       <AppShell>
         <ServiceTopBar />
-        <p className="px-[18px] py-[26px] text-center text-sub text-ink-3">
+        <p className="px-[18px] py-[26px] text-center text-sub text-ink-2">
           コンテンツ最大化(番組表グリッド等)。ページ見出しは持たない
         </p>
       </AppShell>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         毎日使うサービス系(番組表・ライブ・ライブラリ・予約)はトップナビ。
       </p>
     </div>
@@ -118,7 +116,7 @@ export const AsChildNav: Story = {
           </AdminMain>
         </AdminBody>
       </AppShell>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         アプリ本体はこの形でルーティングのリンクを差し込む。
       </p>
     </div>
@@ -175,7 +173,7 @@ export const Admin: Story = {
           </AdminMain>
         </AdminBody>
       </AppShell>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         たまに触る管理系は「設定」から入る別エリアで、左サイドナビ+ページ見出しと説明文
         を持つ落ち着いた構成。サービス系との行き来はトップバーで常に可能。
       </p>

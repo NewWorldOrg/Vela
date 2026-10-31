@@ -37,7 +37,7 @@ export const Default: Story = {
 export const Tones: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>ページ上部バナー</SectionHeading>
+      <SectionHeading>ページ上部バナー</SectionHeading>
       <div className="flex flex-col gap-[9px]">
         <Banner tone="info" progress={68}>
           チャンネルスキャンを実行中です
@@ -60,7 +60,7 @@ export const Tones: Story = {
           この端末は次のリクエストから 401 になります。
         </Banner>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         ページ先頭のバナーは1枚まで。重要でも点滅・グローは使わず、色+アイコンで静的に
         示す。進行中の表示も点滅させず、割合の数値と静的なバーで伝える。
       </p>
@@ -71,7 +71,7 @@ export const Tones: Story = {
 export const Actions: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>バナーの導線</SectionHeading>
+      <SectionHeading>バナーの導線</SectionHeading>
       <div className="flex flex-col gap-[9px]">
         <Banner
           tone="danger"
@@ -110,7 +110,7 @@ export const Actions: Story = {
           <b>進行中の録画はありません。</b>
         </Banner>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         見に行く導線は帯の色のままの太字+下線のテキストリンク。状態を変える操作は
         Button
         のまま帯に載る(1枚に1個まで。色面の規則は帯に掛かるのであって、導線
@@ -125,7 +125,7 @@ export const Actions: Story = {
 export const Inline: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSlashes}>インライン小型アラート</SectionHeading>
+      <SectionHeading>インライン小型アラート</SectionHeading>
       <div className="flex flex-col gap-2">
         <InlineAlert tone="warn">
           エンコードプリセットの変更は、次回の録画から適用されます。
@@ -135,9 +135,7 @@ export const Inline: Story = {
         </InlineAlert>
       </div>
 
-      <SectionHeading mark={MarkPanel} className="mt-7">
-        適用例
-      </SectionHeading>
+      <SectionHeading className="mt-7">適用例</SectionHeading>
       <Surface>
         <h3 className="heading mb-0.5 text-ui">適用例</h3>
         <p className="mb-[11px] text-sub text-ink-2">
@@ -148,7 +146,7 @@ export const Inline: Story = {
             <Label htmlFor="lnb" className="text-ui font-medium">
               LNB 給電
             </Label>
-            <div className="text-note text-ink-3">アンテナへ電源を供給する</div>
+            <div className="text-note text-ink-2">アンテナへ電源を供給する</div>
           </div>
           <Switch id="lnb" defaultChecked />
         </div>
@@ -156,7 +154,7 @@ export const Inline: Story = {
           給電を停止すると BS/CS 全チューナーの受信が止まります。
         </InlineAlert>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         複数の事象が同時に起きた場合は、重大度が最も高い1件へ集約し、残りは件数で示す。
       </p>
     </div>

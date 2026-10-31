@@ -1208,7 +1208,7 @@ export const 操作の並び: Story = {
 
     await expect(canvas.getByRole('button', { name: '削除' })).toHaveAttribute(
       'data-variant',
-      'remove',
+      'danger',
     )
   },
 }
@@ -1263,8 +1263,7 @@ export const 記録の値は札で言う: Story = {
     for (const pill of said.map(pillOf)) {
       const drawn = getComputedStyle(pill)
 
-      await expect(drawn.borderTopStyle).not.toBe('none')
-      await expect(parseFloat(drawn.borderTopWidth)).toBeGreaterThan(0)
+      await expect(drawn.backgroundColor).not.toBe('rgba(0, 0, 0, 0)')
     }
 
     const measured = said.map((words) => {

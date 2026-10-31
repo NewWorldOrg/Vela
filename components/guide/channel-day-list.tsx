@@ -12,12 +12,12 @@ import {
 } from '@/lib/state-terms'
 import { cn } from '@/lib/utils'
 import type { Program } from '@/repository/programs'
-import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
 import {
-  ChevronDownIcon,
-  ChevronUpIcon,
-  RecordIcon,
-} from '@/components/vela/icons'
+  GENRE_MARK_CLASS,
+  cellTimeOf,
+  groundOf,
+} from '@/components/guide/guide-metrics'
+import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 
 const ROOM_ABOVE_NOW_PX = 48
@@ -170,11 +170,11 @@ export function ChannelDayList({
       ref={list}
       data-guide-list
       className={cn(
-        'relative -mx-3.5 min-h-0 flex-1 overflow-y-auto border-t border-line bg-surface',
+        'relative -mx-3.5 min-h-0 flex-1 overflow-y-auto bg-bg px-2 pb-2',
         className,
       )}
     >
-      <ol>
+      <ol className="flex flex-col gap-1.5">
         {programs.map((p) => {
           const onAir = isOnAir(p, nowMin)
           const past =
@@ -187,6 +187,7 @@ export function ChannelDayList({
             onAir && nowMin !== undefined
               ? Math.min(1, (nowMin - p.startMin) / p.durationMin)
               : 0
+          const time = cellTimeOf(p, nowMin)
 
           return (
             <li
@@ -197,18 +198,23 @@ export function ChannelDayList({
               data-on-air={onAir ? '' : undefined}
               data-past={past ? '' : undefined}
               className={cn(
-                'border-b border-dashed border-line last:border-b-0',
-                past && 'bg-surface-2',
-                onAir && 'bg-brand-soft/45',
+                'overflow-hidden rounded-md bg-surface',
                 p.id === chosenId &&
-                  'relative z-[1] outline-2 -outline-offset-2 outline-brand-line',
+                  'relative z-[1] shadow-[inset_0_0_0_2px_var(--ink)]',
               )}
             >
               <div
                 className={cn(
-                  'flex items-stretch pr-1',
-                  onAir && 'shadow-[inset_3px_0_0_var(--color-brand)]',
+                  'relative flex items-stretch pr-1',
+                  onAir && 'min-h-28',
                 )}
+                style={{
+                  background: groundOf(
+                    p.genre,
+                    time,
+                    onAir ? `${elapsed * 100}%` : undefined,
+                  ),
+                }}
               >
                 <button
                   type="button"
@@ -216,19 +222,19 @@ export function ChannelDayList({
                   onClick={() => onToggle(p)}
                   className={cn(
                     pressable,
-                    'flex min-h-14 min-w-0 flex-1 items-start gap-3 py-3 pr-1.5 pl-3.5 text-left',
+                    'flex min-h-14 min-w-0 flex-1 items-start gap-3 py-3 pr-1.5 pl-3 text-left',
                   )}
                 >
                   <span className="flex w-[calc(46rem/16)] shrink-0 flex-col font-code tabular-nums">
                     <span
                       className={cn(
-                        'text-ui font-medium',
-                        past ? 'text-ink-3' : 'text-ink',
+                        'text-title font-semibold',
+                        past ? 'text-ink-2' : 'text-ink',
                       )}
                     >
                       {p.startLabel}
                     </span>
-                    <span className="text-cap text-ink-3">
+                    <span className="text-cap text-ink-2">
                       {p.endUndecided ? '未定' : p.endLabel}
                     </span>
                   </span>
@@ -236,51 +242,36 @@ export function ChannelDayList({
                   <span className="min-w-0 flex-1">
                     <span
                       className={cn(
-                        'block text-body leading-snug',
+                        'block text-title font-semibold',
                         past ? 'text-ink-2' : 'text-ink',
-                        onAir && 'font-bold',
                       )}
                     >
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          'guide-cell-genre-dot',
+                          GENRE_MARK_CLASS[p.genre],
+                          past && 'opacity-45',
+                        )}
+                      />
                       {mark && <BookingGlyph mark={mark} />}
                       {halfWidthOf(p.title)}
                     </span>
                     <span
                       className={cn(
                         'mt-0.5 line-clamp-2 text-sub',
-                        past ? 'text-ink-3' : 'text-ink-2',
+                        past ? 'text-ink-2' : 'text-ink-2',
                       )}
                     >
-                      <span
-                        aria-hidden="true"
-                        className={cn(
-                          'guide-cell-genre-dot mr-1.5',
-                          GENRE_MARK_CLASS[p.genre],
-                        )}
-                      />
-                      <span className="mr-1.5 text-ink-3">
+                      <span className="mr-1.5 font-semibold text-ink">
                         {genreWordOf(p.genreLabel)}
                       </span>
                       {p.description && halfWidthOf(p.description)}
                     </span>
-                    {onAir && (
-                      <span className="mt-2 flex items-center gap-2">
-                        <span className="h-[3px] flex-1 overflow-hidden rounded-full bg-line">
-                          <span
-                            className="block h-full rounded-full bg-brand"
-                            style={{ width: `${elapsed * 100}%` }}
-                          />
-                        </span>
-                        {nowLabel && (
-                          <span className="rounded-full bg-brand px-2 py-px font-code text-micro font-medium text-on-brand">
-                            {nowLabel}
-                          </span>
-                        )}
-                      </span>
-                    )}
                   </span>
 
                   {!circleOf && (
-                    <span className="flex size-11 shrink-0 items-center justify-center self-center text-ink-3">
+                    <span className="flex size-11 shrink-0 items-center justify-center self-center text-ink-2">
                       <ChevronDownIcon
                         className={cn(
                           'size-[calc(15rem/16)] transition-transform',
@@ -291,13 +282,24 @@ export function ChannelDayList({
                   )}
                 </button>
                 {circleOf && rightEndOf(p, open, past, circleOf, onToggle)}
+                {onAir && (
+                  <span
+                    data-row-now-line
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-x-0 h-0.5 bg-accent"
+                    style={{ top: `${elapsed * 100}%` }}
+                  >
+                    <span className="absolute top-1/2 left-0 size-2 -translate-y-1/2 rounded-full bg-accent" />
+                    {nowLabel && (
+                      <span className="absolute top-1 right-14 font-code text-micro font-bold text-acc-text">
+                        {nowLabel}
+                      </span>
+                    )}
+                  </span>
+                )}
               </div>
 
-              {open && (
-                <div className="border-t border-dashed border-line px-3.5 pt-3.5 pb-4">
-                  {detailOf(p)}
-                </div>
-              )}
+              {open && <div className="px-3.5 pt-3.5 pb-4">{detailOf(p)}</div>}
             </li>
           )
         })}
@@ -325,7 +327,7 @@ function rightEndOf(
           pressable,
         )}
       >
-        <span className="flex size-8 items-center justify-center rounded-full border-[1.5px] border-brand-line bg-brand-soft text-brand [&_svg]:size-4">
+        <span className="flex size-9 items-center justify-center rounded-full bg-black/6 text-ink dark:bg-white/10 [&_svg]:size-4">
           <ChevronUpIcon />
         </span>
       </button>
@@ -343,18 +345,15 @@ function BookingGlyph({ mark }: { mark: 'booked' | 'recording' }) {
   return (
     <span
       data-booking-mark={mark}
-      className={cn(
-        'mr-1.5 inline-flex items-center align-[-1px]',
-        mark === 'recording' ? 'text-coral' : 'text-mint',
-      )}
+      className={cn('mr-1.5 inline-flex items-center align-[1px]')}
     >
       {mark === 'recording' ? (
+        <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
+      ) : (
         <span
           aria-hidden="true"
-          className="size-[calc(9rem/16)] rounded-full bg-current"
+          className="size-2.5 rounded-full border-[1.5px] border-acc-text"
         />
-      ) : (
-        <RecordIcon className="size-[calc(13rem/16)]" />
       )}
       <span className="sr-only">
         {mark === 'recording'

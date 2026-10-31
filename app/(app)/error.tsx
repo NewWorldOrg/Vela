@@ -22,7 +22,7 @@ export default function AppError({ reset }: { reset: () => void }) {
       title="画面を表示できませんでした"
       className="mt-16 max-w-[calc(560rem/16)]"
       action={
-        <Button variant="change" size="sm" onClick={readAgain}>
+        <Button variant="tone" size="sm" onClick={readAgain}>
           再試行
         </Button>
       }

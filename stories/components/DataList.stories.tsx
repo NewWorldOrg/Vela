@@ -40,9 +40,7 @@ export const Rows: Story = {
 
     return (
       <div className="mx-auto max-w-[720px] p-6">
-        <SectionHeading mark={ListIcon}>
-          データ行・展開行(チューナー一覧)
-        </SectionHeading>
+        <SectionHeading>データ行・展開行(チューナー一覧)</SectionHeading>
         <DataList columns={COLUMNS} minWidth={520}>
           <DataListHeader>
             <span />
@@ -54,7 +52,7 @@ export const Rows: Story = {
           </DataListHeader>
 
           <DataListRow>
-            <ChevronRightIcon className="size-3.5 text-ink-3" />
+            <ChevronRightIcon className="size-3.5 text-ink-2" />
             <span className="font-code font-medium tabular-nums">
               PX-Q3U4 #1
             </span>
@@ -88,7 +86,7 @@ export const Rows: Story = {
               aria-expanded={open}
               aria-controls="tuner-2-candidates"
               onClick={() => setOpen((prev) => !prev)}
-              className="tap-target inline-flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring"
+              className="tap-target inline-flex size-[18px] cursor-pointer items-center justify-center rounded-full text-ink-2 outline-none focus-visible:shadow-ring"
             >
               <ChevronRightIcon
                 className={`size-3.5 transition-transform duration-150 ease-toy ${
@@ -157,7 +155,7 @@ export const Rows: Story = {
           )}
 
           <DataListRow muted>
-            <ChevronRightIcon className="size-3.5 text-ink-3" />
+            <ChevronRightIcon className="size-3.5 text-ink-2" />
             <span className="font-code font-medium tabular-nums">
               PX-W3PE5 #1
             </span>
@@ -169,7 +167,7 @@ export const Rows: Story = {
             </span>
           </DataListRow>
         </DataList>
-        <p className="mt-[9px] text-note text-ink-3">
+        <p className="mt-[9px] text-note text-ink-2">
           外枠で囲わない。ヘッダ行は
           surface-2、行間は破線区切り、行のホバーは面の色 だけ。数値列は
           tabular-nums で右揃え。
@@ -182,7 +180,7 @@ export const Rows: Story = {
 export const Empty: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkStar}>空状態</SectionHeading>
+      <SectionHeading>空状態</SectionHeading>
       <DataList columns={COLUMNS} minWidth={520}>
         <DataListHeader>
           <span />

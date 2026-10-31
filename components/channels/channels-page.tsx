@@ -52,8 +52,8 @@ const SCAN_STATE_COLUMN = stateColumnFor(Object.values(SCAN_STATE_LABEL))
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
-      <h2 className="heading text-[calc(15rem/16)]">{title}</h2>
-      <span className="text-note tabular-nums text-ink-3">{stat}</span>
+      <h2 className="heading text-title">{title}</h2>
+      <span className="text-note tabular-nums text-ink-2">{stat}</span>
     </div>
   )
 }
@@ -107,7 +107,7 @@ function runToneOf(state: ScanRun['state']): StateTone {
 function ScanHistory({ history }: { history: ScanRun[] }) {
   return (
     <section id="scan-history" className="mt-10">
-      <SectionHeading mark={MarkDots}>スキャン履歴</SectionHeading>
+      <SectionHeading>スキャン履歴</SectionHeading>
       {history.length === 0 ? (
         <EmptyState usher={null} title="まだスキャン履歴がありません" />
       ) : (

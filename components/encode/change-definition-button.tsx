@@ -25,7 +25,7 @@ function ChangeButton({
 }) {
   return (
     <Button
-      variant="change"
+      variant="tone"
       size="sm"
       aria-label={`${label} を変更`}
       onClick={onOpen}

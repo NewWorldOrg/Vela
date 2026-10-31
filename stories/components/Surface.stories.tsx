@@ -25,7 +25,7 @@ type Story = StoryObj<typeof meta>
 export const Surfaces: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkPanel}>Surface(枠なしの面)</SectionHeading>
+      <SectionHeading>Surface(枠なしの面)</SectionHeading>
       <Surface>
         <h3 className="heading mb-0.5 text-ui">枠で囲わない情報のまとまり</h3>
         <p className="text-sub text-ink-2">
@@ -33,9 +33,7 @@ export const Surfaces: Story = {
         </p>
       </Surface>
 
-      <SectionHeading mark={MarkStar} className="mt-7">
-        Tile(押せるタイル)
-      </SectionHeading>
+      <SectionHeading className="mt-7">Tile(押せるタイル)</SectionHeading>
       <div className="flex flex-wrap gap-2.5">
         <Tile>
           <TileTitle>チューナー</TileTitle>
@@ -50,14 +48,12 @@ export const Surfaces: Story = {
           <TileMeta>取得できません</TileMeta>
         </Tile>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         線と影を持つのは押せるものだけ。ポインタを載せると 1px
         持ち上がり、押すと沈む。
       </p>
 
-      <SectionHeading mark={MarkCup} className="mt-7">
-        TintPanel(パステルの面)
-      </SectionHeading>
+      <SectionHeading className="mt-7">TintPanel(パステルの面)</SectionHeading>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-[9px]">
         <TintPanel tint="lavender">
           <TintMetric label="チューナー" value="3 / 4" unit="稼働中" />
@@ -97,7 +93,7 @@ export const 空状態の四通り: Story = {
       <EmptyState
         title="条件に合う録画がありません"
         action={
-          <Button variant="halt" size="sm">
+          <Button variant="tone" size="sm">
             条件を解除
           </Button>
         }
@@ -105,7 +101,7 @@ export const 空状態の四通り: Story = {
       <EmptyState
         title="未完了の予約がありません"
         action={
-          <Button variant="halt" size="sm">
+          <Button variant="tone" size="sm">
             条件を解除
           </Button>
         }

@@ -1,16 +1,13 @@
-import type { ComponentProps, ComponentType } from 'react'
+import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { MarkStar, type IconProps } from '@/components/vela/icons'
 
 export function SectionHeading({
-  mark: Mark = MarkStar,
   level = 2,
   className,
   children,
   ...props
 }: ComponentProps<'h2'> & {
-  mark?: ComponentType<IconProps>
   level?: 2 | 3 | 4
 }) {
   const Tag = `h${level}` as const
@@ -19,17 +16,12 @@ export function SectionHeading({
     <Tag
       data-slot="section-heading"
       className={cn(
-        'heading mb-[calc(11rem/16)] flex items-center gap-[calc(7rem/16)] text-ui text-ink',
+        'heading mb-3 flex items-baseline gap-2 text-heading text-ink',
         className,
       )}
       {...props}
     >
-      <Mark className="drawn stamps size-[calc(18rem/16)] text-brand [--stroke-length:60]" />
       {children}
-      <span
-        aria-hidden="true"
-        className="h-px flex-1 border-t border-dashed border-line"
-      />
     </Tag>
   )
 }
@@ -51,7 +43,7 @@ export function PageHeading({
       {...props}
     >
       <div className="min-w-0">
-        <h1 className="heading text-h3 leading-[1.45] phone:sr-only">
+        <h1 className="heading text-heading leading-[1.45] phone:sr-only">
           {children}
         </h1>
         {description && (

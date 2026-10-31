@@ -51,7 +51,7 @@ function Sample({
 }) {
   return (
     <div className="flex flex-col gap-[7px]">
-      <span className="font-code text-[10px] tracking-[0.06em] text-ink-3">
+      <span className="font-code text-[10px] tracking-[0.06em] text-ink-2">
         {caption}
       </span>
       {children}
@@ -62,7 +62,7 @@ function Sample({
 export const TextInputs: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkRuler}>テキスト入力</SectionHeading>
+      <SectionHeading>テキスト入力</SectionHeading>
       <Surface>
         <div className="grid gap-[17px] sm:grid-cols-2">
           <Sample caption="通常">
@@ -124,7 +124,7 @@ export const TextInputs: Story = {
           </Field>
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         入力の角丸は 10px。パス・数値は M PLUS 1 Code
         で組み、桁と区切りを読み取りやすくする。エラーは境界色+メッセージのみで示し、
         点滅やグローは使わない。
@@ -136,7 +136,7 @@ export const TextInputs: Story = {
 function PasswordSamples() {
   return (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkRuler}>パスワード入力</SectionHeading>
+      <SectionHeading>パスワード入力</SectionHeading>
       <Surface>
         <div className="grid gap-[17px] sm:grid-cols-2">
           <Sample caption="通常">
@@ -158,7 +158,7 @@ function PasswordSamples() {
           </Sample>
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         マスクは切り替えられる。打ったものが読めないと、断られたのか打ち間違えたのかが本人にも分からない。
         切り替えは欄の中ではなく横に置く。44px の触れる面は載せた側が press
         を受け取るので、欄の中に置くと右端で文字を選べなくなる。
@@ -188,7 +188,7 @@ export const パスワードを表示中: Story = {
 export const Selects: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkSplit}>セレクト</SectionHeading>
+      <SectionHeading>セレクト</SectionHeading>
       <Surface>
         <div className="grid gap-[17px] sm:grid-cols-2">
           <Field>
@@ -244,9 +244,7 @@ export const Selects: Story = {
 export const Toggles: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkPill}>
-        スイッチ・チェックボックス・ラジオ
-      </SectionHeading>
+      <SectionHeading>スイッチ・チェックボックス・ラジオ</SectionHeading>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5">
         <OptionGroup title="スイッチ" className="col-span-full bg-brand-soft">
           <div className="flex items-center gap-[11px]">
@@ -259,7 +257,7 @@ export const Toggles: Story = {
           </div>
           <div className="flex items-center gap-[11px]">
             <Switch id="subtitle-stream" defaultChecked disabled />
-            <Label htmlFor="subtitle-stream" className="text-ink-3">
+            <Label htmlFor="subtitle-stream" className="text-ink-2">
               字幕ストリームを保存
             </Label>
           </div>
@@ -280,7 +278,7 @@ export const Toggles: Story = {
           </div>
           <div className="flex items-center gap-[9px]">
             <Checkbox id="save-logo" disabled />
-            <Label htmlFor="save-logo" className="text-ink-3">
+            <Label htmlFor="save-logo" className="text-ink-2">
               ロゴを保存
             </Label>
           </div>
@@ -299,7 +297,7 @@ export const Toggles: Story = {
           </RadioGroup>
         </OptionGroup>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         選択肢のまとまりは枠で囲わず淡い色面で分ける。ノブとチェックは --ease
         でわずかに行き過ぎてから収まる。
       </p>
