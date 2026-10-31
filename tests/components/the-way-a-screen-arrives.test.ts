@@ -764,19 +764,23 @@ test('the opening of the guide is taken away where movement is switched off', as
   )
 })
 
-test('the curtain and the lines drawn by hand end on a small echo, once', async () => {
+test('an arrival comes to rest without going past it, and the curtain ends on a small echo, once', async () => {
   const sheet = await theSheet()
   const bodies = keyframeBodies(sheet)
 
-  assert.match(bodies.get('rise') ?? '', /70% \{[^}]*-0\.15/)
-  assert.match(bodies.get('swell') ?? '', /70% \{[^}]*translateY\(-1\.5px\)/)
+  for (const name of ['rise', 'swell', 'hop-in', 'appear', 'now-pop']) {
+    assert.doesNotMatch(
+      bodies.get(name) ?? '',
+      /\d+% \{/,
+      `${name} passes its resting place and comes back, and v4 has no overshoot`,
+    )
+  }
   assert.doesNotMatch(
     bodies.get('row') ?? '',
     /transform/,
     'rows that move one after another leave neighbouring rows at different ' +
       'heights, and the table ripples',
   )
-  assert.match(bodies.get('appear') ?? '', /65% \{[^}]*\* -0\.15/)
   assert.match(
     bodies.get('curtain-sway') ?? '',
     /86% \{[^}]*var\(--th\) \* -0\.07/,
@@ -799,15 +803,6 @@ test('the curtain and the lines drawn by hand end on a small echo, once', async 
   )
 
   assert.match(curtain, /curtain-tassel/)
-
-  assert.match(
-    await readFile(
-      path.join(ROOT, 'components/vela/section-heading.tsx'),
-      'utf8',
-    ),
-    /drawn stamps/,
-    'the section heading draws its mark without the stamp at the end',
-  )
 
   assert.match(
     await readFile(path.join(ROOT, 'components/vela/empty-state.tsx'), 'utf8'),

@@ -5,12 +5,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 import manifest from '@/app/manifest'
-import {
-  DARK_SURFACE,
-  LIGHT_BG,
-  LIGHT_SURFACE,
-  statusBarColours,
-} from '@/lib/app-colours'
+import { DARK_BG, LIGHT_BG, statusBarColours } from '@/lib/app-colours'
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -51,21 +46,20 @@ test('the colours the manifest and the status bar give are the tokens', async ()
   const sheet = (await read('app/globals.css')).toString('utf8')
 
   assert.equal(LIGHT_BG, tokenIn(sheet, ':root {', 'bg'))
-  assert.equal(LIGHT_SURFACE, tokenIn(sheet, ':root {', 'surface'))
-  assert.equal(DARK_SURFACE, tokenIn(sheet, '@variant dark {', 'surface'))
+  assert.equal(DARK_BG, tokenIn(sheet, '@variant dark {', 'bg'))
 
   const said = manifest()
 
-  assert.equal(said.theme_color, LIGHT_SURFACE)
+  assert.equal(said.theme_color, LIGHT_BG)
   assert.equal(said.background_color, LIGHT_BG)
 })
 
 test('the status bar follows the theme a person chose', () => {
-  assert.deepEqual(statusBarColours('light'), [{ color: LIGHT_SURFACE }])
-  assert.deepEqual(statusBarColours('dark'), [{ color: DARK_SURFACE }])
+  assert.deepEqual(statusBarColours('light'), [{ color: LIGHT_BG }])
+  assert.deepEqual(statusBarColours('dark'), [{ color: DARK_BG }])
   assert.deepEqual(statusBarColours('system'), [
-    { media: '(prefers-color-scheme: light)', color: LIGHT_SURFACE },
-    { media: '(prefers-color-scheme: dark)', color: DARK_SURFACE },
+    { media: '(prefers-color-scheme: light)', color: LIGHT_BG },
+    { media: '(prefers-color-scheme: dark)', color: DARK_BG },
   ])
 })
 
@@ -144,6 +138,6 @@ test('the frame of every screen stays inside the safe area', async () => {
   )
   assert.match(
     shell,
-    /ADMIN_LIST_HEIGHT_CAP =\s*'max-h-\[calc\(100dvh-66rem\/16-var\(--safe-bottom\)-var\(--tab-bar\)\)\]'/,
+    /ADMIN_LIST_HEIGHT_CAP =\s*'max-h-\[calc\(100dvh-var\(--top-bar\)-20rem\/16-var\(--safe-bottom\)-var\(--tab-bar\)\)\]'/,
   )
 })

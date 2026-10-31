@@ -123,7 +123,7 @@ function IconGrid({ items }: { items: [string, ComponentType<IconProps>][] }) {
         {items.map(([name, Component]) => (
           <div key={name} className="flex flex-col items-center gap-1.5">
             <Component className="size-6 text-ink" />
-            <span className="font-code text-[9.5px] text-ink-3">{name}</span>
+            <span className="font-code text-[9.5px] text-ink-2">{name}</span>
           </div>
         ))}
       </div>
@@ -135,21 +135,19 @@ export const IconSet: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <section className="mb-7">
-        <SectionHeading mark={Icons.MarkStar}>
-          ナビゲーション・領域
-        </SectionHeading>
+        <SectionHeading>ナビゲーション・領域</SectionHeading>
         <IconGrid items={NAVIGATION} />
       </section>
 
       <section className="mb-7">
-        <SectionHeading mark={Icons.MarkPill}>操作・状態</SectionHeading>
+        <SectionHeading>操作・状態</SectionHeading>
         <IconGrid items={ACTIONS} />
       </section>
 
       <section className="mb-7">
-        <SectionHeading mark={Icons.MarkDots}>セクションマーク</SectionHeading>
+        <SectionHeading>セクションマーク</SectionHeading>
         <IconGrid items={MARKS} />
-        <p className="mt-[9px] text-note text-ink-3">
+        <p className="mt-[9px] text-note text-ink-2">
           セクション見出しの前に置く小さなマーク。同じ形を使い回さず、区画ごとに変える。
         </p>
       </section>

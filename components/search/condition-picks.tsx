@@ -71,7 +71,7 @@ export function SubgenrePicks({
           <SelectTrigger
             size="sm"
             aria-label="サブジャンルを追加"
-            className="w-fit rounded-full text-ink-3"
+            className="w-fit rounded-full text-ink-2"
           >
             ＋ サブジャンルを追加
           </SelectTrigger>
@@ -124,7 +124,7 @@ export function DayPicks({
           <SelectTrigger
             size="sm"
             aria-label="曜日を追加"
-            className="w-fit rounded-full text-ink-3"
+            className="w-fit rounded-full text-ink-2"
           >
             ＋ 曜日を追加
           </SelectTrigger>

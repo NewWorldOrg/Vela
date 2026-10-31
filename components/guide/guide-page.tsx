@@ -274,7 +274,7 @@ export function GuideView({
   const besideOf = (program: Program | undefined) =>
     program ? (
       <>
-        <h2 className="heading mb-3 text-h2 leading-[1.45]">
+        <h2 className="heading mb-3 text-section leading-[1.45]">
           {halfWidthOf(program.title)}
         </h2>
         {detailOf(program)}
@@ -298,7 +298,7 @@ export function GuideView({
           aria-controls={daysId}
           onClick={() => setDaysOpen(!daysOpen)}
           className={cn(
-            'heading flex h-11 min-w-0 items-center gap-1 rounded-full text-h2 whitespace-nowrap outline-none focus-visible:shadow-ring',
+            'heading flex h-11 min-w-0 items-center gap-1 rounded-full text-section whitespace-nowrap outline-none focus-visible:shadow-ring',
             pressable,
           )}
         >
@@ -311,7 +311,7 @@ export function GuideView({
           <span className="sr-only">日を選ぶ</span>
           <ChevronDownIcon
             className={cn(
-              'size-[calc(18rem/16)] shrink-0 text-ink-3 transition-transform',
+              'size-[calc(18rem/16)] shrink-0 text-ink-2 transition-transform',
               daysOpen && 'rotate-180',
             )}
           />
@@ -505,7 +505,7 @@ export function GuideView({
           titleLevel={2}
           title={`${CHANNEL_KINDS.find((k) => k.value === guide.kind)?.label} の番組情報が不足しています(カバレッジ ${guide.coverageDays ?? 0} 日)`}
           action={
-            <Button variant="watch" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href="/settings/channels">チャンネルへ</Link>
             </Button>
           }

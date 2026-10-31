@@ -42,7 +42,7 @@ function Rows({ rows }: { rows: [string, string][] }) {
     <dl className="grid grid-cols-[minmax(0,13rem)_minmax(0,1fr)] gap-x-4 gap-y-2 text-ui">
       {rows.map(([name, said]) => (
         <div key={name} className="contents">
-          <dt className="text-sub text-ink-3">{name}</dt>
+          <dt className="text-sub text-ink-2">{name}</dt>
           <dd className="font-code tabular-nums">{said}</dd>
         </div>
       ))}
@@ -61,15 +61,15 @@ type Story = StoryObj<typeof meta>
 export const ひとつの語とひとつの形: Story = {
   render: () => (
     <div className="mx-auto max-w-[680px] p-6">
-      <SectionHeading mark={MarkRuler}>日時の見出し語</SectionHeading>
+      <SectionHeading>日時の見出し語</SectionHeading>
       <Surface className="mb-5">
         <Rows rows={HEADINGS} />
       </Surface>
-      <SectionHeading mark={MarkAxis}>同じ形で書く 4 か所</SectionHeading>
+      <SectionHeading>同じ形で書く 4 か所</SectionHeading>
       <Surface className="mb-5">
         <Rows rows={PLACES} />
       </Surface>
-      <SectionHeading mark={MarkRuler}>端</SectionHeading>
+      <SectionHeading>端</SectionHeading>
       <Surface>
         <Rows rows={EDGES} />
       </Surface>

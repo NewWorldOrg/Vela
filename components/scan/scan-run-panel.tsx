@@ -74,11 +74,11 @@ function AttemptResult({ attempt }: { attempt: ScanAttemptRow }) {
     return (
       <span
         data-slot="attempt-not-yet-named"
-        className="inline-flex items-center gap-2 text-ui text-ink-3"
+        className="inline-flex items-center gap-2 text-ui text-ink-2"
       >
         <span
           aria-hidden="true"
-          className="inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-surface-3 font-code text-cap leading-none font-medium text-ink-3"
+          className="inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-surface-3 font-code text-cap leading-none font-medium text-ink-2"
         >
           ?
         </span>
@@ -152,7 +152,7 @@ export function ScanAttemptsTable({
 
 function ScanCounts({ progress }: { progress: ScanRunProgress }) {
   return (
-    <div className="flex flex-wrap items-baseline gap-x-[calc(18rem/16)] gap-y-1.5 text-sub text-ink-3">
+    <div className="flex flex-wrap items-baseline gap-x-[calc(18rem/16)] gap-y-1.5 text-sub text-ink-2">
       <span>
         スキャン済み{' '}
         <b className="font-code text-ui font-medium tabular-nums text-ink">
@@ -211,7 +211,7 @@ export function ScanRunPanel({
               progress?.systems.length === 1 ? progress.systems[0] : undefined
             }
           />
-          <span className="text-note text-ink-3">
+          <span className="text-note text-ink-2">
             スキャン中のため、変更できません。
           </span>
         </div>
@@ -267,7 +267,7 @@ export function ScanRunPanel({
 
       {progress && progress.attempts.length > 0 && (
         <section className="mt-[calc(22rem/16)]">
-          <SectionHeading mark={MarkAxis}>スキャン結果(順次)</SectionHeading>
+          <SectionHeading>スキャン結果(順次)</SectionHeading>
           <FailureLegend />
           <ScanAttemptsTable attempts={progress.attempts} />
         </section>

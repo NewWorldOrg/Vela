@@ -71,7 +71,7 @@ export function EncodeView({
       <PageHeading>エンコード</PageHeading>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkDots}>ジョブの状況</SectionHeading>
+        <SectionHeading>ジョブの状況</SectionHeading>
 
         {running && <RunningJob job={running} onCallOff={actions.onCallOff} />}
 
@@ -92,7 +92,7 @@ export function EncodeView({
       </section>
 
       <section className="mt-9">
-        <SectionHeading mark={MarkPill}>自動実行</SectionHeading>
+        <SectionHeading>自動実行</SectionHeading>
         <AutoRunPanel
           autoRun={screen.autoRun}
           destination={inUse.length === 1 ? inUse[0].label : undefined}
@@ -101,7 +101,7 @@ export function EncodeView({
       </section>
 
       <section className="mt-9">
-        <SectionHeading mark={MarkPanel}>プロファイル</SectionHeading>
+        <SectionHeading>プロファイル</SectionHeading>
         {profiles.length > 0 ? (
           <ProfileList
             profiles={profiles}
@@ -124,7 +124,7 @@ export function EncodeView({
       </section>
 
       <section className="mt-9">
-        <SectionHeading mark={MarkSplit}>保存先</SectionHeading>
+        <SectionHeading>保存先</SectionHeading>
         {destinations.length > 0 ? (
           <DestinationList
             destinations={destinations}

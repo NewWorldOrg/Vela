@@ -98,7 +98,7 @@ function DropdownMenuContent({
         data-slot="dropdown-menu-content"
         sideOffset={sideOffset}
         className={cn(
-          'z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg border border-line-strong bg-surface p-1 text-ink shadow-pop-xl data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=closed]:disappears data-[state=open]:appears',
+          'z-50 max-h-(--radix-dropdown-menu-content-available-height) min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-x-hidden overflow-y-auto rounded-lg bg-raised p-1.5 text-ink shadow-lift data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=closed]:disappears data-[state=open]:appears',
           className,
         )}
         {...props}
@@ -133,7 +133,7 @@ function DropdownMenuItem({
       data-inset={inset}
       data-variant={variant}
       className={cn(
-        "relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-surface-2 focus:text-ink data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[inset]:pl-8 data-[variant=destructive]:text-coral data-[variant=destructive]:focus:bg-coral/10 data-[variant=destructive]:focus:text-coral dark:data-[variant=destructive]:focus:bg-coral/20 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-ink-2 data-[variant=destructive]:*:[svg]:text-coral!",
+        "relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-2.5 py-1.5 text-body outline-hidden select-none focus:bg-surface focus:text-ink data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 data-[inset]:pl-8 data-[variant=destructive]:text-acc-text data-[variant=destructive]:focus:bg-accent-soft data-[variant=destructive]:focus:text-acc-text [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-ink-2 data-[variant=destructive]:*:[svg]:text-acc-text!",
         className,
       )}
       {...props}
@@ -151,7 +151,7 @@ function DropdownMenuCheckboxItem({
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
       className={cn(
-        "relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none focus:bg-surface-2 focus:text-ink data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-body outline-hidden select-none focus:bg-surface focus:text-ink data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       checked={checked}
@@ -187,7 +187,7 @@ function DropdownMenuRadioItem({
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
       className={cn(
-        "relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-sm outline-hidden select-none focus:bg-surface-2 focus:text-ink data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
+        "relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm py-1.5 pr-2 pl-8 text-body outline-hidden select-none focus:bg-surface focus:text-ink data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
       {...props}
@@ -214,7 +214,7 @@ function DropdownMenuLabel({
       data-slot="dropdown-menu-label"
       data-inset={inset}
       className={cn(
-        'px-2 py-1.5 text-sm font-medium data-[inset]:pl-8',
+        'px-2.5 py-1.5 text-note font-semibold text-ink-2 data-[inset]:pl-8',
         className,
       )}
       {...props}
@@ -229,7 +229,7 @@ function DropdownMenuSeparator({
   return (
     <DropdownMenuPrimitive.Separator
       data-slot="dropdown-menu-separator"
-      className={cn('-mx-1 my-1 h-px bg-border', className)}
+      className={cn('-mx-1.5 my-1 h-px bg-hair', className)}
       {...props}
     />
   )
@@ -242,7 +242,7 @@ function DropdownMenuShortcut({
   return (
     <span
       data-slot="dropdown-menu-shortcut"
-      className={cn('ml-auto text-xs tracking-widest text-ink-2', className)}
+      className={cn('ml-auto text-note tracking-widest text-ink-2', className)}
       {...props}
     />
   )
@@ -267,7 +267,7 @@ function DropdownMenuSubTrigger({
       data-slot="dropdown-menu-sub-trigger"
       data-inset={inset}
       className={cn(
-        "flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-2 py-1.5 text-sm outline-hidden select-none focus:bg-surface-2 focus:text-ink data-[inset]:pl-8 data-[state=open]:bg-surface-2 data-[state=open]:text-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-ink-2",
+        "flex min-h-11 cursor-pointer items-center gap-2 rounded-sm px-2.5 py-1.5 text-body outline-hidden select-none focus:bg-surface focus:text-ink data-[inset]:pl-8 data-[state=open]:bg-surface data-[state=open]:text-ink [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 [&_svg:not([class*='text-'])]:text-ink-2",
         className,
       )}
       {...props}
@@ -286,7 +286,7 @@ function DropdownMenuSubContent({
     <DropdownMenuPrimitive.SubContent
       data-slot="dropdown-menu-sub-content"
       className={cn(
-        'z-50 min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg border border-line-strong bg-surface p-1 text-ink shadow-pop-xl data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=closed]:disappears data-[state=open]:appears',
+        'z-50 min-w-[8rem] origin-(--radix-dropdown-menu-content-transform-origin) overflow-hidden rounded-lg bg-raised p-1.5 text-ink shadow-lift data-[side=bottom]:[--from-y:-8px] data-[side=top]:[--from-y:8px] data-[side=left]:[--from-x:8px] data-[side=right]:[--from-x:-8px] data-[state=closed]:disappears data-[state=open]:appears',
         className,
       )}
       {...props}

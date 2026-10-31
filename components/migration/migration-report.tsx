@@ -40,7 +40,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
   return (
     <>
       <section className="mt-5">
-        <SectionHeading mark={MarkDots}>実行情報</SectionHeading>
+        <SectionHeading>実行情報</SectionHeading>
         <Surface>
           <div className="flex flex-wrap items-center gap-2.5">
             <b className="text-ui font-bold">{run.heading}</b>
@@ -63,7 +63,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkPanel}>母集団サマリ</SectionHeading>
+        <SectionHeading>母集団サマリ</SectionHeading>
         <div className="space-y-2.5">
           {result.populations.map((population) => (
             <Surface
@@ -72,7 +72,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             >
               <div>
                 <b className="text-ui font-bold">{population.name}</b>
-                <span className="ml-2 font-code text-note break-keep text-ink-3">
+                <span className="ml-2 font-code text-note break-keep text-ink-2">
                   {population.source}
                 </span>
                 <span className="mt-0.5 block text-note text-ink-2">
@@ -130,7 +130,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkType}>未取り込みの明細</SectionHeading>
+        <SectionHeading>未取り込みの明細</SectionHeading>
         <Table
           cards
           className="table-fixed min-w-[calc(860rem/16)]"
@@ -154,12 +154,12 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                     <b className="text-ui font-bold">{group.name}</b>
                     <span className="font-code text-ui tabular-nums text-brand">
                       {group.count}
-                      <em className="ml-0.5 font-sans text-note text-ink-3 not-italic">
+                      <em className="ml-0.5 font-sans text-note text-ink-2 not-italic">
                         {group.unit}
                       </em>
                     </span>
                     {group.reason && (
-                      <span className="text-note text-ink-3">
+                      <span className="text-note text-ink-2">
                         {group.reason}
                       </span>
                     )}
@@ -196,7 +196,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                 <TableRow>
                   <TableCell
                     colSpan={3}
-                    className="whitespace-normal text-ink-3"
+                    className="whitespace-normal text-ink-2"
                   >
                     <span className="max-[600px]:block max-[600px]:px-3.5 max-[600px]:py-3">
                       {group.empty}
@@ -210,7 +210,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkSlashes}>移行後の欠落</SectionHeading>
+        <SectionHeading>移行後の欠落</SectionHeading>
         <div className="space-y-2">
           {result.losses.map((loss) => (
             <Surface key={loss.id} className="text-ui">
@@ -219,7 +219,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             </Surface>
           ))}
           {result.losses.length === 0 && (
-            <Surface className="text-ui text-ink-3">{NO_LOSSES}</Surface>
+            <Surface className="text-ui text-ink-2">{NO_LOSSES}</Surface>
           )}
         </div>
       </section>

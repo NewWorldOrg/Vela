@@ -169,7 +169,7 @@ const ServiceLine = memo(function ServiceLine({
           aria-label={`${service.name} の候補チャンネル`}
           aria-expanded={expanded}
           onClick={() => onToggle(service.key)}
-          className="tap-target inline-flex cursor-pointer text-ink-3 hover:text-ink"
+          className="tap-target inline-flex cursor-pointer text-ink-2 hover:text-ink"
         >
           <ChevronRightIcon
             className={cn(

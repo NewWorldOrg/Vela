@@ -24,7 +24,7 @@ export function ProgramDetailView({
   return (
     <ScreenMain className="pb-16">
       <div className="mx-auto max-w-[calc(780rem/16)] px-6 pt-[calc(22rem/16)] max-[700px]:px-3.5">
-        <Button variant="watch" size="sm" className="mb-3.5" asChild>
+        <Button variant="tone" size="sm" className="mb-3.5" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
             番組表へ

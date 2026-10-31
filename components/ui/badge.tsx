@@ -4,22 +4,23 @@ import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
+/** A chip is said only when it asks for attention, or states a fact quietly. Good news wears no colour. */
 const badgeVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full border px-[calc(11rem/16)] py-[calc(3rem/16)] text-note font-medium whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:ring-brand/50 [&>svg]:pointer-events-none [&>svg]:size-3',
+  'inline-flex h-6 shrink-0 items-center justify-center gap-[5px] rounded-full px-[9px] text-note font-semibold whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:shadow-ring [&>svg]:pointer-events-none [&>svg]:size-3',
   {
     variants: {
       variant: {
-        default: 'border-line bg-surface text-ink-2',
-        secondary: 'border-line bg-surface-2 text-ink-2',
-        outline: 'border-line-strong bg-transparent text-ink-2',
-        mute: 'border-dashed border-line bg-surface-2 text-ink-3',
-        ok: 'border-mint-line bg-mint-soft text-mint',
-        warn: 'border-lemon-line bg-lemon-soft text-lemon',
-        err: 'border-coral-line bg-coral-soft text-coral',
-        sky: 'border-sky-line bg-sky-soft text-sky',
-        info: 'border-brand-line bg-brand-soft text-brand',
-        selected: 'border-brand-line bg-brand-soft font-bold text-brand',
-        recording: 'border-coral-line bg-coral-soft font-bold text-coral',
+        default: 'bg-surface-2 text-ink-2',
+        secondary: 'bg-surface-2 text-ink-2',
+        outline: 'bg-surface-2 text-ink-2',
+        mute: 'bg-surface-2 text-ink-2',
+        ok: 'bg-surface-2 text-ink',
+        sky: 'bg-surface-2 text-ink',
+        info: 'bg-surface-2 text-ink',
+        warn: 'bg-accent-soft text-acc-text',
+        err: 'bg-accent-soft text-acc-text',
+        recording: 'bg-accent-soft text-acc-text',
+        selected: 'bg-btn text-on-ink',
       },
     },
     defaultVariants: {

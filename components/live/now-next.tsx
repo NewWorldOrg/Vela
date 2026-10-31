@@ -39,7 +39,7 @@ export function NowNext({
           no={channel.no}
           className="self-center"
         />
-        <h1 className="heading text-h2 leading-[1.45]">
+        <h1 className="heading text-section leading-[1.45]">
           {programme ? programme.title : '番組情報がありません'}
         </h1>
         {programme && (
@@ -53,7 +53,7 @@ export function NowNext({
       <p className="text-ui text-ink-2">{channel.name}</p>
       {programme && (
         <div className="mt-[calc(11rem/16)] flex items-center gap-[calc(11rem/16)]">
-          <span className="font-code text-note whitespace-nowrap text-ink-3">
+          <span className="font-code text-note whitespace-nowrap text-ink-2">
             {nowLabel}
           </span>
           <ProgressBar
@@ -62,7 +62,7 @@ export function NowNext({
             className="h-[calc(5rem/16)] min-w-[calc(60rem/16)] flex-1"
           />
           {restMin !== undefined && (
-            <span className="font-code text-note whitespace-nowrap text-ink-3">
+            <span className="font-code text-note whitespace-nowrap text-ink-2">
               残り {restMin} 分
             </span>
           )}

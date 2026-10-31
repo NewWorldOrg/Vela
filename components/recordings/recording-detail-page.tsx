@@ -202,7 +202,7 @@ function PicksUpOnTheBar({ at, id }: { at: number; id: string }) {
 }
 
 function Dot({ className }: { className?: string }) {
-  return <span className={cn('text-ink-3', className)}>・</span>
+  return <span className={cn('text-ink-2', className)}>・</span>
 }
 
 export function RecordingDetailView({
@@ -313,7 +313,7 @@ export function RecordingDetailView({
           >
             <Link
               href="/library"
-              className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+              className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink"
             >
               <ChevronLeftIcon className="size-[calc(15rem/16)]" />
               ライブラリへ
@@ -329,7 +329,7 @@ export function RecordingDetailView({
               )}
             >
               <OutcomeMark outcome={banded} />
-              <h2 className="heading text-[calc(15rem/16)] whitespace-nowrap">
+              <h2 className="heading text-title whitespace-nowrap">
                 {alarming ? OUTCOME_LABEL[alarming] : LEFT_SCRAMBLED_IN_FULL}
               </h2>
               {d.fileMissing && <FileMissingChip />}
@@ -354,7 +354,7 @@ export function RecordingDetailView({
                   <DetailStat label="進行中のドロップ" value={d.live.drops} />
                   <DetailStat label="残り" value={d.live.rest} />
                 </div>
-                <p className="mt-2.5 text-note text-ink-3">
+                <p className="mt-2.5 text-note text-ink-2">
                   最終更新 <span className="font-code">{d.live.updatedAt}</span>
                 </p>
               </section>
@@ -530,8 +530,8 @@ const INFO_CLASSES: Record<
   }
 > = {
   page: {
-    title: 'heading text-[calc(24rem/16)] leading-[1.45] upright:text-h2',
-    meta: 'mt-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2 upright:mt-1.5 upright:gap-1.5 upright:text-sub upright:text-ink-3',
+    title: 'heading text-[calc(24rem/16)] leading-[1.45] upright:text-section',
+    meta: 'mt-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2 upright:mt-1.5 upright:gap-1.5 upright:text-sub upright:text-ink-2',
     synopsis:
       'mt-3.5 max-w-[calc(660rem/16)] text-[calc(13rem/16)] leading-[1.9] text-ink-2 upright:order-3 upright:text-body upright:leading-[1.8]',
     actions: 'mt-[calc(18rem/16)] upright:order-2 upright:mt-3.5',
@@ -541,8 +541,8 @@ const INFO_CLASSES: Record<
     dot: '',
   },
   face: {
-    title: 'heading text-h2 leading-[1.45]',
-    meta: 'mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sub text-ink-3 [&>a]:basis-full [&>span:first-child]:basis-full',
+    title: 'heading text-section leading-[1.45]',
+    meta: 'mt-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sub text-ink-2 [&>a]:basis-full [&>span:first-child]:basis-full',
     synopsis: 'order-3 mt-3.5 text-body leading-[1.8] text-ink-2',
     actions: 'order-2 mt-3.5',
     failure:
@@ -601,7 +601,7 @@ function RecordingInfo({
           key={nth}
           className="min-w-0 border-l border-line px-3 py-[calc(9rem/16)] first:border-l-0"
         >
-          <dt className="text-micro font-bold text-ink-3">{name}</dt>
+          <dt className="text-micro font-bold text-ink-2">{name}</dt>
           <dd className="truncate text-ui">{value}</dd>
         </div>
       ))}
@@ -684,7 +684,7 @@ function RecordingInfo({
               </p>
             )}
             {d.failureReason.noticedAt && (
-              <p className="mt-1 font-code text-note tabular-nums text-ink-3">
+              <p className="mt-1 font-code text-note tabular-nums text-ink-2">
                 {d.failureReason.noticedAt}
               </p>
             )}

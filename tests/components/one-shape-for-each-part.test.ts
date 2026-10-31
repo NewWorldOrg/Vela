@@ -365,7 +365,7 @@ test('saving is one button of one height, and the row it sits in is that height'
 })
 
 const A_BORROWED_NAME =
-  /(?:^|[\s"'`:!])((?:bg|text|ring|border|outline|fill|stroke|divide|ring-offset)-(?:muted|popover|accent|destructive|primary|secondary|foreground|background|card|input|ring)(?:-foreground)?)(?![\w-])/g
+  /(?:^|[\s"'`:!])((?:bg|text|ring|border|outline|fill|stroke|divide|ring-offset)-(?:muted|popover|destructive|primary|secondary|foreground|background|card|input|ring)(?:-foreground)?)(?![\w-])/g
 
 const A_SOFT_SHADOW =
   /(?:^|[\s"'`:!])(shadow(?:-(?:2xs|xs|sm|md|lg|xl|2xl))?)(?=[\s"'`]|$)/g
@@ -387,8 +387,8 @@ test('the shared parts are dressed in the canon’s own names, not the kit’s',
 
     for (const found of source.matchAll(A_SOFT_SHADOW)) {
       assert.fail(
-        `${file} casts the kit’s blurred ${found[1]}; a floating thing casts ` +
-          'the hard shadow-pop-xl',
+        `${file} casts the kit’s ${found[1]}; a floating thing casts ` +
+          'the canon’s shadow-lift',
       )
     }
   }
@@ -526,7 +526,10 @@ test('a corner or a size of type that is on a step is said by the step’s name'
   }
 })
 
-const A_CORNER_OFF_THE_STEPS = new Map([['components/ui/checkbox.tsx', 6]])
+const A_CORNER_OFF_THE_STEPS = new Map([
+  ['components/ui/checkbox.tsx', 6],
+  ['components/vela/toast.tsx', 14],
+])
 
 test('a corner off the steps is written only where a step would change the shape', async () => {
   for (const { file, source } of await everySource()) {
@@ -679,23 +682,12 @@ test('the usher is troubled only where the page could not be shown', async () =>
   )
 })
 
-const THE_ICON_TILT =
-  /export const iconTilt =\s*'[^']*hover:\[&_svg\]:scale-\[1\.08\] hover:\[&_svg\]:rotate-\[-7deg\]'/
-
-test('an icon outside the player tilts by the one amount, and only the icon tilts', async () => {
-  assert.match(
+test('nothing turns under the pointer, and only a picture grows, by the one amount', async () => {
+  assert.doesNotMatch(
     await read('components/vela/tactile.ts'),
-    THE_ICON_TILT,
-    'the tilt of an icon under the pointer is not the one the canon gives',
+    /iconTilt/,
+    'an icon tilts under the pointer again, and v4 leaves it where it is',
   )
-
-  for (const file of [
-    'components/ui/button.tsx',
-    'components/vela/icon-button.tsx',
-    'components/vela/app-shell.tsx',
-  ]) {
-    assert.match(await read(file), /\biconTilt\b/, `${file} tilts on its own`)
-  }
 
   const offenders: string[] = []
 
@@ -703,9 +695,11 @@ test('an icon outside the player tilts by the one amount, and only the icon tilt
     (file) => !/\/player-/.test(file),
   )) {
     for (const found of (await read(file)).matchAll(
-      /hover:(?:\[&_svg\]:)?(?:-rotate-\d+|rotate-\[[^\]]+\]|scale-\d+|scale-\[[^\]]+\])/g,
+      /hover:(?:\[&_svg\]:)?(?:-?rotate-\d+|-?rotate-\[[^\]]+\]|scale-\d+|scale-\[[^\]]+\])/g,
     )) {
-      offenders.push(`${file}: ${found[0]}`)
+      if (found[0] !== 'hover:scale-[1.04]') {
+        offenders.push(`${file}: ${found[0]}`)
+      }
     }
   }
 

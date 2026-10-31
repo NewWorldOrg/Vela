@@ -114,20 +114,20 @@ function ChannelCard({
       <span
         className={cn(
           'heading text-[calc(16.5rem/16)] leading-[1.5] [overflow-wrap:anywhere]',
-          !programme && 'font-normal text-ink-3',
+          !programme && 'font-normal text-ink-2',
         )}
       >
         {programme ? programme.title : '番組情報がありません'}
       </span>
       {programme && (
-        <span className="font-code text-note tabular-nums text-ink-3">
+        <span className="font-code text-note tabular-nums text-ink-2">
           {programme.startLabel}
           {SPAN_DASH}
           {programme.endLabel ?? '終了未定'}
         </span>
       )}
       {channel.next && (
-        <span className="mt-auto block pt-1 text-note text-ink-3 [overflow-wrap:anywhere]">
+        <span className="mt-auto block pt-1 text-note text-ink-2 [overflow-wrap:anywhere]">
           次 <span className="font-code">{channel.next.startLabel}</span>{' '}
           {channel.next.title}
         </span>

@@ -73,7 +73,7 @@ function Read({
   return (
     <>
       <section className="mt-5">
-        <SectionHeading mark={MarkRuler}>精度</SectionHeading>
+        <SectionHeading>精度</SectionHeading>
         <PrecisionPanel status={status} />
       </section>
 
@@ -89,7 +89,7 @@ function Read({
       </section>
 
       <section className={LATER}>
-        <SectionHeading mark={MarkPill}>飛ばすボタン</SectionHeading>
+        <SectionHeading>飛ばすボタン</SectionHeading>
         <SkipThresholdPanel
           threshold={status.skipThreshold}
           onSettle={actions.onSettleSkipThreshold}
@@ -97,7 +97,7 @@ function Read({
       </section>
 
       <section className={LATER}>
-        <SectionHeading mark={MarkDots}>学習に使うデータ</SectionHeading>
+        <SectionHeading>学習に使うデータ</SectionHeading>
         <LearningDataPanel
           data={status.learningData}
           catalog={status.catalog}
@@ -115,22 +115,22 @@ function Unread({
   return (
     <>
       <section className="mt-5">
-        <SectionHeading mark={MarkRuler}>精度</SectionHeading>
+        <SectionHeading>精度</SectionHeading>
         <UnreadSurface slot={PRECISION_SLOT} reading={reading} />
       </section>
 
       <section data-slot={VERSIONS_SLOT} className={LATER}>
-        <SectionHeading mark={MarkAxis}>{VERSIONS_HEADING}</SectionHeading>
+        <SectionHeading>{VERSIONS_HEADING}</SectionHeading>
         <UnreadSurface slot="segment-version-table" reading={reading} />
       </section>
 
       <section className={LATER}>
-        <SectionHeading mark={MarkPill}>飛ばすボタン</SectionHeading>
+        <SectionHeading>飛ばすボタン</SectionHeading>
         <UnreadSurface slot={SKIP_THRESHOLD_SLOT} reading={reading} />
       </section>
 
       <section className={LATER}>
-        <SectionHeading mark={MarkDots}>学習に使うデータ</SectionHeading>
+        <SectionHeading>学習に使うデータ</SectionHeading>
         <UnreadSurface slot={LEARNING_DATA_SLOT} reading={reading} />
       </section>
     </>

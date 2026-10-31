@@ -204,7 +204,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
             <Button
-              variant="halt"
+              variant="tone"
               size="sm"
               onClick={() =>
                 change({ kind: null, days: null, ch: null, rule: null })
@@ -221,7 +221,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"
           action={
-            <Button variant="watch" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href="/reservations">予約へ</Link>
             </Button>
           }

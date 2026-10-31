@@ -48,7 +48,7 @@ export function FieldHint({ className, ...props }: ComponentProps<'p'>) {
   return (
     <p
       data-slot="field-hint"
-      className={cn('text-note text-ink-3', className)}
+      className={cn('text-note text-ink-2', className)}
       {...props}
     />
   )

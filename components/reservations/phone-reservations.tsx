@@ -90,7 +90,7 @@ export function PhoneConflict({
           className="relative mx-0.5 mt-3 mb-2.5"
           style={{ height: `${(18 + (line.kept.length + 1) * 24) / 16}rem` }}
         >
-          <div className="absolute inset-x-0 top-0 h-3 font-code text-micro leading-none text-ink-3">
+          <div className="absolute inset-x-0 top-0 h-3 font-code text-micro leading-none text-ink-2">
             {line.ticks.map((tick, nth) => (
               <span
                 key={tick.label}
@@ -151,7 +151,7 @@ export function PhoneConflict({
               <span className="block truncate text-ui font-bold">
                 {entry.title}
               </span>
-              <span className="block truncate font-code text-note text-ink-3">
+              <span className="block truncate font-code text-note text-ink-2">
                 {entry.meta}
               </span>
             </span>
@@ -171,7 +171,7 @@ export function PhoneConflict({
             <span className="block truncate text-ui font-bold">
               {reservation.title}
             </span>
-            <span className="block font-code text-note text-ink-3">
+            <span className="block font-code text-note text-ink-2">
               {clockOf(lost.startAt)}–{clockOf(lost.endAt)}
             </span>
             {loses && (
@@ -181,7 +181,7 @@ export function PhoneConflict({
             )}
           </span>
           <Button
-            variant="change"
+            variant="tone"
             size="sm"
             disabled={pending}
             onClick={takeIt}
@@ -273,7 +273,7 @@ export function PhoneReservationRows({
         return (
           <section key={day} aria-label={heading?.near ?? heading?.date}>
             {heading && (
-              <h2 className="flex items-center gap-2 px-4 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-3">
+              <h2 className="flex items-center gap-2 px-4 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2">
                 {heading.near}
                 <span className="font-code font-medium">{heading.date}</span>
               </h2>
@@ -320,7 +320,7 @@ export function PhoneReservationRows({
                           <span className="text-ui font-medium">
                             {span ? clockOf(span.startAt) : ''}
                           </span>
-                          <span className="text-cap text-ink-3">
+                          <span className="text-cap text-ink-2">
                             {span ? clockOf(span.endAt) : ''}
                           </span>
                         </span>
@@ -328,7 +328,7 @@ export function PhoneReservationRows({
                           <span className="block truncate text-ui leading-normal font-bold">
                             {reservation.title}
                           </span>
-                          <span className="flex min-w-0 items-center gap-1.5 text-sub text-ink-3">
+                          <span className="flex min-w-0 items-center gap-1.5 text-sub text-ink-2">
                             <span className="shrink-0">
                               {reservation.channelName}
                             </span>
@@ -355,7 +355,7 @@ export function PhoneReservationRows({
                           aria-label="取り消す"
                           onClick={() => takeBack(reservation)}
                           className={cn(
-                            'flex size-11 shrink-0 items-center justify-center self-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring',
+                            'flex size-11 shrink-0 items-center justify-center self-center rounded-full text-ink-2 outline-none focus-visible:shadow-ring',
                             pressable,
                           )}
                         >
@@ -430,8 +430,10 @@ export function ReservationBeside({
 
   return (
     <div data-slot="reservation-beside">
-      <h2 className="heading text-h2 leading-[1.45]">{reservation.title}</h2>
-      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sub text-ink-3">
+      <h2 className="heading text-section leading-[1.45]">
+        {reservation.title}
+      </h2>
+      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sub text-ink-2">
         {span && (
           <span className="font-code tabular-nums">
             {clockOf(span.startAt)}–{clockOf(span.endAt)}

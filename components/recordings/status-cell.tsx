@@ -27,7 +27,7 @@ const SAY_TONE: Record<StateTone, string> = {
   warn: 'text-lemon',
   err: 'text-coral',
   info: 'text-brand',
-  mute: 'text-ink-3',
+  mute: 'text-ink-2',
 }
 
 function emOf(word: string): number {
