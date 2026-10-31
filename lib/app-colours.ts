@@ -1,10 +1,10 @@
 import type { ThemePreference } from '@/lib/theme'
 
-export const LIGHT_BG = '#f7f4ed'
+export const LIGHT_BG = '#ffffff'
 
-export const LIGHT_SURFACE = '#fffdf8'
+export const LIGHT_SURFACE = '#f4f4f5'
 
-export const DARK_SURFACE = '#1c1b1f'
+export const DARK_SURFACE = '#1a1a1e'
 
 const SYSTEM_LIGHT = '(prefers-color-scheme: light)'
 
