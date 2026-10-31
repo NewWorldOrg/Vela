@@ -35,8 +35,8 @@ const OPTION = cn(
 )
 
 const ICON_ONLY = {
-  default: 'w-10 justify-center px-0 [&_svg]:size-4',
-  band: 'w-9 justify-center px-0 [&_svg]:size-4',
+  default: 'w-11 justify-center px-0 [&_svg]:size-4',
+  band: 'w-11 justify-center px-0 [&_svg]:size-4',
 } as const
 
 function Said({ option }: { option: SegmentedOption }) {

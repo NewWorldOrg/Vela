@@ -38,7 +38,7 @@ function recordingHref(id: string): Route {
 }
 
 const GLASS =
-  'pointer-events-none absolute z-[1] inline-flex h-5 items-center gap-1 rounded-full bg-[rgba(20,20,22,.5)] px-1.5 font-code text-micro leading-none font-semibold text-white backdrop-blur-md'
+  'pointer-events-none absolute z-[1] inline-flex h-5 items-center gap-1 rounded-full bg-[rgba(20,20,22,.6)] px-1.5 font-code text-micro leading-none font-semibold text-white backdrop-blur-md'
 
 /** The line of how far a recording was watched, inside the foot of its picture. */
 function WatchedBar({ share }: { share: number | undefined }) {
@@ -453,7 +453,7 @@ function SeriesCard({
             lengthShown={false}
             watchedShown={false}
           >
-            <span className="pointer-events-none absolute bottom-2 left-2 z-[1] inline-flex h-5 items-center rounded-full bg-[rgba(20,20,22,.5)] px-2 text-micro leading-none font-semibold text-white backdrop-blur-md">
+            <span className="pointer-events-none absolute bottom-2 left-2 z-[1] inline-flex h-5 items-center rounded-full bg-[rgba(20,20,22,.6)] px-2 text-micro leading-none font-semibold text-white backdrop-blur-md">
               <span className="font-code">{series.items.length}</span>
               &nbsp;話
             </span>

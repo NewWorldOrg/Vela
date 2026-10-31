@@ -15,7 +15,7 @@ import { waitsWhile } from '@/components/vela/waiting'
 
 const TABLE_MIN = '60rem'
 
-const HEAD = 'h-10 border-0 bg-transparent text-ink-2'
+const HEAD = 'sticky top-0 z-10 h-10 border-0 text-ink-2'
 
 export function RecordingsTable({
   items,

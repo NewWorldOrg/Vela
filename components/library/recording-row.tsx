@@ -140,7 +140,7 @@ export function RecordingRow({
               onClick={(event) => event.stopPropagation()}
               tabIndex={picking ? -1 : undefined}
               className={cn(
-                'flex min-w-0 items-center gap-1.5 text-[calc(14.5rem/16)] leading-5 font-semibold tracking-[-0.008em] no-underline outline-none focus-visible:shadow-ring',
+                'tap-target flex min-w-0 items-center gap-1.5 text-[calc(14.5rem/16)] leading-5 font-semibold tracking-[-0.008em] no-underline outline-none focus-visible:shadow-ring',
                 state === 'watched' ? 'text-ink-2' : 'text-ink',
               )}
             >

@@ -26,7 +26,7 @@ export function FilterChips({
       role="group"
       aria-label={label}
       data-slot="filter-chips"
-      className="flex min-w-0 flex-wrap gap-2"
+      className="flex min-w-0 flex-wrap gap-x-2 gap-y-3"
     >
       {pills.map((pill) => {
         const chosen = pill.value === value

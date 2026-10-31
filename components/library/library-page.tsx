@@ -160,7 +160,7 @@ export function LibraryView({
           placeholder="番組名・概要・出演者で検索"
           className={cn(
             BAND_CONTROL,
-            'rounded-full pl-[calc(34rem/16)] text-ellipsis phone:h-10 phone:text-body',
+            'rounded-full pl-[calc(34rem/16)] text-ellipsis',
           )}
         />
       </form>
@@ -257,7 +257,7 @@ export function LibraryView({
         </div>
       </div>
 
-      <div className="mt-4 flex flex-wrap items-center gap-2 phone:hidden">
+      <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3 phone:hidden">
         <FilterChips
           label="ジャンル"
           options={genres}

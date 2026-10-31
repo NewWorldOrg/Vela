@@ -34,9 +34,7 @@ export function attentionOf(recording: Recording) {
     ),
     r.gap && (
       <InFull key="gap" says={r.gap.detail}>
-        <Badge data-slot="gap-mark" variant="warn">
-          {r.gap.label}
-        </Badge>
+        <Badge variant="warn">{r.gap.label}</Badge>
       </InFull>
     ),
     r.leftScrambled && <LeftScrambledChip key="scrambled" />,
