@@ -246,6 +246,7 @@ function withSatellitePower(saved: boolean, applied: boolean) {
   return {
     ...TUNERS,
     notices: [],
+    cardReaders: undefined,
     rows: TUNERS.rows.map((row) =>
       row.device === SATELLITE ? { ...row, lnb: { saved, applied } } : row,
     ),
@@ -395,7 +396,9 @@ export const LNB給電を保存して未反映: Story = {
 
     const cell = lnbCellOf(canvasElement, SATELLITE)
 
-    await expect(within(cell).getByRole('switch')).toBeChecked()
+    await expect(
+      within(cell).getByRole('switch', { name: `${SATELLITE} の LNB 給電` }),
+    ).toBeChecked()
     await expect(within(cell).getByText('未反映')).toBeVisible()
     await expect(lnbCellOf(canvasElement, 'adapter1')).not.toHaveTextContent(
       '未反映',
