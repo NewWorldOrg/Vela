@@ -7,6 +7,7 @@ import { test } from 'node:test'
 const WAIVED = [
   'components/data-broadcast/data-broadcast-player.tsx',
   'components/guide/program-cell.tsx',
+  'components/guide/reserve-circle.tsx',
 ]
 
 const NAMES_IT = [

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { getRouter } from '@storybook/nextjs/navigation.mock'
-import { expect, fn, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import {
   COLUMN_MIN_REM,
@@ -117,10 +117,13 @@ export const 通常: Story = {
 
     for (const [index, program] of IN_GRID_ORDER.entries()) {
       await expect(cells[index]).toHaveTextContent(halfWidthOf(program.title))
-      if (shown(partOfCell(cells[index], '.guide-cell-desc'))) {
-        await expect(cells[index]).toHaveTextContent(
-          genreWordOf(program.genreLabel),
-        )
+      if (
+        program.description &&
+        shown(partOfCell(cells[index], '.guide-cell-desc'))
+      ) {
+        await expect(
+          partOfCell(cells[index], '.guide-cell-desc').textContent,
+        ).toContain(halfWidthOf(program.description).slice(0, 4))
       }
     }
   },
@@ -170,89 +173,6 @@ export const 放送マーク: Story = {
   },
 }
 
-export const 現れ方: Story = {
-  args: { guide: base },
-  globals: { a11y: { manual: true } },
-  play: async ({ canvasElement }) => {
-    await waitFor(() =>
-      expect(
-        canvasElement.querySelector('[data-guide-opening]'),
-      ).not.toBeNull(),
-    )
-
-    const opening = partOf(canvasElement, '[data-guide-opening]')
-
-    await expect(opening).not.toHaveAttribute('data-open')
-    await expect(
-      getComputedStyle(partOf(opening, '.guide-opening-above')).backgroundColor,
-    ).toBe(
-      getComputedStyle(partOf(opening, '.guide-opening-below')).backgroundColor,
-    )
-    await expect(
-      getComputedStyle(partOf(opening, '.guide-opening-line')).animationName,
-    ).toBe('opening-line')
-    await expect(
-      getComputedStyle(partOf(opening, '.guide-opening-ball')).animationName,
-    ).toBe('ball-across')
-    await expect(canvasElement.querySelector('[data-now-line]')).toBeNull()
-
-    await waitFor(() => expect(opening).toHaveAttribute('data-open'), {
-      timeout: 4000,
-    })
-
-    await expect(
-      getComputedStyle(partOf(opening, '.guide-opening-ball-body'))
-        .animationName,
-    ).toBe('ball-burst')
-    await expect(opening.querySelectorAll('.guide-opening-ring')).toHaveLength(
-      2,
-    )
-    await expect(opening.querySelectorAll('.guide-opening-piece')).toHaveLength(
-      20,
-    )
-    await expect(
-      getComputedStyle(partOf(opening, '.guide-opening-piece')).animationName,
-    ).toBe('opening-piece')
-
-    const label = partOf(canvasElement, '[data-now-line] span')
-
-    await expect(getComputedStyle(label).animationName).toBe('now-pop')
-
-    await waitFor(
-      () =>
-        expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
-      { timeout: 4000 },
-    )
-
-    for (const column of canvasElement.querySelectorAll<HTMLElement>(
-      '[data-guide-column]',
-    )) {
-      await expect(getComputedStyle(column).animationName).toBe('none')
-    }
-  },
-}
-
-export const 途中で操作すると入りを飛ばす: Story = {
-  args: { guide: base },
-  globals: { a11y: { manual: true } },
-  play: async ({ canvasElement }) => {
-    await waitFor(() =>
-      expect(
-        canvasElement.querySelector('[data-guide-opening]'),
-      ).not.toBeNull(),
-    )
-
-    window.dispatchEvent(new WheelEvent('wheel', { deltaY: 40 }))
-
-    await waitFor(() =>
-      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
-    )
-    await waitFor(() =>
-      expect(canvasElement.querySelector('[data-now-line]')).not.toBeNull(),
-    )
-  },
-}
-
 export const 放送済み: Story = {
   args: { guide: base },
   play: async ({ canvasElement }) => {
@@ -279,21 +199,18 @@ export const 放送済み: Story = {
 
     const face = getComputedStyle(ended[0].cell).backgroundColor
     for (const { cell } of ended) {
+      await expect(cell).toHaveAttribute('data-time', 'ended')
       await expect(getComputedStyle(cell).backgroundColor).toBe(face)
-      await expect(getComputedStyle(cell).borderTopStyle).toBe('dashed')
+      await expect(getComputedStyle(cell).backgroundImage).toBe('none')
     }
 
     for (const { cell } of ahead) {
-      await expect(getComputedStyle(cell).backgroundColor).not.toBe(face)
-      await expect(getComputedStyle(cell).borderTopStyle).toBe('solid')
-    }
+      const ground = getComputedStyle(cell)
 
-    for (const { genre, cell } of ended) {
-      const live = ahead.find((it) => it.genre === genre)
-      if (live) {
-        await expect(getComputedStyle(cell).borderTopColor).toBe(
-          getComputedStyle(live.cell).borderTopColor,
-        )
+      await expect(ground.backgroundColor).not.toBe(face)
+
+      if (cell.dataset.time === 'onAir') {
+        await expect(ground.backgroundImage).toMatch(/^linear-gradient/)
       }
     }
   },
@@ -394,55 +311,61 @@ export const 予約の印: Story = {
 
     await expect(cells).toHaveLength(inOrder.length)
 
-    const colourOf: Partial<Record<string, string>> = {}
-    const sizesMarked = new Set<string>()
+    const kinds = new Set<string>()
 
     for (const [index, program] of inOrder.entries()) {
       const cell = cells[index]
-      const mark = cell.querySelector<HTMLElement>('[data-booking-mark]')
+      const marks = [
+        ...cell.querySelectorAll<HTMLElement>('[data-booking-mark]'),
+      ]
       const expected = bookingMarkOf(program.booking)
 
       if (expected === undefined) {
-        await expect(mark).toBeNull()
-        await expect(getComputedStyle(cell).outlineStyle).toBe('none')
+        await expect(marks).toHaveLength(0)
         continue
       }
 
-      await expect(mark).not.toBeNull()
-      await expect(mark!.dataset.bookingMark).toBe(expected)
+      const shownMarks = marks.filter(
+        (mark) => mark.getBoundingClientRect().width > 0,
+      )
 
-      const drawn = mark!.getBoundingClientRect()
+      await expect(shownMarks).toHaveLength(1)
+      await expect(shownMarks[0].dataset.bookingMark).toBe(expected)
+
+      const drawn = shownMarks[0].getBoundingClientRect()
       const room = cell.getBoundingClientRect()
 
-      await expect(drawn.width).toBeGreaterThan(0)
       await expect(drawn.top).toBeGreaterThanOrEqual(room.top)
-      await expect(drawn.bottom).toBeLessThanOrEqual(room.bottom)
+      await expect(drawn.bottom).toBeLessThanOrEqual(room.bottom + 0.5)
       await expect(drawn.left).toBeGreaterThanOrEqual(room.left)
+      await expect(getComputedStyle(shownMarks[0]).color).toBe(
+        getComputedStyle(cell.querySelector('.guide-cell-marks') ?? cell).color,
+      )
 
-      const colour = getComputedStyle(mark!).color
-      colourOf[expected] ??= colour
-      await expect(colour).toBe(colourOf[expected])
-
-      const framed = getComputedStyle(cell)
-
-      await expect(framed.outlineStyle).toBe('solid')
-      await expect(framed.outlineWidth).toBe('2px')
-      await expect(framed.outlineOffset).toBe('-2px')
-      await expect(framed.outlineColor).toBe(colour)
-
-      sizesMarked.add(drawn.width.toFixed(1))
+      kinds.add(expected)
     }
 
-    await expect(colourOf.booked).toBeDefined()
-    await expect(colourOf.recording).toBeDefined()
-    await expect(colourOf.booked).not.toBe(colourOf.recording)
-    await expect(sizesMarked.size).toBe(2)
+    await expect([...kinds].sort()).toEqual(['booked', 'recording'])
   },
 }
 
 const day = base
 
 const A_LAPTOP = { width: 1280, height: 720 }
+
+/** The gap between two programmes is laid as two pixels inside each. */
+const HALF_GAP_PX = 2
+
+function dayChip(
+  canvas: ReturnType<typeof within>,
+  day: { label: string },
+): HTMLElement {
+  const [date, weekday] = day.label.replace(')', '').split('(')
+
+  return within(canvas.getByRole('list', { name: '日' })).getByRole('button', {
+    name: new RegExp(`^${date}\\s*${weekday}$`, 'u'),
+  })
+}
 
 async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
   await waitFor(
@@ -451,7 +374,10 @@ async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
       expect(
         canvasElement.querySelector('[data-guide-column].invisible'),
       ).toBeNull()
-      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull()
+      expect(
+        canvasElement.querySelector('[data-guide-scroll]') === null ||
+          canvasElement.querySelector('[data-guide-measured]') !== null,
+      ).toBe(true)
     },
     { timeout: 5000 },
   )
@@ -493,12 +419,6 @@ export const 現在時刻の位置で開く: Story = {
 
     await expect(now.top).toBeCloseTo((shown + grid.bottom) / 2, -1)
   },
-}
-
-const LATE_AT_NIGHT = {
-  ...day,
-  nowMin: (27 - 4) * 60 + 13,
-  nowLabel: '03:13',
 }
 
 const THE_LAST_MINUTE_OF_THE_DAY = {
@@ -571,99 +491,7 @@ export const 深夜3時59分は線が表の高さに収まる: Story = {
     await expect(line.offsetTop + line.offsetHeight).toBeLessThanOrEqual(
       24 * hourPx(),
     )
-    await expect(label.offsetTop).toBeCloseTo(-10, 0)
-  },
-}
-
-async function opensInTheMiddle(canvasElement: HTMLElement): Promise<void> {
-  await waitFor(() =>
-    expect(canvasElement.querySelector('[data-guide-opening]')).not.toBeNull(),
-  )
-
-  const opening = partOf(canvasElement, '[data-guide-opening]')
-  const scroller = partOf(canvasElement, '[data-guide-scroll]')
-  const heading = partOf(canvasElement, '[data-guide-heading]')
-    .parentElement as HTMLElement
-
-  await expect(opening.querySelector('.guide-opening-ball')).toBeNull()
-  await expect(opening.querySelector('.guide-opening-line')).toBeNull()
-  await expect(
-    parseFloat(partOf(opening, '.guide-opening-below').style.top),
-  ).toBeCloseTo((heading.offsetHeight + scroller.clientHeight) / 2, 0)
-
-  await waitFor(
-    () =>
-      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
-    { timeout: 4000 },
-  )
-
-  const grid = scroller.getBoundingClientRect()
-  const line = partOf(canvasElement, '[data-now-line]').getBoundingClientRect()
-
-  await expect(line.top).toBeGreaterThanOrEqual(grid.top)
-  await expect(line.top).toBeLessThanOrEqual(grid.bottom)
-}
-
-export const 昼は今の線から割れて開く: Story = {
-  args: { guide: day },
-  parameters: { screen: A_LAPTOP },
-  globals: { a11y: { manual: true } },
-  play: async ({ canvasElement }) => {
-    await waitFor(() =>
-      expect(
-        canvasElement.querySelector('[data-guide-opening]'),
-      ).not.toBeNull(),
-    )
-
-    const opening = partOf(canvasElement, '[data-guide-opening]')
-    const scroller = partOf(canvasElement, '[data-guide-scroll]')
-    const heading = partOf(canvasElement, '[data-guide-heading]')
-      .parentElement as HTMLElement
-    const seam = parseFloat(partOf(opening, '.guide-opening-below').style.top)
-
-    await expect(opening.querySelector('.guide-opening-ball')).not.toBeNull()
-    await expect(seam).toBeCloseTo(
-      (heading.offsetHeight + scroller.clientHeight) / 2,
-      -0.5,
-    )
-    await expect(scroller.querySelector('script')).toBeNull()
-
-    await waitFor(() => expect(opening).toHaveAttribute('data-open'), {
-      timeout: 4000,
-    })
-
-    const line = partOf(canvasElement, '[data-now-line]')
-
-    await expect(
-      line.getBoundingClientRect().top - scroller.getBoundingClientRect().top,
-    ).toBeCloseTo(seam, -0.5)
-  },
-}
-
-export const 深夜は真ん中から割れて開く: Story = {
-  args: { guide: LATE_AT_NIGHT },
-  parameters: { screen: A_LAPTOP },
-  globals: { a11y: { manual: true } },
-  play: async ({ canvasElement }) => {
-    await opensInTheMiddle(canvasElement)
-  },
-}
-
-export const 放送日の終わる間際も真ん中から割れて開く: Story = {
-  args: { guide: THE_LAST_MINUTE_OF_THE_DAY },
-  parameters: { screen: A_LAPTOP },
-  globals: { a11y: { manual: true } },
-  play: async ({ canvasElement }) => {
-    await opensInTheMiddle(canvasElement)
-  },
-}
-
-export const 放送日の始まりも真ん中から割れて開く: Story = {
-  args: { guide: THE_FIRST_MINUTE_OF_THE_DAY },
-  parameters: { screen: A_LAPTOP },
-  globals: { a11y: { manual: true } },
-  play: async ({ canvasElement }) => {
-    await opensInTheMiddle(canvasElement)
+    await expect(label).toHaveTextContent(THE_LAST_MINUTE_OF_THE_DAY.nowLabel!)
   },
 }
 
@@ -1130,7 +958,7 @@ export const 枠には収まる行だけを出す: Story = {
     await expect(shown(partOfCell(sevenMinutes, '.guide-cell-desc'))).toBe(
       false,
     )
-    await expect(marked.width).toBeCloseTo((11 / 16) * rootPx, 0)
+    await expect(marked.width).toBeCloseTo((10 / 16) * rootPx, 0)
     await expect(marked.top).toBeGreaterThanOrEqual(room.top)
     await expect(marked.bottom).toBeLessThanOrEqual(room.bottom)
 
@@ -1151,10 +979,7 @@ export const 枠には収まる行だけを出す: Story = {
       }
       await expect(title).toHaveTextContent(halfWidthOf(program.title))
       await expect(title.textContent).not.toMatch(/[\uFF01-\uFF5E\u3000]/)
-      await expect(title.querySelector('.guide-cell-genre')).toBeNull()
-      await expect(
-        partOfCell(cell, '.guide-cell-desc').firstElementChild,
-      ).toHaveTextContent(genreWordOf(program.genreLabel))
+      await expect(title.querySelector('.guide-cell-genre-dot')).not.toBeNull()
     }
 
     await expect(tall[4]).toHaveTextContent('🈞連続テレビ小説「おむすび」(35)')
@@ -1433,9 +1258,12 @@ export const 別の日: Story = {
 
     await expect(canvasElement.querySelector('[data-now-line]')).toBeNull()
     await expect(scroller.scrollTop).toBe(0)
-    await expect(canvas.getByRole('button', { name: '次の日' })).toBeDisabled()
+    await expect(dayChip(canvas, GUIDE_DAYS[2])).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
 
-    await userEvent.click(canvas.getByRole('button', { name: '今日' }))
+    await userEvent.click(dayChip(canvas, GUIDE_DAYS[1]))
 
     await expect(router.replace).toHaveBeenCalledWith('/guide', {
       scroll: false,
@@ -1480,7 +1308,7 @@ export const 起き上がったあとも描いた枠は消さない: Story = {
     for (const [index, program] of IN_GRID_ORDER.entries()) {
       await expect(cells[index]).toHaveTextContent(program.title)
       await expect(cells[index].offsetTop).toBeCloseTo(
-        ((program.startMin + EVENING_MIN) / 60) * hourPx(),
+        ((program.startMin + EVENING_MIN) / 60) * hourPx() + HALF_GAP_PX,
         0,
       )
     }
@@ -1793,16 +1621,19 @@ export const 日を送る: Story = {
     const canvas = within(canvasElement)
     const router = getRouter()
 
-    await expect(canvas.queryByRole('button', { name: '今日' })).toBeNull()
+    await expect(dayChip(canvas, GUIDE_DAYS[1])).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
 
-    await userEvent.click(canvas.getByRole('button', { name: '次の日' }))
+    await userEvent.click(dayChip(canvas, GUIDE_DAYS[2]))
 
     await expect(router.replace).toHaveBeenCalledWith(
       `/guide?date=${GUIDE_DAYS[2].date}`,
       { scroll: false },
     )
 
-    await userEvent.click(canvas.getByRole('button', { name: '前の日' }))
+    await userEvent.click(dayChip(canvas, GUIDE_DAYS[0]))
 
     await expect(router.replace).toHaveBeenCalledWith(
       `/guide?date=${GUIDE_DAYS[0].date}`,
@@ -2373,7 +2204,8 @@ export const 電話では放送中の番組から開く: Story = {
       await expect(row).not.toHaveAttribute('data-past')
     }
 
-    const groundOf = (row: HTMLElement) => getComputedStyle(row).backgroundColor
+    const groundOf = (row: HTMLElement) =>
+      getComputedStyle(row.firstElementChild as HTMLElement).background
 
     await expect(groundOf(past[0])).not.toBe(groundOf(ahead[0]))
     await expect(groundOf(past[0])).not.toBe(groundOf(rows[onAirAt]))
@@ -2611,56 +2443,31 @@ export const 電話で別の日: Story = {
   },
 }
 
-export const 横向きの電話は局の一覧と詳細を左右に置く: Story = {
+export const 横向きの電話は局を列に並べる: Story = {
   args: { guide: base },
   parameters: { screen: SIDEWAYS_PHONE, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const list = await waitFor(() => {
-      const found =
-        canvasElement.querySelector<HTMLElement>('[data-pane="list"]')
 
-      expect(found).not.toBeNull()
+    await columnsFilled(canvasElement)
+    aGridIsShown(canvasElement)
 
-      return found!
-    })
-    const beside = canvas.getByRole('region', { name: '番組の詳細' })
-
-    await expect(canvasElement.querySelector('[data-guide-scroll]')).toBeNull()
-    await expect(list.getBoundingClientRect().right).toBeLessThanOrEqual(
-      beside.getBoundingClientRect().left + 0.5,
-    )
-    const heading = within(beside).getAllByRole('heading', { level: 2 })[0]
-
-    await expect(
-      list.querySelector('[data-on-air]')?.textContent ?? '',
-    ).toContain(heading.textContent ?? '-')
+    await expect(canvasElement.querySelector('[data-pane="list"]')).toBeNull()
 
     const bar = canvasElement.querySelector<HTMLElement>(
       '[data-slot="top-bar"]',
     )!
 
     await expect(
-      within(bar).getByRole('group', { name: 'チャンネル' }),
-    ).toBeVisible()
-    await expect(
       within(bar).getByRole('link', { name: '番組を検索' }),
     ).toBeVisible()
 
-    const rows = list.querySelectorAll<HTMLElement>('li[data-programme]')
-    const later = rows[rows.length - 1]
+    const cell = canvasElement.querySelector<HTMLElement>(
+      '[data-time="onAir"]',
+    )!
 
-    await userEvent.click(within(later).getAllByRole('button')[0])
-    await waitFor(() => expect(later).toHaveAttribute('data-chosen'))
-    await expect(later.querySelector('[data-program-detail]')).toBeNull()
-    await expect(beside.querySelector('[data-program-detail]')).not.toBeNull()
-
-    const tools = within(bar).getByRole('button', { name: '絞り込み' })
-
-    await userEvent.click(tools)
-    await expect(
-      canvas.getByRole('group', { name: '放送の種別' }),
-    ).toBeVisible()
+    await userEvent.click(cell)
+    await expect(await screen.findByRole('dialog')).toBeVisible()
   },
 }
 
@@ -2901,6 +2708,65 @@ export const 電話では行の丸で1回で予約し知らせで取り消せる
     await expect(cancelled).toEqual([`r-${reserved[0]}`])
   },
 }
+
+export const PCではこれからの番組の右上の丸で1回で予約し知らせで取り消せる: Story =
+  {
+    args: { guide: base, onReserve: reserveIt, onCancel: cancelIt },
+    parameters: { screen: A_LAPTOP },
+    beforeEach: () => {
+      reserved.length = 0
+      cancelled.length = 0
+    },
+    play: async ({ canvasElement }) => {
+      await columnsFilled(canvasElement)
+
+      for (const gone of canvasElement.querySelectorAll<HTMLElement>(
+        '[data-opens="program-panel"]:is([data-time="ended"], [data-time="onAir"])',
+      )) {
+        await expect(
+          gone.nextElementSibling?.matches('[data-slot="reserve-plus"]') ??
+            false,
+        ).toBe(false)
+      }
+
+      const plus = Array.from(
+        canvasElement.querySelectorAll<HTMLElement>(
+          '[data-slot="reserve-plus"]',
+        ),
+      ).find((one) => one.getBoundingClientRect().width > 0)!
+      const cell = plus.previousElementSibling as HTMLElement
+
+      await expect(cell).toHaveAttribute('data-time', 'ahead')
+      await expect(plus.getBoundingClientRect().right).toBeLessThanOrEqual(
+        cell.getBoundingClientRect().right,
+      )
+      await expect(plus.getBoundingClientRect().top).toBeGreaterThanOrEqual(
+        cell.getBoundingClientRect().top,
+      )
+
+      plus.scrollIntoView({ block: 'center' })
+      await userEvent.click(plus)
+      await waitFor(() => expect(reserved).toHaveLength(1))
+      await expect(plus.isConnected).toBe(false)
+      await expect(cell).toHaveAttribute('aria-pressed', 'false')
+
+      const toast = await waitFor(() => {
+        const found = canvasElement.querySelector<HTMLElement>(
+          '[data-slot="toast"]',
+        )
+
+        expect(found).not.toBeNull()
+
+        return found!
+      })
+
+      await expect(toast).toHaveTextContent('予約しました')
+      await userEvent.click(
+        within(toast).getByRole('button', { name: '取り消す' }),
+      )
+      await expect(cancelled).toEqual([`r-${reserved[0]}`])
+    },
+  }
 
 export const 電話では終わった番組に丸を置かず開いた行の右は閉じる: Story = {
   args: { guide: A_FULL_DAY_GUIDE },

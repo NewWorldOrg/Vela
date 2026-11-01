@@ -19,14 +19,11 @@ import {
   isOnAir,
   joinedColumnsOf,
   minutesBeforeMeasuringOf,
-  NOW_LABEL_GAP_PX,
   NOW_LINE_THICKNESS_PX,
-  nowLabelTopOf,
   nowLineTopOf,
   nowMinOf,
   openingScrollScriptOf,
   openingScrollTopOf,
-  openingSeamOf,
   primaryKeyOfShadow,
   relationDestinationOf,
   sharesWith,
@@ -115,13 +112,6 @@ test('the now line does not run past the bottom of the day', () => {
     nowLineTopOf(24 * 60 - 1, HOUR_REM, 24),
     `min(${((24 * 60 - 1) / 60) * HOUR_REM}rem, calc(216rem - ${NOW_LINE_THICKNESS_PX}px))`,
   )
-})
-
-test('the label sits ten pixels above the line, but never above where the day begins', () => {
-  assert.equal(nowLabelTopOf(200, HOUR_REM), 'max(-10px, -30rem)')
-  assert.equal(nowLabelTopOf(0, HOUR_REM), 'max(-10px, 0rem)')
-  assert.equal(nowLabelTopOf(1, HOUR_REM), 'max(-10px, -0.15rem)')
-  assert.equal(NOW_LABEL_GAP_PX, 10)
 })
 
 test('a programme nobody booked carries no mark', () => {
@@ -242,8 +232,8 @@ test('a copy does not follow a relay back, only a shared broadcast', () => {
 const TELEVISION_SERVICES = 27
 
 test('a channel is given a column a programme name fits in, in rem', () => {
-  assert.equal(gridMinWidthOf(1), 'calc(46px + 15rem)')
-  assert.equal(gridMinWidthOf(4), 'calc(46px + 60rem)')
+  assert.equal(gridMinWidthOf(1), 'calc(46px + 13.75rem)')
+  assert.equal(gridMinWidthOf(4), 'calc(46px + 55rem)')
 })
 
 test('a whole aerial is wider than the screen it is read on', () => {
@@ -853,75 +843,6 @@ test('building ahead stops once every column is drawn', () => {
   assert.equal(holdsEveryColumn({ from: 1, to: 12 }, 12), false)
   assert.equal(holdsEveryColumn({ from: 0, to: 11 }, 12), false)
   assert.equal(holdsEveryColumn({ from: 0, to: 0 }, 0), true)
-})
-
-test('the cover opens along the line for now, where the screen shows it', () => {
-  assert.deepEqual(
-    openingSeamOf({
-      nowMin: 960,
-      hourPx: 96,
-      scrollTop: 1536 - 330,
-      headingPx: 40,
-      viewPx: 700,
-    }),
-    { top: 370, line: true },
-  )
-})
-
-test('a day without a line for now opens in the middle of the rows it shows', () => {
-  assert.deepEqual(
-    openingSeamOf({
-      nowMin: undefined,
-      hourPx: 96,
-      scrollTop: 0,
-      headingPx: 40,
-      viewPx: 700,
-    }),
-    { top: 370, line: false },
-  )
-})
-
-test('late at night the cover opens in the middle, not along the line near the bottom', () => {
-  const lateAtNight = 22 * 60 + 13
-  const view = { hourPx: 96, headingPx: 40, viewPx: 700 }
-  const lastScrollTop = 40 + 24 * 96 - 700
-
-  assert.deepEqual(
-    openingSeamOf({ ...view, nowMin: lateAtNight, scrollTop: lastScrollTop }),
-    { top: 370, line: false },
-  )
-  assert.deepEqual(
-    openingSeamOf({ ...view, nowMin: 24 * 60 - 1, scrollTop: lastScrollTop }),
-    { top: 370, line: false },
-  )
-})
-
-test('early in the morning the cover opens in the middle, not along the line near the top', () => {
-  const view = { hourPx: 96, headingPx: 40, viewPx: 700, scrollTop: 0 }
-
-  assert.deepEqual(openingSeamOf({ ...view, nowMin: 0 }), {
-    top: 370,
-    line: false,
-  })
-  assert.deepEqual(openingSeamOf({ ...view, nowMin: 60 }), {
-    top: 370,
-    line: false,
-  })
-})
-
-test('a line for now within a pixel of the middle still carries the ball', () => {
-  const view = { hourPx: 96, headingPx: 40, viewPx: 700 }
-  const scrollTop = openingScrollTopOf(600, 96, 660)
-
-  assert.equal(
-    openingSeamOf({ ...view, nowMin: 600, scrollTop: Math.round(scrollTop) })
-      .line,
-    true,
-  )
-  assert.equal(
-    openingSeamOf({ ...view, nowMin: 600, scrollTop: scrollTop + 3 }).line,
-    false,
-  )
 })
 
 test('the script in the first HTML scrolls the guide where opening it would', () => {
