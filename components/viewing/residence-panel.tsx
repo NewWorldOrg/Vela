@@ -1,6 +1,12 @@
 'use client'
 
-import { useId, useState, useTransition, type FormEvent } from 'react'
+import {
+  useId,
+  useState,
+  useTransition,
+  type FormEvent,
+  type ReactNode,
+} from 'react'
 
 import type { Residence } from '@/lib/bml/receiver-info'
 import {
@@ -27,8 +33,11 @@ import {
 } from '@/components/ui/select'
 import { FieldError } from '@/components/vela/field'
 import { Spinner } from '@/components/vela/progress'
-import { Surface } from '@/components/vela/surface'
-import { ValueRow, ValueRows } from '@/components/segments/value-rows'
+import {
+  SETTINGS_GROUP_TITLE,
+  SettingsGroup,
+  SettingsRow,
+} from '@/components/vela/settings-rows'
 
 export const RESIDENCE_SLOT = 'residence'
 
@@ -42,9 +51,11 @@ function prefectureOf(chosen: string): number | null {
 
 /** Where the receiver is, as the documents of a data broadcast read it: the postal code and the prefecture as values, which `変更` turns into a field and a list in place, saved together. */
 export function ResidencePanel({
+  heading,
   residence,
   onSettle,
 }: {
+  heading: ReactNode
   residence: Residence
   onSettle: SettleResidence
 }) {
@@ -122,88 +133,96 @@ export function ResidencePanel({
   }
 
   return (
-    <Surface data-slot={RESIDENCE_SLOT}>
-      <form noValidate onSubmit={save}>
-        <ValueRows>
-          <ValueRow
-            name={
-              editing ? (
-                <label htmlFor={postalId}>{POSTAL_CODE_LABEL}</label>
-              ) : (
-                POSTAL_CODE_LABEL
-              )
-            }
+    <form
+      noValidate
+      onSubmit={save}
+      data-slot={RESIDENCE_SLOT}
+      className="max-w-[calc(720rem/16)]"
+    >
+      <div className="flex items-end justify-between gap-3">
+        <h2 className={SETTINGS_GROUP_TITLE}>{heading}</h2>
+        {!editing && (
+          <Button
+            key="change"
+            type="button"
+            variant="tone"
+            size="sm"
+            className="mb-1"
+            autoFocus={returned}
+            onClick={edit}
           >
-            {editing ? (
-              <span className="flex items-center font-sans">
-                <Input
-                  id={postalId}
-                  inputMode="numeric"
-                  autoComplete="postal-code"
-                  autoFocus
-                  areaClassName="w-[calc(130rem/16)]"
-                  className="font-code tabular-nums"
-                  value={typed}
-                  readOnly={pending}
-                  aria-invalid={problem ? true : undefined}
-                  aria-describedby={said ? errorId : undefined}
-                  onChange={(event) => retype(event.target.value)}
-                />
-              </span>
+            変更
+          </Button>
+        )}
+      </div>
+      <SettingsGroup>
+        <SettingsRow
+          name={
+            editing ? (
+              <label htmlFor={postalId}>{POSTAL_CODE_LABEL}</label>
             ) : (
-              postalCodeShown(residence.postalCode)
-            )}
-          </ValueRow>
-          <ValueRow
-            name={
-              editing ? (
-                <label htmlFor={prefectureId}>{PREFECTURE_LABEL}</label>
-              ) : (
-                PREFECTURE_LABEL
-              )
-            }
-          >
-            {editing ? (
-              <span className="flex items-center font-sans">
-                <Select
-                  value={chosen}
-                  disabled={pending}
-                  onValueChange={choose}
-                >
-                  <SelectTrigger
-                    id={prefectureId}
-                    size="sm"
-                    className="w-full max-w-[calc(260rem/16)]"
-                  >
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value={NONE}>{NOT_REGISTERED}</SelectItem>
-                    {PREFECTURES.map(({ value, label }) => (
-                      <SelectItem key={value} value={String(value)}>
-                        {label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </span>
-            ) : (
-              <span className="font-sans">
-                {prefectureShown(residence.prefecture)}
-              </span>
-            )}
-          </ValueRow>
-        </ValueRows>
-        <span aria-live="polite">
-          {editing && said && (
-            <FieldError id={errorId} className="mt-2.5">
-              {said}
-            </FieldError>
-          )}
-        </span>
-        <div className="mt-3 flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-line pt-3">
+              POSTAL_CODE_LABEL
+            )
+          }
+        >
           {editing ? (
-            <>
+            <Input
+              id={postalId}
+              inputMode="numeric"
+              autoComplete="postal-code"
+              autoFocus
+              areaClassName="w-[calc(130rem/16)]"
+              className="bg-bg tabular-nums"
+              value={typed}
+              readOnly={pending}
+              aria-invalid={problem ? true : undefined}
+              aria-describedby={said ? errorId : undefined}
+              onChange={(event) => retype(event.target.value)}
+            />
+          ) : (
+            postalCodeShown(residence.postalCode)
+          )}
+        </SettingsRow>
+        <SettingsRow
+          name={
+            editing ? (
+              <label htmlFor={prefectureId}>{PREFECTURE_LABEL}</label>
+            ) : (
+              PREFECTURE_LABEL
+            )
+          }
+        >
+          {editing ? (
+            <Select value={chosen} disabled={pending} onValueChange={choose}>
+              <SelectTrigger
+                id={prefectureId}
+                size="sm"
+                className="w-[calc(220rem/16)] max-w-full bg-bg"
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={NONE}>{NOT_REGISTERED}</SelectItem>
+                {PREFECTURES.map(({ value, label }) => (
+                  <SelectItem key={value} value={String(value)}>
+                    {label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          ) : (
+            prefectureShown(residence.prefecture)
+          )}
+        </SettingsRow>
+        {editing && (
+          <SettingsRow
+            name={
+              <span aria-live="polite">
+                {said && <FieldError id={errorId}>{said}</FieldError>}
+              </span>
+            }
+          >
+            <div className="flex items-center gap-2">
               <Button
                 type="button"
                 variant="ghost"
@@ -216,21 +235,10 @@ export function ResidencePanel({
                 {pending && <Spinner size="control" />}
                 保存する
               </Button>
-            </>
-          ) : (
-            <Button
-              key="change"
-              type="button"
-              variant="tone"
-              size="sm"
-              autoFocus={returned}
-              onClick={edit}
-            >
-              変更
-            </Button>
-          )}
-        </div>
-      </form>
-    </Surface>
+            </div>
+          </SettingsRow>
+        )}
+      </SettingsGroup>
+    </form>
   )
 }

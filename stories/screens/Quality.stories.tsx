@@ -531,6 +531,7 @@ export const 放送日の刻みが2つだけの24時間: Story = {
 
 export const 推移_7日: Story = {
   args: { result: A_WEEK },
+  parameters: { screen: { width: 1800, height: 1000 } },
   play: async ({ canvasElement }) => {
     const panel = within(trendPanel(canvasElement))
     const whole = panel.getByRole('img', { name: '全体の推移' })

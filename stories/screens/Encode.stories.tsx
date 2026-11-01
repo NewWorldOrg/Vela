@@ -504,7 +504,7 @@ export const 中止: Story = {
   },
 }
 
-const WHERE_THE_TYPE_STEPS_UP_PX = 1440
+const WHERE_THE_TYPE_STEPS_UP_PX = 1920
 
 export const 字の段が上がる幅でも枠に収まる表: Story = {
   parameters: { screen: { width: WHERE_THE_TYPE_STEPS_UP_PX, height: 1000 } },
@@ -584,7 +584,7 @@ export const 狭い幅で収まらないほどのジョブ: Story = {
   },
 }
 
-const SETTINGS_BESIDE_PX = 212
+const SETTINGS_BESIDE_PX = 460
 
 export const 設定の枠に収まるジョブ表: Story = {
   args: { screen: MORE_JOBS_THAN_FIT },

@@ -8,24 +8,37 @@ import { VelaMark } from '@/components/vela/marks'
 import {
   ChannelIcon,
   ChevronRightIcon,
-  DisplayIcon,
   EncodeIcon,
-  KeyIcon,
   ListIcon,
-  PlayIcon,
+  DeviceDesktopIcon,
+  LockIcon,
   QualityIcon,
   SegmentsIcon,
+  SunIcon,
   TunerIcon,
   type IconProps,
 } from '@/components/vela/icons'
 
 type Tone = 'ok' | 'warn' | 'err'
 
+/** A state that is well needs no colour; one that wants a hand takes the accent's dot. */
 const TONE_DOT: Record<Tone, string> = {
-  ok: 'bg-mint',
-  warn: 'bg-lemon',
-  err: 'bg-coral',
+  ok: 'bg-ink-3',
+  warn: 'bg-accent',
+  err: 'bg-accent',
 }
+
+/** The colour of each setting's tile: the setting's own, as a phone's settings colour theirs, the same in both themes. */
+const TILE = {
+  viewing: 'bg-[#2F6FEB]',
+  display: 'bg-[#5E5CE6]',
+  encode: 'bg-[#E8590C]',
+  segments: 'bg-[#D9480F]',
+  quality: 'bg-[#2B8A3E]',
+  tuners: 'bg-[#495057]',
+  channels: 'bg-[#1098AD]',
+  keeping: 'bg-[#868E96]',
+} as const
 
 export interface SettingsEntranceValues {
   viewing?: string
@@ -48,10 +61,16 @@ interface Group {
 interface Signal {
   name: ReactNode
   tone: Tone
+  /** Its dot drawn while it is well too: the API's and the driver's, which say only by it. */
+  dotted?: boolean
 }
 
 function apiSignal(status: SystemStatus): Signal {
-  return { name: 'API', tone: status.api.state === 'ok' ? 'ok' : 'err' }
+  return {
+    name: 'API',
+    tone: status.api.state === 'ok' ? 'ok' : 'err',
+    dotted: true,
+  }
 }
 
 function driverTone(status: SystemStatus): Tone {
@@ -93,8 +112,8 @@ function tunersFree(status: SystemStatus): ReactNode {
 
   return (
     <>
-      空き <span className="font-code">{free}</span> /{' '}
-      <span className="font-code">{census.total}</span>
+      空き <span className="tabular-nums">{free}</span> /{' '}
+      <span className="tabular-nums">{census.total}</span>
     </>
   )
 }
@@ -102,7 +121,7 @@ function tunersFree(status: SystemStatus): ReactNode {
 function signalsOf(status: SystemStatus): Signal[] {
   const signals: Signal[] = [
     apiSignal(status),
-    { name: 'driver', tone: driverTone(status) },
+    { name: 'driver', tone: driverTone(status), dotted: true },
   ]
   const free = tunersFree(status)
 
@@ -125,8 +144,8 @@ function groupsOf(
     {
       href: '/settings/authentication',
       label: '認証',
-      icon: KeyIcon,
-      tile: 'bg-surface-2',
+      icon: LockIcon,
+      tile: TILE.keeping,
     },
   ]
 
@@ -135,7 +154,7 @@ function groupsOf(
       href: '/settings/migration',
       label: '移行記録',
       icon: ListIcon,
-      tile: 'bg-surface-2',
+      tile: TILE.keeping,
     })
   }
 
@@ -146,15 +165,15 @@ function groupsOf(
         {
           href: '/settings/viewing',
           label: '視聴',
-          icon: PlayIcon,
-          tile: 'bg-tint-sky',
+          icon: DeviceDesktopIcon,
+          tile: TILE.viewing,
           value: values.viewing,
         },
         {
           href: '/settings/display',
           label: '表示',
-          icon: DisplayIcon,
-          tile: 'bg-tint-lavender',
+          icon: SunIcon,
+          tile: TILE.display,
           value: values.display,
         },
       ],
@@ -166,19 +185,19 @@ function groupsOf(
           href: '/settings/encode',
           label: 'エンコード',
           icon: EncodeIcon,
-          tile: 'bg-tint-sage',
+          tile: TILE.encode,
         },
         {
           href: '/settings/segments',
           label: 'CM・OP・ED の検出',
           icon: SegmentsIcon,
-          tile: 'bg-tint-butter',
+          tile: TILE.segments,
         },
         {
           href: '/settings/quality',
           label: '品質',
           icon: QualityIcon,
-          tile: 'bg-tint-salmon',
+          tile: TILE.quality,
         },
       ],
     },
@@ -189,14 +208,14 @@ function groupsOf(
           href: '/settings/tuners',
           label: 'チューナー',
           icon: TunerIcon,
-          tile: 'bg-tint-blush',
+          tile: TILE.tuners,
           value: tunersFree(status),
         },
         {
           href: '/settings/channels',
           label: 'チャンネル',
           icon: ChannelIcon,
-          tile: 'bg-tint-sky',
+          tile: TILE.channels,
         },
       ],
     },
@@ -218,100 +237,135 @@ function SystemRow({
       href="/settings/system"
       aria-current={here ? 'page' : undefined}
       className={cn(
-        'flex items-center gap-3 rounded-xl border border-line bg-surface py-3 pr-2 pl-3.5 text-ink no-underline outline-none focus-visible:shadow-ring',
-        here && 'border-brand-line bg-brand-soft',
+        'flex items-center gap-3 rounded-lg py-3.5 pr-3 pl-4 text-ink no-underline outline-none focus-visible:shadow-ring',
+        'transition-[background-color] duration-[140ms] ease-toy',
+        here ? 'bg-accent-tint' : 'bg-surface hover:bg-surface-2',
       )}
     >
-      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-2">
-        <VelaMark className="size-[calc(26rem/16)]" />
+      <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-bg">
+        <VelaMark />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="heading block text-heading leading-normal">
+        <span
+          className={cn(
+            'block text-title font-semibold',
+            here && 'text-acc-text',
+          )}
+        >
           システム
         </span>
-        <span className="flex flex-wrap gap-x-2.5 text-note text-ink-2">
+        <span className="mt-0.5 flex flex-wrap gap-x-2.5 text-sub text-ink-2 tabular-nums">
           {signalsOf(status).map((signal, nth) => (
-            <span key={nth} className="flex items-center gap-[calc(5rem/16)]">
-              <span
-                aria-hidden="true"
-                className={cn(
-                  'size-[calc(7rem/16)] rounded-full',
-                  TONE_DOT[signal.tone],
-                )}
-              />
+            <span
+              key={nth}
+              className={cn(
+                'flex items-center gap-1.5 whitespace-nowrap',
+                signal.tone === 'err' && 'text-acc-text',
+              )}
+            >
+              {(signal.dotted || signal.tone !== 'ok') && (
+                <span
+                  aria-hidden="true"
+                  className={cn('size-1.5 rounded-full', TONE_DOT[signal.tone])}
+                />
+              )}
               {signal.name}
             </span>
           ))}
         </span>
       </span>
-      <ChevronRightIcon className="size-[calc(18rem/16)] shrink-0 text-ink-2" />
+      <ChevronRightIcon className="size-4 shrink-0 text-ink-3" />
     </Link>
   )
 }
 
-function ItemRow({ item, current }: { item: Item; current?: string }) {
+function ItemRow({
+  item,
+  current,
+  withValues,
+}: {
+  item: Item
+  current?: string
+  withValues: boolean
+}) {
   const Icon = item.icon
   const here = current?.startsWith(item.href) ?? false
 
   return (
-    <li className="border-b border-dashed border-line last:border-b-0">
+    <li className="relative before:absolute before:top-0 before:right-0 before:left-[calc(58rem/16)] before:h-px before:bg-hair first:before:hidden">
       <Link
         href={item.href}
         aria-current={here ? 'page' : undefined}
         className={cn(
-          'flex h-[calc(54rem/16)] items-center gap-3 pr-2 pl-3 text-ink no-underline outline-none focus-visible:shadow-ring',
-          here && 'bg-brand-soft',
+          'flex h-[calc(52rem/16)] items-center gap-3.5 pr-3 pl-4 text-ink no-underline outline-none focus-visible:shadow-ring focus-visible:-outline-offset-2',
+          'transition-[background-color] duration-[140ms] ease-toy',
+          here ? 'bg-accent-tint' : 'hover:bg-surface-2',
         )}
       >
         <span
           className={cn(
-            'flex size-8 shrink-0 items-center justify-center rounded-md text-ink-2 [&_svg]:size-[calc(18rem/16)]',
+            'flex size-7 shrink-0 items-center justify-center rounded-sm text-white [&_svg]:size-4 [&_svg]:stroke-[1.9]',
             item.tile,
           )}
         >
           <Icon />
         </span>
-        <span className="min-w-0 flex-1 truncate text-ui font-bold">
+        <span
+          className={cn(
+            'min-w-0 flex-1 truncate text-[calc(14.5rem/16)] font-medium',
+            here && 'text-acc-text',
+          )}
+        >
           {item.label}
         </span>
-        {item.value && (
-          <span className="min-w-0 truncate text-note text-ink-2">
+        {withValues && item.value && (
+          <span className="min-w-0 truncate text-ui text-ink-2 tabular-nums">
             {item.value}
           </span>
         )}
-        <ChevronRightIcon className="size-[calc(18rem/16)] shrink-0 text-ink-2" />
+        <ChevronRightIcon className="size-4 shrink-0 text-ink-3" />
       </Link>
     </li>
   )
 }
 
-/** The way into the settings on a phone: the system's state at the head, then each setting with its value, in four groups. Held upright it is a screen of its own; on its side it stays at the left of the setting open, which it marks (`current`). */
+/** The way into the settings: the system's state at the head, then each setting with its value, in four groups. A phone held upright opens it as a screen of its own; anywhere else it stays at the left of the setting open, which it marks (`current`). */
 export function SettingsEntranceView({
   status,
   values,
   hasMigration,
   current,
+  withValues = true,
 }: {
   status: SystemStatus
   values: SettingsEntranceValues
   hasMigration: boolean
   current?: string
+  /** Each setting's value after its name; the wide screen leaves them to the setting open beside. */
+  withValues?: boolean
 }) {
+  const GroupTitle = current === undefined ? 'h2' : 'p'
+
   return (
-    <div data-slot="settings-entrance" className="pt-1 pb-4">
+    <div data-slot="settings-entrance" className="pt-4 pb-6 upright:pt-1">
       {current === undefined && <h1 className="sr-only">設定</h1>}
       <SystemRow status={status} current={current} />
       {groupsOf(status, values, hasMigration).map((group) => (
         <section key={group.name} aria-labelledby={`settings-${group.name}`}>
-          <h2
+          <GroupTitle
             id={`settings-${group.name}`}
-            className="px-0.5 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2"
+            className="mx-4 mt-[calc(22rem/16)] mb-2 text-sub font-semibold text-ink-2"
           >
             {group.name}
-          </h2>
-          <ul className="overflow-hidden rounded-xl border border-line bg-surface">
+          </GroupTitle>
+          <ul className="overflow-hidden rounded-lg bg-surface">
             {group.items.map((item) => (
-              <ItemRow key={item.href} item={item} current={current} />
+              <ItemRow
+                key={item.href}
+                item={item}
+                current={current}
+                withValues={withValues}
+              />
             ))}
           </ul>
         </section>

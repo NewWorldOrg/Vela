@@ -4,7 +4,6 @@ import { useState, useSyncExternalStore } from 'react'
 
 import {
   MOTION_COOKIE,
-  MOTION_HINT,
   MOTION_LABEL,
   movesNow,
   type MotionSetting,
@@ -14,16 +13,12 @@ import { useTheme } from '@/components/theme/ThemeProvider'
 import type { ThemePreference } from '@/lib/theme'
 import { THEME_OPTIONS } from '@/components/theme/ThemeToggle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { FieldHint, FieldLabel } from '@/components/vela/field'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { PageHeading } from '@/components/vela/section-heading'
-import { Surface } from '@/components/vela/surface'
+import { SettingsGroup, SettingsRow } from '@/components/vela/settings-rows'
 
 const MOTION_ID = 'display-motion'
 
 const THEME_LABEL = 'テーマ'
-
-const THEME_HINT = 'システムは端末の明暗の設定に合わせます。'
 
 const REDUCED_BY_THE_SYSTEM = '(prefers-reduced-motion: reduce)'
 
@@ -60,47 +55,33 @@ export function DisplayView({ motion }: { motion?: MotionSetting }) {
 
   return (
     <>
-      <Crumb>
-        設定 / <CrumbCurrent>表示</CrumbCurrent>
-      </Crumb>
       <PageHeading>表示</PageHeading>
 
-      <Surface className="mt-3.5 max-w-[calc(640rem/16)]">
-        <dl className="flex items-center justify-between gap-4">
-          <dt className="min-w-0 text-ui font-bold text-ink">{THEME_LABEL}</dt>
-          <dd className="shrink-0">
-            <SegmentedControl
-              aria-label={THEME_LABEL}
-              options={THEME_OPTIONS.map(({ value, label }) => ({
-                value,
-                label,
-              }))}
-              value={preference}
-              onValueChange={(next) => setPreference(next as ThemePreference)}
-            />
-          </dd>
-        </dl>
-        <FieldHint className="mt-1.5">{THEME_HINT}</FieldHint>
+      <SettingsGroup className="mt-[calc(18rem/16)]">
+        <SettingsRow name={THEME_LABEL}>
+          <SegmentedControl
+            aria-label={THEME_LABEL}
+            options={THEME_OPTIONS.map(({ value, label }) => ({
+              value,
+              label,
+            }))}
+            value={preference}
+            onValueChange={(next) => setPreference(next as ThemePreference)}
+          />
+        </SettingsRow>
+        <SettingsRow name={<label htmlFor={MOTION_ID}>{MOTION_LABEL}</label>}>
+          <Switch
+            id={MOTION_ID}
+            checked={moves}
+            onCheckedChange={(next) => {
+              const chosen: MotionSetting = next ? 'moves' : 'still'
 
-        <dl className="mt-4 flex items-center justify-between gap-4 border-t border-dashed border-line pt-4">
-          <dt className="min-w-0">
-            <FieldLabel htmlFor={MOTION_ID}>{MOTION_LABEL}</FieldLabel>
-          </dt>
-          <dd className="shrink-0">
-            <Switch
-              id={MOTION_ID}
-              checked={moves}
-              onCheckedChange={(next) => {
-                const chosen: MotionSetting = next ? 'moves' : 'still'
-
-                setSaid(chosen)
-                remember(chosen)
-              }}
-            />
-          </dd>
-        </dl>
-        <FieldHint className="mt-1.5">{MOTION_HINT}</FieldHint>
-      </Surface>
+              setSaid(chosen)
+              remember(chosen)
+            }}
+          />
+        </SettingsRow>
+      </SettingsGroup>
     </>
   )
 }

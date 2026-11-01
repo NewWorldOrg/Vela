@@ -6,9 +6,6 @@ export type MotionSetting = 'moves' | 'still'
 
 export const MOTION_LABEL = 'アニメーション'
 
-export const MOTION_HINT =
-  '切ると、画面の出入りや一覧の展開などの動きを止めます。'
-
 export function motionOf(
   said: string | null | undefined,
 ): MotionSetting | undefined {
