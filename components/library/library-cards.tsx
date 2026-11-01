@@ -90,7 +90,7 @@ export function Picture({
       />
       {recording.outcome === 'recording' && (
         <span className={cn(GLASS, 'top-1.5 left-1.5 font-sans')}>
-          <span className="breathes size-1.5 rounded-full bg-accent" />
+          <span className="breathes size-1.5 rounded-full bg-rec" />
           {RECORDING_IN_PROGRESS_TERM.label}
         </span>
       )}
