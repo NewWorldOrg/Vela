@@ -62,7 +62,7 @@ export function HardwareLine({
           '@[36rem]/line:grid-cols-[minmax(0,1fr)_calc(200rem/16)_calc(148rem/16)]',
         )}
       >
-        <div className="min-w-0">
+        <div className="col-span-2 min-w-0 @[36rem]/line:col-span-1">
           <p
             className={cn(
               'truncate text-[calc(14.5rem/16)] leading-5 font-medium text-ink',
@@ -74,7 +74,7 @@ export function HardwareLine({
           {sub && (
             <p
               title={sub}
-              className="mt-0.5 text-sub leading-[1.45] break-all text-ink-2 @[36rem]/line:truncate"
+              className="mt-0.5 text-sub leading-[1.45] break-words text-ink-2 @[36rem]/line:truncate"
             >
               {sub}
             </p>
@@ -83,7 +83,7 @@ export function HardwareLine({
         <div className="col-start-1 row-start-2 min-w-0 @[36rem]/line:col-start-2 @[36rem]/line:row-start-1">
           <StatusSaid status={status} why={why} />
         </div>
-        <div className="col-start-2 row-span-2 row-start-1 flex items-center justify-end gap-3 @[36rem]/line:col-start-3 @[36rem]/line:row-span-1">
+        <div className="col-start-2 row-start-2 flex items-center justify-end gap-3 @[36rem]/line:col-start-3 @[36rem]/line:row-start-1">
           {controls}
         </div>
       </div>
