@@ -12,9 +12,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { InlineAlert } from '@/components/vela/banner'
-import { Field, FieldHint, FieldLabel } from '@/components/vela/field'
+import { Field, FieldLabel } from '@/components/vela/field'
 import { KeyIcon, SuccessIcon } from '@/components/vela/icons'
 import { RedirectUri } from '@/components/authentication/redirect-uri'
+
+const ONE_A_LINE = '1 行に 1 つ'
 
 export function OidcSettings({
   config,
@@ -63,9 +65,9 @@ export function OidcSettings({
     })
 
   return (
-    <div className="flex flex-col gap-[calc(18rem/16)]">
+    <div className="flex max-w-[calc(720rem/16)] flex-col gap-[calc(18rem/16)]">
       <div>
-        <span className="heading block text-ui text-ink">
+        <span className="block text-ui font-bold text-ink">
           登録すべき redirect URI
         </span>
         <div className="mt-2">
@@ -129,11 +131,11 @@ export function OidcSettings({
           <Textarea
             id={groupsId}
             rows={3}
+            placeholder={ONE_A_LINE}
             value={groups}
             disabled={pending}
             onChange={(event) => setGroups(event.target.value)}
           />
-          <FieldHint>1 行に 1 つ</FieldHint>
         </Field>
 
         <Field>
@@ -141,11 +143,11 @@ export function OidcSettings({
           <Textarea
             id={domainsId}
             rows={3}
+            placeholder={ONE_A_LINE}
             value={domains}
             disabled={pending}
             onChange={(event) => setDomains(event.target.value)}
           />
-          <FieldHint>1 行に 1 つ</FieldHint>
         </Field>
       </div>
 
@@ -156,7 +158,7 @@ export function OidcSettings({
           </InlineAlert>
         )}
         {saved && (
-          <span className="flex items-start gap-[calc(9rem/16)] rounded-md bg-mint-soft px-3 py-2 text-sub text-mint">
+          <span className="flex items-start gap-[calc(9rem/16)] rounded-md bg-surface-2 px-3 py-2 text-sub text-ink">
             <SuccessIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
             <span>保存しました。</span>
           </span>

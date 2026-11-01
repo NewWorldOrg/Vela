@@ -3,7 +3,6 @@ import { wordFor } from '@/lib/not-yet-in-this-build'
 import { cn } from '@/lib/utils'
 import type { AuthMethod } from '@/repository/auth'
 import type { RevokeResult, SessionRow } from '@/repository/sessions'
-import { Badge } from '@/components/ui/badge'
 import {
   Table,
   TableBody,
@@ -37,8 +36,6 @@ const DEVICE_ICON: Record<
   スマートフォン: DevicePhoneIcon,
   外部プレイヤー: DevicePlayerIcon,
 }
-
-const CURRENT_ROW = 'shadow-[inset_3px_0_0_0_var(--color-brand)]'
 
 export function SessionTable({
   sessions,
@@ -80,10 +77,7 @@ export function SessionTable({
       </TableHeader>
       <TableBody>
         {sessions.map((session) => (
-          <TableRow
-            key={session.id}
-            className={session.current ? CURRENT_ROW : undefined}
-          >
+          <TableRow key={session.id}>
             <TableCell {...cardPlace('lead')}>
               <DeviceName session={session} />
             </TableCell>
@@ -122,38 +116,24 @@ function DeviceName({ session }: { session: SessionRow }) {
     : DeviceDesktopIcon
 
   return (
-    <div className="flex min-w-0 items-center gap-[calc(11rem/16)]">
-      <span
-        className={
-          session.current
-            ? 'flex size-8 shrink-0 items-center justify-center rounded-md bg-surface text-brand'
-            : 'flex size-8 shrink-0 items-center justify-center rounded-md bg-surface-2 text-ink-2'
-        }
-      >
+    <div className="flex min-w-0 items-center gap-3">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-[calc(8rem/16)] bg-surface-2 text-ink-2">
         <Glyph className="size-[calc(17rem/16)]" />
       </span>
       <span className="min-w-0">
-        <b
-          className={
-            session.current
-              ? 'heading block text-ui text-brand'
-              : 'heading block text-ui'
-          }
-        >
+        <b className="block truncate text-ui font-semibold text-ink">
           {session.device.name}
         </b>
-        {session.device.kind && (
-          <span className="block text-cap text-ink-2">
-            {session.device.kind}
-          </span>
-        )}
+        <span className="flex items-center gap-2 text-cap text-ink-2">
+          {session.device.kind}
+          {session.current && (
+            <span className="inline-flex items-center gap-1 font-semibold whitespace-nowrap text-acc-text">
+              <ChipDot className="bg-accent" />
+              いまの端末
+            </span>
+          )}
+        </span>
       </span>
-      {session.current && (
-        <Badge variant="info" className="bg-surface font-bold">
-          <ChipDot />
-          いまの端末
-        </Badge>
-      )}
     </div>
   )
 }
@@ -161,7 +141,7 @@ function DeviceName({ session }: { session: SessionRow }) {
 function Account({ session }: { session: SessionRow }) {
   return (
     <span className="block min-w-[calc(160rem/16)] whitespace-normal wrap-anywhere">
-      <b className="heading block text-ui">{session.displayName}</b>
+      <b className="block text-ui font-semibold">{session.displayName}</b>
       <small className="block text-cap text-ink-2">
         {wordFor(METHOD_LABEL, session.method)}
       </small>
