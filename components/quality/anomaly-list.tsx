@@ -18,7 +18,7 @@ function AnomalyRow({ anomaly }: { anomaly: QualityAnomaly }) {
   return (
     <div
       data-slot="anomaly"
-      className="-mx-2 border-b border-dashed border-line px-2 py-2 last:border-b-0"
+      className="-mx-2 border-b border-hair px-2 py-2 last:border-b-0"
     >
       <span className="flex flex-wrap items-center gap-x-2 gap-y-1">
         <b className="text-ui font-bold">{anomaly.title}</b>

@@ -54,19 +54,19 @@ const TO_THE_TUNERS = 'チューナーへ'
 
 const PERIOD = '期間'
 
-const HEALTH_COLUMNS: { label: string; width: string }[] = [
-  { label: 'チューナー', width: 'calc(200rem/16)' },
+const HEALTH_COLUMNS: { label: string; width: string | undefined }[] = [
+  { label: 'チューナー', width: undefined },
   { label: '状態', width: 'calc(112rem/16)' },
-  { label: 'ドロップ率', width: 'calc(124rem/16)' },
+  { label: 'ドロップ率', width: 'calc(150rem/16)' },
   { label: 'lock 率', width: 'calc(112rem/16)' },
   { label: 'CNR', width: 'calc(112rem/16)' },
-  { label: 'post-Viterbi ビット誤り率', width: 'calc(260rem/16)' },
+  { label: 'post-Viterbi ビット誤り率', width: 'calc(180rem/16)' },
 ]
 
 const BAR_TONE: Record<QualityLevel, string> = {
-  good: 'bg-mint',
-  warn: 'bg-lemon',
-  bad: 'bg-coral',
+  good: 'bg-ink-2',
+  warn: 'bg-warn',
+  bad: 'bg-rec',
   unmeasured: 'bg-transparent',
   nodata: 'bg-transparent',
   unsupported: 'bg-transparent',
@@ -77,7 +77,7 @@ const BAR_TRACK: Record<QualityLevel, string> = {
   good: 'bg-surface-3',
   warn: 'bg-surface-3',
   bad: 'bg-surface-3',
-  unmeasured: 'border border-dashed border-line-strong',
+  unmeasured: 'border border-hair-strong',
   nodata: 'border border-line',
   unsupported: 'border border-line',
   unreachable: 'border border-line',
@@ -99,17 +99,13 @@ function ChannelMeters({
       {channels.map((channel) => (
         <div key={channel.id} data-slot="meter" data-level={channel.level}>
           <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-            <span className="text-ui font-bold">{channel.name}</span>
+            <span className="text-ui font-semibold">{channel.name}</span>
             {channel.no && (
-              <span className="font-code text-note text-ink-2">
-                {channel.no}
-              </span>
+              <span className="text-note text-ink-2">{channel.no}</span>
             )}
             <span className="ml-auto flex items-center gap-2.5">
               {channel.dropRate && (
-                <b className="font-code text-ui tabular-nums">
-                  {channel.dropRate}
-                </b>
+                <b className="text-ui tabular-nums">{channel.dropRate}</b>
               )}
               <QualityChip level={channel.level}>
                 {QUALITY_LEVEL_LABEL[channel.level]}
@@ -137,7 +133,7 @@ function ChannelMeters({
               />
             )}
           </div>
-          <p className="mt-1 font-code text-note tabular-nums text-ink-2">
+          <p className="mt-1 text-note tabular-nums text-ink-2">
             {channel.note}
           </p>
         </div>
@@ -207,18 +203,21 @@ export function QualityView({
         </Banner>
       )}
 
-      <div className="mt-3.5 grid gap-2.5 min-[720px]:grid-cols-2 min-[1120px]:grid-cols-4">
+      <div
+        data-slot="quality-stats"
+        className="mt-4 grid gap-px overflow-hidden rounded-lg bg-hair min-[720px]:grid-cols-2 min-[1120px]:grid-cols-4"
+      >
         {result.stats.map((stat) => (
-          <Surface key={stat.key}>
-            <span className="heading block text-sub text-ink-2">
+          <div key={stat.key} className="bg-surface px-4 py-3.5">
+            <span className="block text-sub font-medium text-ink-2">
               {stat.label}
             </span>
-            <span className="mt-1 block font-code text-[calc(26rem/16)] leading-none font-medium tabular-nums">
+            <span className="mt-1.5 block text-display-s leading-none font-bold tabular-nums">
               {stat.value ? (
                 <>
                   {stat.value}
                   {stat.unit && (
-                    <small className="ml-1 font-sans text-note font-medium text-ink-2">
+                    <small className="ml-1 text-note font-medium text-ink-2">
                       {stat.unit}
                     </small>
                   )}
@@ -241,11 +240,11 @@ export function QualityView({
                 </span>
               ))}
             </span>
-          </Surface>
+          </div>
         ))}
       </div>
 
-      <div className="mt-3.5 grid gap-2.5 min-[900px]:grid-cols-2">
+      <div className="mt-3.5 grid gap-2.5 min-[1700px]:grid-cols-2">
         <ThresholdPanel
           thresholds={result.thresholds}
           onSave={onSaveThresholds}
@@ -287,7 +286,7 @@ export function QualityView({
         {result.tuners.length > 0 ? (
           <Table
             cards
-            className="table-fixed min-w-[calc(900rem/16)]"
+            className="table-fixed min-w-[calc(820rem/16)]"
             containerClassName={cn(
               ADMIN_LIST_HEIGHT_CAP,
               'overflow-y-auto pb-1',
@@ -307,7 +306,7 @@ export function QualityView({
               {result.tuners.map((tuner) => (
                 <TableRow key={tuner.id}>
                   <TableCell {...cardPlace('lead')} className="align-top">
-                    <b className="block text-[calc(13rem/16)] font-bold">
+                    <b className="block text-ui font-semibold">
                       {tuner.device}
                     </b>
                     <span className="text-note text-ink-2">
@@ -354,7 +353,7 @@ export function QualityView({
         <div className="mt-2.5 flex justify-end">
           <Link
             href="/settings/tuners"
-            className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
+            className="tap-target text-ui font-semibold text-acc-text underline-offset-[3px] hover:underline"
           >
             チューナーへ
           </Link>
@@ -369,7 +368,7 @@ export function QualityView({
               {result.problemRecordings.map((recording) => (
                 <div
                   key={recording.id}
-                  className="border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0"
+                  className="border-b border-hair pb-2 last:border-b-0 last:pb-0"
                 >
                   <div className="flex items-center gap-2.5">
                     <b className="min-w-0 flex-1 text-ui font-bold">
@@ -382,19 +381,17 @@ export function QualityView({
                   </span>
                   <span className="mt-1 grid grid-cols-[auto_auto] items-center justify-start justify-items-start gap-x-2.5 gap-y-1">
                     <span className="flex flex-wrap items-center gap-x-2.5">
-                      <span className="font-code text-note tabular-nums text-ink-2">
+                      <span className="text-note tabular-nums text-ink-2">
                         {recording.drops}
                       </span>
                       {recording.pct && (
-                        <b className="font-code text-ui tabular-nums">
-                          {recording.pct}
-                        </b>
+                        <b className="text-ui tabular-nums">{recording.pct}</b>
                       )}
                     </span>
                     <QualityChip level={recording.level}>
                       {QUALITY_LEVEL_LABEL[recording.level]}
                     </QualityChip>
-                    <span className="font-code text-note tabular-nums text-ink-2">
+                    <span className="text-note tabular-nums text-ink-2">
                       {recording.gap.reading}
                     </span>
                     <QualityChip level={recording.gap.level}>
@@ -409,10 +406,10 @@ export function QualityView({
               期間内に警告水準を超えた録画がありません。
             </EmptyState>
           )}
-          <div className="mt-3 flex justify-end border-t border-dashed border-line pt-3">
+          <div className="mt-3 flex justify-end border-t border-hair pt-3">
             <Link
               href="/library"
-              className="tap-target text-note font-bold text-brand underline-offset-[3px] hover:underline"
+              className="tap-target text-ui font-semibold text-acc-text underline-offset-[3px] hover:underline"
             >
               ライブラリへ
             </Link>
