@@ -93,7 +93,6 @@ const APPLIED: RuleApplication = {
 const applied: string[] = []
 
 const MARKED_REQUIRED = [
-  '条件',
   'ルール名',
   '優先度',
   '前マージン(秒)',
@@ -440,12 +439,15 @@ export const 曜日とサブジャンルと期間を足す: Story = {
 
     widenedSaved.length = 0
 
-    await choose('曜日を追加', '水曜')
-    await choose('曜日を追加', '月曜')
-    await expect(picked(canvasElement, '曜日')).toEqual([
-      '曜日 月曜 を外す',
-      '曜日 水曜 を外す',
-    ])
+    const days = within(canvas.getByRole('group', { name: '曜日' }))
+
+    await userEvent.click(days.getByRole('button', { name: '水曜' }))
+    await userEvent.click(days.getByRole('button', { name: '月曜' }))
+    await expect(
+      days
+        .getAllByRole('button', { pressed: true })
+        .map((one) => one.getAttribute('aria-label')),
+    ).toEqual(['月曜', '水曜'])
 
     await userEvent.click(
       canvas.getByRole('combobox', { name: 'サブジャンルを追加' }),
@@ -654,7 +656,11 @@ export const 曜日だけのルールは保存できる: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
     await expect(await canvas.findByText(refusal)).toBeVisible()
 
-    await choose('曜日を追加', '土曜')
+    await userEvent.click(
+      within(canvas.getByRole('group', { name: '曜日' })).getByRole('button', {
+        name: '土曜',
+      }),
+    )
     await userEvent.click(canvas.getByRole('button', { name: '保存' }))
 
     await waitFor(() => expect(weighed).toHaveLength(1))
@@ -1082,7 +1088,7 @@ export const 即時適用: Story = {
     const notice = await applyNow(canvasElement)
 
     await expect(applied).toEqual(['rule-301'])
-    await expect(notice).toHaveClass('bg-mint-soft')
+    await expect(notice).toHaveClass('bg-surface')
     await expect(notice).toHaveTextContent(
       'ルールを適用しました(新しく作られた予約 3 件、引っ込んだ予約 1 件)。1 件は除外されました(移動 1 件)。',
     )
@@ -1135,7 +1141,7 @@ export const 即時適用で作成できなかった予約がある: Story = {
   play: async ({ canvasElement }) => {
     const notice = await applyNow(canvasElement)
 
-    await expect(notice).toHaveClass('bg-lemon-soft')
+    await expect(notice).toHaveClass('bg-accent-soft')
     await expect(notice).toHaveTextContent(
       'ルールを適用しました(新しく作られた予約 3 件、引っ込んだ予約 1 件、作成できなかった予約 2 件、条件を読めず無効にしたルール 1 件、調べられなかったルール 1 件)。',
     )
@@ -1156,7 +1162,7 @@ export const 即時適用を断られる: Story = {
   play: async ({ canvasElement }) => {
     const notice = await applyNow(canvasElement)
 
-    await expect(notice).toHaveClass('bg-lemon-soft')
+    await expect(notice).toHaveClass('bg-accent-soft')
     await expect(notice).toHaveTextContent(
       'ルールの適用がすでに実行中のため、適用できませんでした。',
     )

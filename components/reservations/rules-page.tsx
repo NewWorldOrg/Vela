@@ -1,7 +1,7 @@
 'use client'
 
-import type { ReactNode } from 'react'
-import { useCallback, useRef, useState, useTransition } from 'react'
+import type { ComponentProps, ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -88,7 +88,9 @@ import { Input } from '@/components/ui/input'
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
@@ -103,24 +105,26 @@ import {
   RequiredMark,
 } from '@/components/vela/field'
 import {
-  FilterIcon,
-  ListIcon,
+  CloseIcon,
   PlusIcon,
   RebuildIcon,
-  ReservationIcon,
   SearchIcon,
-  SettingsIcon,
   SuccessIcon,
   TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
-import {
-  DayPicks,
-  Pick,
-  SubgenrePicks,
-} from '@/components/search/condition-picks'
+import { GenreDot } from '@/components/reservations/genre-dot'
+import { Stepper } from '@/components/reservations/stepper'
+import { SegmentedControl } from '@/components/vela/segmented-control'
 import { ScreenMain } from '@/components/vela/app-shell'
+import type { Genre } from '@/repository/programs'
+import {
+  SEARCH_DAY_OPTIONS,
+  offeredSubgenres,
+  searchDaysInOrder,
+  subgenreLabelOf,
+} from '@/lib/search-condition'
 
 export type RuleEditing =
   | { state: 'none' }
@@ -152,11 +156,14 @@ export function RulesView({
   channels,
   editing,
   actions,
+  ahead,
 }: {
   result: RulesResult
   channels: GuideChannel[]
   editing: RuleEditing
   actions: RuleActions
+  /** How many reservations each rule still has ahead of it, by the rule's id; left out when they cannot be counted. */
+  ahead?: Readonly<Record<string, number>>
 }) {
   return (
     <RulesScreen
@@ -165,6 +172,7 @@ export function RulesView({
       channels={channels}
       editing={editing}
       actions={actions}
+      ahead={ahead}
     />
   )
 }
@@ -184,11 +192,13 @@ function RulesScreen({
   channels,
   editing,
   actions,
+  ahead,
 }: {
   result: RulesResult
   channels: GuideChannel[]
   editing: RuleEditing
   actions: RuleActions
+  ahead?: Readonly<Record<string, number>>
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -212,14 +222,19 @@ function RulesScreen({
   }
 
   return (
-    <ScreenMain className="px-3.5 pt-6 pb-16 phone:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]">
+    <ScreenMain className="px-3.5 pt-3.5 pb-16 phone:pt-1 min-[701px]:px-6 min-[1366px]:px-10">
       <ReservationTabs
         current="rules"
+        count={
+          <>
+            <span className="font-code">{result.total}</span> 件 · 有効{' '}
+            <span className="font-code">{enabled}</span>
+          </>
+        }
         action={
-          <span className="flex flex-wrap items-start justify-end gap-[calc(9rem/16)]">
+          <>
             <Button
-              variant="tone"
-              size="sm"
+              variant="ghost"
               disabled={applying || !anEnabledRule}
               title={anEnabledRule ? undefined : NOTHING_TO_APPLY}
               onClick={() => anEnabledRule && apply(anEnabledRule.id)}
@@ -228,18 +243,18 @@ function RulesScreen({
               ルールを即時適用
             </Button>
             <ActionRow>
-              <Button variant="tone" size="sm" asChild>
+              <Button variant="tone" asChild>
                 <Link href="/search">
                   <SearchIcon />
                   検索から作成
                 </Link>
               </Button>
-              <Button size="sm" onClick={() => open(NEW_RULE)}>
+              <Button onClick={() => open(NEW_RULE)}>
                 <PlusIcon />
                 ルールを追加
               </Button>
             </ActionRow>
-          </span>
+          </>
         }
       />
 
@@ -247,25 +262,15 @@ function RulesScreen({
         {applied && <RuleApplicationNotice outcome={applied} />}
       </div>
 
-      <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(calc(280rem/16),calc(360rem/16))_1fr]">
-        <section className="rounded-lg bg-surface px-4 py-3.5">
-          <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-            <h2 className="heading flex items-center gap-1.5 text-title">
-              <ReservationIcon className="size-4 text-brand" />
-              ルール
-            </h2>
-            <span className="ml-auto text-sub text-ink-2">
-              全{' '}
-              <b className="font-code font-medium text-ink">{result.total}</b>{' '}
-              件 · 有効{' '}
-              <b className="font-code font-medium text-ink">{enabled}</b>
-            </span>
-          </div>
-
+      <div className="mt-5 grid items-start gap-8 min-[1000px]:grid-cols-[calc(360rem/16)_minmax(0,1fr)] min-[1366px]:grid-cols-[calc(420rem/16)_minmax(0,1fr)]">
+        <section aria-labelledby="rules-list" className="min-w-0">
+          <h2 id="rules-list" className="sr-only">
+            ルール
+          </h2>
           {result.items.length === 0 ? (
             <EmptyState usher={null} title="まだルールがありません" />
           ) : (
-            <ul className="flex flex-col gap-1.5">
+            <ul>
               {result.items.map((rule) => (
                 <RuleRow
                   key={rule.id}
@@ -276,6 +281,7 @@ function RulesScreen({
                   summary={ruleConditionParts(rule.terms, channelNameOf).join(
                     ' · ',
                   )}
+                  ahead={ahead?.[rule.id]}
                   onOpen={() => open(rule.id)}
                   onSwitch={(next) => actions.onSwitch(rule.id, next)}
                 />
@@ -307,12 +313,14 @@ function RuleRow({
   rule,
   selected,
   summary,
+  ahead,
   onOpen,
   onSwitch,
 }: {
   rule: Rule
   selected: boolean
   summary: string
+  ahead?: number
   onOpen: () => void
   onSwitch: (enabled: boolean) => Promise<RuleWrite<number>>
 }) {
@@ -320,36 +328,37 @@ function RuleRow({
   const [pending, startTransition] = useTransition()
 
   return (
-    <li>
+    <li
+      data-selected={selected ? '' : undefined}
+      className="relative before:absolute before:top-0 before:right-2.5 before:left-2.5 before:h-px before:bg-hair before:content-[''] first:before:hidden has-[>div:hover]:before:opacity-0 data-selected:before:opacity-0 [&:has(>div:hover)+li]:before:opacity-0 [&[data-selected]+li]:before:opacity-0"
+    >
       <div
         className={cn(
-          'flex items-center gap-2.5 rounded-md px-2.5 py-2 transition-[color,box-shadow] duration-150',
-          selected
-            ? 'text-brand shadow-[inset_3px_0_0_0_var(--color-brand)]'
-            : 'hover:text-brand',
+          'relative flex items-center gap-4 rounded-md px-2.5 py-2.5 transition-[background-color] duration-[140ms] ease-toy hover:bg-surface',
+          selected && 'bg-surface',
         )}
       >
         <button
           type="button"
           onClick={onOpen}
           aria-current={selected ? 'true' : undefined}
-          className="tap-target min-w-0 flex-1 cursor-pointer text-left"
+          className="min-w-0 flex-1 cursor-pointer text-left outline-none after:absolute after:inset-0 after:rounded-md after:content-[''] focus-visible:after:shadow-ring"
         >
-          <b
-            className={cn(
-              'block text-ui font-bold',
-              rule.enabled ? 'text-ink' : 'text-ink-2',
-            )}
-          >
+          <b className="block text-title font-semibold tracking-[-0.008em] text-ink">
             {rule.name}
           </b>
-          <span className="block text-note text-ink-2">{summary}</span>
+          <span className="mt-0.5 block text-sub text-ink-2">{summary}</span>
+          {ahead !== undefined && (
+            <span className="mt-1 block text-sub text-ink-2">
+              今後 <span className="font-code">{ahead}</span> 件
+            </span>
+          )}
         </button>
         <Switch
-          size="sm"
           checked={rule.enabled}
           disabled={pending}
           aria-label={`${rule.name} を有効にする`}
+          className="relative z-[1]"
           onCheckedChange={(next) =>
             startTransition(async () => {
               const result = await onSwitch(next)
@@ -367,7 +376,7 @@ function RuleRow({
       </div>
       <span aria-live="polite">
         {refusal && (
-          <InlineAlert tone="warn" className="mt-1.5">
+          <InlineAlert tone="warn" className="mx-2.5 mb-2">
             {refusal}
           </InlineAlert>
         )}
@@ -477,6 +486,7 @@ function RuleEditor({
   const [confirming, setConfirming] = useState(false)
   const [retiring, setRetiring] = useState(false)
   const [pending, startTransition] = useTransition()
+  const [previewing, startPreviewing] = useTransition()
 
   const edits = useRef(0)
 
@@ -606,13 +616,24 @@ function RuleEditor({
 
     const askedAt = edits.current
 
-    startTransition(async () => {
+    startPreviewing(async () => {
       answered(await actions.onPreview(draft, rule?.id), (seen) => {
         setPreview(seen)
         setStale(edits.current !== askedAt)
       })
     })
   }
+
+  const looked = useRef(false)
+
+  useEffect(() => {
+    if (looked.current || !rule) {
+      return
+    }
+
+    looked.current = true
+    rehearse()
+  })
 
   const weigh = (): void => {
     const draft = drafted()
@@ -719,35 +740,40 @@ function RuleEditor({
   }
 
   return (
-    <section className="rounded-lg bg-surface px-4 py-3.5">
-      <div className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-dashed border-line pb-2.5">
-        <h2 className="heading min-w-0 flex-1 text-title">
+    <section
+      aria-label={rule ? rule.name : '新しいルール'}
+      className="min-w-0 rounded-xl bg-surface px-6 pt-5 pb-6 phone:-mx-1 phone:px-4"
+    >
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+        <h2 className="min-w-0 flex-1 text-section font-bold text-ink">
           {rule ? rule.name : '新しいルール'}
         </h2>
-        {entry.enabled ? (
-          <Badge variant="ok" className="font-bold">
+        <span className="flex items-center gap-2.5">
+          <FieldLabel
+            htmlFor="rule-enabled"
+            className="text-ui font-medium text-ink-2"
+          >
             有効
-          </Badge>
-        ) : (
-          <Badge variant="mute">無効</Badge>
-        )}
-        {rule && (
-          <span className="text-note text-ink-2">
-            作成 {formatMoment(rule.createdAt)}
-          </span>
-        )}
+          </FieldLabel>
+          <Switch
+            id="rule-enabled"
+            checked={entry.enabled}
+            onCheckedChange={(next) => amend({ enabled: next })}
+          />
+        </span>
       </div>
+      {rule && (
+        <p className="mt-1 text-sub text-ink-2">
+          作成 <span className="font-code">{formatMoment(rule.createdAt)}</span>
+        </p>
+      )}
 
-      <FormSection
-        icon={<FilterIcon className="size-4 text-brand" />}
-        title="条件"
-        required
-      >
+      <div className="mt-5 flex flex-col gap-[calc(18rem/16)]">
         <Field>
-          <FieldLabel htmlFor="rule-name">
+          <RuleLabel htmlFor="rule-name">
             ルール名
             <RequiredMark />
-          </FieldLabel>
+          </RuleLabel>
           <Input
             id="rule-name"
             value={entry.name}
@@ -756,6 +782,7 @@ function RuleEditor({
               problem?.field === 'name' ? 'rule-name-error' : undefined
             }
             onChange={(event) => amend({ name: event.target.value })}
+            className={ON_THE_PANEL}
           />
           <span aria-live="polite">
             {problem?.field === 'name' && (
@@ -764,57 +791,48 @@ function RuleEditor({
           </span>
         </Field>
 
-        <div className="grid gap-3.5 min-[701px]:grid-cols-2">
+        <div className={TWO_UP}>
           <Field>
-            <FieldLabel htmlFor="rule-keyword">キーワード</FieldLabel>
+            <RuleLabel htmlFor="rule-keyword">キーワード</RuleLabel>
             <Input
               id="rule-keyword"
               value={entry.q}
               onChange={(event) => amend({ q: event.target.value })}
+              className={ON_THE_PANEL}
             />
           </Field>
 
           <Field>
-            <FieldLabel htmlFor="rule-exclude">除外キーワード</FieldLabel>
+            <RuleLabel htmlFor="rule-exclude">除外キーワード</RuleLabel>
             <Input
               id="rule-exclude"
               value={entry.exclude}
               onChange={(event) => amend({ exclude: event.target.value })}
+              className={ON_THE_PANEL}
             />
           </Field>
         </div>
 
-        <div className="grid gap-3.5 min-[701px]:grid-cols-2">
+        <div className={TWO_UP}>
           <Field>
-            <FieldLabel>対象範囲</FieldLabel>
-            <Select
+            <RuleLabel id="rule-fields-label">対象範囲</RuleLabel>
+            <SegmentedControl
+              aria-label="対象範囲"
+              options={SEARCH_FIELD_OPTIONS}
               value={entry.fields}
               onValueChange={(value) => amend({ fields: value as SearchField })}
-            >
-              <SelectTrigger
-                size="sm"
-                aria-label="対象範囲"
-                className="w-fit rounded-full"
-              >
-                {
-                  SEARCH_FIELD_OPTIONS.find(
-                    (option) => option.value === entry.fields,
-                  )?.label
-                }
-              </SelectTrigger>
-              <SelectContent>
-                {SEARCH_FIELD_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className={SEGMENTS_ON_THE_PANEL}
+            />
           </Field>
 
           <Field>
-            <FieldLabel>種別</FieldLabel>
-            <Select
+            <RuleLabel>種別</RuleLabel>
+            <SegmentedControl
+              aria-label="種別"
+              options={[
+                { value: EVERY_KIND, label: 'すべて' },
+                ...SEARCH_KIND_OPTIONS,
+              ]}
               value={entry.kind ?? EVERY_KIND}
               onValueChange={(value) =>
                 amend({
@@ -823,150 +841,183 @@ function RuleEditor({
                   channels: [],
                 })
               }
-            >
-              <SelectTrigger
-                size="sm"
-                aria-label="種別"
-                className="w-fit rounded-full"
-              >
-                {SEARCH_KIND_OPTIONS.find(
-                  (option) => option.value === entry.kind,
-                )?.label ?? 'すべて'}
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={EVERY_KIND}>すべて</SelectItem>
-                {SEARCH_KIND_OPTIONS.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              className={SEGMENTS_ON_THE_PANEL}
+            />
           </Field>
         </div>
 
-        <Field>
-          <FieldLabel>ジャンル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
-            {entry.genres.map((genre) => (
-              <Pick
-                key={genre}
-                label={genreLabelOf(genre)}
-                spoken={`ジャンル ${genreLabelOf(genre)} を外す`}
-                onRemove={() =>
-                  amend({
-                    genres: entry.genres.filter((one) => one !== genre),
-                  })
-                }
-              />
-            ))}
-            {unusedGenres.length > 0 && (
-              <Select
-                value=""
-                onValueChange={(value) =>
-                  amend({ genres: [...entry.genres, value as SearchGenre] })
-                }
-              >
-                <SelectTrigger
-                  size="sm"
-                  aria-label="ジャンルを追加"
-                  className="w-fit rounded-full text-ink-2"
+        <div className={TWO_UP}>
+          <Field>
+            <RuleLabel>ジャンル</RuleLabel>
+            <Tags>
+              {entry.genres.map((genre) => (
+                <RuleTag
+                  key={genre}
+                  label={genreLabelOf(genre)}
+                  dot={DOT_OF[genre]}
+                  spoken={`ジャンル ${genreLabelOf(genre)} を外す`}
+                  onRemove={() =>
+                    amend({
+                      genres: entry.genres.filter((one) => one !== genre),
+                    })
+                  }
+                />
+              ))}
+              {unusedGenres.length > 0 && (
+                <AddPick
+                  label="ジャンルを追加"
+                  onPick={(value) =>
+                    amend({ genres: [...entry.genres, value as SearchGenre] })
+                  }
                 >
-                  ＋ ジャンルを追加
-                </SelectTrigger>
-                <SelectContent>
                   {unusedGenres.map((option) => (
                     <SelectItem key={option.value} value={option.value}>
                       {option.label}
                     </SelectItem>
                   ))}
-                </SelectContent>
-              </Select>
-            )}
-          </span>
-        </Field>
+                </AddPick>
+              )}
+            </Tags>
+          </Field>
 
-        <Field>
-          <FieldLabel>サブジャンル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
-            <SubgenrePicks
-              genres={entry.genres}
-              subgenres={entry.subgenres}
-              onChange={(subgenres) => amend({ subgenres })}
-            />
-          </span>
-        </Field>
-
-        <Field>
-          <FieldLabel>チャンネル</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
-            {entry.channels.map((id) => (
-              <Pick
-                key={id}
-                label={channelNameOf(id)}
-                spoken={`チャンネル ${channelNameOf(id)} を外す`}
-                onRemove={() =>
-                  amend({
-                    channels: entry.channels.filter((one) => one !== id),
-                  })
-                }
-              />
-            ))}
-            {unusedChannels.length > 0 &&
-              entry.channels.length < SEARCH_MOST_CHANNELS && (
-                <Select
-                  value=""
-                  onValueChange={(value) =>
-                    amend({ channels: [...entry.channels, value] })
+          <Field>
+            <RuleLabel>サブジャンル</RuleLabel>
+            <Tags>
+              {entry.subgenres.map((subgenre) => (
+                <RuleTag
+                  key={subgenre}
+                  label={subgenreLabelOf(subgenre)}
+                  spoken={`サブジャンル ${subgenreLabelOf(subgenre)} を外す`}
+                  onRemove={() =>
+                    amend({
+                      subgenres: entry.subgenres.filter(
+                        (one) => one !== subgenre,
+                      ),
+                    })
+                  }
+                />
+              ))}
+              {offeredSubgenres(entry.genres, entry.subgenres).length > 0 && (
+                <AddPick
+                  label="サブジャンルを追加"
+                  onPick={(value) =>
+                    amend({ subgenres: [...entry.subgenres, value] })
                   }
                 >
-                  <SelectTrigger
-                    size="sm"
-                    aria-label="チャンネルを追加"
-                    className="w-fit rounded-full text-ink-2"
+                  {offeredSubgenres(entry.genres, entry.subgenres).map(
+                    (group) => (
+                      <SelectGroup key={group.kind}>
+                        <SelectLabel>{group.label}</SelectLabel>
+                        {group.under.map((option) => (
+                          <SelectItem key={option.value} value={option.value}>
+                            {option.label}
+                          </SelectItem>
+                        ))}
+                      </SelectGroup>
+                    ),
+                  )}
+                </AddPick>
+              )}
+            </Tags>
+          </Field>
+        </div>
+
+        <div className={TWO_UP}>
+          <Field>
+            <RuleLabel>チャンネル</RuleLabel>
+            <Tags>
+              {entry.channels.map((id) => (
+                <RuleTag
+                  key={id}
+                  label={channelNameOf(id)}
+                  spoken={`チャンネル ${channelNameOf(id)} を外す`}
+                  onRemove={() =>
+                    amend({
+                      channels: entry.channels.filter((one) => one !== id),
+                    })
+                  }
+                />
+              ))}
+              {unusedChannels.length > 0 &&
+                entry.channels.length < SEARCH_MOST_CHANNELS && (
+                  <AddPick
+                    label="チャンネルを追加"
+                    onPick={(value) =>
+                      amend({ channels: [...entry.channels, value] })
+                    }
                   >
-                    ＋ チャンネルを追加
-                  </SelectTrigger>
-                  <SelectContent>
                     {unusedChannels.map((channel) => (
                       <SelectItem key={channel.id} value={channel.id}>
                         {channel.name}
                       </SelectItem>
                     ))}
-                  </SelectContent>
-                </Select>
-              )}
-          </span>
-          {entry.channels.length >= SEARCH_MOST_CHANNELS && (
-            <FieldHint>
-              チャンネルは {SEARCH_MOST_CHANNELS} 局まで指定できます
-            </FieldHint>
-          )}
-        </Field>
+                  </AddPick>
+                )}
+            </Tags>
+            {entry.channels.length >= SEARCH_MOST_CHANNELS && (
+              <FieldHint>
+                チャンネルは {SEARCH_MOST_CHANNELS} 局まで指定できます
+              </FieldHint>
+            )}
+          </Field>
+
+          <Field>
+            <RuleLabel id="rule-days-label">曜日</RuleLabel>
+            <div
+              role="group"
+              aria-labelledby="rule-days-label"
+              className="flex flex-wrap gap-2"
+            >
+              {SEARCH_DAY_OPTIONS.map((day) => {
+                const on = entry.days.includes(day.value)
+
+                return (
+                  <button
+                    key={day.value}
+                    type="button"
+                    aria-pressed={on}
+                    aria-label={day.label}
+                    onClick={() =>
+                      amend({
+                        days: on
+                          ? entry.days.filter((one) => one !== day.value)
+                          : searchDaysInOrder([...entry.days, day.value]),
+                      })
+                    }
+                    className={cn(
+                      'tap-target grid size-9 cursor-pointer place-items-center rounded-sm text-ui font-semibold outline-none',
+                      'transition-[background-color,color] duration-[140ms] ease-toy focus-visible:shadow-ring active:scale-[0.98]',
+                      on
+                        ? 'bg-accent-tint text-acc-text'
+                        : 'bg-bg text-ink hover:bg-surface-2',
+                    )}
+                  >
+                    {day.short}
+                  </button>
+                )
+              })}
+            </div>
+          </Field>
+        </div>
+
+        <div className={TWO_UP}>
+          <MarkField
+            label="印"
+            marks={entry.marks}
+            offered={unnamedMarks}
+            onChange={(marks) => amend({ marks })}
+          />
+
+          <MarkField
+            label="除外する印"
+            marks={entry.excludedMarks}
+            offered={unnamedMarks}
+            onChange={(excludedMarks) => amend({ excludedMarks })}
+          />
+        </div>
 
         <Field>
-          <FieldLabel>曜日</FieldLabel>
-          <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
-            <DayPicks days={entry.days} onChange={(days) => amend({ days })} />
-          </span>
-        </Field>
-
-        <MarkField
-          label="印"
-          marks={entry.marks}
-          offered={unnamedMarks}
-          onChange={(marks) => amend({ marks })}
-        />
-
-        <MarkField
-          label="除外する印"
-          marks={entry.excludedMarks}
-          offered={unnamedMarks}
-          onChange={(excludedMarks) => amend({ excludedMarks })}
-        />
-
-        <Field>
-          <FieldLabel>期間</FieldLabel>
+          <RuleLabel>期間</RuleLabel>
           <span className="flex flex-wrap items-center gap-2">
             <Input
               type="date"
@@ -979,8 +1030,8 @@ function RuleEditor({
               onChange={(event) =>
                 amend({ from: event.target.value || undefined })
               }
-              areaClassName="w-[calc(150rem/16)]"
-              className="h-[calc(33rem/16)] rounded-full"
+              areaClassName="w-[calc(160rem/16)]"
+              className={ON_THE_PANEL}
             />
             <span className="text-sub text-ink-2">〜</span>
             <Input
@@ -994,8 +1045,8 @@ function RuleEditor({
               onChange={(event) =>
                 amend({ to: event.target.value || undefined })
               }
-              areaClassName="w-[calc(150rem/16)]"
-              className="h-[calc(33rem/16)] rounded-full"
+              areaClassName="w-[calc(160rem/16)]"
+              className={ON_THE_PANEL}
             />
           </span>
           <span aria-live="polite">
@@ -1005,144 +1056,94 @@ function RuleEditor({
           </span>
         </Field>
 
-        <span aria-live="polite">
+        <span aria-live="polite" className="empty:hidden">
           {problem?.field === 'terms' && (
             <FieldError id="rule-terms-error">{problem.text}</FieldError>
           )}
         </span>
-      </FormSection>
+      </div>
 
-      <FormSection
-        icon={<SettingsIcon className="size-4 text-brand" />}
-        title="録画設定"
-      >
-        <div className="grid gap-3.5 min-[701px]:grid-cols-3">
-          <Field>
-            <FieldLabel htmlFor="rule-priority">
-              優先度
-              <RequiredMark />
-            </FieldLabel>
-            <Input
-              id="rule-priority"
-              inputMode="numeric"
-              value={entry.priority}
-              aria-invalid={problem?.field === 'priority' || undefined}
-              aria-describedby={
-                problem?.field === 'priority'
-                  ? 'rule-priority-error'
-                  : undefined
-              }
-              onChange={(event) => amend({ priority: event.target.value })}
-            />
-            <FieldHint>
-              {PRIORITY_RANGE.least} 〜 {PRIORITY_RANGE.most}
-            </FieldHint>
-            <span aria-live="polite">
-              {problem?.field === 'priority' && (
-                <FieldError id="rule-priority-error">{problem.text}</FieldError>
-              )}
-            </span>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="rule-margin-before">
-              前マージン(秒)
-              <RequiredMark />
-            </FieldLabel>
-            <Input
-              id="rule-margin-before"
-              inputMode="numeric"
-              value={entry.before}
-              aria-invalid={problem?.field === 'before' || undefined}
-              aria-describedby={
-                problem?.field === 'before'
-                  ? 'rule-margin-before-error'
-                  : undefined
-              }
-              onChange={(event) => amend({ before: event.target.value })}
-            />
-            <FieldHint>
-              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
-            </FieldHint>
-            <span aria-live="polite">
-              {problem?.field === 'before' && (
-                <FieldError id="rule-margin-before-error">
-                  {problem.text}
-                </FieldError>
-              )}
-            </span>
-          </Field>
-
-          <Field>
-            <FieldLabel htmlFor="rule-margin-after">
-              後マージン(秒)
-              <RequiredMark />
-            </FieldLabel>
-            <Input
-              id="rule-margin-after"
-              inputMode="numeric"
-              value={entry.after}
-              aria-invalid={problem?.field === 'after' || undefined}
-              aria-describedby={
-                problem?.field === 'after'
-                  ? 'rule-margin-after-error'
-                  : undefined
-              }
-              onChange={(event) => amend({ after: event.target.value })}
-            />
-            <FieldHint>
-              {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
-            </FieldHint>
-            <span aria-live="polite">
-              {problem?.field === 'after' && (
-                <FieldError id="rule-margin-after-error">
-                  {problem.text}
-                </FieldError>
-              )}
-            </span>
-          </Field>
+      <div className="mt-6 flex flex-wrap items-start gap-x-[calc(22rem/16)] gap-y-4 border-t border-hair pt-5">
+        <RuleNumber
+          field="priority"
+          id="rule-priority"
+          label="優先度"
+          value={entry.priority}
+          onChange={(priority) => amend({ priority })}
+          range={PRIORITY_RANGE}
+          step={1}
+          problem={problem}
+        />
+        <RuleNumber
+          field="before"
+          id="rule-margin-before"
+          label="前マージン(秒)"
+          value={entry.before}
+          onChange={(before) => amend({ before })}
+          range={MARGIN_RANGE}
+          step={10}
+          problem={problem}
+        />
+        <RuleNumber
+          field="after"
+          id="rule-margin-after"
+          label="後マージン(秒)"
+          value={entry.after}
+          onChange={(after) => amend({ after })}
+          range={MARGIN_RANGE}
+          step={10}
+          problem={problem}
+        />
+        <div className="flex h-9 items-center gap-2.5 self-end">
+          <Switch
+            id="rule-encode"
+            checked={entry.encodeWhenRecorded}
+            onCheckedChange={(next) => amend({ encodeWhenRecorded: next })}
+          />
+          <FieldLabel htmlFor="rule-encode" className="text-ui font-semibold">
+            自動エンコード
+          </FieldLabel>
         </div>
+      </div>
 
-        <div className="flex flex-col gap-[calc(26rem/16)]">
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Switch
-              id="rule-enabled"
-              checked={entry.enabled}
-              onCheckedChange={(next) => amend({ enabled: next })}
-            />
-            <FieldLabel htmlFor="rule-enabled">有効</FieldLabel>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Switch
-              id="rule-encode"
-              checked={entry.encodeWhenRecorded}
-              onCheckedChange={(next) => amend({ encodeWhenRecorded: next })}
-            />
-            <FieldLabel htmlFor="rule-encode">自動エンコード</FieldLabel>
-          </div>
-        </div>
-      </FormSection>
-
-      <FormSection
-        icon={<ListIcon className="size-4 text-brand" />}
-        title="マッチプレビュー"
+      <section
+        aria-labelledby="rule-matches"
+        className="mt-6 border-t border-hair pt-5"
       >
-        <div className="flex flex-wrap items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <h3 id="rule-matches" className="text-ui font-semibold text-ink">
+            {preview ? (
+              <>
+                この条件に一致する今後の番組{' '}
+                <span className="font-code">{preview.matched}</span> 件
+              </>
+            ) : (
+              'この条件に一致する今後の番組'
+            )}
+          </h3>
           <Button
-            variant="tone"
+            variant="ghost"
             size="sm"
-            disabled={pending}
+            disabled={previewing}
             onClick={rehearse}
           >
             <SearchIcon />
             一致を表示
           </Button>
-          {preview && (
+          <Link
+            href={searched}
+            className="tap-target ml-auto text-ui font-medium text-ink-2 no-underline hover:text-ink"
+          >
+            番組検索へ
+          </Link>
+        </div>
+
+        {preview && (
+          <div className={cn('mt-2 flex flex-col gap-3', stale && 'grayscale')}>
             <span
               className={cn(
-                'text-sub text-ink-2',
-                stale && 'text-ink-2 [&_b]:text-ink-2',
+                'block text-sub text-ink-2',
+                stale && '[&_b]:text-ink-2',
               )}
             >
               一致 <Count value={preview.matched} /> 件 / 新しく作られる{' '}
@@ -1150,17 +1151,6 @@ function RuleEditor({
               <Count value={preview.alreadyReserved} /> 件 / 競合{' '}
               <Count value={preview.contended} /> 件
             </span>
-          )}
-          <Link
-            href={searched}
-            className="tap-target ml-auto text-note font-bold text-ink-2 underline underline-offset-[3px] hover:text-ink"
-          >
-            番組検索へ
-          </Link>
-        </div>
-
-        {preview && (
-          <div className={cn('flex flex-col gap-3.5', stale && 'grayscale')}>
             <Excluded excluded={preview.excluded} as="p" />
             {preview.takes.length === 0 ? (
               <EmptyState usher={null} title="条件に合う番組がありません" />
@@ -1170,24 +1160,26 @@ function RuleEditor({
                   {preview.takes.map((take) => (
                     <li
                       key={take.id}
-                      className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5 border-b border-dashed border-line py-[calc(7rem/16)] last:border-b-0"
+                      className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-5 gap-y-0.5 border-b border-hair py-2.5 last:border-b-0 max-[700px]:grid-cols-[minmax(0,1fr)_auto]"
                     >
-                      <span className="font-code text-note whitespace-nowrap text-ink-2">
+                      <span className="font-code text-ui whitespace-nowrap text-ink-2 max-[700px]:col-span-2">
                         {take.whenLabel}
                       </span>
-                      <span className="text-note whitespace-nowrap text-ink-2">
-                        {take.channelName}
-                      </span>
-                      <span className="min-w-0 flex-1 text-ui text-ink">
+                      <span className="min-w-0 text-ui font-semibold text-ink">
                         {take.title}
                       </span>
-                      {take.alreadyReserved ? (
-                        <Badge variant="mute">予約済み</Badge>
-                      ) : take.verdict === 'contended' ? (
-                        <Badge variant="err">競合</Badge>
-                      ) : (
-                        <Badge variant="ok">確保</Badge>
-                      )}
+                      <span className="flex items-center justify-end gap-2.5">
+                        <span className="text-ui whitespace-nowrap text-ink-2">
+                          {take.channelName}
+                        </span>
+                        {take.alreadyReserved ? (
+                          <Badge variant="mute">予約済み</Badge>
+                        ) : take.verdict === 'contended' ? (
+                          <Badge variant="err">競合</Badge>
+                        ) : (
+                          <Badge variant="ok">確保</Badge>
+                        )}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -1201,20 +1193,25 @@ function RuleEditor({
             )}
           </div>
         )}
-      </FormSection>
+      </section>
 
-      <div className="mt-3.5 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
+      <div className="mt-6 flex flex-wrap items-center gap-2.5">
+        <Button disabled={pending} onClick={weigh}>
+          保存
+        </Button>
         {rule && (
           <Button variant="danger" disabled={pending} onClick={retire}>
             <TrashIcon />
             削除
           </Button>
         )}
-        <Button variant="ghost" disabled={pending} onClick={onClose}>
+        <Button
+          variant="ghost"
+          disabled={pending}
+          onClick={onClose}
+          className="ml-auto"
+        >
           閉じる
-        </Button>
-        <Button className="ml-auto" disabled={pending} onClick={weigh}>
-          保存
         </Button>
       </div>
 
@@ -1242,7 +1239,7 @@ function RuleEditor({
                 <span className="text-ink-2">件数を数えています。</span>
               )}
             </div>
-            <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
+            <p className="flex items-center gap-2 rounded-md bg-accent-soft px-3.5 py-2.5 text-ui font-medium text-acc-text">
               <WarningIcon className="size-4 shrink-0" />
               削除したルールは元に戻せません。
             </p>
@@ -1306,26 +1303,135 @@ function RuleEditor({
   )
 }
 
-function FormSection({
-  icon,
-  title,
-  required,
+const ON_THE_PANEL = 'rounded-md bg-bg enabled:hover:bg-bg focus-visible:bg-bg'
+
+const TWO_UP = 'grid gap-x-5 gap-y-[calc(18rem/16)] min-[800px]:grid-cols-2'
+
+const SEGMENTS_ON_THE_PANEL = 'w-fit bg-bg'
+
+/** The dot each genre wears in the guide, by the name a search gives the genre. */
+const DOT_OF: Partial<Record<SearchGenre, Genre>> = {
+  news: 'news',
+  sports: 'sports',
+  info: 'info',
+  drama: 'drama',
+  music: 'music',
+  variety: 'variety',
+  movie: 'movie',
+  anime: 'anime',
+  documentary: 'doc',
+}
+
+function RuleLabel({ className, ...props }: ComponentProps<typeof FieldLabel>) {
+  return (
+    <FieldLabel
+      className={cn('text-sub font-semibold text-ink-2', className)}
+      {...props}
+    />
+  )
+}
+
+/** The field a set of picks sits in: the picks as tags, and the way to add one more at their end. */
+function Tags({ children }: { children: ReactNode }) {
+  return (
+    <span className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1.5 rounded-md bg-bg px-1.5 py-1.5">
+      {children}
+    </span>
+  )
+}
+
+function RuleTag({
+  label,
+  spoken,
+  dot,
+  onRemove,
+}: {
+  label: string
+  spoken: string
+  dot?: Genre
+  onRemove: () => void
+}) {
+  return (
+    <span className="inline-flex h-7 items-center gap-1.5 rounded-sm bg-raised pr-1.5 pl-2.5 text-ui font-medium text-ink shadow-[0_0_0_1px_var(--hair)]">
+      <GenreDot genre={dot} />
+      {label}
+      <button
+        type="button"
+        aria-label={spoken}
+        onClick={onRemove}
+        className="tap-target grid size-5 shrink-0 cursor-pointer place-items-center rounded-full text-ink-2 hover:bg-surface-2 hover:text-ink [&_svg]:size-3"
+      >
+        <CloseIcon />
+      </button>
+    </span>
+  )
+}
+
+function AddPick({
+  label,
+  onPick,
   children,
 }: {
-  icon: ReactNode
-  title: string
-  required?: boolean
+  label: string
+  onPick: (value: string) => void
   children: ReactNode
 }) {
   return (
-    <section className="mb-3.5 flex flex-col gap-3.5 last:mb-0">
-      <h3 className="heading flex items-center gap-1.5 text-ui">
-        {icon}
-        {title}
-        {required && <RequiredMark />}
-      </h3>
-      {children}
-    </section>
+    <Select value="" onValueChange={onPick}>
+      <SelectTrigger
+        size="sm"
+        aria-label={label}
+        className="h-7 w-fit gap-1 rounded-sm bg-transparent px-2 text-ui font-medium text-ink-2 enabled:hover:bg-surface-2 [&>svg:last-child]:hidden"
+      >
+        <PlusIcon className="size-3.5" />
+        {label}
+      </SelectTrigger>
+      <SelectContent>{children}</SelectContent>
+    </Select>
+  )
+}
+
+function RuleNumber({
+  field,
+  id,
+  label,
+  value,
+  onChange,
+  range,
+  step,
+  problem,
+}: {
+  field: Named['field']
+  id: string
+  label: string
+  value: string
+  onChange: (next: string) => void
+  range: { least: number; most: number }
+  step: number
+  problem?: Named
+}) {
+  const wrong = problem?.field === field
+
+  return (
+    <Field className="gap-2">
+      <RuleLabel htmlFor={id}>
+        {label}
+        <RequiredMark />
+      </RuleLabel>
+      <Stepper
+        id={id}
+        value={value}
+        onChange={onChange}
+        range={range}
+        step={step}
+        invalid={wrong}
+        describedBy={wrong ? `${id}-error` : undefined}
+        className="bg-bg"
+      />
+      <span aria-live="polite">
+        {wrong && <FieldError id={`${id}-error`}>{problem.text}</FieldError>}
+      </span>
+    </Field>
   )
 }
 
@@ -1377,8 +1483,8 @@ function AppliedLine({
     <div
       data-slot="rule-application"
       className={cn(
-        'mb-3.5 flex items-start gap-2 rounded-xl px-[calc(13rem/16)] py-2.5 text-sub leading-[1.7]',
-        fellShort ? 'bg-lemon-soft text-lemon' : 'bg-mint-soft text-mint',
+        'mt-4 flex items-start gap-2 rounded-lg px-4 py-3 text-sub leading-[1.7]',
+        fellShort ? 'bg-accent-soft text-acc-text' : 'bg-surface text-ink',
       )}
     >
       <Icon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />
@@ -1432,10 +1538,10 @@ function MarkField({
 }) {
   return (
     <Field>
-      <FieldLabel>{label}</FieldLabel>
-      <span className="flex flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
+      <RuleLabel>{label}</RuleLabel>
+      <Tags>
         {marks.map((mark) => (
-          <Pick
+          <RuleTag
             key={mark}
             label={ruleMarkLabelOf(mark)}
             spoken={`${label} ${ruleMarkLabelOf(mark)} を外す`}
@@ -1443,29 +1549,20 @@ function MarkField({
           />
         ))}
         {offered.length > 0 && (
-          <Select
-            value=""
-            onValueChange={(value) =>
+          <AddPick
+            label={`${label}を追加`}
+            onPick={(value) =>
               onChange(ruleMarksInOrder([...marks, value as RuleMark]))
             }
           >
-            <SelectTrigger
-              size="sm"
-              aria-label={`${label}を追加`}
-              className="w-fit rounded-full text-ink-2"
-            >
-              ＋ {label}を追加
-            </SelectTrigger>
-            <SelectContent>
-              {offered.map((option) => (
-                <SelectItem key={option.value} value={option.value}>
-                  {option.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+            {offered.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
+          </AddPick>
         )}
-      </span>
+      </Tags>
     </Field>
   )
 }

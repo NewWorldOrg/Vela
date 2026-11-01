@@ -10,6 +10,7 @@ import { RULES_EVENT } from '@/repository/events'
 import { listPickableChannels } from '@/repository/programs'
 import type { Rule } from '@/repository/rules'
 import { listRules } from '@/repository/rules'
+import { countAheadByRule } from '@/repository/reservations'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import type { RuleEditing } from '@/components/reservations/rules-page'
 import { RulesView } from '@/components/reservations/rules-page'
@@ -53,9 +54,10 @@ export default async function Page({
   searchParams: Promise<Asked>
 }) {
   const params = await searchParams
-  const [result, channels] = await Promise.all([
+  const [result, channels, ahead] = await Promise.all([
     listRules(),
     listPickableChannels(),
+    countAheadByRule().catch(() => undefined),
   ])
 
   return (
@@ -65,6 +67,7 @@ export default async function Page({
         result={result}
         channels={channels}
         editing={editingOf(params, result.items)}
+        ahead={ahead && Object.fromEntries(ahead)}
         actions={{
           onSave: saveRule,
           onDelete: dropRule,
