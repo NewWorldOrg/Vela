@@ -208,7 +208,11 @@ export function QualityView({
         className="mt-4 grid gap-px overflow-hidden rounded-lg bg-hair min-[720px]:grid-cols-2 min-[1120px]:grid-cols-4"
       >
         {result.stats.map((stat) => (
-          <div key={stat.key} className="bg-surface px-4 py-3.5">
+          <div
+            key={stat.key}
+            data-slot="quality-stat"
+            className="bg-surface px-4 py-3.5"
+          >
             <span className="block text-sub font-medium text-ink-2">
               {stat.label}
             </span>

@@ -25,7 +25,10 @@ function Row({ row, trend }: { row: QualityTrendRow; trend: QualityTrend }) {
 
   return (
     <>
-      <InFull says={row.name}>
+      <InFull
+        says={row.name}
+        wraps="col-span-2 flex min-w-0 @[34rem]/trend:col-span-1"
+      >
         <span className="truncate text-note text-ink-2">{row.name}</span>
       </InFull>
       <svg
@@ -92,7 +95,7 @@ function Row({ row, trend }: { row: QualityTrendRow; trend: QualityTrend }) {
             x2={step.x2}
             y1={step.y}
             y2={step.y}
-            className={step.over ? 'stroke-coral' : 'stroke-ink-2'}
+            className={step.over ? 'stroke-rec' : 'stroke-ink-2'}
             strokeWidth={2}
             strokeLinecap="round"
             vectorEffect="non-scaling-stroke"
@@ -151,7 +154,7 @@ function Axis({ trend }: { trend: QualityTrend }) {
 
 export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
   return (
-    <Surface>
+    <Surface className="px-4 @container/trend">
       <SectionHeading>{HEADING}</SectionHeading>
       <SegmentedControl
         aria-label={SUBJECT}
@@ -160,11 +163,11 @@ export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
         className="mb-3"
       />
       {trend.rows.length > 0 ? (
-        <div className="grid grid-cols-[minmax(0,min(8.5rem,30%))_minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2">
+        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-2 gap-y-2 @[34rem]/trend:gap-x-3 @[34rem]/trend:grid-cols-[minmax(0,min(8.5rem,30%))_minmax(0,1fr)_auto]">
           {trend.rows.map((row) => (
             <Row key={row.key} row={row} trend={trend} />
           ))}
-          <span aria-hidden="true" />
+          <span aria-hidden="true" className="hidden @[34rem]/trend:block" />
           <Axis trend={trend} />
           <span aria-hidden="true" />
         </div>
