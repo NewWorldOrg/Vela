@@ -6,7 +6,7 @@ import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { TableCell, TableRow } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
 import { WHEN_LABELS } from '@/lib/when-terms'
-import { OriginCell } from '@/components/reservations/origin-cell'
+import { ListIcon } from '@/components/vela/icons'
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/vela/icons'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { OutcomeKindChip } from '@/components/reservations/outcome-kind-chip'
@@ -14,7 +14,33 @@ import { Unfold } from '@/components/vela/unfold'
 
 const GONE = '記録が残っていません'
 
-export const OUTCOME_COLUMN_COUNT = 8
+export const OUTCOME_COLUMN_COUNT = 7
+
+/** Where the reservation came from, on the line under its title: the rule by name, or how it was made. */
+function OriginLine({
+  origin,
+  ruleName,
+}: {
+  origin: string
+  ruleName?: string
+}) {
+  return (
+    <span
+      data-slot="outcome-origin"
+      className="mt-0.5 flex items-start gap-1.5 text-sub text-ink-2"
+    >
+      <span className="sr-only">由来</span>
+      {ruleName ? (
+        <>
+          <ListIcon className="mt-[calc(4rem/16)] size-3 shrink-0" />
+          <span className="min-w-0 text-pretty wrap-anywhere">{ruleName}</span>
+        </>
+      ) : (
+        origin
+      )}
+    </span>
+  )
+}
 
 export function OutcomeRow({
   outcome,
@@ -53,6 +79,7 @@ export function OutcomeRow({
           <b className="block text-ui font-semibold text-ink">
             {outcome.title}
           </b>
+          <OriginLine origin={outcome.origin} ruleName={outcome.ruleName} />
         </TableCell>
         <TableCell {...cardPlace('meta')} className="align-top">
           <span className="flex items-center gap-2">
@@ -70,7 +97,6 @@ export function OutcomeRow({
         >
           {outcome.whenLabel}
         </TableCell>
-        <OriginCell origin={outcome.origin} ruleName={outcome.ruleName} />
         <TableCell
           {...cardPlace('field', '優先度')}
           className="text-right align-top font-code tabular-nums text-ink-2"

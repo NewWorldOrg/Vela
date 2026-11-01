@@ -41,7 +41,7 @@ const FAILURES: [string, string][] = [
   ['山あいの町から', '録画失敗'],
 ]
 
-const KIND_COLUMN = 6
+const KIND_COLUMN = 5
 
 const meta = {
   title: 'Screens/失敗台帳',
@@ -72,7 +72,7 @@ export const 通常: Story = {
       canvas
         .getAllByRole('row')
         .slice(1)
-        .map((row) => within(row).getAllByRole('cell')[7].textContent),
+        .map((row) => within(row).getAllByRole('cell')[6].textContent),
     ).toEqual(['2026/09/02 02:31', '2026/08/27 22:41', '2026/08/27 19:56'])
 
     for (const row of canvas.getAllByRole('row').slice(1)) {
@@ -304,7 +304,7 @@ export const 札の並び: Story = {
   },
 }
 
-const ORIGIN_COLUMN = 4
+const TITLE_COLUMN = 1
 
 const A_LONG_RULE_NAME =
   '毎週の深夜アニメの新番組の第一話だけを録って、学習に使い終えたら動画を消しておく'
@@ -324,19 +324,46 @@ export const 長い由来: Story = {
     const rows = canvas.getAllByRole('row').slice(1)
 
     await expect(rows.length).toBe(OUTCOME_FIXTURES.length)
+    await expect(
+      canvas.queryByRole('columnheader', { name: '由来' }),
+    ).not.toBeInTheDocument()
 
     for (const row of rows) {
-      const origin = cellOf(row, ORIGIN_COLUMN)
+      const title = cellOf(row, TITLE_COLUMN)
+      const origin = title.querySelector<HTMLElement>(
+        '[data-slot="outcome-origin"]',
+      )!
       const name = within(origin).getByText(A_LONG_RULE_NAME)
       const said = name.getBoundingClientRect()
-      const cell = origin.getBoundingClientRect()
-      const next = cellOf(row, ORIGIN_COLUMN + 1).getBoundingClientRect()
+      const cell = title.getBoundingClientRect()
+      const next = cellOf(row, TITLE_COLUMN + 1).getBoundingClientRect()
       const line = parseFloat(getComputedStyle(name).lineHeight)
 
+      await expect(origin).toHaveTextContent(/^由来/)
+      await expect(said.top).toBeGreaterThan(
+        within(title)
+          .getByText(row.querySelector('b')!.textContent!)
+          .getBoundingClientRect().top,
+      )
       await expect(said.right).toBeLessThanOrEqual(cell.right)
       await expect(cell.right).toBeLessThanOrEqual(next.left)
       await expect(said.height).toBeGreaterThanOrEqual(line * 2)
     }
+  },
+}
+
+export const 幅1180でも横に送らない: Story = {
+  args: { result: outcomeLedger(EVERY_KIND_FIXTURES) },
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    const table = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="table-container"]',
+    )!
+
+    await expect(table.scrollWidth).toBeLessThanOrEqual(table.clientWidth)
+    await expect(
+      within(canvasElement).getByRole('columnheader', { name: '取得日時' }),
+    ).toBeVisible()
   },
 }
 
