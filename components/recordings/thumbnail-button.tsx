@@ -69,9 +69,12 @@ export function redrawsThumbnail(recording: Recording): boolean {
 export function ThumbnailButton({
   recording,
   onRemake,
+  quiet,
 }: {
   recording: Recording
   onRemake: (id: string) => Promise<ThumbnailWrite>
+  /** A light press as wide as the column it stands in, under the main ones. */
+  quiet?: boolean
 }) {
   const [pending, startTransition] = useTransition()
   const [notice, setNotice] = useState<{ drew: boolean; text: string }>()
@@ -98,10 +101,13 @@ export function ThumbnailButton({
   return (
     <div
       data-slot="thumbnail-action"
-      className="flex flex-col items-start gap-1.5"
+      className={cn(
+        'flex flex-col gap-1.5',
+        quiet ? 'items-stretch' : 'items-start',
+      )}
     >
       <Button
-        variant="tone"
+        variant={quiet ? 'ghost' : 'tone'}
         disabled={refused !== undefined}
         title={refused}
         aria-disabled={pending}

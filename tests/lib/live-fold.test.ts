@@ -38,19 +38,19 @@ test('a remembered fold is drawn, not played', () => {
   assert.equal(foldBand(STILL), 'translate-x-0')
   assert.equal(foldBandDelay(0, undefined), undefined)
   assert.equal(foldBandDelay(3, STILL), undefined)
-  assert.equal(foldColumn(false, undefined), 'w-[calc(344rem/16)]')
+  assert.equal(foldColumn(false, undefined), 'w-[calc(372rem/16)]')
   assert.equal(foldColumn(true, STILL), 'w-11')
 })
 
 test('a band arrives from the fold side and leaves the same way', () => {
   assert.match(
     foldBand(OPENING),
-    /starting:translate-x-\[calc\(min\(100%,344rem\/16\)\+14rem\/16\)\]/,
+    /starting:translate-x-\[calc\(min\(100%,372rem\/16\)\+14rem\/16\)\]/,
   )
   assert.match(foldBand(OPENING), /(^|\s)translate-x-0(\s|$)/)
   assert.match(
     foldBand(CLOSING),
-    /(^|\s)translate-x-\[calc\(min\(100%,344rem\/16\)\+14rem\/16\)\](\s|$)/,
+    /(^|\s)translate-x-\[calc\(min\(100%,372rem\/16\)\+14rem\/16\)\](\s|$)/,
   )
   assert.doesNotMatch(foldBand(CLOSING), /starting:/)
 })
@@ -94,7 +94,7 @@ test('a fold turned round mid-flight moves every band at once', () => {
 test('the column opens with the first band and closes behind the last one', () => {
   assert.match(
     foldColumn(false, OPENING),
-    /(^|\s)w-\[calc\(344rem\/16\)\](\s|$)/,
+    /(^|\s)w-\[calc\(372rem\/16\)\](\s|$)/,
   )
   assert.doesNotMatch(foldColumn(false, OPENING), /delay-/)
   assert.match(foldColumn(true, CLOSING), /(^|\s)w-11(\s|$)/)
@@ -130,7 +130,7 @@ test('the column unfolds to show the remote while the data broadcast is open, an
 test("a column that stands only while the data broadcast is open keeps the fold's widths after the gap from the player", () => {
   assert.match(
     foldColumnBeside(false, STILL),
-    /(^|\s)w-\[calc\(344rem\/16\)\](\s|$)/,
+    /(^|\s)w-\[calc\(372rem\/16\)\](\s|$)/,
   )
   assert.match(foldColumnBeside(true, STILL), /(^|\s)w-11(\s|$)/)
 
@@ -139,7 +139,7 @@ test("a column that stands only while the data broadcast is open keeps the fold'
     foldColumnBeside(false, OPENING),
     foldColumnBeside(true, CLOSING),
   ]) {
-    assert.match(classes, /(^|\s)ml-\[calc\(26rem\/16\)\](\s|$)/)
+    assert.match(classes, /(^|\s)ml-8(\s|$)/)
   }
 })
 

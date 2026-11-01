@@ -12,7 +12,8 @@ import {
   QUALITY_EVENT,
   RECORDINGS_EVENT,
 } from '@/repository/events'
-import { getRecording } from '@/repository/recordings'
+import { getRecording, listRecordings } from '@/repository/recordings'
+import { seriesNameOf } from '@/lib/library-series'
 import { getSegmentModelVersion } from '@/repository/recording-segments'
 import { DECODES_COOKIE, decodesOf } from '@/lib/browser-decodes'
 import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
@@ -100,6 +101,7 @@ export default async function Page({
     encodeJob,
     artefact,
     modelVersion,
+    everyRecording,
   ] = await Promise.all([
     getRecording(id),
     decodesCarinaTakes(decodes).then((told) =>
@@ -115,11 +117,21 @@ export default async function Page({
       return undefined
     }),
     getSegmentModelVersion(id),
+    listRecordings({}).catch((error: unknown) => {
+      console.warn('[recording] the series was not read', id, error)
+
+      return undefined
+    }),
   ])
 
   if (!detail) {
     notFound()
   }
+
+  const series = seriesNameOf(detail.title)
+  const episodes = (everyRecording?.items ?? [])
+    .filter((one) => one.id !== id && seriesNameOf(one.title) === series)
+    .sort((a, b) => b.startedAt.localeCompare(a.startedAt))
 
   return (
     <>
@@ -153,6 +165,7 @@ export default async function Page({
         }
         onNoteSkip={noteTheSkip}
         onNoteSeek={noteTheSeek}
+        episodes={episodes}
       />
     </>
   )

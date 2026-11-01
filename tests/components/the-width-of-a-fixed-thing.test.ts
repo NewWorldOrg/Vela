@@ -152,13 +152,13 @@ test('the mark on the volume sits on the line it reads against', async () => {
 
     assert.match(
       track,
-      /calc\(var\(--volume-dot\) \/ 2\) 50% \/\s*calc\(100% - var\(--volume-dot\)\) 2px/,
+      /calc\(var\(--volume-dot\) \/ 2\) 50% \/\s*calc\(100% - var\(--volume-dot\)\) 4px/,
       `${part} draws the line past the centres the mark can reach, so at full ` +
         'volume the mark stops short of its end',
     )
     assert.match(
       track,
-      /calc\(\(100% - var\(--volume-dot\)\) \* var\(--volume-ratio, 0\)\) 2px/,
+      /calc\(\(100% - var\(--volume-dot\)\) \* var\(--volume-ratio, 0\)\) 4px/,
       `${part} lights the line past the centre of the mark`,
     )
   }
