@@ -111,11 +111,18 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+      className="flex flex-col px-3.5 pt-3.5 pb-6 phone:pt-1 min-[701px]:px-6 min-[1366px]:px-10"
     >
-      <ReservationTabs current="outcomes" />
+      <ReservationTabs
+        current="outcomes"
+        count={
+          <>
+            <span className="font-code">{total}</span> 件
+          </>
+        }
+      />
 
-      <div className="mb-3.5 flex flex-wrap items-center gap-x-3.5 gap-y-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
+      <div className="mt-4 mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-3 phone:mt-1">
         <SegmentedControl
           label="分類"
           options={KIND_OPTIONS}
@@ -124,26 +131,28 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
             change({ kind: next === EVERY ? null : next })
           }
         />
-        <FilterSelect
-          label="期間"
-          value={filter.days}
-          options={OUTCOME_SPANS}
-          onChange={(next) => change({ days: next })}
-        />
-        <FilterSelect
-          label="チャンネル"
-          value={filter.ch}
-          options={channels}
-          onChange={(next) => change({ ch: next })}
-        />
-        <FilterSelect
-          label="ルール"
-          value={filter.rule}
-          options={rules}
-          onChange={(next) => change({ rule: next })}
-        />
-        <span className="ml-auto text-sub whitespace-nowrap text-ink-2 max-[900px]:ml-0">
-          全 <b className="font-code font-medium text-ink">{total}</b> 件
+        <div className="ml-auto flex flex-wrap items-center gap-x-2.5 gap-y-3 max-[900px]:ml-0">
+          <FilterSelect
+            label="期間"
+            value={filter.days}
+            options={OUTCOME_SPANS}
+            onChange={(next) => change({ days: next })}
+          />
+          <FilterSelect
+            label="チャンネル"
+            value={filter.ch}
+            options={channels}
+            onChange={(next) => change({ ch: next })}
+          />
+          <FilterSelect
+            label="ルール"
+            value={filter.rule}
+            options={rules}
+            onChange={(next) => change({ rule: next })}
+          />
+        </div>
+        <span className="hidden text-sub whitespace-nowrap text-ink-2 phone:inline">
+          全 <span className="font-code">{total}</span> 件
         </span>
       </div>
 

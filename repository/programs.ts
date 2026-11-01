@@ -670,13 +670,17 @@ function guideDays(): GuideDay[] {
   return days
 }
 
-export function genreDisplayOf(programme: Programme): {
+export function genreDisplayOf(programme: {
+  genres: readonly { kind: number | string }[]
+}): {
   slug: Genre
   label: string
 } {
   const genreKind = programme.genres[0]?.kind
 
-  return (genreKind != null ? GENRES[genreKind] : undefined) ?? GENRE_OTHER
+  return (
+    (genreKind != null ? GENRES[toInt(genreKind)] : undefined) ?? GENRE_OTHER
+  )
 }
 
 export function calendarDateOf(at: Date): string {

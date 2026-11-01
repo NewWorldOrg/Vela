@@ -67,6 +67,7 @@ const NAVIGATION: [string, ComponentType<IconProps>][] = [
 
 const ACTIONS: [string, ComponentType<IconProps>][] = [
   ['PlusIcon', Icons.PlusIcon],
+  ['MinusIcon', Icons.MinusIcon],
   ['EditIcon', Icons.EditIcon],
   ['TrashIcon', Icons.TrashIcon],
   ['SearchIcon', Icons.SearchIcon],

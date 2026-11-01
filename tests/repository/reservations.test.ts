@@ -642,10 +642,11 @@ test('a counterpart is spelled by its channel and its clock', async () => {
   )
 })
 
-test('the headline counts the streams, not the reservations', async () => {
+test('the line under the headline counts the streams and the programmes on them', async () => {
   const conflict = await contended()
 
-  assert.equal(conflict.headline, '同時刻に地上波チューナー 2 本が録画予定です')
+  assert.equal(conflict.headline, '録画が重なっています')
+  assert.equal(conflict.body, '地上波のチューナー 2 本に 3 番組')
 })
 
 test('raising the priority asks for one above the highest counterpart', async () => {

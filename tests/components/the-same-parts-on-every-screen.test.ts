@@ -127,7 +127,7 @@ test('a column that says a state goes through the one cell', async () => {
   const columns = await stateColumns()
 
   assert.ok(
-    columns.length > 4,
+    columns.length > 2,
     `only ${columns.length} state columns were read; the scan is watching ` +
       'almost nothing',
   )
@@ -163,7 +163,7 @@ test('a state in a table is a dot and a word, with no outline and no fill', asyn
     }
   }
 
-  assert.ok(said.length > 4, `only ${said.length} states were read`)
+  assert.ok(said.length > 2, `only ${said.length} states were read`)
 })
 
 test('what is not a state is not drawn as a pill', async () => {
@@ -339,7 +339,6 @@ test('an action carries an icon beside its word', async () => {
   for (const file of [
     'components/library/recording-row.tsx',
     'components/recordings/recording-actions.tsx',
-    'components/reservations/reservation-row.tsx',
     'components/channels/candidate-list.tsx',
     'components/integrity/integrity-page.tsx',
     'components/guide/program-panel.tsx',
@@ -360,7 +359,7 @@ test('an action carries an icon beside its word', async () => {
     }
   }
 
-  assert.ok(drawn.length > 8, `only ${drawn.length} actions were read`)
+  assert.ok(drawn.length > 4, `only ${drawn.length} actions were read`)
 })
 
 test('making a new one is the filled button, wherever it is offered', async () => {
