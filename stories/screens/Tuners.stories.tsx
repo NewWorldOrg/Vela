@@ -13,7 +13,11 @@ import {
 import { TunersView } from '@/components/tuners/tuners-page'
 import { tipIn } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
-import { FROM_600, PHONE } from '@/stories/rows-as-cards'
+import { PHONE } from '@/stories/rows-as-cards'
+
+const WIDE = { width: 1440, height: 900 }
+
+const LANDSCAPE_PHONE = { width: 844, height: 390 }
 
 function lineOf(canvasElement: HTMLElement, id: string): HTMLElement {
   const line = canvasElement.querySelector<HTMLElement>(
@@ -449,7 +453,9 @@ export const サービスが0件の種別を最上部で言う: Story = {
 }
 
 function placeOfParts(line: HTMLElement) {
-  const [what, state] = Array.from(line.children) as HTMLElement[]
+  const [what, state] = Array.from(
+    line.firstElementChild?.children ?? [],
+  ) as HTMLElement[]
 
   return {
     what: what.getBoundingClientRect(),
@@ -468,14 +474,25 @@ export const 電話の幅では状態を名前の下に置く: Story = {
   },
 }
 
-export const 幅600pxからは状態を名前の右に置く: Story = {
+export const 広い面では状態を名前の右に置く: Story = {
   args: 通常.args,
-  parameters: { screen: FROM_600 },
+  parameters: { screen: WIDE },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
     const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
 
     await expect(state.left).toBeGreaterThanOrEqual(what.right)
+  },
+}
+
+export const 横向きの電話でも面が狭ければ状態を名前の下に置く: Story = {
+  args: 通常.args,
+  parameters: { screen: LANDSCAPE_PHONE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
+
+    await expect(state.top).toBeGreaterThanOrEqual(what.bottom - 1)
   },
 }
 

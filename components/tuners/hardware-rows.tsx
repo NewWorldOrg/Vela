@@ -52,34 +52,38 @@ export function HardwareLine({
       id={id}
       data-slot="hardware-line"
       className={cn(
-        'relative grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3',
-        'min-[600px]:grid-cols-[minmax(0,1fr)_calc(232rem/16)_auto]',
+        '@container/line relative',
         'before:absolute before:top-0 before:right-0 before:left-4 before:h-px before:bg-hair first:before:hidden',
       )}
     >
-      <div className="min-w-0">
-        <p
-          className={cn(
-            'truncate text-[calc(14.5rem/16)] leading-5 font-medium text-ink',
-            code && 'font-code text-ui',
-          )}
-        >
-          {title}
-        </p>
-        {sub && (
-          <p className="mt-0.5 truncate text-sub leading-[1.45] text-ink-2">
-            {sub}
-          </p>
+      <div
+        className={cn(
+          'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3',
+          '@[36rem]/line:grid-cols-[minmax(0,1fr)_calc(200rem/16)_calc(148rem/16)]',
         )}
-      </div>
-      <div className="col-start-1 row-start-2 min-w-0 min-[600px]:col-start-2 min-[600px]:row-start-1">
-        <StatusSaid status={status} why={why} />
-      </div>
-      {controls && (
-        <div className="col-start-2 row-span-2 row-start-1 flex items-center justify-end gap-3 min-[600px]:col-start-3 min-[600px]:row-span-1">
+      >
+        <div className="min-w-0">
+          <p
+            className={cn(
+              'truncate text-[calc(14.5rem/16)] leading-5 font-medium text-ink',
+              code && 'font-code text-ui',
+            )}
+          >
+            {title}
+          </p>
+          {sub && (
+            <p className="mt-0.5 text-sub leading-[1.45] break-all text-ink-2 @[36rem]/line:truncate">
+              {sub}
+            </p>
+          )}
+        </div>
+        <div className="col-start-1 row-start-2 min-w-0 @[36rem]/line:col-start-2 @[36rem]/line:row-start-1">
+          <StatusSaid status={status} why={why} />
+        </div>
+        <div className="col-start-2 row-span-2 row-start-1 flex items-center justify-end gap-3 @[36rem]/line:col-start-3 @[36rem]/line:row-span-1">
           {controls}
         </div>
-      )}
+      </div>
     </div>
   )
 }
@@ -103,7 +107,7 @@ export function StatusSaid({
     )
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 min-[600px]:block">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 @[36rem]/line:block">
       {why ? (
         <InFull says={why} wraps={tipBoxOf(status.tone === 'plain')}>
           {word}
@@ -112,7 +116,7 @@ export function StatusSaid({
         word
       )}
       {status.line && (
-        <p className="truncate text-sub leading-[1.45] text-ink-2 tabular-nums min-[600px]:mt-0.5">
+        <p className="truncate text-sub leading-[1.45] text-ink-2 tabular-nums @[36rem]/line:mt-0.5">
           {status.line}
         </p>
       )}
