@@ -72,7 +72,7 @@ export function Pager({
             className={cn(
               'tap-target flex h-[calc(29rem/16)] min-w-[calc(29rem/16)] cursor-pointer items-center justify-center rounded-full border px-2.5 font-code text-sub shadow-pop transition-[translate,box-shadow,color] duration-150 ease-toy hover:shadow-pop-lg active:shadow-pop-none',
               item === page
-                ? 'border-btn-fill bg-btn-fill text-on-btn'
+                ? 'border-transparent bg-accent-tint font-bold text-acc-text'
                 : 'border-line-strong bg-surface text-ink-2 hover:text-ink',
             )}
           >

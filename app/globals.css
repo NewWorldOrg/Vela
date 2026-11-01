@@ -226,6 +226,10 @@
     --on-ink: #ffffff;
     --accent: #f2483a;
     --accent-soft: rgba(242, 72, 58, 0.12);
+    --accent-tint: #fde9e7;
+    --accent-fill: #da3324;
+    --accent-fill-hover: #c42b1e;
+    --on-accent: #ffffff;
     --acc-text: #b8291f;
     --lift: 0 1px 2px rgba(16, 16, 20, 0.06), 0 6px 18px rgba(16, 16, 20, 0.08);
     --lift-up:
@@ -284,6 +288,10 @@
       --on-ink: #0e0e10;
       --accent: #ff6153;
       --accent-soft: rgba(255, 97, 83, 0.16);
+      --accent-tint: #3f2526;
+      --accent-fill: #da3324;
+      --accent-fill-hover: #c42b1e;
+      --on-accent: #ffffff;
       --acc-text: #ff8378;
       --lift: 0 1px 2px rgba(0, 0, 0, 0.4), 0 8px 24px rgba(0, 0, 0, 0.45);
       --lift-up: 0 -1px 2px rgba(0, 0, 0, 0.3), 0 -8px 24px rgba(0, 0, 0, 0.35);
@@ -331,11 +339,11 @@
     --line: var(--hair);
     --line-strong: var(--hair-strong);
     --edge: var(--hair-strong);
-    --brand: var(--ink);
-    --brand-hover: var(--ink);
-    --on-brand: var(--on-ink);
-    --brand-soft: var(--surface-2);
-    --brand-line: var(--hair-strong);
+    --brand: var(--acc-text);
+    --brand-hover: var(--acc-text);
+    --on-brand: var(--on-accent);
+    --brand-soft: var(--accent-tint);
+    --brand-line: transparent;
     --btn-fill: var(--btn);
     --btn-fill-hover: var(--btn-hover);
     --on-btn: var(--on-ink);
@@ -395,7 +403,7 @@
     --fold-lit: var(--surface);
     --fold-cord: var(--ink-3);
     --pop: transparent;
-    --ring: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--ink);
+    --ring: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent);
   }
 
   @media (prefers-reduced-motion: reduce) {
@@ -551,6 +559,10 @@
   --color-on-ink: var(--on-ink);
   --color-accent: var(--accent);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-tint: var(--accent-tint);
+  --color-accent-fill: var(--accent-fill);
+  --color-accent-fill-hover: var(--accent-fill-hover);
+  --color-on-accent: var(--on-accent);
   --color-acc-text: var(--acc-text);
   --color-toast: var(--toast);
   --color-on-toast: var(--on-toast);
@@ -661,8 +673,8 @@
   --color-card-foreground: var(--ink);
   --color-popover: var(--raised);
   --color-popover-foreground: var(--ink);
-  --color-primary: var(--btn);
-  --color-primary-foreground: var(--on-ink);
+  --color-primary: var(--accent-fill);
+  --color-primary-foreground: var(--on-accent);
   --color-secondary: var(--surface-2);
   --color-secondary-foreground: var(--ink);
   --color-muted: var(--surface-2);
@@ -671,7 +683,7 @@
   --color-destructive-foreground: var(--on-ink);
   --color-border: var(--hair);
   --color-input: var(--surface);
-  --color-ring: var(--ink);
+  --color-ring: var(--accent);
 
   --radius-sm: var(--r-s);
   --radius-md: var(--r-m);

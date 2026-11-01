@@ -25,7 +25,7 @@ const THE_VARIANTS = ['default', 'tone', 'ghost', 'danger', 'dangerFill']
 
 /** The ground and the word each kind of press is drawn in, as the canon's table of buttons pairs them. */
 const BY_KIND: Record<string, [string, string]> = {
-  default: ['bg-btn', 'text-on-ink'],
+  default: ['bg-accent-fill', 'text-on-accent'],
   tone: ['bg-surface-2', 'text-ink'],
   ghost: ['bg-transparent', 'text-ink-2'],
   danger: ['bg-transparent', 'text-acc-text'],
