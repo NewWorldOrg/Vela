@@ -43,7 +43,7 @@ export function RecordingThumb({
       data-thumbnail={recording.thumbnail}
       className={cn(
         'flex h-[calc(54rem/16)] w-[calc(96rem/16)] shrink-0 flex-col items-center justify-center gap-px overflow-hidden rounded-sm bg-surface-2 text-ink-2',
-        recording.thumbnail === 'error' && 'bg-accent-soft text-acc-text',
+        recording.thumbnail === 'error' && 'bg-rec-soft text-rec-text',
         className,
       )}
     >
