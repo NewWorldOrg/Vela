@@ -30,7 +30,7 @@ function RadioGroupItem({
         'transition-[background-color,box-shadow] duration-[140ms] ease-toy',
         'enabled:hover:bg-surface-3',
         'data-[state=checked]:bg-accent-fill data-[state=checked]:shadow-none enabled:data-[state=checked]:hover:bg-accent-fill-hover',
-        'focus-visible:shadow-ring aria-invalid:bg-accent-soft',
+        'focus-visible:shadow-ring aria-invalid:bg-rec-soft',
         'disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}

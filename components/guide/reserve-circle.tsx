@@ -25,11 +25,11 @@ const RING: Record<CircleMark, string> = {
   recording: 'bg-black/6 dark:bg-white/10',
 }
 
-/** Not yet: a hollow ring. Booked or recording: the accent's ring, filled. */
+/** Not yet: a hollow ring. Booked: an amber ring, filled. Recording: a red one. */
 const DOT: Record<CircleMark, string> = {
   none: 'border-[1.5px] border-ink-2',
-  booked: 'border-[1.5px] border-accent bg-accent bg-clip-content p-[2px]',
-  recording: 'border-[1.5px] border-accent bg-accent bg-clip-content p-[2px]',
+  booked: 'border-[1.5px] border-warn bg-warn bg-clip-content p-[2px]',
+  recording: 'border-[1.5px] border-rec bg-rec bg-clip-content p-[2px]',
 }
 
 function said(written: ReservationWrite): string {
