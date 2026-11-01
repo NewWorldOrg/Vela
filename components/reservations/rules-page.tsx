@@ -1334,7 +1334,7 @@ function RuleLabel({ className, ...props }: ComponentProps<typeof FieldLabel>) {
 /** The field a set of picks sits in: the picks as tags, and the way to add one more at their end. */
 function Tags({ children }: { children: ReactNode }) {
   return (
-    <span className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-1.5 rounded-md bg-bg px-1.5 py-1.5">
+    <span className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-4 rounded-md bg-bg px-1.5 py-1.5">
       {children}
     </span>
   )
