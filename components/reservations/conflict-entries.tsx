@@ -9,13 +9,19 @@ export function ConflictEntries({
   className?: string
 }) {
   return (
-    <div className={cn('space-y-1.5', className)}>
+    <div className={cn(className)}>
       {entries.map((entry, at) => (
         <div
           key={`${entry.title}-${at}`}
-          className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub text-ink"
+          data-slot="conflict-entry"
+          className="flex flex-wrap items-center gap-x-3 gap-y-0.5 border-t border-hair py-2 text-sub text-ink first:border-t-0"
         >
-          <span className="min-w-0 flex-1 font-medium">{entry.title}</span>
+          <span
+            data-slot="conflict-entry-title"
+            className="min-w-0 flex-1 font-semibold"
+          >
+            {entry.title}
+          </span>
           <span className="font-code text-ink-2">{entry.meta}</span>
           <span className="text-ink-2">{entry.ruleName ?? entry.origin}</span>
         </div>

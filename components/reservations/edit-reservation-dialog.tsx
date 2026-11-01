@@ -14,6 +14,7 @@ import type {
   ReservationRevision,
   ReservationWrite,
 } from '@/repository/reservations'
+import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -33,10 +34,13 @@ import {
   FieldLabel,
   RequiredMark,
 } from '@/components/vela/field'
+import { Stepper } from '@/components/reservations/stepper'
 
 type Named = 'priority' | 'before' | 'after'
 
 const SIGNED_OUT = signedOut('操作')
+
+const MARGIN_STEP = 10
 
 const NOTHING_CHANGED = '変える値がありません。どれかを書き換えてください。'
 
@@ -54,10 +58,13 @@ export function EditReservationDialog({
   open,
   onOpenChange,
   onRevise,
-  inline = false,
+  layout = 'dialog',
 }: {
-  /** Drawn in the page's flow under the row it changes, as a phone held upright opens it, rather than as a dialog. */
-  inline?: boolean
+  /**
+   * `dialog` opens over the screen; `row` is drawn across the reservation it changes, under its row in the list; `stack`
+   * puts the fields one under another, under a row on a phone.
+   */
+  layout?: 'dialog' | 'row' | 'stack'
   booking: Booking
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -163,111 +170,122 @@ export function EditReservationDialog({
     })
   }
 
+  const inline = layout !== 'dialog'
   const ids = inline ? `-${booking.id}` : ''
+  const number = (
+    field: Named,
+    id: string,
+    label: string,
+    value: string,
+    onChange: (next: string) => void,
+    range: { least: number; most: number },
+    step: number,
+  ) => (
+    <Field className={cn(layout === 'row' && 'gap-2')}>
+      <FieldLabel
+        htmlFor={`${id}${ids}`}
+        className={cn(inline && 'text-sub font-semibold text-ink-2')}
+      >
+        {label}
+        <RequiredMark />
+      </FieldLabel>
+      {inline ? (
+        <Stepper
+          id={`${id}${ids}`}
+          value={value}
+          onChange={onChange}
+          range={range}
+          step={step}
+          invalid={problem?.field === field}
+          describedBy={
+            problem?.field === field ? `${id}-error${ids}` : undefined
+          }
+        />
+      ) : (
+        <>
+          <Input
+            id={`${id}${ids}`}
+            inputMode="numeric"
+            value={value}
+            aria-invalid={problem?.field === field || undefined}
+            aria-describedby={
+              problem?.field === field ? `${id}-error${ids}` : undefined
+            }
+            onChange={(event) => onChange(event.target.value)}
+          />
+          <FieldHint>
+            {range.least} 〜 {range.most}
+          </FieldHint>
+        </>
+      )}
+      <span aria-live="polite">
+        {problem?.field === field && (
+          <FieldError id={`${id}-error${ids}`}>{problem.text}</FieldError>
+        )}
+      </span>
+    </Field>
+  )
   const fields = (
     <div
       data-slot="dialog-body"
-      className="flex min-h-0 flex-col gap-4 overflow-y-auto"
+      className={cn(
+        'flex min-h-0',
+        layout === 'row'
+          ? 'flex-wrap items-start gap-x-[calc(22rem/16)] gap-y-4'
+          : 'flex-col gap-4 overflow-y-auto',
+      )}
     >
-      <Field>
-        <FieldLabel htmlFor={`reservation-priority${ids}`}>
-          優先度
-          <RequiredMark />
-        </FieldLabel>
-        <Input
-          id={`reservation-priority${ids}`}
-          inputMode="numeric"
-          value={priority}
-          aria-invalid={problem?.field === 'priority' || undefined}
-          aria-describedby={
-            problem?.field === 'priority'
-              ? `reservation-priority-error${ids}`
-              : undefined
-          }
-          onChange={(event) => setPriority(event.target.value)}
-        />
-        <FieldHint>
-          {PRIORITY_RANGE.least} 〜 {PRIORITY_RANGE.most}
-        </FieldHint>
-        <span aria-live="polite">
-          {problem?.field === 'priority' && (
-            <FieldError id={`reservation-priority-error${ids}`}>
-              {problem.text}
-            </FieldError>
-          )}
-        </span>
-      </Field>
+      {number(
+        'priority',
+        'reservation-priority',
+        '優先度',
+        priority,
+        setPriority,
+        PRIORITY_RANGE,
+        1,
+      )}
+      {number(
+        'before',
+        'reservation-margin-before',
+        '前マージン(秒)',
+        before,
+        setBefore,
+        MARGIN_RANGE,
+        MARGIN_STEP,
+      )}
+      {number(
+        'after',
+        'reservation-margin-after',
+        '後マージン(秒)',
+        after,
+        setAfter,
+        MARGIN_RANGE,
+        MARGIN_STEP,
+      )}
 
-      <Field>
-        <FieldLabel htmlFor={`reservation-margin-before${ids}`}>
-          前マージン(秒)
-          <RequiredMark />
-        </FieldLabel>
-        <Input
-          id={`reservation-margin-before${ids}`}
-          inputMode="numeric"
-          value={before}
-          aria-invalid={problem?.field === 'before' || undefined}
-          aria-describedby={
-            problem?.field === 'before'
-              ? `reservation-margin-before-error${ids}`
-              : undefined
-          }
-          onChange={(event) => setBefore(event.target.value)}
-        />
-        <FieldHint>
-          {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
-        </FieldHint>
-        <span aria-live="polite">
-          {problem?.field === 'before' && (
-            <FieldError id={`reservation-margin-before-error${ids}`}>
-              {problem.text}
-            </FieldError>
-          )}
-        </span>
-      </Field>
-
-      <Field>
-        <FieldLabel htmlFor={`reservation-margin-after${ids}`}>
-          後マージン(秒)
-          <RequiredMark />
-        </FieldLabel>
-        <Input
-          id={`reservation-margin-after${ids}`}
-          inputMode="numeric"
-          value={after}
-          aria-invalid={problem?.field === 'after' || undefined}
-          aria-describedby={
-            problem?.field === 'after'
-              ? `reservation-margin-after-error${ids}`
-              : undefined
-          }
-          onChange={(event) => setAfter(event.target.value)}
-        />
-        <FieldHint>
-          {MARGIN_RANGE.least} 〜 {MARGIN_RANGE.most}
-        </FieldHint>
-        <span aria-live="polite">
-          {problem?.field === 'after' && (
-            <FieldError id={`reservation-margin-after-error${ids}`}>
-              {problem.text}
-            </FieldError>
-          )}
-        </span>
-      </Field>
-
-      <div className="flex flex-wrap items-center gap-2.5">
+      <div
+        className={cn(
+          'flex flex-wrap items-center gap-2.5',
+          layout === 'row' && 'h-9 self-end',
+        )}
+      >
         <Switch
           id={`reservation-encode${ids}`}
           checked={encode}
           onCheckedChange={setEncode}
         />
-        <FieldLabel htmlFor={`reservation-encode${ids}`}>
+        <FieldLabel
+          htmlFor={`reservation-encode${ids}`}
+          className={cn(inline && 'text-ui font-semibold')}
+        >
           自動エンコード
         </FieldLabel>
       </div>
 
-      <span aria-live="polite">
+      <span
+        aria-live="polite"
+        className={cn(layout === 'row' && 'basis-full empty:hidden')}
+      >
         {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
       </span>
     </div>
@@ -287,7 +305,10 @@ export function EditReservationDialog({
     return open ? (
       <div
         data-slot="reservation-change"
-        className="flex flex-col gap-4 [&_input]:h-11"
+        className={cn(
+          'flex gap-4',
+          layout === 'row' ? 'flex-wrap items-end justify-between' : 'flex-col',
+        )}
       >
         {fields}
         <div className="flex flex-wrap justify-end gap-2">{choices}</div>

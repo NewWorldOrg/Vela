@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
+import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
 import type { Reservation, ReservationBatch } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
@@ -29,10 +30,12 @@ export function ReservationSelection({
   chosen,
   onClear,
   actions,
+  className,
 }: {
   chosen: Reservation[]
   onClear: () => void
   actions: ReservationBulkActions
+  className?: string
 }) {
   const [pending, startTransition] = useTransition()
   const [outcome, setOutcome] = useState<string>()
@@ -69,10 +72,13 @@ export function ReservationSelection({
     <div
       role="group"
       aria-label="選択した予約の操作"
-      className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]"
+      className={cn(
+        'mb-3.5 flex flex-wrap items-center gap-2.5 rounded-lg bg-surface py-2 pr-2 pl-4',
+        className,
+      )}
     >
-      <span className="text-ui font-medium whitespace-nowrap text-ink">
-        <b className="font-code font-bold">{chosen.length}</b> 件を選択
+      <span className="mr-auto text-ui font-medium whitespace-nowrap text-ink">
+        <b className="font-code font-semibold">{chosen.length}</b> 件を選択
       </span>
       <Button
         variant="tone"
@@ -93,7 +99,7 @@ export function ReservationSelection({
         <TrashIcon />
         削除
       </Button>
-      <Button variant="tone" size="sm" disabled={pending} onClick={onClear}>
+      <Button variant="ghost" size="sm" disabled={pending} onClick={onClear}>
         選択を解除
       </Button>
       {outcome && (
@@ -120,7 +126,7 @@ export function ReservationSelection({
               </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <p className="flex items-start gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
+          <p className="flex items-start gap-2 rounded-md bg-accent-soft px-3.5 py-2.5 text-ui font-medium text-acc-text">
             <WarningIcon className="mt-0.5 size-4 shrink-0" />
             <span>
               予約の記録が消えます。元に戻せません。

@@ -1,6 +1,5 @@
 'use client'
 
-import { formatMomentSpan } from '@/lib/format'
 import {
   leadingSegmentOf,
   relayCountSaying,
@@ -9,27 +8,33 @@ import {
 } from '@/lib/reservations'
 import type { Reservation } from '@/repository/reservations'
 import { Checkbox } from '@/components/ui/checkbox'
-import { TableCell, TableRow } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
-import { OriginCell } from '@/components/reservations/origin-cell'
-import { StatusCell } from '@/components/recordings/status-cell'
-import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronDownIcon, ChevronRightIcon } from '@/components/vela/icons'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
+import { cn } from '@/lib/utils'
+import { GenreDot } from '@/components/reservations/genre-dot'
+import {
+  PICKING_GRID,
+  ROW_GRID,
+  ROW_GROUND,
+  ROW_LINE,
+  RowTimes,
+  whereFrom,
+} from '@/components/reservations/reservation-row'
 import {
   ReservationStateChip,
   reservationStateLabelOf,
 } from '@/components/reservations/reservation-state-chip'
 
 /**
- * The one line a relayed broadcast is listed as: its segments counted, its whole span, and the
- * state of the segment to look at first.
+ * The one line a relayed broadcast is listed as: its whole span, its segments counted, and the state of the segment to
+ * look at first. Pressing it lays its segments out under it.
  */
 export function RelayRow({
   segments,
   nth,
   open,
   onToggle,
+  picking,
   chosen,
   onSelect,
 }: {
@@ -37,6 +42,7 @@ export function RelayRow({
   nth: number
   open: boolean
   onToggle: () => void
+  picking: boolean
   chosen: number
   onSelect: (taken: boolean) => void
 }) {
@@ -46,80 +52,87 @@ export function RelayRow({
   const leading = leadingSegmentOf(segments)
   const said = segments.map(reservationStateLabelOf)
   const differ = new Set(said).size > 1
+  const quiet = leading.standing === 'scheduled' && !differ
 
   return (
-    <TableRow
+    <li
       data-relay=""
       data-state={chosen === segments.length ? 'selected' : undefined}
+      data-open={open ? '' : undefined}
+      data-picking={picking ? '' : undefined}
       style={delayOf(rowDelayMs(nth))}
-      className={rowArrivesIn(nth)}
+      className={cn(rowArrivesIn(nth), ROW_LINE)}
     >
-      <TableCell {...cardPlace('select')} className="h-11 align-top">
-        <Checkbox
-          checked={
-            chosen === 0
-              ? false
-              : chosen === segments.length
-                ? true
-                : 'indeterminate'
-          }
-          onCheckedChange={(next) => onSelect(next === true)}
-          aria-label={
-            partial
-              ? `${first.title} の表示中の区切り ${summary.shown} つを選ぶ`
-              : `${first.title} の区切りをすべて選ぶ`
-          }
-        />
-        {!open &&
-          segments.map((one) => (
-            <span key={one.id} id={reservationAnchor(one.id)} />
-          ))}
-      </TableCell>
-      <TableCell {...cardPlace('end')} className="align-top">
-        <button
-          type="button"
-          aria-expanded={open}
-          aria-label="区切りの一覧"
-          onClick={onToggle}
-          className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-ink-2 transition-colors duration-150 hover:bg-surface-2 [&_svg]:size-3.5"
-        >
-          {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
-        </button>
-      </TableCell>
-      <TableCell {...cardPlace('lead')} className="align-top whitespace-normal">
-        <b className="block text-[calc(13rem/16)] font-bold">{first.title}</b>
-        <span className="text-note text-ink-2">
-          {relayCountSaying(summary)}
-        </span>
-      </TableCell>
-      <TableCell {...cardPlace('meta')} className="align-top">
-        <span className="flex items-center gap-2">
-          <ChannelMark
-            logo={first.channelLogo}
-            no={first.channelNo}
-            keepsTheSlot
-          />
-          <span className="min-w-0">{first.channelName}</span>
-        </span>
-      </TableCell>
-      <TableCell
-        {...cardPlace('meta')}
-        className="align-top font-code text-ink-2"
+      {!open &&
+        segments.map((one) => (
+          <span key={one.id} id={reservationAnchor(one.id)} />
+        ))}
+      <div
+        className={cn(
+          'relative',
+          ROW_GRID,
+          ROW_GROUND,
+          picking && PICKING_GRID,
+          (open || chosen === segments.length) && 'bg-surface',
+        )}
       >
-        {formatMomentSpan(summary.startAt, summary.endAt)}
-      </TableCell>
-      <OriginCell origin={first.origin} ruleName={first.ruleName} />
-      <TableCell {...cardPlace('field', '状態')} className="align-top">
-        <StatusCell>
-          <ReservationStateChip
-            reservation={leading}
-            say
-            more={differ ? [breakdownOf(said)] : []}
+        {picking && (
+          <Checkbox
+            checked={
+              chosen === 0
+                ? false
+                : chosen === segments.length
+                  ? true
+                  : 'indeterminate'
+            }
+            onCheckedChange={(next) => onSelect(next === true)}
+            aria-label={
+              partial
+                ? `${first.title} の表示中の区切り ${summary.shown} つを選ぶ`
+                : `${first.title} の区切りをすべて選ぶ`
+            }
+            className="relative z-[2]"
           />
-        </StatusCell>
-      </TableCell>
-      <TableCell {...cardPlace('actions')} />
-    </TableRow>
+        )}
+        <RowTimes
+          span={
+            summary.startAt && summary.endAt
+              ? { startAt: summary.startAt, endAt: summary.endAt }
+              : undefined
+          }
+          whenLabel={first.whenLabel}
+        />
+        <span className="min-w-0">
+          <span className="flex min-w-0 items-center gap-2 text-title font-semibold tracking-[-0.008em] text-ink">
+            <GenreDot genre={first.genre} />
+            <span className="min-w-0 truncate">{first.title}</span>
+          </span>
+          <span className="mt-0.5 block truncate text-sub text-ink-2">
+            {first.channelName} · {relayCountSaying(summary)} ·{' '}
+            {whereFrom(first)}
+          </span>
+        </span>
+        <span className="flex items-center justify-end gap-2">
+          {!quiet && (
+            <span data-slot="row-chips" className="relative z-[2] flex">
+              <ReservationStateChip
+                reservation={leading}
+                more={differ ? [breakdownOf(said)] : []}
+              />
+            </span>
+          )}
+          <button
+            type="button"
+            aria-expanded={open}
+            aria-label="区切りの一覧"
+            onClick={onToggle}
+            className="flex size-[calc(34rem/16)] cursor-pointer items-center justify-center rounded-full text-ink-2 outline-none after:absolute after:inset-0 after:z-[1] after:rounded-md after:content-[''] focus-visible:after:shadow-ring [&_svg]:size-4"
+          >
+            {open ? <ChevronDownIcon /> : <ChevronRightIcon />}
+          </button>
+        </span>
+      </div>
+    </li>
   )
 }
 
