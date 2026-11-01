@@ -351,7 +351,10 @@ test('the last service a tuner saw is the one the API reports for its system', a
     systems: [reaching('isdbT', 'reaching', SEEN_AT)],
   }
 
-  assert.equal((await screen()).rows[0]?.lastService?.at, formatRecentMoment(SEEN_AT))
+  assert.equal(
+    (await screen()).rows[0]?.lastService?.at,
+    formatRecentMoment(SEEN_AT),
+  )
 })
 
 test('a system the API calls silent is put on the screen as the API judged it', async () => {
