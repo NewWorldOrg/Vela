@@ -39,7 +39,9 @@ const GROUPS: [string, string[]][] = [
 ]
 
 function entranceOf(canvasElement: HTMLElement): HTMLElement {
-  const found = canvasElement.querySelector('[data-slot="settings-entrance"]')
+  const found = canvasElement.querySelector(
+    '[data-slot="admin-main"] [data-slot="settings-entrance"]',
+  )
 
   if (!(found instanceof HTMLElement)) {
     throw new Error('the entrance is not on the page')
@@ -99,7 +101,7 @@ export const OnAPhone: Story = {
       'テーマ システム',
     )
     await expect(
-      canvasElement.querySelector('[data-slot="admin-side-nav"]'),
+      canvasElement.querySelector('[data-slot="settings-side"]'),
     ).not.toBeVisible()
     await expect(
       canvasElement.querySelector('[data-slot="phone-bar-title"]'),

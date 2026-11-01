@@ -30,7 +30,7 @@ export function SettingsBeside({
     <nav
       aria-label="設定"
       data-slot="settings-beside"
-      className="sticky top-[calc(52rem/16)] h-[calc(100dvh-52rem/16)] w-[42%] shrink-0 self-start overflow-y-auto overscroll-contain border-r border-line pr-4 pb-[calc(var(--safe-bottom)+16rem/16)] pl-5"
+      className="sticky top-[calc(52rem/16)] h-[calc(100dvh-52rem/16)] w-[42%] shrink-0 self-start overflow-y-auto overscroll-contain pr-4 pb-[calc(var(--safe-bottom)+16rem/16)] pl-5"
     >
       <SettingsEntranceView
         status={status}

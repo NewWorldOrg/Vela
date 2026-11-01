@@ -3,15 +3,10 @@
 import type { ReactNode } from 'react'
 
 import {
-  AUTO_OPEN_HINT,
   AUTO_OPEN_LABEL,
-  HYBRIDCAST_HINT,
   HYBRIDCAST_LABEL,
-  LINE_HINT,
   LINE_LABEL,
-  RECEIVER_ID_HINT,
   RECEIVER_ID_LABEL,
-  SOUNDS_HINT,
   SOUNDS_LABEL,
 } from '@/lib/viewing'
 import {
@@ -27,13 +22,13 @@ import {
   SOUNDS_SPELLING,
 } from '@/lib/stored-flag'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
-import { cn } from '@/lib/utils'
 import { Switch } from '@/components/ui/switch'
-import { FieldHint, FieldLabel } from '@/components/vela/field'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
-import { Surface } from '@/components/vela/surface'
-import { MarkDoubleCircle } from '@/components/vela/icons'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/section-heading'
+import {
+  SETTINGS_GROUP_TITLE,
+  SettingsGroup,
+  SettingsRow,
+} from '@/components/vela/settings-rows'
 import { UnreadSurface } from '@/components/segments/value-rows'
 import {
   ResidencePanel,
@@ -54,35 +49,20 @@ const HYBRIDCAST_ID = 'viewing-data-broadcast-hybridcast'
 
 const SOUNDS_ID = 'viewing-data-broadcast-sounds'
 
-/** One row of the page: the name on the left, the switch on the right and one sentence under the name; a row after the first is set off by a dashed rule. */
+/** One row of the page: the name on the left, its switch on the right. */
 function Row({
   id,
   label,
-  hint,
-  first = false,
   children,
 }: {
   id: string
   label: string
-  hint: string
-  first?: boolean
   children: ReactNode
 }) {
   return (
-    <>
-      <dl
-        className={cn(
-          'flex items-center justify-between gap-4',
-          !first && 'mt-4 border-t border-dashed border-line pt-4',
-        )}
-      >
-        <dt className="min-w-0">
-          <FieldLabel htmlFor={id}>{label}</FieldLabel>
-        </dt>
-        <dd className="shrink-0">{children}</dd>
-      </dl>
-      <FieldHint className="mt-1.5">{hint}</FieldHint>
-    </>
+    <SettingsRow name={<label htmlFor={id}>{label}</label>}>
+      {children}
+    </SettingsRow>
   )
 }
 
@@ -132,25 +112,17 @@ export function ViewingView({
 
   return (
     <>
-      <Crumb>
-        設定 / <CrumbCurrent>視聴</CrumbCurrent>
-      </Crumb>
       <PageHeading>視聴</PageHeading>
 
-      <Surface className="mt-3.5 max-w-[calc(640rem/16)]">
-        <Row
-          id={AUTO_OPEN_ID}
-          label={AUTO_OPEN_LABEL}
-          hint={AUTO_OPEN_HINT}
-          first
-        >
+      <SettingsGroup className="mt-[calc(18rem/16)]">
+        <Row id={AUTO_OPEN_ID} label={AUTO_OPEN_LABEL}>
           <Switch
             id={AUTO_OPEN_ID}
             checked={autoOpens}
             onCheckedChange={setAutoOpens}
           />
         </Row>
-        <Row id={LINE_ID} label={LINE_LABEL} hint={LINE_HINT}>
+        <Row id={LINE_ID} label={LINE_LABEL}>
           <Switch
             id={LINE_ID}
             checked={allows}
@@ -167,11 +139,7 @@ export function ViewingView({
             }}
           />
         </Row>
-        <Row
-          id={RECEIVER_ID_ID}
-          label={RECEIVER_ID_LABEL}
-          hint={RECEIVER_ID_HINT}
-        >
+        <Row id={RECEIVER_ID_ID} label={RECEIVER_ID_LABEL}>
           <Switch
             id={RECEIVER_ID_ID}
             checked={allows && hands}
@@ -179,7 +147,7 @@ export function ViewingView({
             onCheckedChange={setHands}
           />
         </Row>
-        <Row id={HYBRIDCAST_ID} label={HYBRIDCAST_LABEL} hint={HYBRIDCAST_HINT}>
+        <Row id={HYBRIDCAST_ID} label={HYBRIDCAST_LABEL}>
           <Switch
             id={HYBRIDCAST_ID}
             checked={allows && hybridcast}
@@ -187,22 +155,23 @@ export function ViewingView({
             onCheckedChange={setHybridcast}
           />
         </Row>
-        <Row id={SOUNDS_ID} label={SOUNDS_LABEL} hint={SOUNDS_HINT}>
+        <Row id={SOUNDS_ID} label={SOUNDS_LABEL}>
           <Switch id={SOUNDS_ID} checked={sounds} onCheckedChange={setSounds} />
         </Row>
-      </Surface>
+      </SettingsGroup>
 
-      <section className="mt-6 max-w-[calc(640rem/16)]">
-        <SectionHeading>{RESIDENCE_HEADING}</SectionHeading>
-        {residence.state === 'ok' ? (
-          <ResidencePanel
-            residence={residence.value}
-            onSettle={onSettleResidence}
-          />
-        ) : (
+      {residence.state === 'ok' ? (
+        <ResidencePanel
+          heading={RESIDENCE_HEADING}
+          residence={residence.value}
+          onSettle={onSettleResidence}
+        />
+      ) : (
+        <section className="max-w-[calc(720rem/16)]">
+          <h2 className={SETTINGS_GROUP_TITLE}>{RESIDENCE_HEADING}</h2>
           <UnreadSurface slot={RESIDENCE_SLOT} reading={residence} />
-        )}
-      </section>
+        </section>
+      )}
     </>
   )
 }

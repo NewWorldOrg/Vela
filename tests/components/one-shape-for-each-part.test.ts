@@ -62,26 +62,21 @@ function paddingOf(classes: string): string {
   return found[1]
 }
 
-test('the library and search tables head their columns with the shared heading cell', async () => {
+test('the library table heads its columns with the shared heading cell', async () => {
   const table = await read('components/ui/table.tsx')
   const cellPadding = paddingOf(classOf(table, 'TableCell'))
 
   assert.equal(cellPadding, paddingOf(classOf(table, 'TableHead')))
 
-  for (const file of [
-    'components/library/recordings-table.tsx',
-    'components/search/search-page.tsx',
-  ]) {
-    const source = await read(file)
+  const source = await read('components/library/recordings-table.tsx')
 
-    assert.doesNotMatch(
-      source,
-      /<th\b/,
-      `${file} draws its column headings itself, so their padding and ` +
-        'letter spacing are its own',
-    )
-    assert.match(source, /<TableHead\b/)
-  }
+  assert.doesNotMatch(
+    source,
+    /<th\b/,
+    'the library table draws its column headings itself, so their padding ' +
+      'and letter spacing are its own',
+  )
+  assert.match(source, /<TableHead\b/)
 
   const row = await read('components/library/recording-row.tsx')
   const cell = row.match(/const CELL =\s*'([^']+)'/)
@@ -92,21 +87,23 @@ test('the library and search tables head their columns with the shared heading c
     cellPadding,
     'the library cells sit at a different inset from their headings',
   )
+})
 
-  const search = await read('components/search/search-page.tsx')
-  const cells = [
-    ...search.matchAll(/<td\s+(?:role="cell"\s+)?className="([^"]+)"/g),
-  ]
+test('the search hits are rows, not a table with headings', async () => {
+  const hits = await read('components/search/search-hits.tsx')
 
-  assert.ok(cells.length >= 4, `only ${cells.length} search cells were read`)
-
-  for (const found of cells) {
-    assert.equal(
-      paddingOf(found[1]),
-      cellPadding,
-      'a search cell sits at a different inset from its heading',
-    )
-  }
+  assert.doesNotMatch(
+    hits,
+    /<(table|TableHead|th)\b/,
+    'the search hits went back to a table, whose column headings the rows ' +
+      'say without',
+  )
+  assert.match(
+    hits,
+    /grid-cols-\[calc\(96rem\/16\)_calc\(150rem\/16\)_minmax\(0,1fr\)_auto\]/,
+    'the hit row no longer lays its time, channel, title and reserve pill in ' +
+      'the four columns the list lines up on',
+  )
 })
 
 async function everySource(

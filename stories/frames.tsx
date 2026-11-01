@@ -2,8 +2,9 @@ import type { Decorator } from '@storybook/nextjs'
 
 import { AppTabBar } from '@/app/(app)/_shell/tab-bar'
 import { AppTopBar } from '@/app/(app)/_shell/top-bar'
-import { SettingsSideNav } from '@/app/(app)/settings/_shell/side-nav'
-import { AdminBody, AdminMain, AppFrame } from '@/components/vela/app-shell'
+import { AppFrame } from '@/components/vela/app-shell'
+import { SettingsFrame } from '@/components/settings-entrance/settings-frame'
+import { SYSTEM_STATUS } from '@/repository/system.fixtures'
 import { Toasts } from '@/components/vela/toast'
 
 export const inTheApp: Decorator = (Story) => (
@@ -19,12 +20,13 @@ export const inTheApp: Decorator = (Story) => (
 export const inTheSettings: Decorator = (Story) => (
   <AppFrame>
     <AppTopBar />
-    <AdminBody className="min-h-0 flex-1">
-      <SettingsSideNav hasMigration />
-      <AdminMain>
-        <Story />
-      </AdminMain>
-    </AdminBody>
+    <SettingsFrame
+      status={SYSTEM_STATUS}
+      values={{ display: 'テーマ システム' }}
+      hasMigration
+    >
+      <Story />
+    </SettingsFrame>
     <AppTabBar />
   </AppFrame>
 )

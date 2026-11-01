@@ -13,7 +13,7 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { ReservationArea } from '@/components/guide/reservation-area'
 import { ProgramDescription } from '@/components/guide/program-description'
-import { marked } from '@/components/search/phone-search-hits'
+import { marked } from '@/components/search/hit-parts'
 
 /** A hit beside the list on a phone held on its side: its title, when and where it is on, its genre and description, and the reservation, as the guide's detail lays them; the whole of it is a press away. */
 export function HitDetail({

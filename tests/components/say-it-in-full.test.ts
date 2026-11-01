@@ -46,7 +46,6 @@ const KEEPS_A_FIXED_BOX: string[] = [
   'components/guide/guide-grid.tsx',
   'components/quality/quality-trend.tsx',
   'components/vela/progress.tsx',
-  'components/search/search-page.tsx',
 ]
 
 const LIVE_CARDS: { file: string; prints: RegExp; what: string }[] = [

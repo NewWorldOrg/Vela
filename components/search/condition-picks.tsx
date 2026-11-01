@@ -28,13 +28,13 @@ export function Pick({
   onRemove: () => void
 }) {
   return (
-    <span className="inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-brand bg-brand-soft py-1 pr-1.5 pl-3 text-sub font-bold text-brand">
+    <span className="inline-flex h-8 items-center gap-1.5 rounded-full bg-accent-tint pr-1.5 pl-3 text-ui font-semibold text-acc-text">
       {label}
       <button
         type="button"
         aria-label={spoken}
         onClick={onRemove}
-        className="tap-target flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface text-brand [&_svg]:size-2.5"
+        className="tap-target flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-full text-acc-text outline-none hover:bg-bg/60 focus-visible:shadow-ring [&_svg]:size-3"
       >
         <CloseIcon />
       </button>

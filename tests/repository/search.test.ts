@@ -406,6 +406,41 @@ test('a hit carries the mark of its station, as every other list of programmes d
   )
 })
 
+test('a hit on today or tomorrow in Tokyo is headed by that day, and a later one only by its date', async () => {
+  standing()
+
+  const hourAhead = (hours: number): string =>
+    new Date(Date.now() + hours * 60 * 60 * 1000).toISOString()
+  const tokyoDayOf = (at: string): string =>
+    new Date(new Date(at).getTime() + 9 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10)
+  const today = tokyoDayOf(new Date().toISOString())
+  const tomorrow = tokyoDayOf(hourAhead(24))
+  const later = hourAhead(24 * 5)
+
+  store.page = {
+    items: [
+      programme(131, 1310, 40001, '今日の番組', `${today}T03:00:00+09:00`),
+      programme(131, 1310, 40002, '明日の番組', `${tomorrow}T03:00:00+09:00`),
+      programme(131, 1310, 40003, '先の番組', later),
+    ],
+    total: 3,
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 20,
+  }
+
+  const result = await searchPrograms({ q: '番組' })
+
+  assert.deepEqual(
+    result.outcome.state === 'searched'
+      ? result.outcome.found.hits.map((hit) => hit.dayNear)
+      : [],
+    ['今日', '明日', undefined],
+  )
+})
+
 test('a page in the middle says which of the whole it is holding', async () => {
   standing()
   store.page = {
