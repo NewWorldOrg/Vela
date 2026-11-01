@@ -15,8 +15,16 @@ import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
 import { fetchProgramme, toInt } from '@/repository/programmes'
 import { listRecordingsByReservation } from '@/repository/recordings'
-import type { GuideChannel, ProgramBooking } from '@/repository/programs'
-import { fetchServiceChannels, kindOfNetwork } from '@/repository/programs'
+import type {
+  Genre,
+  GuideChannel,
+  ProgramBooking,
+} from '@/repository/programs'
+import {
+  fetchServiceChannels,
+  genreDisplayOf,
+  kindOfNetwork,
+} from '@/repository/programs'
 import { ruleNames } from '@/repository/rules'
 import { whatItSaid } from '@/repository/said'
 
@@ -37,8 +45,10 @@ export interface ConflictEntry {
   meta: string
   origin: string
   ruleName?: string
-  /** When the rival's broadcast starts and ends, for the phone's line of the overlap. */
+  /** When the rival's broadcast starts and ends, for the line of the overlap. */
   span?: { startAt: string; endAt: string }
+  /** The genre of the rival's programme, for the dot before its title on the line of the overlap. */
+  genre?: Genre
 }
 
 export interface ReservationConflict {
@@ -73,6 +83,8 @@ export interface Reservation {
   id: string
   title: string
   note?: string
+  /** The genre of the programme, for the dot before its title. */
+  genre?: Genre
   channelName: string
   channelNo?: string
   channelLogo?: StationLogo
@@ -80,6 +92,7 @@ export interface Reservation {
   /** When the broadcast starts and ends, for the phone's list by day and its line of an overlap. */
   span?: { startAt: string; endAt: string }
   origin: OriginLabel
+  ruleId?: string
   ruleName?: string
   standing: ReservationStanding
   endAtConfirmed: boolean
@@ -165,6 +178,26 @@ const KIND_LABEL: Record<ChannelKind, string> = {
 }
 
 const HOLDS_A_SEAT: ReservationStanding[] = ['scheduled', 'recording']
+
+export const CONFLICT_HEADLINE = '録画が重なっています'
+
+const STILL_AHEAD: ReservationStanding[] = ['scheduled', 'conflict', 'recording']
+
+/** How many reservations each rule still has ahead of it, recording or to come: the count beside a rule in the list of rules. */
+export async function countAheadByRule(): Promise<Map<string, number>> {
+  const carried = await fetchEveryReservation()
+  const counted = new Map<string, number>()
+
+  for (const one of carried.items) {
+    if (!one.ruleId || !STILL_AHEAD.includes(one.standing)) {
+      continue
+    }
+
+    counted.set(one.ruleId, (counted.get(one.ruleId) ?? 0) + 1)
+  }
+
+  return counted
+}
 
 export async function listReservations(
   filter: ReservationsFilter = {},
@@ -575,12 +608,14 @@ export function toReservation(
     id: r.id,
     title: r.programme.name,
     note: r.programme.summary || undefined,
+    genre: genreDisplayOf(r.programme).slug,
     channelName: channel?.name || serviceKeyOf(r),
     channelNo: channel?.no,
     channelLogo: channel?.logo,
     whenLabel: formatMomentSpan(r.window.startAt, r.window.endAt),
     span: { startAt: r.window.startAt, endAt: r.window.endAt },
     origin: formatReservationOrigin(r.origin),
+    ruleId: r.ruleId ?? undefined,
     ruleName: ruleNameOf(r.ruleId, rules),
     standing: r.standing,
     endAtConfirmed,
@@ -676,11 +711,12 @@ function conflictOf(
     channelOf(r, known)?.kind ?? kindOfNetwork(toInt(r.programme.networkId))
 
   return {
-    headline: `同時刻に${KIND_LABEL[kind]}チューナー ${seats.size} 本が録画予定です`,
-    body: `${formatMoment(r.window.startAt)} の開始時点で空きがなく、この予約にはチューナーを割り当てられません。`,
+    headline: CONFLICT_HEADLINE,
+    body: `${KIND_LABEL[kind]}のチューナー ${seats.size} 本に ${rivals.length + 1} 番組`,
     entries: rivals.map((one) => ({
       ...toConflictEntry(one, known, rules),
       span: { startAt: one.window.startAt, endAt: one.window.endAt },
+      genre: genreDisplayOf(one.programme).slug,
     })),
     raiseTo: Math.max(...rivals.map((one) => toInt(one.priority))) + 1,
   }
