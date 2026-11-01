@@ -296,7 +296,8 @@ export function GuideView({
                   className={cn(
                     'tap-target flex h-10 items-baseline gap-1 rounded-full px-2.5 pt-[calc(9rem/16)] font-code text-title font-bold whitespace-nowrap text-ink-2 outline-none transition-[background-color,color] duration-[140ms] ease-toy hover:text-ink focus-visible:shadow-ring',
                     pressable,
-                    day.date === guide.day.date && 'bg-surface text-ink',
+                    day.date === guide.day.date &&
+                      'bg-accent-tint text-acc-text hover:text-acc-text',
                   )}
                 >
                   {date}

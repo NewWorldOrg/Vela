@@ -2531,8 +2531,8 @@
   }
 
   &:hover {
-    background: var(--btn);
-    color: var(--on-ink);
+    background: var(--accent-fill);
+    color: var(--on-accent);
   }
 
   &:active {
