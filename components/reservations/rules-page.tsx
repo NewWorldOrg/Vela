@@ -1239,7 +1239,7 @@ function RuleEditor({
                 <span className="text-ink-2">件数を数えています。</span>
               )}
             </div>
-            <p className="flex items-center gap-2 rounded-md bg-accent-soft px-3.5 py-2.5 text-ui font-medium text-acc-text">
+            <p className="flex items-center gap-2 rounded-md bg-rec-soft px-3.5 py-2.5 text-ui font-medium text-rec-text">
               <WarningIcon className="size-4 shrink-0" />
               削除したルールは元に戻せません。
             </p>
@@ -1484,7 +1484,7 @@ function AppliedLine({
       data-slot="rule-application"
       className={cn(
         'mt-4 flex items-start gap-2 rounded-lg px-4 py-3 text-sub leading-[1.7]',
-        fellShort ? 'bg-accent-soft text-acc-text' : 'bg-surface text-ink',
+        fellShort ? 'bg-warn-soft text-warn-text' : 'bg-surface text-ink',
       )}
     >
       <Icon className="mt-[calc(3rem/16)] size-[calc(15rem/16)] shrink-0" />

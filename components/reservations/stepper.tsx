@@ -37,7 +37,7 @@ export function Stepper({
       data-slot="stepper"
       className={cn(
         'inline-flex h-9 w-fit items-center gap-0.5 rounded-full bg-surface-2 px-1',
-        invalid && 'shadow-[inset_0_0_0_1.5px_var(--accent)]',
+        invalid && 'shadow-[inset_0_0_0_1.5px_var(--rec)]',
         className,
       )}
     >

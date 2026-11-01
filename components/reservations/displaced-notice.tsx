@@ -25,7 +25,7 @@ export function DisplacedNotice({
         className,
       )}
     >
-      <div className="flex items-center gap-1.5 text-ui font-semibold text-acc-text">
+      <div className="flex items-center gap-1.5 text-ui font-semibold text-warn-text">
         <WarningIcon className="size-4 shrink-0" />
         {DISPLACED}
       </div>

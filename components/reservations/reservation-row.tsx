@@ -347,7 +347,7 @@ export function ReservationRow({
               </dl>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <p className="flex items-start gap-2 rounded-md bg-accent-soft px-3.5 py-2.5 text-ui font-medium text-acc-text">
+          <p className="flex items-start gap-2 rounded-md bg-rec-soft px-3.5 py-2.5 text-ui font-medium text-rec-text">
             <WarningIcon className="mt-0.5 size-4 shrink-0" />
             <span>
               予約の記録が消えます。元に戻せません。
