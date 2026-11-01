@@ -107,8 +107,7 @@ export function GlobalNavItem({
         'tap-target relative flex h-9 items-center gap-1.5 rounded-full px-[13px] text-title font-semibold text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-[140ms] ease-toy',
         'hover:bg-surface focus-visible:shadow-ring',
-        active &&
-          'text-ink before:absolute before:-bottom-1.5 before:left-1/2 before:size-[5px] before:-translate-x-1/2 before:rounded-full before:bg-accent',
+        active && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
         className,
       )}
       {...props}
@@ -135,7 +134,7 @@ export function SettingsLink({
         'transition-[background-color,color] duration-[140ms] ease-toy',
         'hover:bg-surface hover:text-ink focus-visible:shadow-ring',
         active &&
-          'text-ink before:absolute before:-bottom-1 before:left-1/2 before:size-[5px] before:-translate-x-1/2 before:rounded-full before:bg-accent',
+          'bg-accent-tint text-acc-text hover:bg-accent-tint hover:text-acc-text',
         className,
       )}
       {...props}
@@ -151,7 +150,7 @@ export function NavCount({ count, saying }: { count: number; saying: string }) {
   return (
     <span
       data-slot="nav-count"
-      className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-surface-2 px-[5px] font-code text-micro leading-none font-bold text-ink-2"
+      className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-fill px-[5px] font-code text-micro leading-none font-bold text-on-accent"
     >
       <span aria-hidden="true">{count}</span>
       <span className="sr-only">{saying}</span>
@@ -213,7 +212,7 @@ export function TabBarItem({
           'group/tab relative flex min-w-0 flex-1 flex-col items-center justify-center gap-[calc(2rem/16)] text-ink-2 no-underline outline-none',
           'transition-colors duration-[140ms] ease-toy hover:text-ink',
           'sideways:mx-1.5 sideways:rounded-xl',
-          active && 'text-ink sideways:bg-surface-2',
+          active && 'text-acc-text hover:text-acc-text sideways:bg-accent-tint',
           className,
         )}
         {...props}
@@ -223,6 +222,7 @@ export function TabBarItem({
             'flex h-[calc(28rem/16)] w-[calc(52rem/16)] items-center justify-center rounded-full',
             'transition-[box-shadow] duration-[140ms] ease-toy',
             'group-focus-visible/tab:shadow-ring [&_svg]:size-[calc(22rem/16)]',
+            active && 'bg-accent-tint sideways:bg-transparent',
           )}
         >
           {icon}
@@ -235,13 +235,6 @@ export function TabBarItem({
         >
           {label}
         </span>
-        {active && (
-          <span
-            aria-hidden="true"
-            data-slot="tab-bar-dot"
-            className="absolute bottom-[calc(3rem/16)] left-1/2 size-[5px] -translate-x-1/2 rounded-full bg-accent sideways:hidden"
-          />
-        )}
         {badge}
         {asChild ? <Slot.Slottable>{children}</Slot.Slottable> : null}
       </Comp>
@@ -249,7 +242,7 @@ export function TabBarItem({
   )
 }
 
-/** A count a tab carries of things waiting on the person, on the accent's pale ground over the corner of its icon. Read aloud after the tab's name. */
+/** A count a tab carries of things waiting on the person, on the accent over the corner of its icon. Read aloud after the tab's name. */
 export function TabBadge({
   count,
   saying,
@@ -263,7 +256,7 @@ export function TabBadge({
     <span
       data-slot="tab-badge"
       className={cn(
-        'absolute top-[calc(3rem/16)] left-[calc(50%+10rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-accent-soft px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-acc-text',
+        'absolute top-[calc(3rem/16)] left-[calc(50%+10rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-accent-fill px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-on-accent',
         className,
       )}
     >
