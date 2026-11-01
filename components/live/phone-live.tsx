@@ -299,7 +299,7 @@ export function RecordThisButton({
       onClick={() => record(programmeId)}
       className={size === 'sm' ? 'h-[calc(38rem/16)]' : undefined}
     >
-      <ReserveRing />
+      <ReserveRing className="border-current" />
       この番組を録画
     </Button>
   )

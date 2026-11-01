@@ -243,7 +243,7 @@ export function PlayerSeek({
           ))}
         <span
           aria-hidden="true"
-          className="absolute inset-y-0 left-0 rounded-full bg-white"
+          className="absolute inset-y-0 left-0 rounded-full bg-(--pl-accent)"
           style={{ width: `${playedPct}%` }}
         />
       </div>

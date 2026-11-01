@@ -44,7 +44,10 @@ export function SeriesEpisodes({
           <span className="font-code">{episodes.length + 1}</span> 話
           {unwatched > 0 && (
             <>
-              {' · '}未視聴 <span className="font-code">{unwatched}</span>
+              {' · '}
+              <span className="text-acc-text">
+                未視聴 <span className="font-code">{unwatched}</span>
+              </span>
             </>
           )}
         </small>
