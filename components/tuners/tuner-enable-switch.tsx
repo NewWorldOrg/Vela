@@ -74,7 +74,7 @@ export function TunerEnableSwitch({
         className={cn(
           'block text-cap leading-[1.5]',
           outcome?.failed
-            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-coral'
+            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-rec-text'
             : 'sr-only',
         )}
       >

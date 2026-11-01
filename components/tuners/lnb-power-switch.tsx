@@ -105,7 +105,7 @@ export function LnbPowerSwitch({
         className={cn(
           'block text-cap leading-[1.5]',
           refusal
-            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-coral'
+            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-rec-text'
             : 'sr-only',
         )}
       >
