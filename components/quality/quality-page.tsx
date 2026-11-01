@@ -405,7 +405,7 @@ export function QualityView({
               ))}
             </div>
           ) : (
-            <EmptyState usher="glad" title="対象がありません">
+            <EmptyState title="対象がありません">
               期間内に警告水準を超えた録画がありません。
             </EmptyState>
           )}

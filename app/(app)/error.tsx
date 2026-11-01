@@ -4,7 +4,6 @@ import { startTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
 import { Button } from '@/components/ui/button'
-import { EmptyState } from '@/components/vela/empty-state'
 
 export default function AppError({ reset }: { reset: () => void }) {
   const router = useRouter()
@@ -16,18 +15,16 @@ export default function AppError({ reset }: { reset: () => void }) {
   }
 
   return (
-    <EmptyState
-      usher="troubled"
-      titleLevel={2}
-      title="画面を表示できませんでした"
-      className="mt-16 max-w-[calc(560rem/16)]"
-      action={
-        <Button variant="tone" size="sm" onClick={readAgain}>
-          再試行
-        </Button>
-      }
+    <div
+      data-slot="screen-error"
+      className="mx-auto flex max-w-[calc(560rem/16)] flex-col items-center gap-7 px-6 pt-[18vh] text-center"
     >
-      一時的な不調の可能性があります。再試行しても直らないときは、時間をおいてからもう一度お試しください。
-    </EmptyState>
+      <h2 className="text-display-s font-bold text-ink phone:text-section">
+        画面を表示できませんでした
+      </h2>
+      <Button variant="tone" onClick={readAgain}>
+        再試行
+      </Button>
+    </div>
   )
 }

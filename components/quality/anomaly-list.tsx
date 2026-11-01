@@ -66,9 +66,7 @@ export function AnomalyList({ anomalies }: { anomalies: QualityAnomalies }) {
           ))}
         </div>
       ) : (
-        <EmptyState usher="glad" title={NOTHING}>
-          {NOTHING_UNSETTLED}
-        </EmptyState>
+        <EmptyState title={NOTHING}>{NOTHING_UNSETTLED}</EmptyState>
       )}
     </Surface>
   )
