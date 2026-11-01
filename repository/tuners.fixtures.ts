@@ -91,7 +91,6 @@ export const TUNERS: TunerResult = {
       status: { word: '警告', tone: 'warn', line: '20:58 に確認' },
       kind: '衛星',
       enabled: true,
-      idleLabel: 'アイドル',
       state: 'warn',
       stateLabel: '警告',
       stateSub: 'BS のサービスが 26 時間 0 件',
@@ -106,7 +105,6 @@ export const TUNERS: TunerResult = {
       status: { word: '異常', tone: 'err', line: '20:58 に確認' },
       kind: '地上波',
       enabled: true,
-      idleLabel: '割当停止中',
       state: 'faulted',
       stateLabel: '異常',
       stateSub:

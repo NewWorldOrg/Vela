@@ -84,7 +84,6 @@ export interface TunerRow {
   kind?: '地上波' | '衛星'
   enabled: boolean
   session?: TunerSession
-  idleLabel?: string
   draining?: boolean
   state: 'ok' | 'warn' | 'faulted'
   stateLabel: string
@@ -921,7 +920,6 @@ function toRow(
     draining:
       observation?.state === 'draining' || observation?.disablePending === true,
     session,
-    idleLabel: toIdleLabel(observation),
     lnb: toLnb(entry, observation),
     lastService,
     ...toState(observation),
@@ -1174,20 +1172,6 @@ function toSession(
     code: tuningLabelOf(observation.sessionTuning),
     endsAt: endsAt === undefined ? undefined : formatRecentMoment(endsAt),
   }
-}
-
-function toIdleLabel(
-  observation: TunerObservationResponder | undefined,
-): string | undefined {
-  if (observation === undefined) {
-    return undefined
-  }
-
-  if (observation.state === 'faulted') {
-    return '割当停止中'
-  }
-
-  return observation.state === 'idle' ? 'アイドル' : undefined
 }
 
 function toLnb(
