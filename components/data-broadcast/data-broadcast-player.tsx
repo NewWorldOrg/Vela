@@ -379,7 +379,7 @@ export function DataBroadcastFace({
         className="pointer-events-none absolute inset-x-0 bottom-[30%] z-[2] flex justify-center"
       >
         {says && (
-          <span className="max-w-[88%] rounded-full border border-white/25 bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)">
+          <span className="max-w-[88%] rounded-full bg-black/80 px-4 py-2 text-center text-ui font-medium text-(--pl-ink)">
             {says}
           </span>
         )}
@@ -463,7 +463,7 @@ const SINKS =
   'transition-[translate,background-color,border-color,color] duration-150 ease-toy'
 
 const KEY_LOOK = cn(
-  'relative flex shrink-0 items-center justify-center rounded-full border border-white/30 bg-white/10 font-bold text-(--pl-ink) select-none hover:bg-white/20 focus-visible:shadow-ring focus-visible:outline-none active:bg-white/25',
+  'relative flex shrink-0 items-center justify-center rounded-full border border-transparent bg-white/12 font-semibold text-(--pl-ink) select-none hover:bg-white/20 focus-visible:shadow-ring focus-visible:outline-none active:bg-white/25',
   SINKS,
   pressable,
 )
@@ -473,7 +473,7 @@ const PILL = cn(
   'h-(--pill-h) w-(--pill-w) text-[length:var(--pill-font)] leading-none after:absolute after:-inset-x-[2px] after:-inset-y-[4px] after:content-[""]',
 )
 
-const PILL_ON = 'border-white bg-white/28 text-white hover:bg-white/28'
+const PILL_ON = 'bg-white/28 text-white hover:bg-white/28'
 
 const ENTER_LOOK = cn(
   'absolute top-1/2 left-1/2 z-[1] flex size-(--ok) -translate-1/2 items-center justify-center rounded-full bg-(--pl-accent) text-[length:var(--ok-font)] leading-none font-bold tracking-[-0.02em] text-(--pl-bg) select-none hover:bg-(--pl-accent-ink) focus-visible:shadow-ring focus-visible:outline-none active:translate-[calc(-50%+1px)] active:bg-(--pl-accent)',
@@ -543,7 +543,7 @@ function Disc({ pressing }: { pressing: Pressing }) {
       aria-label="十字"
       data-tap-exempt="a wedge of the disc is the press, as wide as the quarter it fills; the cross through its arrow is narrower than the sector"
       className={cn(
-        'relative size-(--disc) shrink-0 overflow-hidden rounded-full bg-white/10 ring-1 ring-white/26 ring-inset',
+        'relative size-(--disc) shrink-0 overflow-hidden rounded-full bg-white/10',
         DIAGONALS,
       )}
     >
@@ -850,7 +850,7 @@ export function DataBroadcastRemote({
       data-slot="data-broadcast-remote"
       className={cn(
         IN_THE_COLUMN,
-        'flex flex-col gap-y-(--group-gap) rounded-xl border border-line-strong bg-(--pl-bg) p-[20px] text-(--pl-ink) shadow-pop-xl',
+        'flex flex-col gap-y-(--group-gap) rounded-[18px] bg-(--pl-bg) p-[20px] text-(--pl-ink)',
         className,
       )}
     >

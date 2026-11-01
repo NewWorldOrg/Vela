@@ -38,7 +38,6 @@ import {
   SettingsRow,
 } from '@/components/vela/settings-rows'
 import {
-  MarkAxis,
   SearchIcon,
   TunerSatelliteIcon,
   TunerTerrestrialIcon,
