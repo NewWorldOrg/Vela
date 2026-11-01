@@ -24,8 +24,8 @@ type Tone = 'ok' | 'warn' | 'err'
 /** A state that is well needs no colour; one that wants a hand takes the accent's dot. */
 const TONE_DOT: Record<Tone, string> = {
   ok: 'bg-ink-3',
-  warn: 'bg-accent',
-  err: 'bg-accent',
+  warn: 'bg-warn',
+  err: 'bg-rec',
 }
 
 /** The colour of each setting's tile: the setting's own, as a phone's settings colour theirs, the same in both themes. */
@@ -260,7 +260,7 @@ function SystemRow({
               key={nth}
               className={cn(
                 'flex items-center gap-1.5 whitespace-nowrap',
-                signal.tone === 'err' && 'text-acc-text',
+                signal.tone === 'err' && 'text-rec-text',
               )}
             >
               {(signal.dotted || signal.tone !== 'ok') && (

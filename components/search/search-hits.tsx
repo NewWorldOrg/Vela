@@ -48,7 +48,10 @@ function ReservePill({
         'transition-[background-color,color] duration-[140ms] ease-toy',
         pressable,
         held
-          ? 'text-acc-text hover:bg-surface-2'
+          ? cn(
+              'hover:bg-surface-2',
+              mark === 'recording' ? 'text-rec-text' : 'text-warn-text',
+            )
           : 'bg-surface-2 text-ink group-hover/hit:bg-accent-fill group-hover/hit:text-on-accent hover:bg-accent-fill-hover! hover:text-on-accent',
       )}
     >
@@ -57,8 +60,10 @@ function ReservePill({
         className={cn(
           'size-3 rounded-full border-[1.75px]',
           held
-            ? 'border-accent bg-accent shadow-[inset_0_0_0_2px_var(--bg)]'
-            : 'border-accent group-hover/hit:border-on-accent',
+            ? mark === 'recording'
+              ? 'border-rec bg-rec shadow-[inset_0_0_0_2px_var(--bg)]'
+              : 'border-warn bg-warn shadow-[inset_0_0_0_2px_var(--bg)]'
+            : 'border-warn group-hover/hit:border-on-accent',
         )}
       />
       {mark === 'recording' ? '録画中' : held ? '予約済み' : '予約'}
@@ -149,7 +154,7 @@ export function SearchHits({
                     />
                   ) : (
                     hit.booked && (
-                      <span className="px-[calc(13rem/16)] text-sub font-semibold text-acc-text">
+                      <span className="px-[calc(13rem/16)] text-sub font-semibold text-warn-text">
                         予約済み
                       </span>
                     )
