@@ -262,6 +262,26 @@ export function ListIcon(props: IconProps) {
   )
 }
 
+export function GridIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <rect x="4.5" y="4.5" width="6" height="6" rx="1.6" />
+      <rect x="13.5" y="4.5" width="6" height="6" rx="1.6" />
+      <rect x="4.5" y="13.5" width="6" height="6" rx="1.6" />
+      <rect x="13.5" y="13.5" width="6" height="6" rx="1.6" />
+    </Icon>
+  )
+}
+
+export function RowsIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M9 6.5h11M9 12h11M9 17.5h11" />
+      <path d="M4.6 6.5h.1M4.6 12h.1M4.6 17.5h.1" strokeWidth={2.6} />
+    </Icon>
+  )
+}
+
 export function LedgerIcon(props: IconProps) {
   return (
     <Icon {...props}>

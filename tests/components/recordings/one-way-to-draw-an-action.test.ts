@@ -5,17 +5,16 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const WHERE_THE_ACTIONS_ARE = [
-  'components/library/recording-row.tsx',
+  'components/library/phone-library.tsx',
   'components/recordings/recording-actions.tsx',
   'components/recordings/external-player.tsx',
   'components/recordings/thumbnail-button.tsx',
   'components/recordings/encode-button.tsx',
 ]
 
-const THE_GROUPS = [
-  'components/library/recording-row.tsx',
-  'components/recordings/recording-actions.tsx',
-]
+const THE_GROUPS = ['components/recordings/recording-actions.tsx']
+
+const THE_LIBRARY_ROW = 'components/library/recording-row.tsx'
 
 const WHERE_THE_EVEN_WIDTH_IS_DECLARED = 'components/vela/action-row.tsx'
 
@@ -79,6 +78,17 @@ test('deleting is destructive wherever it is offered', async () => {
   for (const file of THE_GROUPS) {
     assert.ok(deleting.includes(file), `${file} offers no deleting`)
   }
+})
+
+test('the library row deletes from its menu, as a destructive item', async () => {
+  const row = await readFile(path.join(ROOT, THE_LIBRARY_ROW), 'utf8')
+  const item = row.match(
+    /<DropdownMenuItem\b([^>]*)>([\s\S]*?)<\/DropdownMenuItem>/,
+  )
+
+  assert.ok(item, `${THE_LIBRARY_ROW} offers no deleting`)
+  assert.match(item[2], DELETES)
+  assert.match(item[1], /variant="destructive"/)
 })
 
 test('a group of actions is laid out by the one row', async () => {

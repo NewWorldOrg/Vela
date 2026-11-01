@@ -7,61 +7,28 @@ import { useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
 import { playingOnHref } from '@/lib/playback-source'
-import { formatClock, formatPlayerTime } from '@/lib/format'
+import { formatClock } from '@/lib/format'
 import {
   byDay,
   dayHeadingOf,
   minutesLeftOf,
-  watchedShareOf,
+  watchStateOf,
 } from '@/lib/library-days'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import {
-  ChevronUpIcon,
-  MoreIcon,
-  PlayIcon,
-  TrashIcon,
-} from '@/components/vela/icons'
+import { ChevronUpIcon, MoreIcon, TrashIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
-import { RecordingThumb } from '@/components/library/recording-thumb'
-import { OutcomeChip } from '@/components/recordings/outcome-chip'
-import { EncodeChip } from '@/components/recordings/encode-chip'
-import { LeftScrambledChip } from '@/components/recordings/left-scrambled-chip'
-import { FileMissingChip } from '@/components/recordings/file-missing-chip'
+import { Picture } from '@/components/library/library-cards'
+import { AttentionChips } from '@/components/library/attention-chips'
 import {
   holdDeletion,
   releaseDeletion,
 } from '@/components/recordings/held-deletions'
 
-/** The encode states a row names, each with the word that says it is the encode's. */
-const SHOWN_ENCODE: Partial<Record<Recording['encode'], string>> = {
-  queued: 'エンコード待ち',
-  running: 'エンコード中',
-  failed: 'エンコード失敗',
-}
-
 function recordingHref(id: string): Route {
   return `/recordings/${id}` as Route
-}
-
-function WatchedLine({ share }: { share: number | undefined }) {
-  if (share === undefined) {
-    return null
-  }
-
-  return (
-    <span
-      aria-hidden="true"
-      className="absolute inset-x-0 bottom-0 h-1 bg-black/35"
-    >
-      <span
-        className="block h-full bg-(--pl-accent)"
-        style={{ width: `${share * 100}%` }}
-      />
-    </span>
-  )
 }
 
 /** The recordings left part-way, across the phone in a row that is sent sideways: each opens where it was left. */
@@ -74,7 +41,7 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
     <section aria-labelledby="library-continue" data-slot="phone-continue">
       <h2
         id="library-continue"
-        className="px-0.5 pt-3 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2"
+        className="px-0.5 pt-3 pb-2 text-heading font-bold tracking-[-0.015em] text-ink"
       >
         続きから
       </h2>
@@ -83,25 +50,17 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
           const left = minutesLeftOf(recording)
 
           return (
-            <li key={recording.id} className="w-[calc(214rem/16)] shrink-0">
+            <li key={recording.id} className="w-[calc(232rem/16)] shrink-0">
               <Link
                 href={playingOnHref(recording.id) as Route}
                 className="block text-ink no-underline outline-none focus-visible:shadow-ring"
               >
-                <span className="relative block">
-                  <RecordingThumb
-                    recording={recording}
-                    className="aspect-video h-auto w-full rounded-lg"
-                  />
-                  <span
-                    aria-hidden="true"
-                    className="absolute bottom-3 left-2.5 flex size-9 items-center justify-center rounded-full bg-white/90 text-[#1a181e] [&_svg]:ml-0.5 [&_svg]:size-4 [&_svg]:fill-current"
-                  >
-                    <PlayIcon />
-                  </span>
-                  <WatchedLine share={watchedShareOf(recording)} />
-                </span>
-                <span className="mt-1.5 block truncate text-ui font-bold">
+                <Picture
+                  recording={recording}
+                  corner="rounded-md"
+                  lengthShown={false}
+                />
+                <span className="mt-2 block truncate text-ui font-bold">
                   {recording.title}
                 </span>
                 <span className="block text-note text-ink-2">
@@ -119,29 +78,6 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
       </ul>
     </section>
   )
-}
-
-function Attention({ recording }: { recording: Recording }) {
-  const chips = [
-    recording.outcome !== 'complete' && (
-      <OutcomeChip key="outcome" recording={recording} />
-    ),
-    recording.leftScrambled && <LeftScrambledChip key="scrambled" />,
-    recording.fileMissing && <FileMissingChip key="missing" />,
-    SHOWN_ENCODE[recording.encode] && (
-      <EncodeChip
-        key="encode"
-        recording={recording}
-        says={SHOWN_ENCODE[recording.encode]}
-      />
-    ),
-  ].filter(Boolean)
-
-  if (chips.length === 0) {
-    return null
-  }
-
-  return <span className="mt-1.5 flex flex-wrap gap-1.5">{chips}</span>
 }
 
 /** The recordings on a phone held upright: under the day each started on, a row each of its picture with its length and the line of how far it was watched, its title, channel and time, and only the states that need attention. Pressing the row opens it; `…` opens what can be done to it under the row. */
@@ -204,17 +140,24 @@ export function PhoneRecordingRows({
 
         return (
           <section key={day} aria-label={heading.near ?? heading.date}>
-            <h2 className="flex items-center gap-2 px-4 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2">
+            <h2 className="flex items-baseline gap-2 px-4 pt-5 pb-1 text-title font-bold tracking-[-0.015em] text-ink">
               {heading.near}
-              <span className="font-code font-medium">{heading.date}</span>
+              <span
+                className={cn(
+                  'font-code',
+                  heading.near && 'text-sub font-medium text-ink-2',
+                )}
+              >
+                {heading.date}
+              </span>
             </h2>
-            <ul className="border-y border-line bg-surface sideways:grid sideways:grid-cols-2">
+            <ul className="sideways:grid sideways:grid-cols-2">
               {items.map((recording) => (
                 <li
                   key={recording.id}
                   data-keep={recording.id}
                   data-recording={recording.id}
-                  className="border-b border-dashed border-line last:border-b-0 sideways:odd:border-r sideways:[&:nth-last-child(2):nth-child(odd)]:border-b-0"
+                  className="min-w-0"
                 >
                   <div className="flex items-start">
                     {picking && (
@@ -235,20 +178,25 @@ export function PhoneRecordingRows({
                         picking ? 'pl-1' : 'pl-4',
                       )}
                     >
-                      <span className="relative shrink-0">
-                        <RecordingThumb
-                          recording={recording}
-                          className="h-[calc(68rem/16)] w-[calc(120rem/16)]"
-                        />
-                        {recording.lengthSec !== undefined && (
-                          <span className="absolute right-1.5 bottom-2 rounded-sm bg-black/60 px-[calc(5rem/16)] py-[calc(3rem/16)] font-code text-micro leading-none font-bold text-white">
-                            {formatPlayerTime(recording.lengthSec)}
-                          </span>
-                        )}
-                        <WatchedLine share={watchedShareOf(recording)} />
+                      <span className="w-[calc(120rem/16)] shrink-0">
+                        <Picture recording={recording} corner="rounded-sm" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="line-clamp-2 text-ui leading-normal font-bold">
+                        <span
+                          className={cn(
+                            'line-clamp-2 text-ui leading-normal font-bold',
+                            watchStateOf(recording) === 'watched' &&
+                              'text-ink-2',
+                          )}
+                        >
+                          {watchStateOf(recording) === 'unwatched' && (
+                            <span
+                              data-slot="unwatched-dot"
+                              className="mr-1.5 mb-[0.12em] inline-block size-1.5 rounded-full bg-accent"
+                            >
+                              <span className="sr-only">未視聴</span>
+                            </span>
+                          )}
                           {recording.title}
                         </span>
                         <span className="mt-0.5 block text-sub text-ink-2">
@@ -259,7 +207,10 @@ export function PhoneRecordingRows({
                             )}
                           </span>
                         </span>
-                        <Attention recording={recording} />
+                        <AttentionChips
+                          recording={recording}
+                          className="mt-1.5"
+                        />
                       </span>
                     </Link>
                     {!picking && (
@@ -286,7 +237,7 @@ export function PhoneRecordingRows({
                     )}
                   </div>
                   {open === recording.id && (
-                    <div className="flex flex-wrap gap-2 border-t border-dashed border-line px-4 pt-3 pb-3.5">
+                    <div className="mx-4 mb-2 flex flex-wrap gap-2 rounded-md bg-surface px-3 py-3">
                       <Button
                         variant="danger"
                         size="sm"

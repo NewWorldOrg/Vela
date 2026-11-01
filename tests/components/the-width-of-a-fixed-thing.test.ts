@@ -78,25 +78,19 @@ test('every column of the library table is measured in letters', async () => {
   assert.match(table, /const TABLE_MIN = '\d+(\.\d+)?rem'/)
 })
 
-test('the state columns and the actions after them are held apart', async () => {
+test('the library says a row’s state in its own column on a wide screen and beside the title under that', async () => {
   const table = await read(THE_LIBRARY_TABLE)
   const row = await read(THE_LIBRARY_ROW)
 
+  assert.match(table, /hidden min-\[1366px\]:table-column/)
+  assert.match(table, /hidden min-\[1366px\]:table-cell/)
+  assert.match(row, /hidden min-\[1366px\]:table-cell/)
+  assert.match(row, /min-\[1366px\]:hidden/)
   assert.equal(
-    (table.match(/gap: GAP_BEFORE_STATE/g) ?? []).length,
-    3,
-    'the three state columns do not all carry the room on their left that ' +
-      'the header measured',
+    (row.match(/<AttentionChips\b/g) ?? []).length,
+    2,
+    'the state is said once beside the title and once in its column, one of the two hidden at each width',
   )
-  assert.match(table, /gap: GAP_BEFORE_ACTIONS/)
-  assert.equal(
-    (row.match(/GAP_BEFORE_STATE/g) ?? []).length,
-    4,
-    'the cells under the state headers do not carry the same room the ' +
-      'headers do',
-  )
-  assert.match(row, /export const GAP_BEFORE_STATE = 'pl-4'/)
-  assert.match(row, /export const GAP_BEFORE_ACTIONS = 'pl-5'/)
 })
 
 test('no row says its state with a colour laid under the whole of it', async () => {

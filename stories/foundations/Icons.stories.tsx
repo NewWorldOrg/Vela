@@ -83,6 +83,8 @@ const ACTIONS: [string, ComponentType<IconProps>][] = [
   ['CalendarIcon', Icons.CalendarIcon],
   ['ClockIcon', Icons.ClockIcon],
   ['ListIcon', Icons.ListIcon],
+  ['GridIcon', Icons.GridIcon],
+  ['RowsIcon', Icons.RowsIcon],
   ['FilterIcon', Icons.FilterIcon],
   ['InfoIcon', Icons.InfoIcon],
   ['SwapIcon', Icons.SwapIcon],

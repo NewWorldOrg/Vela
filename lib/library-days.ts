@@ -1,5 +1,8 @@
 import { formatCalendarDate } from '@/lib/format'
-import { whereToPickUp } from '@/lib/playback-resume'
+import {
+  ALREADY_AT_THE_BEGINNING_SEC,
+  whereToPickUp,
+} from '@/lib/playback-resume'
 
 const CALENDAR_DAY = new Intl.DateTimeFormat('en-CA', {
   timeZone: 'Asia/Tokyo',
@@ -97,4 +100,18 @@ export function watchedShareOf(recording: Watched): number | undefined {
   }
 
   return Math.min(1, Math.max(0, recording.watchedSec / recording.lengthSec))
+}
+
+export type WatchState = 'unwatched' | 'partway' | 'watched'
+
+/** Unwatched until watched past its first moments, part-way while there is a place to go on from, and watched after. */
+export function watchStateOf(recording: Watched): WatchState {
+  if (
+    recording.watchedSec === undefined ||
+    recording.watchedSec < ALREADY_AT_THE_BEGINNING_SEC
+  ) {
+    return 'unwatched'
+  }
+
+  return goesOnFrom(recording) ? 'partway' : 'watched'
 }
