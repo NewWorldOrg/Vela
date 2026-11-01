@@ -97,11 +97,13 @@ test('the maskable icon and the home screen icon fill their square', async () =>
   })
 })
 
-test('the tab carries the mark, drawn in its small cut', async () => {
+test('the tab carries the mark, two strokes meeting at the green dot, drawn in its small cut', async () => {
   const svg = (await read('app/icon.svg')).toString('utf8')
 
-  assert.match(svg, /stroke-width="21"/)
-  assert.doesNotMatch(svg, /stroke-width="16"/)
+  assert.match(svg, /stroke-width="15"/)
+  assert.match(svg, /<circle class="dot"/)
+  assert.match(svg, /\.dot\{fill:#2F8A76\}/)
+  assert.doesNotMatch(svg, /sail|keel/)
   assert.match(svg, /prefers-color-scheme:\s*dark/)
 
   const ico = await read('app/favicon.ico')
