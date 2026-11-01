@@ -4,7 +4,6 @@ import { hydrateRoot } from 'react-dom/client'
 import { renderToString } from 'react-dom/server'
 import { expect, waitFor } from 'storybook/test'
 
-import { FOLDS_ON_A_SIDE } from '@/lib/curtain'
 import { Curtain } from '@/components/vela/curtain'
 
 function FromTheServer() {
@@ -41,6 +40,18 @@ function curtainOf(canvasElement: HTMLElement): HTMLElement | null {
   )
 }
 
+function theGround(): string {
+  const probe = document.createElement('span')
+
+  probe.style.backgroundColor = 'var(--bg)'
+  document.body.append(probe)
+  const ground = getComputedStyle(probe).backgroundColor
+
+  probe.remove()
+
+  return ground
+}
+
 function movingWith(motion: string) {
   return () => {
     document.documentElement.dataset.motion = motion
@@ -59,19 +70,22 @@ export const 閉じた形で描かれ上がり終わると片付く: Story = {
     await expect(curtain).not.toBeNull()
     await expect(getComputedStyle(curtain!).display).not.toBe('none')
     await expect(getComputedStyle(curtain!).pointerEvents).toBe('none')
-    await expect(curtain!.querySelectorAll('.curtain-fold')).toHaveLength(
-      FOLDS_ON_A_SIDE * 2,
-    )
-    await expect(curtain!.querySelectorAll('[data-slot="usher"]')).toHaveLength(
-      0,
-    )
-    const boat = curtain!.querySelector('[data-slot="television-boat"]')
-    await expect(boat).not.toBeNull()
-    await expect(boat!.querySelectorAll('[data-part="leg"]')).toHaveLength(4)
+    await expect(getComputedStyle(curtain!).backgroundColor).toBe(theGround())
     await expect(
-      getComputedStyle(boat!.querySelector('.curtain-boat [data-part="sail"]')!)
-        .animationName,
-    ).toBe('curtain-sail')
+      curtain!.querySelectorAll(':scope > [data-slot="vela-mark"]'),
+    ).toHaveLength(1)
+    await expect(curtain!.querySelectorAll('svg')).toHaveLength(1)
+
+    const movements = curtain!.getAnimations({ subtree: true })
+
+    await expect(
+      movements.map((running) =>
+        'animationName' in running ? running.animationName : '',
+      ),
+    ).toEqual(['curtain-lift'])
+    await expect(
+      Number(movements[0].effect?.getComputedTiming().duration),
+    ).toBe(140)
 
     await waitFor(() => expect(curtainOf(canvasElement)).toBeNull(), {
       timeout: 5000,
@@ -91,29 +105,7 @@ export const 開き終わった形は画面を覆わない: Story = {
       running.currentTime = Number(running.effect?.getComputedTiming().endTime)
     }
 
-    const screen = curtain!.getBoundingClientRect()
-    const covering = [
-      ...curtain!.querySelectorAll<HTMLElement>(
-        '.curtain-fold-paint, .curtain-valance, .curtain-tassel, .curtain-tie-loop',
-      ),
-    ].filter((part) => {
-      const drawn = part.getBoundingClientRect()
-
-      return (
-        drawn.right > screen.left + 1 &&
-        drawn.left < screen.right - 1 &&
-        drawn.bottom > screen.top + 1 &&
-        drawn.top < screen.bottom - 1
-      )
-    })
-
-    await expect(covering).toHaveLength(0)
-
-    for (const faded of curtain!.querySelectorAll<HTMLElement>(
-      '.curtain-boat-z, .curtain-twinkle, .curtain-dock-ring',
-    )) {
-      await expect(getComputedStyle(faded).opacity).toBe('0')
-    }
+    await expect(getComputedStyle(curtain!).opacity).toBe('0')
   },
 }
 
