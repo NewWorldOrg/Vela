@@ -17,13 +17,15 @@ const buttonVariants = cva(
       variant: {
         default:
           'bg-accent-fill text-on-accent not-disabled:not-aria-disabled:hover:bg-accent-fill-hover',
+        record:
+          'bg-rec-fill text-on-rec not-disabled:not-aria-disabled:hover:bg-rec-fill-hover',
         tone: 'bg-surface-2 text-ink not-disabled:not-aria-disabled:hover:bg-surface-3',
         ghost:
           'bg-transparent text-ink-2 not-disabled:not-aria-disabled:hover:bg-surface not-disabled:not-aria-disabled:hover:text-ink',
         danger:
-          'bg-transparent text-acc-text not-disabled:not-aria-disabled:hover:bg-accent-soft',
+          'bg-transparent text-rec-text not-disabled:not-aria-disabled:hover:bg-rec-soft',
         dangerFill:
-          'bg-accent-soft text-acc-text not-disabled:not-aria-disabled:hover:bg-accent/20',
+          'bg-rec-soft text-rec-text not-disabled:not-aria-disabled:hover:bg-rec/20',
       },
       size: {
         default: 'h-10 px-[18px] text-body',

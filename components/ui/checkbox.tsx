@@ -19,7 +19,7 @@ function Checkbox({
         'enabled:hover:bg-surface-3',
         'data-[state=checked]:bg-accent-fill data-[state=checked]:shadow-none data-[state=checked]:text-on-accent enabled:data-[state=checked]:hover:bg-accent-fill-hover',
         'data-[state=indeterminate]:bg-accent-fill data-[state=indeterminate]:text-on-accent',
-        'focus-visible:shadow-ring aria-invalid:bg-accent-soft',
+        'focus-visible:shadow-ring aria-invalid:bg-rec-soft',
         'disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}
