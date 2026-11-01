@@ -97,7 +97,7 @@ function Part({
   const body = (
     <>
       <span className="flex min-w-0 flex-1 items-start gap-3">
-        <span className="grid size-7 shrink-0 place-items-center rounded-[calc(8rem/16)] bg-surface-2 text-ink-2">
+        <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-surface-2 text-ink-2">
           <Mark className="size-4" />
         </span>
         <span className="flex min-w-0 flex-col gap-0.5 pt-[calc(3rem/16)]">

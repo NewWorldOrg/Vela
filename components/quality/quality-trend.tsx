@@ -25,12 +25,11 @@ function Row({ row, trend }: { row: QualityTrendRow; trend: QualityTrend }) {
 
   return (
     <>
-      <InFull
-        says={row.name}
-        wraps="col-span-2 flex min-w-0 @[34rem]/trend:col-span-1"
-      >
-        <span className="truncate text-note text-ink-2">{row.name}</span>
-      </InFull>
+      <span className="col-span-2 flex min-w-0 @[34rem]/trend:col-span-1">
+        <InFull says={row.name}>
+          <span className="truncate text-note text-ink-2">{row.name}</span>
+        </InFull>
+      </span>
       <svg
         role="img"
         aria-label={`${row.name}の${HEADING}`}

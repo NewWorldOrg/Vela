@@ -117,7 +117,7 @@ function DeviceName({ session }: { session: SessionRow }) {
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-[calc(8rem/16)] bg-surface-2 text-ink-2">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-surface-2 text-ink-2">
         <Glyph className="size-[calc(17rem/16)]" />
       </span>
       <span className="min-w-0">

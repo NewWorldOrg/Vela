@@ -850,7 +850,7 @@ export function DataBroadcastRemote({
       data-slot="data-broadcast-remote"
       className={cn(
         IN_THE_COLUMN,
-        'flex flex-col gap-y-(--group-gap) rounded-[18px] bg-(--pl-bg) p-[20px] text-(--pl-ink)',
+        'flex flex-col gap-y-(--group-gap) rounded-xl bg-(--pl-bg) p-[20px] text-(--pl-ink)',
         className,
       )}
     >

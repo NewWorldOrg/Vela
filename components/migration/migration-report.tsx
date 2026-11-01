@@ -224,7 +224,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             </div>
           ))}
           {result.losses.length === 0 && (
-            <div className="px-4 py-3.5 text-ink-2">{NO_LOSSES}</div>
+            <Surface className="text-ink-2">{NO_LOSSES}</Surface>
           )}
         </div>
       </section>

@@ -105,7 +105,7 @@ function DeviceIcon({ row }: { row: TunerRow }) {
   const Icon = row.kind === '衛星' ? TunerSatelliteIcon : TunerTerrestrialIcon
 
   return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-[calc(8rem/16)] bg-surface-2">
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-surface-2">
       <Icon className="size-4 text-ink-2" />
     </span>
   )
