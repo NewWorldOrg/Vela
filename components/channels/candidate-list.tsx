@@ -70,7 +70,7 @@ function ReceptionBadge({
 function CandidateMeter({ candidate }: { candidate: CandidateRow }) {
   if (candidate.measurement === undefined) {
     return (
-      <span className="w-[calc(280rem/16)] max-w-full text-sub text-ink-3">
+      <span className="w-[calc(280rem/16)] max-w-full text-sub text-ink-2">
         {RECEPTION_WITHOUT_FIGURE[candidate.reception]}
       </span>
     )
@@ -122,7 +122,7 @@ function DeleteCandidateDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="removeFill"
+            variant="dangerFill"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()
@@ -173,7 +173,7 @@ export function CandidateList({
 
   return (
     <>
-      <p className="mb-[calc(9rem/16)] text-cap font-bold text-ink-3">
+      <p className="mb-[calc(9rem/16)] text-cap font-bold text-ink-2">
         候補チャンネル
       </p>
       {candidates.map((candidate) => (
@@ -200,7 +200,7 @@ export function CandidateList({
               {candidate.rotation.label}
             </Badge>
           )}
-          <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-3">
+          <span className="font-code text-cap tabular-nums whitespace-nowrap text-ink-2">
             発見 {candidate.discovered} · 評価 {candidate.lastSeen}
             {candidate.rotation && ` · ${candidate.rotation.note}`}
           </span>
@@ -213,7 +213,7 @@ export function CandidateList({
             <ActionRow>
               {!candidate.selected && (
                 <Button
-                  variant="change"
+                  variant="tone"
                   size="sm"
                   disabled={pending}
                   onClick={() =>
@@ -233,7 +233,7 @@ export function CandidateList({
                 </Button>
               )}
               <Button
-                variant="remove"
+                variant="danger"
                 size="sm"
                 disabled={pending}
                 aria-label={`${candidate.channel} を候補から削除`}

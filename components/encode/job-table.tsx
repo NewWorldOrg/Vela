@@ -92,7 +92,7 @@ function whyItStands(job: EncodeJob): string {
 }
 
 function Dash() {
-  return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+  return <span className="font-sans text-ink-2">{EMPTY_VALUE}</span>
 }
 
 function Started({ job }: { job: EncodeJob }) {
@@ -189,7 +189,7 @@ export function JobTable({
 
 function JobTitle({ job }: { job: EncodeJob }) {
   if (job.title === undefined) {
-    return <span className="text-ink-3">{RECORDING_REMOVED_LABEL}</span>
+    return <span className="text-ink-2">{RECORDING_REMOVED_LABEL}</span>
   }
 
   return (
@@ -201,7 +201,7 @@ function JobTitle({ job }: { job: EncodeJob }) {
         <span className="block">{job.title}</span>
       </Link>
       {job.recordedAt && (
-        <span className="block font-code text-micro text-ink-3">
+        <span className="block font-code text-micro text-ink-2">
           {job.recordedAt} の録画
         </span>
       )}
@@ -256,7 +256,7 @@ function RouteCell({ job }: { job: EncodeJob }) {
           : wordFor(ENCODER_LABEL, job.route.ran)}
       </span>
       {job.route.swerved && (
-        <small className="block text-micro text-ink-3">
+        <small className="block text-micro text-ink-2">
           {wordFor(SWERVE_LABEL, job.route.swerved)}
         </small>
       )}

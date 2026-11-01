@@ -42,7 +42,7 @@ function leftOver(r: Recording) {
 }
 
 function Dash() {
-  return <span className="font-sans text-ink-3">{EMPTY_VALUE}</span>
+  return <span className="font-sans text-ink-2">{EMPTY_VALUE}</span>
 }
 
 function Length({ recording: r }: { recording: Recording }) {
@@ -69,7 +69,7 @@ function Length({ recording: r }: { recording: Recording }) {
 
 function Size({ recording: r }: { recording: Recording }) {
   const said = r.fileMissing ? (
-    <span className="font-sans text-ink-3">{NO_FILE_ON_DISK}</span>
+    <span className="font-sans text-ink-2">{NO_FILE_ON_DISK}</span>
   ) : r.sizeBytes == null ? (
     <Dash />
   ) : (
@@ -103,7 +103,7 @@ export function RecordingRow({
   onSelect: (chosen: boolean) => void
 }) {
   const deletable = r.outcome !== 'recording'
-  const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-3'
+  const subTone = r.outcome === 'recording' ? 'text-ink-2' : 'text-ink-2'
 
   return (
     <tr
@@ -222,7 +222,7 @@ export function RecordingRow({
       >
         <ActionRow onClick={(e) => e.stopPropagation()}>
           <Button
-            variant="remove"
+            variant="danger"
             size="sm"
             title={deletable ? undefined : '録画中のため、削除できません。'}
             disabled={!deletable}
@@ -238,7 +238,7 @@ export function RecordingRow({
         {...cardPlace('end')}
         className={cn(
           CELL,
-          'p-0 text-ink-3 transition-colors duration-150 group-hover:text-brand',
+          'p-0 text-ink-2 transition-colors duration-150 group-hover:text-brand',
         )}
       >
         <Link

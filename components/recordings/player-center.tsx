@@ -53,7 +53,7 @@ export function PlayerCenter({
               data-slot="player-center-bezel-text"
               className="absolute inset-x-0 top-[10%] animate-player-bezel-text text-center still:animate-player-shown-briefly"
             >
-              <span className="inline-block rounded-[3px] bg-black/50 px-5 py-2.5 font-code text-h1 leading-none font-medium text-white tabular-nums">
+              <span className="inline-block rounded-[3px] bg-black/50 px-5 py-2.5 font-code text-section leading-none font-medium text-white tabular-nums">
                 {Math.floor(bezel.level * 100)}%
               </span>
             </span>

@@ -115,30 +115,34 @@ instead of addressing the wrong process. Keep it that way.
 
 ## Design System
 
-The canon is "a small digital toy". What that means in the code:
+The canon is v4: a neutral ground, one vermilion accent, the device's own type,
+and colour that comes from the pictures. What that means in the code:
 
-- **A border and a shadow mean it can be pressed, or it is floating.** A plain
-  grouping of information is a `Surface` or a `TintPanel`, with neither; the
-  things you press are `Tile` and `Button`
-- **Shadows are never blurred.** They are hard offsets: `shadow-pop` (2px) →
-  hover `shadow-pop-lg` (3px) and a 1px lift → active `shadow-pop-none` and a 1px
-  sink. Floating things get `shadow-pop-xl` (4px). The shared feel lives in
-  `components/vela/tactile.ts`; pair it rather than rewriting the transition
-- **The primary button is a pill.** There are no square filled buttons
-- **A filled button is `bg-btn-fill` / `text-on-btn`.** Never `--accent` as a
-  background: dark mode switches to a pale fill with dark text
-- **Sections are separated by a tint, not by a rule.** Text stays `text-ink` and
-  saturation stays down. Three or four tints per screen at most
+- **Nothing that lies on the page has an outline or a shadow.** A grouping is a
+  `--surface` face with a corner; a face on a face is `--surface-2`. Only what
+  floats (a menu, a dialog, a toast) casts `shadow-lift`
+- **The accent marks, it never fills.** `--accent` is for the now line, the
+  recording lamp, the reservation ring, the chosen destination's dot and the
+  watched part of a picture. Words in the accent are `--acc-text`. A filled
+  press is `bg-btn` / `text-on-ink`, which is ink in light and paper in dark
+- **Good news wears no colour.** A chip is drawn only when something needs a
+  hand (`--accent-soft` and `--acc-text`) or states a quiet fact (`--surface-2`)
+- **A press steps its ground up under the pointer and gives to 98% when
+  pressed.** Nothing lifts, tilts or bounces. Motion is 140ms on
+  `cubic-bezier(.2,.7,.2,1)`. The shared feel lives in `components/vela/tactile.ts`
+- **The genres are tints of the ground**, three per genre (`--g-*-light`,
+  `--g-*-deep`, `--g-*-dot`), used by the guide only
+- **Small words are `--ink` or `--ink-2`.** `--ink-3` is for large words,
+  placeholders and icons; the a11y gate holds the rest to 4.5:1
+- **Type is the device's own** (`system-ui` first, nothing downloaded), on the
+  steps in `globals.css`: display, display-s, section, heading, title, body,
+  ui, sub, note, cap, micro. Figures are `tabular-nums`
 - **Icons are drawn in `components/vela/icons.tsx`.** They are not replaced with
-  a general icon set. 24x24, stroke 1.6, round caps, no fill
-- **Contrast is a constraint on the tokens, not a per-screen fix.** The ink steps
-  are set where the a11y gate accepts them at the sizes they are used
-- **No animation that loops forever** — no blinking, pulsing or spinning. The one
-  exception is `Spinner`
+  a general icon set. 24x24, round caps, no fill
 - **The wording does not change.** Terms are not softened to suit a design
-- Not allowed: gradient backgrounds, blurred shadows, monospace for blocks of
-  text, large areas of saturated colour, large areas of pure black or white,
-  emoji as icons, decoration that means nothing
+- Not allowed: gradient backgrounds, glows, overshooting motion, outlines on
+  cards, large areas of saturated colour, emoji as icons, explanatory text on a
+  screen
 
 ## Conventions
 

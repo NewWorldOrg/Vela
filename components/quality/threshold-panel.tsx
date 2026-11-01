@@ -203,7 +203,7 @@ export function ThresholdPanel({
             ) : (
               <Button
                 type="button"
-                variant="change"
+                variant="tone"
                 size="sm"
                 autoFocus={returned}
                 onClick={edit}
@@ -270,7 +270,7 @@ function ThresholdRow({
           </Badge>
         )}
         {threshold.basis && (
-          <span className="w-full font-code text-note text-ink-3">
+          <span className="w-full font-code text-note text-ink-2">
             {threshold.basis}
           </span>
         )}
@@ -302,7 +302,7 @@ function ThresholdRow({
             {threshold.source === 'byHand' && (
               <Button
                 type="button"
-                variant="halt"
+                variant="tone"
                 size="sm"
                 className="ml-auto"
                 aria-describedby={nameId}

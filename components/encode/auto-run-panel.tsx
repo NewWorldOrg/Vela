@@ -43,7 +43,7 @@ const RUNS_ITSELF_ID = 'auto-run-runs-itself'
 
 const MOST_CORES_ID = 'auto-run-most-cores'
 
-const NAME = 'self-start pt-1 text-ui text-ink-3'
+const NAME = 'self-start pt-1 text-ui text-ink-2'
 
 const VALUE = 'self-start pt-1 text-ui text-ink-2'
 
@@ -206,7 +206,7 @@ export function AutoRunPanel({
         </dd>
       </dl>
 
-      <p className="mt-3.5 font-code text-note tabular-nums text-ink-3">
+      <p className="mt-3.5 font-code text-note tabular-nums text-ink-2">
         {autoRun.stored && autoRun.updatedAt
           ? `${autoRun.updatedAt} 更新`
           : STILL_AS_DEPLOYED}

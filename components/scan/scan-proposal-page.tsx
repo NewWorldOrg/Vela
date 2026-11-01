@@ -77,7 +77,7 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
                       {channel.channel}
                     </span>
                     {channel.measurement && (
-                      <span className="font-code tabular-nums text-ink-3">
+                      <span className="font-code tabular-nums text-ink-2">
                         {channel.measurement.value}
                       </span>
                     )}
@@ -108,11 +108,11 @@ function DepartureRows({ departures }: { departures: RotationDeparture[] }) {
             <Badge variant="warn" className="font-bold">
               要確認
             </Badge>
-            <span className="font-code text-cap tabular-nums text-ink-3">
+            <span className="font-code text-cap tabular-nums text-ink-2">
               連続失敗 {departure.consecutiveFailures} 回 · {departure.since}{' '}
               から
             </span>
-            <span className="ml-auto font-code text-cap text-ink-3">
+            <span className="ml-auto font-code text-cap text-ink-2">
               {departure.key}
             </span>
           </div>
@@ -158,9 +158,9 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
           className={`rounded-xl px-4 py-[calc(13rem/16)] ${cell.tint}`}
         >
           <div className="text-note font-medium text-ink-2">{cell.label}</div>
-          <div className="font-code text-h1 leading-[1.4] font-medium tabular-nums">
+          <div className="font-code text-section leading-[1.4] font-medium tabular-nums">
             {cell.value}
-            <small className="ml-[calc(3rem/16)] text-cap font-normal text-ink-3">
+            <small className="ml-[calc(3rem/16)] text-cap font-normal text-ink-2">
               {cell.unit}
             </small>
           </div>
@@ -173,8 +173,8 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
-      <h2 className="heading text-[calc(15rem/16)]">{title}</h2>
-      <span className="text-note tabular-nums text-ink-3">{stat}</span>
+      <h2 className="heading text-title">{title}</h2>
+      <span className="text-note tabular-nums text-ink-2">{stat}</span>
     </div>
   )
 }
@@ -212,7 +212,7 @@ export function ScanProposalView({
           }
           className="mt-4"
           action={
-            <Button variant="watch" asChild>
+            <Button variant="tone" asChild>
               <Link href={'/settings/channels' as Route}>チャンネルへ</Link>
             </Button>
           }

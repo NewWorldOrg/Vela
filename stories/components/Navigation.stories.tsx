@@ -40,19 +40,19 @@ export const UnderlineTabs: Story = {
               未取得
             </TabsTrigger>
           </TabsList>
-          <TabsContent value="gr" className="pt-[11px] text-sub text-ink-3">
+          <TabsContent value="gr" className="pt-[11px] text-sub text-ink-2">
             地上デジタル 9 チャンネルの番組表を表示中
           </TabsContent>
-          <TabsContent value="bs" className="pt-[11px] text-sub text-ink-3">
+          <TabsContent value="bs" className="pt-[11px] text-sub text-ink-2">
             BS 22 チャンネルの番組表を表示中
           </TabsContent>
-          <TabsContent value="cs" className="pt-[11px] text-sub text-ink-3">
+          <TabsContent value="cs" className="pt-[11px] text-sub text-ink-2">
             CS110 の番組表を表示中
           </TabsContent>
           <TabsContent value="none" />
         </Tabs>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         アクティブタブは主役色の下線 2px + 淡い面。非アクティブは ink-2。
       </p>
     </div>
@@ -91,7 +91,7 @@ export const Segmented: Story = {
               { value: 'bs', label: 'BS' },
             ]}
           />
-          <p className="mt-3 text-note text-ink-3">
+          <p className="mt-3 text-note text-ink-2">
             変更を受け付けない間は disabled。全体を淡くし、タブ移動からも外す。
           </p>
           <SegmentedControl
@@ -120,7 +120,7 @@ export const DatePagerStory: StoryObj<typeof meta> = {
       <Surface>
         <DatePager label="8/7(木)" />
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         日付・ch 番号は tabular-nums で桁を揃える。
       </p>
     </div>
@@ -149,7 +149,7 @@ export const IconButtons: Story = {
             <SearchIcon />
           </IconButton>
         </div>
-        <p className="mt-[11px] text-cap text-ink-3">
+        <p className="mt-[11px] text-cap text-ink-2">
           pop は押せるものとして浮かせ、quiet
           はバーやパネルの中で触れると少し傾く。
         </p>

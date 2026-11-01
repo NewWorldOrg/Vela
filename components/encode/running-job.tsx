@@ -33,9 +33,9 @@ export function RunningJob({
     <Surface data-slot="running-job">
       <div className="flex flex-wrap items-center gap-2.5">
         <EncodeIcon className="size-[calc(17rem/16)] text-brand" />
-        <b className="heading min-w-0 flex-1 text-[calc(15rem/16)]">
+        <b className="heading min-w-0 flex-1 text-title">
           {job.title ?? (
-            <span className="text-ink-3">{RECORDING_REMOVED_LABEL}</span>
+            <span className="text-ink-2">{RECORDING_REMOVED_LABEL}</span>
           )}
         </b>
         {job.stalled && (
@@ -44,7 +44,7 @@ export function RunningJob({
             {STALLED_LABEL}
           </Badge>
         )}
-        <span className="font-code text-[calc(15rem/16)] font-medium tabular-nums text-brand">
+        <span className="font-code text-title font-medium tabular-nums text-brand">
           {percent !== undefined ? `${percent}%` : EMPTY_VALUE}
         </span>
       </div>
@@ -54,7 +54,7 @@ export function RunningJob({
         label="エンコードの進捗"
         className="mt-2.5 h-1.5"
       />
-      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 font-code text-note tabular-nums text-ink-3">
+      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 font-code text-note tabular-nums text-ink-2">
         {job.recordedAt && <span>{job.recordedAt} の録画</span>}
         {job.elapsedSeconds !== undefined && (
           <span>経過 {formatLength(job.elapsedSeconds)}</span>
@@ -82,7 +82,7 @@ export function RunningJob({
       </div>
       <div className="mt-3 flex flex-wrap items-center gap-2">
         {job.title !== undefined && (
-          <Button variant="watch" size="sm" asChild>
+          <Button variant="tone" size="sm" asChild>
             <Link href={`/recordings/${job.recordingId}` as Route}>
               録画詳細へ
             </Link>

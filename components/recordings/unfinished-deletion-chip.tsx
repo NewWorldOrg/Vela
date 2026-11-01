@@ -21,7 +21,7 @@ export function UnfinishedDeletionChip({
         {shape.label}
       </Badge>
       {shape.detail && (
-        <span className="block text-micro leading-relaxed text-ink-3">
+        <span className="block text-micro leading-relaxed text-ink-2">
           {shape.detail}
         </span>
       )}

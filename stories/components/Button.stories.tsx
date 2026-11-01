@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/vela/surface'
 import { Spinner } from '@/components/vela/progress'
 import {
-  CloseIcon,
   EditIcon,
   PlayIcon,
   PlusIcon,
@@ -24,16 +23,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: [
-        'default',
-        'outline',
-        'ghost',
-        'watch',
-        'change',
-        'halt',
-        'remove',
-        'removeFill',
-      ],
+      options: ['default', 'tone', 'ghost', 'danger', 'dangerFill'],
     },
     size: {
       control: 'select',
@@ -50,83 +40,49 @@ export const Default: Story = {}
 
 export const Variants: Story = {
   render: (args) => (
-    <Surface className="max-w-[560px]">
+    <Surface className="max-w-[640px]">
       <div className="flex flex-wrap items-center gap-2.5">
         <Button {...args} variant="default">
           <PlusIcon />
           予約を追加
         </Button>
-        <Button {...args} variant="watch">
+        <Button {...args} variant="tone">
           <PlayIcon />
-          再生
+          外部プレイヤーで再生
         </Button>
-        <Button {...args} variant="change">
+        <Button {...args} variant="tone">
           <EditIcon />
           変更
-        </Button>
-        <Button {...args} variant="halt">
-          <CloseIcon />
-          取り消し
-        </Button>
-        <Button {...args} variant="remove">
-          <TrashIcon />
-          削除
-        </Button>
-        <Button {...args} variant="removeFill">
-          <TrashIcon />
-          削除する
         </Button>
         <Button {...args} variant="ghost">
           閉じる
         </Button>
+        <Button {...args} variant="danger">
+          <TrashIcon />
+          削除
+        </Button>
+        <Button {...args} variant="dangerFill">
+          <TrashIcon />
+          削除する
+        </Button>
       </div>
-      <p className="mt-[11px] text-cap text-ink-3">
-        観る=watch ・ 変える=change ・ 止める=halt ・ 消す=remove ・
-        足すと対話の実行=塗り ・ 無色は 閉じる と キャンセル だけ
-      </p>
     </Surface>
   ),
 }
 
-const HOVER = '-translate-x-px -translate-y-px shadow-pop-lg'
-const PRESS = 'translate-x-px translate-y-px shadow-pop-none'
-const FOCUS = 'shadow-pop-ring'
-
-const QUIET: Record<string, string> = {
-  [HOVER]: '-translate-y-px bg-surface-2 text-ink',
-  [PRESS]: 'bg-surface-2 text-ink',
-  [FOCUS]: 'shadow-ring',
-}
-
-function StateRow({
-  label,
-  note,
-  extra,
-}: {
-  label: string
-  note?: string
-  extra?: string
-}) {
+function StateRow({ label, className }: { label: string; className?: string }) {
   return (
-    <div className="flex items-center gap-3 py-[11px] not-first:border-t not-first:border-dashed not-first:border-line first:pt-0.5">
-      <span className="w-[74px] shrink-0 text-cap leading-[1.5] text-ink-3">
-        {label}
-        {note && (
-          <em className="block font-code text-[9.5px] not-italic">{note}</em>
-        )}
-      </span>
-      <span className="flex flex-wrap items-center gap-[9px]">
-        <Button variant="default" className={extra}>
+    <div className="flex items-center gap-3 border-t border-hair py-3 first:border-t-0 first:pt-0">
+      <span className="w-[74px] shrink-0 text-note text-ink-2">{label}</span>
+      <span className="flex flex-wrap items-center gap-2.5">
+        <Button variant="default" className={className}>
           <PlusIcon />
           予約を追加
         </Button>
-        <Button variant="outline" className={extra}>
+        <Button variant="tone" className={className}>
           変更
         </Button>
-        <Button variant="ghost" className={extra ? QUIET[extra] : undefined}>
-          詳細
-        </Button>
-        <Button variant="remove" className={extra}>
+        <Button variant="danger" className={className}>
           削除
         </Button>
       </span>
@@ -136,60 +92,45 @@ function StateRow({
 
 export const States: Story = {
   render: () => (
-    <Surface className="max-w-[620px]">
+    <Surface className="max-w-[640px]">
       <StateRow label="通常" />
-      <StateRow label="ホバー" note="+1px / 3px 影" extra={HOVER} />
-      <StateRow label="押下" note="-1px / 影 0" extra={PRESS} />
-      <StateRow label="フォーカス" note="--ring" extra={FOCUS} />
-      <div className="flex items-center gap-3 border-t border-dashed border-line py-[11px]">
-        <span className="w-[74px] shrink-0 text-cap text-ink-3">無効</span>
-        <span className="flex flex-wrap items-center gap-[9px]">
+      <StateRow label="押下" className="scale-[0.98]" />
+      <StateRow label="フォーカス" className="shadow-ring" />
+      <div className="flex items-center gap-3 border-t border-hair py-3">
+        <span className="w-[74px] shrink-0 text-note text-ink-2">無効</span>
+        <span className="flex flex-wrap items-center gap-2.5">
           <Button variant="default" disabled>
             <PlusIcon />
             予約を追加
           </Button>
-          <Button variant="outline" disabled>
+          <Button variant="tone" disabled>
             変更
           </Button>
-          <Button variant="ghost" disabled>
-            詳細
-          </Button>
-          <Button variant="remove" disabled>
+          <Button variant="danger" disabled>
             削除
           </Button>
         </span>
       </div>
-      <div className="flex items-center gap-3 border-t border-dashed border-line py-[11px]">
-        <span className="w-[74px] shrink-0 text-cap text-ink-3">
+      <div className="flex items-center gap-3 border-t border-hair py-3">
+        <span className="w-[74px] shrink-0 text-note text-ink-2">
           ローディング
         </span>
-        <span className="flex flex-wrap items-center gap-[9px]">
+        <span className="flex flex-wrap items-center gap-2.5">
           <Button
             variant="default"
             aria-busy="true"
             aria-disabled
             onClick={hold}
-            className="hover:border-btn-fill hover:bg-btn-fill hover:shadow-pop"
           >
             <Spinner size="control" />
             保存しています
           </Button>
-          <Button
-            variant="outline"
-            aria-busy="true"
-            aria-disabled
-            onClick={hold}
-            className="hover:shadow-pop"
-          >
+          <Button variant="tone" aria-busy="true" aria-disabled onClick={hold}>
             <Spinner size="control" />
             保存しています
           </Button>
         </span>
       </div>
-      <p className="mt-[11px] text-cap text-ink-3">
-        ホバー・押下の行は、その状態を固定したサンプル。実物は「種類」「サイズ」の行で
-        ポインタを載せて確認する。ローディングはスピナー+ラベルを保ち、幅を変えない。
-      </p>
     </Surface>
   ),
 }
@@ -200,21 +141,18 @@ export const Sizes: Story = {
       <div className="flex flex-col gap-5">
         {(['lg', 'default', 'sm'] as const).map((size) => (
           <div key={size} className="flex items-center gap-3">
-            <span className="w-[74px] shrink-0 font-code text-cap text-ink-3">
+            <span className="w-[74px] shrink-0 font-code text-note text-ink-2">
               {size}
             </span>
             <div className="flex flex-wrap items-center gap-2.5">
               <Button size={size}>録画を開始</Button>
-              <Button size={size} variant="outline">
+              <Button size={size} variant="tone">
                 キャンセル
               </Button>
             </div>
           </div>
         ))}
       </div>
-      <p className="mt-[11px] text-cap text-ink-3">
-        default ・ 高さ 34px ／ sm ・ 高さ 28px(一覧の行内・ダイアログのフッタ)
-      </p>
     </Surface>
   ),
 }

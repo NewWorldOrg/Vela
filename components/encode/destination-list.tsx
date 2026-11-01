@@ -116,7 +116,7 @@ export function DestinationList({
               </TableCell>
               <TableCell {...cardPlace('field', '既定のプロファイル')}>
                 {destination.defaultProfileLabel ?? (
-                  <span className="text-ink-3">{EMPTY_VALUE}</span>
+                  <span className="text-ink-2">{EMPTY_VALUE}</span>
                 )}
               </TableCell>
               <TableCell {...cardPlace('field', '作成')} className={STAMP}>

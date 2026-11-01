@@ -47,13 +47,13 @@ export const DotAndText: Story = {
             <StatusDot tone={tone as 'ok' | 'warn' | 'err' | 'off'} />
             <b className="heading w-[3.4em] shrink-0 text-ui">{label}</b>
             <span className="min-w-0 flex-1 text-sub text-ink-2">{desc}</span>
-            <span className="shrink-0 rounded-full bg-surface-2 px-2.5 font-code text-micro text-ink-3">
+            <span className="shrink-0 rounded-full bg-surface-2 px-2.5 font-code text-micro text-ink-2">
               {token}
             </span>
           </div>
         ))}
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         重要な状態も点滅させず、静的な色+形で示す。ドット径 7px。
       </p>
     </div>
@@ -80,7 +80,7 @@ export const Chips: Story = {
         <Badge>ワンセグ</Badge>
         <Badge variant="mute">未計測</Badge>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         ドットを伴うのは録画中のみ。同系色のチップは文言で区別し、色数を増やさない。
       </p>
 
@@ -92,7 +92,7 @@ export const Chips: Story = {
         <span className="text-ui text-ink-2">ワンセグ</span>
         <span className="text-ui text-ink-2">データ</span>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         区分は状態ではないため、文字は ink-2
         のまま。彩度を抑えた面色の差だけで識別する。
       </p>
@@ -108,7 +108,7 @@ export const 録画中: Story = {
         <RecordingInProgressChip />
         <RecordingInProgressChip mark="ledger" />
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         ライブラリ・予約一覧・録画詳細はこの一つを使う。録画詳細だけが台帳の印を伴う。
       </p>
     </div>
@@ -162,7 +162,7 @@ export const InUse: Story = {
           <Badge variant="info">予約済み</Badge>
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         チップは 11.5px / 999px 角丸。soft 面上の文字はコントラスト 4.5:1
         以上を維持する。
       </p>
@@ -174,7 +174,7 @@ export const 状態バッジの説明: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading mark={MarkPill}>吹き出しの付く語</SectionHeading>
-      <p className="mb-3 text-note leading-[1.7] text-ink-3">
+      <p className="mb-3 text-note leading-[1.7] text-ink-2">
         ここでの意味が普段の読みより狭い語にだけ付ける。自明な語には付けない。
       </p>
       <div className="flex flex-wrap items-center gap-2">

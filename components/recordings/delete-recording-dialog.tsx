@@ -72,26 +72,26 @@ export function DeleteRecordingDialog({
           {shown && (
             <AlertDialogDescription asChild>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
-                <dt className="text-ink-3">番組</dt>
+                <dt className="text-ink-2">番組</dt>
                 <dd className="font-bold text-ink">{shown.title}</dd>
-                <dt className="text-ink-3">チャンネル</dt>
+                <dt className="text-ink-2">チャンネル</dt>
                 <dd className="text-ink-2">{shown.channel}</dd>
-                <dt className="text-ink-3">{WHEN_LABELS.recorded}</dt>
+                <dt className="text-ink-2">{WHEN_LABELS.recorded}</dt>
                 <dd className="font-code text-ink-2">{shown.recordedRange}</dd>
-                <dt className="text-ink-3">サイズ</dt>
+                <dt className="text-ink-2">サイズ</dt>
                 <dd className="font-code text-ink-2">
                   {shown.sizeBytes == null
                     ? EMPTY_VALUE
                     : formatBytes(shown.sizeBytes)}
                   {observationOf(shown) && ` (${observationOf(shown)})`}
                 </dd>
-                <dt className="text-ink-3">結果と品質</dt>
+                <dt className="text-ink-2">結果と品質</dt>
                 <dd>
                   <OutcomeChip recording={shown} />{' '}
                   {shown.fileMissing && <FileMissingChip />}{' '}
                   <QualityChip recording={shown} />
                 </dd>
-                <dt className="text-ink-3">ファイル</dt>
+                <dt className="text-ink-2">ファイル</dt>
                 <dd className="font-code text-ink-2">{shown.filePath}</dd>
               </dl>
             </AlertDialogDescription>
@@ -107,7 +107,7 @@ export function DeleteRecordingDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="removeFill"
+            variant="dangerFill"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()

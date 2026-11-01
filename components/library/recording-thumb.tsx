@@ -15,14 +15,14 @@ import {
 
 const ART = {
   shot: <ThumbShotIcon className="size-[calc(19rem/16)] text-sky" />,
-  pending: <ThumbPendingIcon className="size-[calc(19rem/16)] text-ink-3" />,
-  none: <ThumbMissingIcon className="size-[calc(19rem/16)] text-ink-3" />,
+  pending: <ThumbPendingIcon className="size-[calc(19rem/16)] text-ink-2" />,
+  none: <ThumbMissingIcon className="size-[calc(19rem/16)] text-ink-2" />,
   error: <ThumbErrorIcon className="size-[calc(19rem/16)] text-coral" />,
 }
 
 export function RecordingThumb({
   recording,
-  subTone = 'text-ink-3',
+  subTone = 'text-ink-2',
   className,
 }: {
   recording: Recording

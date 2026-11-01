@@ -63,7 +63,7 @@ function SectionCap({
       <CapIcon className="size-3.5 text-brand" />
       {children}
       {stat !== undefined && (
-        <span className="ml-auto text-note font-normal text-ink-3 tabular-nums">
+        <span className="ml-auto text-note font-normal text-ink-2 tabular-nums">
           {stat}
         </span>
       )}
@@ -80,7 +80,7 @@ function StreamName({ row }: { row: StreamVisitRow }) {
       </span>
       <span className="min-w-0 flex-1 text-sub font-bold">
         {row.name ?? EMPTY_VALUE}
-        <small className="ml-1.5 text-cap font-normal whitespace-nowrap text-ink-3">
+        <small className="ml-1.5 text-cap font-normal whitespace-nowrap text-ink-2">
           サービス {row.serviceCount}
         </small>
       </span>
@@ -136,7 +136,7 @@ function VisitDetail({ row }: { row: StreamVisitRow }) {
   }
 
   if (row.outcome === 'neverVisited') {
-    return <span className="text-ink-3">まだ訪問していません</span>
+    return <span className="text-ink-2">まだ訪問していません</span>
   }
 
   if (row.outcome === 'incomplete') {
@@ -173,7 +173,7 @@ function VisitDetail({ row }: { row: StreamVisitRow }) {
         </span>
       )}
       {row.outcome === 'basicOnly' && (
-        <span className="text-ink-3">詳細は次回に持ち越し</span>
+        <span className="text-ink-2">詳細は次回に持ち越し</span>
       )}
     </>
   )
@@ -415,7 +415,7 @@ export function CollectionDrawer({
       >
         <div className="flex items-center gap-2.5 px-5 pt-4">
           <AntennaIcon className="size-[calc(18rem/16)] text-brand" />
-          <h2 className="heading min-w-0 flex-1 text-h3">収集状態</h2>
+          <h2 className="heading min-w-0 flex-1 text-heading">収集状態</h2>
           <IconButton
             aria-label="閉じる"
             variant="quiet"
@@ -432,7 +432,7 @@ export function CollectionDrawer({
 
           <SectionCap icon={CollectIcon}>即時収集</SectionCap>
           <div className="flex flex-wrap items-center gap-x-[calc(9rem/16)] gap-y-2">
-            <span className="text-note font-bold whitespace-nowrap text-ink-3">
+            <span className="text-note font-bold whitespace-nowrap text-ink-2">
               集める範囲
             </span>
             <SegmentedControl
@@ -444,7 +444,7 @@ export function CollectionDrawer({
           </div>
           {range !== 'all' && (
             <div className="mt-2.5 flex flex-wrap items-center gap-x-[calc(9rem/16)] gap-y-2">
-              <span className="text-note font-bold whitespace-nowrap text-ink-3">
+              <span className="text-note font-bold whitespace-nowrap text-ink-2">
                 対象
               </span>
               <Select
@@ -481,7 +481,7 @@ export function CollectionDrawer({
               即時収集を実行
             </Button>
             {coolingDown && (
-              <p className="min-w-[calc(180rem/16)] flex-1 text-note leading-[1.7] text-ink-3">
+              <p className="min-w-[calc(180rem/16)] flex-1 text-note leading-[1.7] text-ink-2">
                 終わってから、間隔をおいてもう一度押せます。
               </p>
             )}
@@ -541,7 +541,7 @@ export function CollectionDrawer({
 
           <div className="mt-3.5 flex flex-wrap items-center gap-3 border-t border-dashed border-line pt-[calc(13rem/16)]">
             <Button
-              variant="remove"
+              variant="danger"
               size="sm"
               onClick={() => setRebuildOpen(true)}
             >

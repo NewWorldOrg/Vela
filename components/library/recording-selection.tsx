@@ -63,7 +63,7 @@ export function RecordingSelection({
       role="group"
       aria-label="選択した録画の操作"
       className={cn(
-        'mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[calc(17rem/16)] py-[calc(13rem/16)]',
+        'mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]',
         className,
       )}
     >
@@ -71,7 +71,7 @@ export function RecordingSelection({
         <b className="font-code font-bold">{chosen.length}</b> 件を選択
       </span>
       <Button
-        variant="remove"
+        variant="danger"
         size="sm"
         disabled={pending || !deletable}
         onClick={() => setRemoving(true)}
@@ -79,7 +79,7 @@ export function RecordingSelection({
         <TrashIcon />
         削除
       </Button>
-      <Button variant="halt" size="sm" disabled={pending} onClick={onClear}>
+      <Button variant="tone" size="sm" disabled={pending} onClick={onClear}>
         選択を解除
       </Button>
       {outcome && (
@@ -113,7 +113,7 @@ export function RecordingSelection({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="removeFill"
+              variant="dangerFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

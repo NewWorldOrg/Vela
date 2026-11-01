@@ -223,12 +223,12 @@ export function ChannelDayList({
                     <span
                       className={cn(
                         'text-ui font-medium',
-                        past ? 'text-ink-3' : 'text-ink',
+                        past ? 'text-ink-2' : 'text-ink',
                       )}
                     >
                       {p.startLabel}
                     </span>
-                    <span className="text-cap text-ink-3">
+                    <span className="text-cap text-ink-2">
                       {p.endUndecided ? '未定' : p.endLabel}
                     </span>
                   </span>
@@ -247,7 +247,7 @@ export function ChannelDayList({
                     <span
                       className={cn(
                         'mt-0.5 line-clamp-2 text-sub',
-                        past ? 'text-ink-3' : 'text-ink-2',
+                        past ? 'text-ink-2' : 'text-ink-2',
                       )}
                     >
                       <span
@@ -257,7 +257,7 @@ export function ChannelDayList({
                           GENRE_MARK_CLASS[p.genre],
                         )}
                       />
-                      <span className="mr-1.5 text-ink-3">
+                      <span className="mr-1.5 text-ink-2">
                         {genreWordOf(p.genreLabel)}
                       </span>
                       {p.description && halfWidthOf(p.description)}
@@ -280,7 +280,7 @@ export function ChannelDayList({
                   </span>
 
                   {!circleOf && (
-                    <span className="flex size-11 shrink-0 items-center justify-center self-center text-ink-3">
+                    <span className="flex size-11 shrink-0 items-center justify-center self-center text-ink-2">
                       <ChevronDownIcon
                         className={cn(
                           'size-[calc(15rem/16)] transition-transform',

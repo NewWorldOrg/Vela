@@ -50,7 +50,7 @@ export const Surfaces: Story = {
           <TileMeta>取得できません</TileMeta>
         </Tile>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         線と影を持つのは押せるものだけ。ポインタを載せると 1px
         持ち上がり、押すと沈む。
       </p>
@@ -97,7 +97,7 @@ export const 空状態の四通り: Story = {
       <EmptyState
         title="条件に合う録画がありません"
         action={
-          <Button variant="halt" size="sm">
+          <Button variant="tone" size="sm">
             条件を解除
           </Button>
         }
@@ -105,7 +105,7 @@ export const 空状態の四通り: Story = {
       <EmptyState
         title="未完了の予約がありません"
         action={
-          <Button variant="halt" size="sm">
+          <Button variant="tone" size="sm">
             条件を解除
           </Button>
         }

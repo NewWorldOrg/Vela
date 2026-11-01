@@ -59,7 +59,7 @@ const COLUMNS: {
 
 const OWNED_BY_NO_RECORDING: readonly IntegrityFault[] = ['noLedgerRow']
 
-const NOT_YET_KNOWN_TONE = 'text-ink-3'
+const NOT_YET_KNOWN_TONE = 'text-ink-2'
 
 const REASON_TONE: Record<IntegrityFault, string> = {
   noLedgerRow: 'text-ink-2',
@@ -139,12 +139,12 @@ export function IntegrityView({
   return (
     <ScreenMain
       scroll="within"
-      className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-1 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+      className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-2 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
       <div className="mb-3">
         <Link
           href="/library"
-          className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink hover:-translate-x-px hover:-translate-y-px"
+          className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink"
         >
           <ChevronLeftIcon className="size-[calc(15rem/16)]" />
           ライブラリへ
@@ -191,7 +191,7 @@ export function IntegrityView({
           </div>
           {(check.rootsOutOfReach > 0 ||
             check.ledgerRowsInRootsOutOfReach > 0) && (
-            <p className="mt-2.5 text-note leading-relaxed text-ink-3">
+            <p className="mt-2.5 text-note leading-relaxed text-ink-2">
               届かなかったルートが {check.rootsOutOfReach} 件あり、そこにある
               録画の記録 {check.ledgerRowsInRootsOutOfReach}{' '}
               行は判定していません。
@@ -217,7 +217,7 @@ export function IntegrityView({
                 <span className="font-code">{root.total}</span>
               </span>
               {root.recordingsInFlight > 0 && (
-                <span className="text-note text-ink-3">
+                <span className="text-note text-ink-2">
                   進行中の録画 {root.recordingsInFlight} 件
                 </span>
               )}
@@ -275,7 +275,7 @@ export function IntegrityView({
                   <b className="block font-code text-sub font-medium break-all">
                     {finding.path}
                   </b>
-                  <span className="text-note text-ink-3">{finding.root}</span>
+                  <span className="text-note text-ink-2">{finding.root}</span>
                 </TableCell>
                 <TableCell
                   {...cardPlace('field', '理由')}
@@ -296,7 +296,7 @@ export function IntegrityView({
                 >
                   <span className="font-code tabular-nums">{finding.size}</span>
                   {finding.sizeNote && (
-                    <small className="block text-micro text-ink-3">
+                    <small className="block text-micro text-ink-2">
                       {finding.sizeNote}
                     </small>
                   )}
@@ -315,7 +315,7 @@ export function IntegrityView({
                     finding.recordingId !== undefined && (
                       <ActionRow>
                         <Button
-                          variant="change"
+                          variant="tone"
                           size="sm"
                           aria-disabled={redrawing}
                           onClick={() => redraw(finding)}
@@ -332,7 +332,7 @@ export function IntegrityView({
                   {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
                     <ActionRow>
                       <Button
-                        variant="remove"
+                        variant="danger"
                         size="sm"
                         onClick={() => setAsked(finding)}
                       >

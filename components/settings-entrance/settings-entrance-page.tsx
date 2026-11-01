@@ -226,7 +226,9 @@ function SystemRow({
         <VelaMark className="size-[calc(26rem/16)]" />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="heading block text-h3 leading-normal">システム</span>
+        <span className="heading block text-heading leading-normal">
+          システム
+        </span>
         <span className="flex flex-wrap gap-x-2.5 text-note text-ink-2">
           {signalsOf(status).map((signal, nth) => (
             <span key={nth} className="flex items-center gap-[calc(5rem/16)]">
@@ -242,7 +244,7 @@ function SystemRow({
           ))}
         </span>
       </span>
-      <ChevronRightIcon className="size-[calc(18rem/16)] shrink-0 text-ink-3" />
+      <ChevronRightIcon className="size-[calc(18rem/16)] shrink-0 text-ink-2" />
     </Link>
   )
 }
@@ -273,11 +275,11 @@ function ItemRow({ item, current }: { item: Item; current?: string }) {
           {item.label}
         </span>
         {item.value && (
-          <span className="min-w-0 truncate text-note text-ink-3">
+          <span className="min-w-0 truncate text-note text-ink-2">
             {item.value}
           </span>
         )}
-        <ChevronRightIcon className="size-[calc(18rem/16)] shrink-0 text-ink-3" />
+        <ChevronRightIcon className="size-[calc(18rem/16)] shrink-0 text-ink-2" />
       </Link>
     </li>
   )
@@ -303,7 +305,7 @@ export function SettingsEntranceView({
         <section key={group.name} aria-labelledby={`settings-${group.name}`}>
           <h2
             id={`settings-${group.name}`}
-            className="px-0.5 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-3"
+            className="px-0.5 pt-4 pb-1.5 text-note font-bold tracking-[0.06em] text-ink-2"
           >
             {group.name}
           </h2>

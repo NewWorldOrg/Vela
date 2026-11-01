@@ -20,7 +20,7 @@ export type TintName =
   'accent' | 'lavender' | 'salmon' | 'butter' | 'sage' | 'sky' | 'blush'
 
 export const TINT_CLASS: Record<TintName, string> = {
-  accent: 'bg-brand-soft',
+  accent: 'bg-surface',
   lavender: 'bg-tint-lavender',
   salmon: 'bg-tint-salmon',
   butter: 'bg-tint-butter',
@@ -94,7 +94,7 @@ export function TileTitle({ className, ...props }: ComponentProps<'span'>) {
 export function TileMeta({ className, ...props }: ComponentProps<'span'>) {
   return (
     <span
-      className={cn('font-code text-note tabular-nums text-ink-3', className)}
+      className={cn('font-code text-note tabular-nums text-ink-2', className)}
       {...props}
     />
   )

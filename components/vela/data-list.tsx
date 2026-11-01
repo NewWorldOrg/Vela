@@ -40,7 +40,7 @@ export function DataListHeader({ className, ...props }: ComponentProps<'div'>) {
       data-slot="data-list-header"
       className={cn(
         GRID,
-        'items-center rounded-md bg-surface-2 px-[calc(13rem/16)] py-[calc(7rem/16)] text-micro font-bold tracking-[0.04em] text-ink-3',
+        'items-center rounded-md bg-surface-2 px-[calc(13rem/16)] py-[calc(7rem/16)] text-micro font-bold tracking-[0.04em] text-ink-2',
         className,
       )}
       {...props}
@@ -61,7 +61,7 @@ export function DataListRow({
         GRID,
         'items-center border-b border-dashed border-line px-[calc(13rem/16)] py-3 text-ui last:border-b-0',
         tactileQuiet,
-        muted && 'text-ink-3',
+        muted && 'text-ink-2',
         className,
       )}
       {...props}

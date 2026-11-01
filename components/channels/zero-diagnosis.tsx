@@ -40,7 +40,7 @@ export function ZeroDiagnosisPanel({
                 className={
                   sole
                     ? 'mb-0.5 text-cap font-medium text-coral'
-                    : 'mb-0.5 text-cap font-medium text-ink-3'
+                    : 'mb-0.5 text-cap font-medium text-ink-2'
                 }
               >
                 {numbered(failure)}
@@ -54,7 +54,7 @@ export function ZeroDiagnosisPanel({
               >
                 {count}
                 {sole && (
-                  <small className="text-cap font-normal text-ink-3">
+                  <small className="text-cap font-normal text-ink-2">
                     {' '}
                     / {diagnosis.attempted}
                   </small>

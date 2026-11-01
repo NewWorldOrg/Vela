@@ -89,7 +89,7 @@ export function Toasts({ children }: { children: ReactNode }) {
             key={shown.key}
             data-slot="toast"
             className={cn(
-              'appears pointer-events-auto flex h-[calc(52rem/16)] w-full max-w-[calc(480rem/16)] items-center gap-2.5 rounded-lg bg-ink pr-1.5 pl-4 text-ui text-on-brand shadow-pop-lg',
+              'appears pointer-events-auto flex h-12 w-fit max-w-[calc(480rem/16)] min-w-0 phone:h-[calc(52rem/16)] phone:w-full items-center gap-4 rounded-[14px] bg-toast pr-2 pl-[18px] text-body text-on-toast shadow-[0_10px_30px_rgba(0,0,0,0.25)]',
             )}
           >
             <span className="min-w-0 flex-1 truncate">{shown.text}</span>
@@ -103,7 +103,7 @@ export function Toasts({ children }: { children: ReactNode }) {
                   action?.onPress()
                 }}
                 className={cn(
-                  'flex h-11 shrink-0 items-center rounded-full px-3 font-bold text-brand-line outline-none focus-visible:shadow-ring dark:text-brand-soft',
+                  'tap-target flex h-[34px] shrink-0 items-center rounded-sm bg-white/12 px-3.5 font-semibold text-on-toast outline-none focus-visible:shadow-ring dark:bg-black/8',
                   pressable,
                 )}
               >

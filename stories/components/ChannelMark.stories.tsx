@@ -56,7 +56,7 @@ function Row({
     <div className="flex items-center gap-[11px] border-b border-dashed border-line py-2.5 last:border-b-0">
       <ChannelMark logo={logo} no={no === '' ? undefined : no} on={on} />
       <span className="min-w-0 flex-1 truncate text-ui font-bold">{name}</span>
-      {note && <span className="shrink-0 text-note text-ink-3">{note}</span>}
+      {note && <span className="shrink-0 text-note text-ink-2">{note}</span>}
     </div>
   )
 }

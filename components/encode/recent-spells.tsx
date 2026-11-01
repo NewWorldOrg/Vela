@@ -2,7 +2,7 @@ import { formatLength } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { EncodeSpells } from '@/repository/encode'
 
-const SENTENCE = 'text-note tabular-nums text-ink-3'
+const SENTENCE = 'text-note tabular-nums text-ink-2'
 
 export function RecentSpells({
   spells,
@@ -28,13 +28,13 @@ export function RecentSpells({
       ) : (
         <span className={SENTENCE}>
           完了 {spells.jobs} 件の平均{' '}
-          <span className="font-code text-[calc(15rem/16)] font-medium tabular-nums text-brand">
+          <span className="font-code text-title font-medium tabular-nums text-brand">
             {formatLength(spells.averageSeconds)}
           </span>
         </span>
       )}
       {spells.from && spells.to && (
-        <span className="font-code text-note tabular-nums text-ink-3">
+        <span className="font-code text-note tabular-nums text-ink-2">
           {spells.from} 〜 {spells.to}
         </span>
       )}

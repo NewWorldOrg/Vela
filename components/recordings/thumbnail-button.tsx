@@ -101,7 +101,7 @@ export function ThumbnailButton({
       className="flex flex-col items-start gap-1.5"
     >
       <Button
-        variant="change"
+        variant="tone"
         disabled={refused !== undefined}
         title={refused}
         aria-disabled={pending}

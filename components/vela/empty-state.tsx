@@ -35,7 +35,7 @@ export function EmptyState({
           {usher && <AnsweringUsher mood={usher} className="usher-arrives" />}
           {said && (
             <div className="flex flex-col items-center gap-[calc(9rem/16)]">
-              {title && <Title className="heading text-h3">{title}</Title>}
+              {title && <Title className="heading text-heading">{title}</Title>}
               {children && (
                 <p className="max-w-[calc(520rem/16)] text-ui text-ink-2">
                   {children}

@@ -68,7 +68,7 @@ export function JobsList({
         <EmptyState
           title="ジョブの履歴がありません"
           action={
-            <Button variant="watch" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href="/library">ライブラリへ</Link>
             </Button>
           }

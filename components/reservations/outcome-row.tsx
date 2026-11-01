@@ -94,7 +94,7 @@ export function OutcomeRow({
           <TableCell colSpan={OUTCOME_COLUMN_COUNT} className="border-b-0 p-0">
             <Unfold open={expanded} bodyClassName="px-3.5 pb-3">
               <div className="rounded-lg bg-surface px-4 py-3.5">
-                <div className="text-cap font-bold tracking-[0.04em] text-ink-3">
+                <div className="text-cap font-bold tracking-[0.04em] text-ink-2">
                   代わりに録られた予約
                 </div>
                 <div className="mt-2 space-y-1.5">

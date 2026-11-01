@@ -107,11 +107,11 @@ export function ProgramBooking({
       <TunerTaken channel={channel} />
       <div className="mt-2.5 flex flex-wrap gap-2">
         <ActionRow>
-          <Button variant="change" size="sm" onClick={() => setEditing(true)}>
+          <Button variant="tone" size="sm" onClick={() => setEditing(true)}>
             <EditIcon />
             予約を変更
           </Button>
-          <Button variant="halt" size="sm" disabled={pending} onClick={drop}>
+          <Button variant="tone" size="sm" disabled={pending} onClick={drop}>
             <CloseIcon />
             予約を取り消し
           </Button>

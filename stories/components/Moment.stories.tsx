@@ -42,7 +42,7 @@ function Rows({ rows }: { rows: [string, string][] }) {
     <dl className="grid grid-cols-[minmax(0,13rem)_minmax(0,1fr)] gap-x-4 gap-y-2 text-ui">
       {rows.map(([name, said]) => (
         <div key={name} className="contents">
-          <dt className="text-sub text-ink-3">{name}</dt>
+          <dt className="text-sub text-ink-2">{name}</dt>
           <dd className="font-code tabular-nums">{said}</dd>
         </div>
       ))}

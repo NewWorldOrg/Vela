@@ -88,7 +88,7 @@ export function RelayRow({
       </TableCell>
       <TableCell {...cardPlace('lead')} className="align-top whitespace-normal">
         <b className="block text-[calc(13rem/16)] font-bold">{first.title}</b>
-        <span className="text-note text-ink-3">
+        <span className="text-note text-ink-2">
           {relayCountSaying(summary)}
         </span>
       </TableCell>

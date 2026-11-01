@@ -83,13 +83,13 @@ export function PhoneChannelRows({
                   keepsTheSlot
                 />
                 {channel.logo && channel.no && (
-                  <span className="font-code text-micro text-ink-3">
+                  <span className="font-code text-micro text-ink-2">
                     {channel.no}
                   </span>
                 )}
               </span>
               <span className="min-w-0 flex-1">
-                <span className="flex items-center gap-1.5 text-note text-ink-3">
+                <span className="flex items-center gap-1.5 text-note text-ink-2">
                   <span className="shrink-0">{channel.name}</span>
                   {channel.next && (
                     <span className="ml-auto min-w-0 truncate text-right">
@@ -104,13 +104,13 @@ export function PhoneChannelRows({
                 <span
                   className={cn(
                     'block truncate text-title leading-normal font-bold',
-                    !programme && 'font-normal text-ink-3',
+                    !programme && 'font-normal text-ink-2',
                   )}
                 >
                   {programme ? programme.title : '番組情報がありません'}
                 </span>
                 {programme && (
-                  <span className="mt-1 flex items-center gap-2 font-code text-micro text-ink-3">
+                  <span className="mt-1 flex items-center gap-2 font-code text-micro text-ink-2">
                     {programme.startLabel}
                     <ProgressBar
                       value={channel.progressPct ?? 0}
@@ -202,12 +202,12 @@ export function PhoneWatchedRows({
                   className={cn(
                     'block truncate text-ui leading-normal font-bold',
                     on && 'text-brand',
-                    !channel.now && 'font-normal text-ink-3',
+                    !channel.now && 'font-normal text-ink-2',
                   )}
                 >
                   {channel.now ? channel.now.title : '番組情報がありません'}
                 </span>
-                <span className="flex items-center gap-1.5 text-note text-ink-3">
+                <span className="flex items-center gap-1.5 text-note text-ink-2">
                   <span className="truncate">{channel.name}</span>
                   {left !== undefined && (
                     <>
@@ -276,7 +276,7 @@ export function RecordThisButton({
 
   return (
     <Button
-      variant="outline"
+      variant="tone"
       size="sm"
       disabled={pending}
       onClick={record}
@@ -314,7 +314,7 @@ export function PhoneLiveInfo({
       className="border-b border-line bg-surface px-4 pt-3 pb-3.5"
     >
       <div className="flex items-start gap-2">
-        <h1 className="heading min-w-0 flex-1 text-h2 leading-[1.45]">
+        <h1 className="heading min-w-0 flex-1 text-section leading-[1.45]">
           {programme ? programme.title : '番組情報がありません'}
         </h1>
         {describes && (
@@ -324,7 +324,7 @@ export function PhoneLiveInfo({
             aria-label="番組の詳細"
             onClick={() => unfold(!unfolded)}
             className={cn(
-              '-mt-1 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-3 outline-none focus-visible:shadow-ring [&_svg]:size-5',
+              '-mt-1 -mr-2 flex size-11 shrink-0 items-center justify-center rounded-full text-ink-2 outline-none focus-visible:shadow-ring [&_svg]:size-5',
               pressable,
             )}
           >
@@ -333,7 +333,7 @@ export function PhoneLiveInfo({
         )}
       </div>
       {programme && (
-        <div className="mt-1.5 flex items-center gap-2 font-code text-note text-ink-3">
+        <div className="mt-1.5 flex items-center gap-2 font-code text-note text-ink-2">
           {programme.startLabel}
           <ProgressBar
             value={progressPct}
@@ -350,7 +350,7 @@ export function PhoneLiveInfo({
       )}
       {unfolded && programme && (
         <div className="mt-3 border-t border-dashed border-line pt-3 [&>:last-child]:mb-0">
-          <p className="mb-2 font-code text-note text-ink-3">
+          <p className="mb-2 font-code text-note text-ink-2">
             {channel.name} {programme.startLabel}
             {SPAN_DASH}
             {programme.endLabel ?? '終了未定'}

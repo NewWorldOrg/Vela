@@ -51,7 +51,7 @@ function Sample({
 }) {
   return (
     <div className="flex flex-col gap-[7px]">
-      <span className="font-code text-[10px] tracking-[0.06em] text-ink-3">
+      <span className="font-code text-[10px] tracking-[0.06em] text-ink-2">
         {caption}
       </span>
       {children}
@@ -124,7 +124,7 @@ export const TextInputs: Story = {
           </Field>
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         入力の角丸は 10px。パス・数値は M PLUS 1 Code
         で組み、桁と区切りを読み取りやすくする。エラーは境界色+メッセージのみで示し、
         点滅やグローは使わない。
@@ -158,7 +158,7 @@ function PasswordSamples() {
           </Sample>
         </div>
       </Surface>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         マスクは切り替えられる。打ったものが読めないと、断られたのか打ち間違えたのかが本人にも分からない。
         切り替えは欄の中ではなく横に置く。44px の触れる面は載せた側が press
         を受け取るので、欄の中に置くと右端で文字を選べなくなる。
@@ -259,7 +259,7 @@ export const Toggles: Story = {
           </div>
           <div className="flex items-center gap-[11px]">
             <Switch id="subtitle-stream" defaultChecked disabled />
-            <Label htmlFor="subtitle-stream" className="text-ink-3">
+            <Label htmlFor="subtitle-stream" className="text-ink-2">
               字幕ストリームを保存
             </Label>
           </div>
@@ -280,7 +280,7 @@ export const Toggles: Story = {
           </div>
           <div className="flex items-center gap-[9px]">
             <Checkbox id="save-logo" disabled />
-            <Label htmlFor="save-logo" className="text-ink-3">
+            <Label htmlFor="save-logo" className="text-ink-2">
               ロゴを保存
             </Label>
           </div>
@@ -299,7 +299,7 @@ export const Toggles: Story = {
           </RadioGroup>
         </OptionGroup>
       </div>
-      <p className="mt-[9px] text-note text-ink-3">
+      <p className="mt-[9px] text-note text-ink-2">
         選択肢のまとまりは枠で囲わず淡い色面で分ける。ノブとチェックは --ease
         でわずかに行き過ぎてから収まる。
       </p>

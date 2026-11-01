@@ -17,7 +17,7 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
         <p className="heading text-[calc(23rem/16)] leading-[1.4] tracking-[0.02em]">
           Vela
         </p>
-        <h1 className="heading mt-1 text-[calc(17rem/16)] leading-[1.5]">
+        <h1 className="heading mt-1 text-heading leading-[1.5]">
           サインアウトしました
         </h1>
         <p className="mt-px mb-2 text-[calc(13rem/16)] text-ink-2">
@@ -41,7 +41,7 @@ export function LoggedOutView({ method }: { method: AuthMethod }) {
           </Link>
         </Button>
         {method === 'oidc' && (
-          <p className="mt-[calc(15rem/16)] text-note leading-[1.7] text-ink-3">
+          <p className="mt-[calc(15rem/16)] text-note leading-[1.7] text-ink-2">
             組織の ID プロバイダーからはサインアウトしていません
           </p>
         )}

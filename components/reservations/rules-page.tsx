@@ -218,7 +218,7 @@ function RulesScreen({
         action={
           <span className="flex flex-wrap items-start justify-end gap-[calc(9rem/16)]">
             <Button
-              variant="outline"
+              variant="tone"
               size="sm"
               disabled={applying || !anEnabledRule}
               title={anEnabledRule ? undefined : NOTHING_TO_APPLY}
@@ -228,7 +228,7 @@ function RulesScreen({
               ルールを即時適用
             </Button>
             <ActionRow>
-              <Button variant="watch" size="sm" asChild>
+              <Button variant="tone" size="sm" asChild>
                 <Link href="/search">
                   <SearchIcon />
                   検索から作成
@@ -250,7 +250,7 @@ function RulesScreen({
       <div className="grid items-start gap-3.5 min-[1061px]:grid-cols-[minmax(calc(280rem/16),calc(360rem/16))_1fr]">
         <section className="rounded-lg bg-surface px-4 py-3.5">
           <div className="mb-2.5 flex flex-wrap items-center gap-2.5">
-            <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
+            <h2 className="heading flex items-center gap-1.5 text-title">
               <ReservationIcon className="size-4 text-brand" />
               ルール
             </h2>
@@ -338,12 +338,12 @@ function RuleRow({
           <b
             className={cn(
               'block text-ui font-bold',
-              rule.enabled ? 'text-ink' : 'text-ink-3',
+              rule.enabled ? 'text-ink' : 'text-ink-2',
             )}
           >
             {rule.name}
           </b>
-          <span className="block text-note text-ink-3">{summary}</span>
+          <span className="block text-note text-ink-2">{summary}</span>
         </button>
         <Switch
           size="sm"
@@ -721,7 +721,7 @@ function RuleEditor({
   return (
     <section className="rounded-lg bg-surface px-4 py-3.5">
       <div className="mb-3 flex flex-wrap items-center gap-2.5 border-b border-dashed border-line pb-2.5">
-        <h2 className="heading min-w-0 flex-1 text-[calc(15rem/16)]">
+        <h2 className="heading min-w-0 flex-1 text-title">
           {rule ? rule.name : '新しいルール'}
         </h2>
         {entry.enabled ? (
@@ -732,7 +732,7 @@ function RuleEditor({
           <Badge variant="mute">無効</Badge>
         )}
         {rule && (
-          <span className="text-note text-ink-3">
+          <span className="text-note text-ink-2">
             作成 {formatMoment(rule.createdAt)}
           </span>
         )}
@@ -870,7 +870,7 @@ function RuleEditor({
                 <SelectTrigger
                   size="sm"
                   aria-label="ジャンルを追加"
-                  className="w-fit rounded-full text-ink-3"
+                  className="w-fit rounded-full text-ink-2"
                 >
                   ＋ ジャンルを追加
                 </SelectTrigger>
@@ -923,7 +923,7 @@ function RuleEditor({
                   <SelectTrigger
                     size="sm"
                     aria-label="チャンネルを追加"
-                    className="w-fit rounded-full text-ink-3"
+                    className="w-fit rounded-full text-ink-2"
                   >
                     ＋ チャンネルを追加
                   </SelectTrigger>
@@ -982,7 +982,7 @@ function RuleEditor({
               areaClassName="w-[calc(150rem/16)]"
               className="h-[calc(33rem/16)] rounded-full"
             />
-            <span className="text-sub text-ink-3">〜</span>
+            <span className="text-sub text-ink-2">〜</span>
             <Input
               type="date"
               aria-label="期間の終了日"
@@ -1130,7 +1130,7 @@ function RuleEditor({
       >
         <div className="flex flex-wrap items-center gap-2.5">
           <Button
-            variant="change"
+            variant="tone"
             size="sm"
             disabled={pending}
             onClick={rehearse}
@@ -1142,7 +1142,7 @@ function RuleEditor({
             <span
               className={cn(
                 'text-sub text-ink-2',
-                stale && 'text-ink-3 [&_b]:text-ink-3',
+                stale && 'text-ink-2 [&_b]:text-ink-2',
               )}
             >
               一致 <Count value={preview.matched} /> 件 / 新しく作られる{' '}
@@ -1175,7 +1175,7 @@ function RuleEditor({
                       <span className="font-code text-note whitespace-nowrap text-ink-2">
                         {take.whenLabel}
                       </span>
-                      <span className="text-note whitespace-nowrap text-ink-3">
+                      <span className="text-note whitespace-nowrap text-ink-2">
                         {take.channelName}
                       </span>
                       <span className="min-w-0 flex-1 text-ui text-ink">
@@ -1192,7 +1192,7 @@ function RuleEditor({
                   ))}
                 </ul>
                 {preview.matched > preview.takes.length && (
-                  <p className="text-note text-ink-3">
+                  <p className="text-note text-ink-2">
                     先の <Count value={RULE_TAKES_SHOWN} />{' '}
                     件だけを載せています。
                   </p>
@@ -1205,7 +1205,7 @@ function RuleEditor({
 
       <div className="mt-3.5 flex flex-wrap items-center gap-2.5 border-t border-dashed border-line pt-3">
         {rule && (
-          <Button variant="remove" disabled={pending} onClick={retire}>
+          <Button variant="danger" disabled={pending} onClick={retire}>
             <TrashIcon />
             削除
           </Button>
@@ -1239,7 +1239,7 @@ function RuleEditor({
                   引っ込む予約 <Count value={leaving.sweeping} /> 件
                 </span>
               ) : (
-                <span className="text-ink-3">件数を数えています。</span>
+                <span className="text-ink-2">件数を数えています。</span>
               )}
             </div>
             <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
@@ -1249,7 +1249,7 @@ function RuleEditor({
             <AlertDialogFooter>
               <AlertDialogCancel>キャンセル</AlertDialogCancel>
               <AlertDialogAction
-                variant="removeFill"
+                variant="dangerFill"
                 disabled={pending || !leaving}
                 onClick={(event) => {
                   event.preventDefault()
@@ -1405,7 +1405,7 @@ function Excluded({
   }
 
   return (
-    <Tag data-excluded="" className="text-note text-ink-3">
+    <Tag data-excluded="" className="text-note text-ink-2">
       <Count value={parts.reduce((sum, part) => sum + part.count, 0)} />{' '}
       件は除外されました(
       {parts.map((part, at) => (
@@ -1452,7 +1452,7 @@ function MarkField({
             <SelectTrigger
               size="sm"
               aria-label={`${label}を追加`}
-              className="w-fit rounded-full text-ink-3"
+              className="w-fit rounded-full text-ink-2"
             >
               ＋ {label}を追加
             </SelectTrigger>

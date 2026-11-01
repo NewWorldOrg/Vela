@@ -350,7 +350,7 @@ export function LiveView({
           titleLevel={2}
           title="チューナーがありません"
           action={
-            <Button variant="watch" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href="/settings/tuners">チューナーへ</Link>
             </Button>
           }
@@ -419,7 +419,7 @@ export function LiveView({
             title="まだ番組情報がありません"
             className="mt-3.5"
             action={
-              <Button variant="watch" size="sm" asChild>
+              <Button variant="tone" size="sm" asChild>
                 <Link href="/guide">番組表へ</Link>
               </Button>
             }

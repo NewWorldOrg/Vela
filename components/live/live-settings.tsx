@@ -24,7 +24,7 @@ import type { CaptionStyle } from '@/lib/caption-style'
 
 function Figure({ children }: { children: ReactNode }) {
   return (
-    <span className="font-code text-[calc(15rem/16)] font-medium text-(--pl-ink)">
+    <span className="font-code text-title font-medium text-(--pl-ink)">
       {children}
     </span>
   )

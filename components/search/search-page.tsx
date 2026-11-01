@@ -330,7 +330,7 @@ function SearchScreen({
   return (
     <ScreenMain className="px-3.5 pt-6 pb-16 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)] upright:pt-0.5 sideways:pt-0">
       <PhoneBarLead>
-        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full sideways:max-w-[calc(240rem/16)] sideways:shrink-0 border-[1.5px] border-brand bg-surface pr-1.5 pl-3.5 text-ink-3 shadow-ring">
+        <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full sideways:max-w-[calc(240rem/16)] sideways:shrink-0 border-[1.5px] border-brand bg-surface pr-1.5 pl-3.5 text-ink-2 shadow-ring">
           <SearchIcon className="size-[calc(18rem/16)] shrink-0" />
           <input
             form={formId}
@@ -348,7 +348,7 @@ function SearchScreen({
               aria-label="キーワードを消す"
               onClick={() => amend({ q: '' })}
               className={cn(
-                'tap-target flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-3 [&_svg]:size-4',
+                'tap-target flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-2 text-ink-2 [&_svg]:size-4',
                 pressable,
               )}
             >
@@ -370,7 +370,7 @@ function SearchScreen({
             番組検索
           </h1>
         </div>
-        <Button variant="watch" size="sm" asChild>
+        <Button variant="tone" size="sm" asChild>
           <Link href="/guide">
             <ChevronLeftIcon />
             番組表へ
@@ -387,7 +387,7 @@ function SearchScreen({
         )}
       >
         <div className="flex flex-wrap items-center gap-2.5 phone:hidden">
-          <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
+          <h2 className="heading flex items-center gap-1.5 text-title">
             <FilterIcon className="size-4 text-brand" />
             検索条件
           </h2>
@@ -395,7 +395,7 @@ function SearchScreen({
             <button
               type="button"
               onClick={clear}
-              className="tap-target ml-auto cursor-pointer text-note text-ink-3 underline underline-offset-[3px] hover:text-ink-2"
+              className="tap-target ml-auto cursor-pointer text-note text-ink-2 underline underline-offset-[3px] hover:text-ink-2"
             >
               条件を解除
             </button>
@@ -516,7 +516,7 @@ function SearchScreen({
                 <SelectTrigger
                   size="sm"
                   aria-label="ジャンルを追加"
-                  className="w-fit rounded-full text-ink-3"
+                  className="w-fit rounded-full text-ink-2"
                 >
                   ＋ ジャンルを追加
                 </SelectTrigger>
@@ -563,7 +563,7 @@ function SearchScreen({
                   <SelectTrigger
                     size="sm"
                     aria-label="チャンネルを追加"
-                    className="w-fit rounded-full text-ink-3"
+                    className="w-fit rounded-full text-ink-2"
                   >
                     ＋ チャンネルを追加
                   </SelectTrigger>
@@ -598,7 +598,7 @@ function SearchScreen({
               areaClassName="w-[calc(150rem/16)]"
               className="h-[calc(33rem/16)] rounded-full"
             />
-            <span className="text-sub text-ink-3">〜</span>
+            <span className="text-sub text-ink-2">〜</span>
             <Input
               type="date"
               aria-label="期間の終了日"
@@ -617,7 +617,7 @@ function SearchScreen({
               検索
             </Button>
             {askedCount > 0 && (
-              <span className="text-note text-ink-3">
+              <span className="text-note text-ink-2">
                 {askedCount} 件の条件を指定しています
               </span>
             )}
@@ -625,9 +625,9 @@ function SearchScreen({
         </form>
 
         <div className="mt-3 flex min-w-0 items-center gap-2.5 border-t border-dashed border-line pt-3 phone:hidden">
-          <LinkIcon className="size-3.5 shrink-0 text-ink-3" />
+          <LinkIcon className="size-3.5 shrink-0 text-ink-2" />
           <InFull says={decodeURIComponent(href)}>
-            <code className="min-w-0 truncate font-code text-note text-ink-3">
+            <code className="min-w-0 truncate font-code text-note text-ink-2">
               {decodeURIComponent(href)}
             </code>
           </InFull>
@@ -689,7 +689,7 @@ function SearchScreen({
             )}
           >
             <div className="mb-2.5 flex flex-wrap items-center gap-2.5 phone:hidden">
-              <h2 className="heading flex items-center gap-1.5 text-[calc(15rem/16)]">
+              <h2 className="heading flex items-center gap-1.5 text-title">
                 <ListIcon className="size-4 text-brand" />
                 検索結果
               </h2>
@@ -770,10 +770,10 @@ function SearchScreen({
                 className="mt-6 max-w-[calc(560rem/16)]"
                 action={
                   <div className="flex flex-wrap justify-center gap-2">
-                    <Button size="sm" variant="halt" onClick={clear}>
+                    <Button size="sm" variant="tone" onClick={clear}>
                       条件を解除
                     </Button>
-                    <Button size="sm" variant="watch" asChild>
+                    <Button size="sm" variant="tone" asChild>
                       <Link href="/guide">番組表へ</Link>
                     </Button>
                   </div>
@@ -922,7 +922,7 @@ function SearchScreen({
                               <p
                                 className={cn(
                                   READABLE_LINE,
-                                  'mt-px text-note text-ink-3',
+                                  'mt-px text-note text-ink-2',
                                 )}
                               >
                                 {p.description}
@@ -998,7 +998,7 @@ function ConditionRow({
       data-condition={name}
       className="flex flex-col gap-1.5 border-b border-dashed border-line py-[calc(9rem/16)] last:border-b-0 min-[701px]:flex-row min-[701px]:items-start min-[701px]:gap-3.5 phone:hidden phone:border-b-0"
     >
-      <span className="text-note font-bold text-ink-3 min-[701px]:w-[calc(92rem/16)] min-[701px]:shrink-0 min-[701px]:pt-2">
+      <span className="text-note font-bold text-ink-2 min-[701px]:w-[calc(92rem/16)] min-[701px]:shrink-0 min-[701px]:pt-2">
         {label}
       </span>
       <span className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-[calc(18rem/16)]">
@@ -1009,5 +1009,5 @@ function ConditionRow({
 }
 
 function Hint({ children }: { children: ReactNode }) {
-  return <span className="text-note text-ink-3">{children}</span>
+  return <span className="text-note text-ink-2">{children}</span>
 }

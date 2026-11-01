@@ -865,7 +865,7 @@ export const 一致を見ているあいだに条件を変えると結果は古�
         /^一致 \d+ 件 \/ 新しく作られる/.test(element.textContent ?? ''),
     )
 
-    await expect(counted).toHaveClass('text-ink-3')
+    await expect(counted).toHaveClass('text-ink-2')
   },
 }
 
@@ -1038,7 +1038,7 @@ export const 追加の置き場: Story = {
     const fromSearch = canvas.getByRole('link', { name: '検索から作成' })
 
     await expect(add).toHaveAttribute('data-variant', 'default')
-    await expect(fromSearch).toHaveAttribute('data-variant', 'watch')
+    await expect(fromSearch).toHaveAttribute('data-variant', 'tone')
 
     const drawn = [add, fromSearch].map((one) => one.getBoundingClientRect())
 

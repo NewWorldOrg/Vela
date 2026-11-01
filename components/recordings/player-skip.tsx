@@ -25,7 +25,7 @@ export const SKIP_THE: Record<SkippableKind, string> = {
 }
 
 const ON_THE_PICTURE =
-  'tap-target flex items-center justify-center rounded-full border border-white/25 bg-black/80 text-(--pl-ink) transition-[translate,background-color,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px hover:bg-black/90 hover:text-white active:translate-x-px active:translate-y-px focus-visible:shadow-ring focus-visible:outline-none still:transition-none'
+  'tap-target flex items-center justify-center rounded-full border border-white/25 bg-black/80 text-(--pl-ink) transition-[translate,background-color,color] duration-150 ease-toy hover:bg-black/90 hover:text-white focus-visible:shadow-ring focus-visible:outline-none still:transition-none'
 
 export function PlayerSkip({
   kinds,

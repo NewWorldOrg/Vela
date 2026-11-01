@@ -162,12 +162,12 @@ export function ReservationRow({
             {reservation.title}
           </b>
           {segment ? (
-            <span className="text-note text-ink-3">
+            <span className="text-note text-ink-2">
               区切り {segment.nth} / {segment.of}
             </span>
           ) : (
             reservation.note && (
-              <span className="text-note text-ink-3">{reservation.note}</span>
+              <span className="text-note text-ink-2">{reservation.note}</span>
             )
           )}
         </TableCell>
@@ -199,7 +199,7 @@ export function ReservationRow({
         <TableCell {...cardPlace('actions')} className="text-right align-top">
           <ActionRow>
             {reservation.recordingId && (
-              <Button variant="watch" size="sm" asChild>
+              <Button variant="tone" size="sm" asChild>
                 <Link href={`/recordings/${reservation.recordingId}`}>
                   <LibraryIcon />
                   この予約の録画へ
@@ -208,7 +208,7 @@ export function ReservationRow({
             )}
             {restorable && (
               <Button
-                variant="watch"
+                variant="tone"
                 size="sm"
                 disabled={pending}
                 onClick={() => run(() => actions.onRestore(reservation.id))}
@@ -218,18 +218,14 @@ export function ReservationRow({
               </Button>
             )}
             {cancellable && (
-              <Button
-                variant="change"
-                size="sm"
-                onClick={() => setEditing(true)}
-              >
+              <Button variant="tone" size="sm" onClick={() => setEditing(true)}>
                 <EditIcon />
                 変更
               </Button>
             )}
             {cancellable && (
               <Button
-                variant="halt"
+                variant="tone"
                 size="sm"
                 disabled={pending}
                 onClick={() => run(() => actions.onCancel(reservation.id))}
@@ -240,7 +236,7 @@ export function ReservationRow({
             )}
             {reservation.discardable && (
               <Button
-                variant="remove"
+                variant="danger"
                 size="sm"
                 disabled={pending}
                 onClick={() => setRemoving(true)}
@@ -273,11 +269,11 @@ export function ReservationRow({
             <AlertDialogTitle>この予約を削除します</AlertDialogTitle>
             <AlertDialogDescription asChild>
               <dl className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-1 text-left text-ui">
-                <dt className="text-ink-3">番組</dt>
+                <dt className="text-ink-2">番組</dt>
                 <dd className="font-bold text-ink">{reservation.title}</dd>
-                <dt className="text-ink-3">チャンネル</dt>
+                <dt className="text-ink-2">チャンネル</dt>
                 <dd className="text-ink-2">{reservation.channelName}</dd>
-                <dt className="text-ink-3">{WHEN_LABELS.broadcast}</dt>
+                <dt className="text-ink-2">{WHEN_LABELS.broadcast}</dt>
                 <dd className="font-code text-ink-2">
                   {reservation.whenLabel}
                 </dd>
@@ -295,7 +291,7 @@ export function ReservationRow({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="removeFill"
+              variant="dangerFill"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()
@@ -327,7 +323,7 @@ export function ReservationRow({
                 />
                 <ActionRow className="mt-2.5 max-[900px]:grid-flow-row max-[900px]:gap-y-4">
                   <Button
-                    variant="change"
+                    variant="tone"
                     size="sm"
                     disabled={pending}
                     onClick={() =>
@@ -344,7 +340,7 @@ export function ReservationRow({
                     この予約を優先
                   </Button>
                   <Button
-                    variant="halt"
+                    variant="tone"
                     size="sm"
                     disabled={pending}
                     onClick={() => run(() => actions.onCancel(reservation.id))}
@@ -352,7 +348,7 @@ export function ReservationRow({
                     <CloseIcon />
                     この予約を取り消し
                   </Button>
-                  <Button variant="watch" size="sm" asChild>
+                  <Button variant="tone" size="sm" asChild>
                     <Link href="/settings/tuners">
                       <TunerIcon />
                       チューナーへ

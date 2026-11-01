@@ -14,13 +14,13 @@ function Checkbox({
     <CheckboxPrimitive.Root
       data-slot="checkbox"
       className={cn(
-        'group/checkbox tap-target peer inline-flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-[6px] border border-line-strong bg-surface outline-none',
-        'transition-[background-color,border-color,transform,box-shadow] duration-150 ease-toy',
-        'enabled:hover:-translate-x-px enabled:hover:-translate-y-px',
-        'data-[state=checked]:border-brand data-[state=checked]:bg-brand data-[state=checked]:text-on-brand',
-        'data-[state=indeterminate]:border-brand data-[state=indeterminate]:bg-brand data-[state=indeterminate]:text-on-brand',
-        'focus-visible:shadow-ring aria-invalid:border-coral',
-        'disabled:cursor-not-allowed disabled:opacity-45',
+        'group/checkbox tap-target peer inline-flex size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-[6px] bg-surface-2 shadow-[inset_0_0_0_1.5px_var(--hair-strong)] outline-none',
+        'transition-[background-color,box-shadow] duration-[140ms] ease-toy',
+        'enabled:hover:bg-surface-3',
+        'data-[state=checked]:bg-accent-fill data-[state=checked]:shadow-none data-[state=checked]:text-on-accent enabled:data-[state=checked]:hover:bg-accent-fill-hover',
+        'data-[state=indeterminate]:bg-accent-fill data-[state=indeterminate]:text-on-accent',
+        'focus-visible:shadow-ring aria-invalid:bg-rec-soft',
+        'disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}
       {...props}

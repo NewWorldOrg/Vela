@@ -18,7 +18,7 @@ const NOTHING = '対象がありません'
 
 const TALL = 'h-[calc(56rem/16)]'
 
-const FIGURES = 'font-code text-note tabular-nums text-ink-3'
+const FIGURES = 'font-code text-note tabular-nums text-ink-2'
 
 function Row({ row, trend }: { row: QualityTrendRow; trend: QualityTrend }) {
   const plot = plotTrend(row.buckets, trend.from, trend.until, row.line?.value)
