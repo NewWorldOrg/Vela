@@ -135,7 +135,7 @@ export function LibraryView({
       className={cn(
         iconButtonVariants(),
         'h-10 w-auto px-4 text-ui font-semibold text-ink',
-        picking && 'bg-btn text-on-ink hover:bg-btn',
+        picking && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
       )}
     >
       選ぶ
@@ -419,15 +419,20 @@ export function LibraryView({
           className="-mx-3.5 mt-[calc(22rem/16)] flex min-h-0 flex-1 flex-col gap-[calc(26rem/16)] overflow-y-auto px-3.5 pb-10 phone:hidden min-[701px]:-mx-6 min-[701px]:px-6 min-[1366px]:-mx-10 min-[1366px]:px-10"
         >
           {view.as === 'table' ? (
-            <RecordingsTable
-              items={items}
-              groups={view.by === 'series' ? series : undefined}
-              waiting={waiting}
-              onDelete={onDelete}
-              picking={picking}
-              picked={picked}
-              onPick={setPicked}
-            />
+            <>
+              {view.by !== 'series' && (
+                <ContinueRow recordings={items.filter(goesOnFrom)} compact />
+              )}
+              <RecordingsTable
+                items={items}
+                groups={view.by === 'series' ? series : undefined}
+                waiting={waiting}
+                onDelete={onDelete}
+                picking={picking}
+                picked={picked}
+                onPick={setPicked}
+              />
+            </>
           ) : view.by === 'series' ? (
             <SeriesGrid series={series} now={now} picking={pickingCards} />
           ) : (

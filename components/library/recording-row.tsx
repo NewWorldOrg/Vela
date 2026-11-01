@@ -47,12 +47,12 @@ function Length({ recording: r }: { recording: Recording }) {
   )
 }
 
-/** How far a recording was watched: 未視聴 in the ink, the line and its share part-way, 視聴済み quietly. */
+/** How far a recording was watched: 未視聴 in the accent's ink, the line and its share part-way, 視聴済み quietly. */
 function Watched({ recording }: { recording: Recording }) {
   const state = watchStateOf(recording)
 
   if (state === 'unwatched') {
-    return <b className="text-note font-semibold text-ink">未視聴</b>
+    return <b className="text-note font-semibold text-acc-text">未視聴</b>
   }
 
   if (state === 'watched') {
