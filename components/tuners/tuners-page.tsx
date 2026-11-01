@@ -31,9 +31,13 @@ import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/section-heading'
 import {
-  ClockIcon,
+  SETTINGS_GROUP_TITLE,
+  SettingsGroup,
+  SettingsRow,
+} from '@/components/vela/settings-rows'
+import {
   MarkAxis,
   SearchIcon,
   TunerSatelliteIcon,
@@ -102,7 +106,7 @@ function DeviceIcon({ row }: { row: TunerRow }) {
   const Icon = row.kind === '衛星' ? TunerSatelliteIcon : TunerTerrestrialIcon
 
   return (
-    <span className="flex size-[calc(30rem/16)] shrink-0 items-center justify-center rounded-md border border-line bg-surface-2">
+    <span className="flex size-7 shrink-0 items-center justify-center rounded-[calc(8rem/16)] bg-surface-2">
       <Icon className="size-4 text-ink-2" />
     </span>
   )
@@ -118,13 +122,15 @@ function DetectionCard({
   footer: React.ReactNode
 }) {
   return (
-    <div className="overflow-hidden rounded-xl border border-line-strong bg-surface shadow-pop-xl">
-      <div className="px-[calc(19rem/16)] pt-[calc(17rem/16)]">
-        <h3 className="heading text-[calc(14.5rem/16)]">検出結果の差分</h3>
+    <div className="overflow-hidden rounded-lg bg-surface">
+      <div className="px-4 pt-4">
+        <h3 className="text-[calc(14.5rem/16)] font-semibold text-ink">
+          検出結果の差分
+        </h3>
         {lede && <p className="mt-px text-sub text-ink-2">{lede}</p>}
       </div>
       {children}
-      <div className="flex flex-wrap items-start justify-end gap-[calc(9rem/16)] px-[calc(19rem/16)] pt-[calc(15rem/16)] pb-[calc(17rem/16)]">
+      <div className="flex flex-wrap items-start justify-end gap-2 px-4 pt-3.5 pb-4">
         {footer}
       </div>
     </div>
@@ -149,7 +155,7 @@ function DetectionPanel({
   if (detection.state !== 'ok') {
     return (
       <DetectionCard footer={<CancelDetection />}>
-        <div className="px-[calc(19rem/16)] py-[calc(13rem/16)]">
+        <div className="px-4 py-3">
           <InlineAlert tone="warn">
             {detection.state === 'unauthenticated'
               ? signedOut('デバイスを検出')
@@ -165,7 +171,7 @@ function DetectionPanel({
   if (rows.length === 0) {
     return (
       <DetectionCard footer={<CancelDetection />}>
-        <p className="px-[calc(19rem/16)] py-[calc(13rem/16)] text-ui text-ink-2">
+        <p className="px-4 py-3 text-ui text-ink-2">
           検出したデバイスは一覧と一致しています。変更はありません。
         </p>
       </DetectionCard>
@@ -189,11 +195,11 @@ function DetectionPanel({
         </>
       }
     >
-      <div className="px-[calc(19rem/16)] py-[calc(13rem/16)]">
+      <div className="px-4 py-2">
         {rows.map((diff) => (
           <div
             key={`${diff.kind}-${diff.device}`}
-            className="flex items-center gap-[calc(11rem/16)] border-b border-dashed border-line py-2.5 last:border-b-0"
+            className="flex items-center gap-3 border-b border-hair py-2.5 last:border-b-0"
           >
             <Badge variant={DIFF_VARIANT[diff.kind]} className="font-bold">
               {diff.tag}
@@ -205,7 +211,7 @@ function DetectionPanel({
           </div>
         ))}
       </div>
-      <p className="px-[calc(19rem/16)] text-note leading-[1.7] text-ink-2">
+      <p className="px-4 text-note leading-[1.7] text-ink-2">
         {notes.filter(Boolean).join('')}
       </p>
     </DetectionCard>
@@ -314,17 +320,15 @@ export function TunersView({
         />
       </div>
 
-      <p className="mx-0.5 mt-[calc(22rem/16)] mb-2.5 flex flex-wrap items-center gap-[calc(9rem/16)] text-ui text-ink-2">
-        <ClockIcon className="size-[calc(15rem/16)] text-brand" />
-        健全性の閾値{' '}
-        <b className="font-code font-medium text-ink">
-          {tuners.thresholdHours} 時間
-        </b>
-        <ThresholdControl
-          hours={tuners.thresholdHours}
-          onSave={onSaveThreshold}
-        />
-      </p>
+      <SettingsGroup className="mt-[calc(18rem/16)] mb-4">
+        <SettingsRow name="健全性の閾値">
+          <span className="text-ink">{tuners.thresholdHours} 時間</span>
+          <ThresholdControl
+            hours={tuners.thresholdHours}
+            onSave={onSaveThreshold}
+          />
+        </SettingsRow>
+      </SettingsGroup>
 
       <Table
         cards
@@ -362,7 +366,7 @@ export function TunersView({
                   onToggle={onToggle}
                 />
                 {row.draining && (
-                  <span className="mt-1 block text-cap leading-[1.5] text-lemon">
+                  <span className="mt-1 block text-cap leading-[1.5] text-warn-text">
                     無効化を受け付け済み
                   </span>
                 )}
@@ -420,7 +424,7 @@ export function TunersView({
 
       {(detection !== undefined || empty) && (
         <section className="mt-9">
-          <SectionHeading>デバイス検出の差分</SectionHeading>
+          <h2 className={SETTINGS_GROUP_TITLE}>デバイス検出の差分</h2>
           <div
             className={cn(
               'grid items-start gap-[calc(18rem/16)]',
@@ -436,7 +440,6 @@ export function TunersView({
             {empty && (
               <EmptyState
                 title="チューナーがありません"
-                className="border-none bg-tint-lavender"
                 action={
                   <Button asChild>
                     <Link href={DETECT_HREF}>

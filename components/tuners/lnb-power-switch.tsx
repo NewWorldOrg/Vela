@@ -96,7 +96,7 @@ export function LnbPowerSwitch({
         }}
       />
       {notApplied && (
-        <span className="mt-1 block text-cap leading-[1.5] text-lemon">
+        <span className="mt-1 block text-cap leading-[1.5] text-warn-text">
           {LNB_NOT_APPLIED}
         </span>
       )}
