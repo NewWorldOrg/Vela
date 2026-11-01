@@ -246,6 +246,24 @@ export const 通常: Story = {
   },
 }
 
+export const 行を開いたところ: Story = {
+  args: { result: shown(RESERVATION_FIXTURES) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+
+    const change = await openRow(canvas, 'ナイター中継 延長あり')
+    const row = rowFor(change)
+
+    await expect(
+      within(row).getByRole('button', { name: 'ナイター中継 延長あり' }),
+    ).toHaveAttribute('aria-expanded', 'true')
+    await expect(row).toHaveTextContent('延長の可能性あり')
+    await expect(within(change).getByLabelText(/前マージン/)).toHaveValue('10')
+  },
+}
+
 export const 次の録画とチューナー: Story = {
   args: { result: shown(RESERVATION_FIXTURES) },
   play: async ({ canvasElement }) => {

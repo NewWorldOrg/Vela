@@ -213,6 +213,13 @@ const meta = {
   args: {
     result: { items: RULE_FIXTURES, total: RULE_FIXTURES.length },
     channels: RULE_CHANNEL_FIXTURES,
+    ahead: {
+      'rule-301': 12,
+      'rule-302': 4,
+      'rule-303': 0,
+      'rule-304': 2,
+      'rule-305': 1,
+    },
   },
   decorators: [inTheApp],
 } satisfies Meta<typeof RulesView>
@@ -280,6 +287,33 @@ export const 通常: Story = {
 }
 
 const editSaved: Saved[] = []
+
+export const 一覧と編集の面: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: recording([], []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rules = within(canvas.getByRole('region', { name: 'ルール' }))
+
+    await expect(rules.getByText(/今後 12 件/)).toBeVisible()
+    await expect(rules.getByText(/今後 0 件/)).toBeVisible()
+    await expect(
+      await canvas.findByText('星のさまよいびと 第1話'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('heading', {
+        name: /この条件に一致する今後の番組 3 件/,
+      }),
+    ).toBeVisible()
+    await expect(
+      within(canvas.getByRole('group', { name: '種別' })).getByRole('button', {
+        name: 'すべて',
+      }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
 
 export const ルールを編集: Story = {
   args: {

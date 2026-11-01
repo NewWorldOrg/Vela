@@ -230,9 +230,7 @@ export function EditReservationDialog({
       data-slot="dialog-body"
       className={cn(
         'flex min-h-0',
-        layout === 'row'
-          ? 'flex-wrap items-start gap-x-[calc(22rem/16)] gap-y-4'
-          : 'flex-col gap-4 overflow-y-auto',
+        layout === 'row' ? 'contents' : 'flex-col gap-4 overflow-y-auto',
       )}
     >
       {number(
@@ -284,7 +282,7 @@ export function EditReservationDialog({
 
       <span
         aria-live="polite"
-        className={cn(layout === 'row' && 'basis-full empty:hidden')}
+        className={cn(layout === 'row' && 'order-last basis-full empty:hidden')}
       >
         {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
       </span>
@@ -306,12 +304,21 @@ export function EditReservationDialog({
       <div
         data-slot="reservation-change"
         className={cn(
-          'flex gap-4',
-          layout === 'row' ? 'flex-wrap items-end justify-between' : 'flex-col',
+          'flex',
+          layout === 'row'
+            ? 'flex-wrap items-start gap-x-[calc(22rem/16)] gap-y-4'
+            : 'flex-col gap-4',
         )}
       >
         {fields}
-        <div className="flex flex-wrap justify-end gap-2">{choices}</div>
+        <div
+          className={cn(
+            'flex flex-wrap justify-end gap-2',
+            layout === 'row' && 'ml-auto self-end',
+          )}
+        >
+          {choices}
+        </div>
       </div>
     ) : null
   }

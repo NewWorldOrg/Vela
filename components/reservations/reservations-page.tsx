@@ -42,7 +42,7 @@ import {
   ReservationBeside,
 } from '@/components/reservations/phone-reservations'
 import { SidewaysPanes } from '@/components/vela/sideways-panes'
-import { usePhoneOnItsSide } from '@/hooks/usePhone'
+import { useOnAPhone, usePhoneOnItsSide } from '@/hooks/usePhone'
 import { cn } from '@/lib/utils'
 
 const SHOW_PARAM = 'show'
@@ -168,6 +168,7 @@ export function ReservationsView({
   const [picking, setPicking] = useState(false)
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const sideways = usePhoneOnItsSide()
+  const onAPhone = useOnAPhone()
   const [besideId, setBesideId] = useState<string>()
   const pick = useCallback(
     (ids: readonly string[], taken: boolean) =>
@@ -367,12 +368,14 @@ export function ReservationsView({
         current="reservations"
         count={countSaying}
         action={
-          <Button asChild>
-            <Link href="/guide">
-              <PlusIcon />
-              予約を追加
-            </Link>
-          </Button>
+          onAPhone ? undefined : (
+            <Button asChild>
+              <Link href="/guide">
+                <PlusIcon />
+                予約を追加
+              </Link>
+            </Button>
+          )
         }
       />
 

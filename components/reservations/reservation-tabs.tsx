@@ -24,8 +24,8 @@ const TITLE_OF: Record<ReservationTab, string> = {
 
 /**
  * The head of the reservations, the rules and the ledger: the page's name and its count, the three tabs beside them
- * and the page's own actions at the right end. A phone puts the name in its bar and the tabs across the screen under it;
- * a phone on its side carries the tabs up into its bar.
+ * and the page's own actions at the right end. A phone puts the name in its bar and the tabs across the screen under it,
+ * the actions under the tabs; a phone on its side carries the tabs up into its bar.
  */
 export function ReservationTabs({
   current,
@@ -40,28 +40,35 @@ export function ReservationTabs({
 
   if (sideways) {
     return (
-      <PhoneBarTools>
-        <nav
-          aria-label="予約の種類"
-          data-slot="reservation-tabs-in-the-bar"
-          className="-order-1 mr-auto flex h-11 items-center gap-0.5 rounded-full bg-surface p-1"
-        >
-          {TABS.map((t) => (
-            <Link
-              key={t.key}
-              href={t.href}
-              aria-current={t.key === current ? 'page' : undefined}
-              className={cn(
-                'tap-target flex h-9 items-center rounded-full px-4 text-ui font-semibold text-ink-2 no-underline transition-[background-color,color] duration-[140ms] ease-toy hover:text-ink',
-                t.key === current &&
-                  'bg-accent-tint text-acc-text hover:text-acc-text',
-              )}
-            >
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-      </PhoneBarTools>
+      <>
+        <PhoneBarTools>
+          <nav
+            aria-label="予約の種類"
+            data-slot="reservation-tabs-in-the-bar"
+            className="-order-1 mr-auto flex h-11 items-center gap-0.5 rounded-full bg-surface p-1"
+          >
+            {TABS.map((t) => (
+              <Link
+                key={t.key}
+                href={t.href}
+                aria-current={t.key === current ? 'page' : undefined}
+                className={cn(
+                  'tap-target flex h-9 items-center rounded-full px-4 text-ui font-semibold text-ink-2 no-underline transition-[background-color,color] duration-[140ms] ease-toy hover:text-ink',
+                  t.key === current &&
+                    'bg-accent-tint text-acc-text hover:text-acc-text',
+                )}
+              >
+                {t.label}
+              </Link>
+            ))}
+          </nav>
+        </PhoneBarTools>
+        {action && (
+          <div className="flex flex-wrap items-center justify-end gap-2.5 pb-2 empty:hidden">
+            {action}
+          </div>
+        )}
+      </>
     )
   }
 
@@ -89,7 +96,7 @@ export function ReservationTabs({
         className="phone:grid phone:w-full phone:grid-cols-3 phone:[&>a]:h-9 phone:[&>a]:justify-center"
       />
       {action && (
-        <div className="ml-auto flex items-center gap-2.5 phone:hidden">
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2.5">
           {action}
         </div>
       )}
