@@ -216,7 +216,7 @@ function JobTitle({ job }: { job: EncodeJob }) {
     <div className={READABLE_LINE}>
       <Link
         href={`/recordings/${job.recordingId}` as Route}
-        className="tap-target block text-ui font-semibold text-ink no-underline underline-offset-[3px] hover:text-acc-text hover:underline [font-feature-settings:'palt']"
+        className="tap-target block text-ui leading-[calc(22rem/16)] font-semibold text-ink no-underline underline-offset-[3px] hover:text-acc-text hover:underline [font-feature-settings:'palt']"
       >
         <span className="block">{job.title}</span>
       </Link>
