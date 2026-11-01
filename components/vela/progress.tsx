@@ -6,7 +6,7 @@ import { InFull } from '@/components/vela/in-full'
 export type MeterTone = 'brand' | 'ok' | 'warn' | 'err'
 
 const FILL_TONE: Record<MeterTone, string> = {
-  brand: 'bg-brand',
+  brand: 'bg-accent',
   ok: 'bg-mint',
   warn: 'bg-lemon',
   err: 'bg-coral',

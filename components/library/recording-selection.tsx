@@ -63,7 +63,7 @@ export function RecordingSelection({
       role="group"
       aria-label="選択した録画の操作"
       className={cn(
-        'mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[calc(17rem/16)] py-[calc(13rem/16)]',
+        'mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]',
         className,
       )}
     >

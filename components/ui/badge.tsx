@@ -20,7 +20,7 @@ const badgeVariants = cva(
         warn: 'bg-accent-soft text-acc-text',
         err: 'bg-accent-soft text-acc-text',
         recording: 'bg-accent-soft text-acc-text',
-        selected: 'bg-btn text-on-ink',
+        selected: 'bg-accent-tint text-acc-text',
       },
     },
     defaultVariants: {

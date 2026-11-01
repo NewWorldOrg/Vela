@@ -29,7 +29,7 @@ function RadioGroupItem({
         'tap-target inline-flex aspect-square size-[calc(18rem/16)] shrink-0 cursor-pointer items-center justify-center rounded-full bg-surface-2 shadow-[inset_0_0_0_1.5px_var(--hair-strong)] outline-none',
         'transition-[background-color,box-shadow] duration-[140ms] ease-toy',
         'enabled:hover:bg-surface-3',
-        'data-[state=checked]:bg-btn data-[state=checked]:shadow-none enabled:data-[state=checked]:hover:bg-btn-hover',
+        'data-[state=checked]:bg-accent-fill data-[state=checked]:shadow-none enabled:data-[state=checked]:hover:bg-accent-fill-hover',
         'focus-visible:shadow-ring aria-invalid:bg-accent-soft',
         'disabled:cursor-not-allowed disabled:opacity-40',
         className,
@@ -40,7 +40,7 @@ function RadioGroupItem({
         data-slot="radio-group-indicator"
         className="flex items-center justify-center"
       >
-        <span className="size-2 rounded-full bg-on-ink" />
+        <span className="size-2 rounded-full bg-on-accent" />
       </RadioGroupPrimitive.Indicator>
     </RadioGroupPrimitive.Item>
   )

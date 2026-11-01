@@ -32,8 +32,7 @@ const OPTION = cn(
   'enabled:hover:text-ink enabled:active:scale-[0.98] focus-visible:shadow-ring',
 )
 
-const CHOSEN =
-  'bg-raised text-ink shadow-chosen dark:shadow-none hover:text-ink'
+const CHOSEN = 'bg-accent-tint text-acc-text hover:text-acc-text'
 
 type Naming =
   | { label: string; 'aria-label'?: string }
