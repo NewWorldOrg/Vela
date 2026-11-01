@@ -244,7 +244,7 @@
     --warn-soft: rgba(224, 154, 26, 0.15);
     --warn-fill: #f0a92e;
     --on-warn: #17171a;
-    --warn-text: #8a5a00;
+    --warn-text: #7f5300;
     --lift: 0 1px 2px rgba(16, 16, 20, 0.06), 0 6px 18px rgba(16, 16, 20, 0.08);
     --lift-up:
       0 -1px 2px rgba(16, 16, 20, 0.04), 0 -6px 18px rgba(16, 16, 20, 0.06);

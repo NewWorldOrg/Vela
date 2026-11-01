@@ -1175,7 +1175,7 @@ export const 即時適用で作成できなかった予約がある: Story = {
   play: async ({ canvasElement }) => {
     const notice = await applyNow(canvasElement)
 
-    await expect(notice).toHaveClass('bg-accent-soft')
+    await expect(notice).toHaveClass('bg-warn-soft')
     await expect(notice).toHaveTextContent(
       'ルールを適用しました(新しく作られた予約 3 件、引っ込んだ予約 1 件、作成できなかった予約 2 件、条件を読めず無効にしたルール 1 件、調べられなかったルール 1 件)。',
     )
@@ -1196,7 +1196,7 @@ export const 即時適用を断られる: Story = {
   play: async ({ canvasElement }) => {
     const notice = await applyNow(canvasElement)
 
-    await expect(notice).toHaveClass('bg-accent-soft')
+    await expect(notice).toHaveClass('bg-warn-soft')
     await expect(notice).toHaveTextContent(
       'ルールの適用がすでに実行中のため、適用できませんでした。',
     )
