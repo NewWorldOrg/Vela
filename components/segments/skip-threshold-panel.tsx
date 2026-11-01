@@ -15,7 +15,11 @@ import { Input } from '@/components/ui/input'
 import { FieldError } from '@/components/vela/field'
 import { Spinner } from '@/components/vela/progress'
 import { Surface } from '@/components/vela/surface'
-import { ValueRow, ValueRows } from '@/components/segments/value-rows'
+import {
+  VALUE_FACE,
+  ValueRow,
+  ValueRows,
+} from '@/components/segments/value-rows'
 import { SKIP_THRESHOLD_SLOT } from '@/components/segments/wording'
 
 const THRESHOLD = '閾値'
@@ -91,11 +95,25 @@ export function SkipThresholdPanel({
   }
 
   return (
-    <Surface data-slot={SKIP_THRESHOLD_SLOT}>
+    <Surface data-slot={SKIP_THRESHOLD_SLOT} className={VALUE_FACE}>
       <form noValidate onSubmit={save}>
         <ValueRows>
           <ValueRow
             name={editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD}
+            aside={
+              editing ? undefined : (
+                <Button
+                  key="change"
+                  type="button"
+                  variant="tone"
+                  size="sm"
+                  autoFocus={returned}
+                  onClick={edit}
+                >
+                  変更
+                </Button>
+              )
+            }
           >
             {editing ? (
               <span className="flex items-center font-sans">
@@ -105,7 +123,7 @@ export function SkipThresholdPanel({
                   autoComplete="off"
                   autoFocus
                   areaClassName="w-[calc(110rem/16)]"
-                  className="font-code tabular-nums"
+                  className="tabular-nums"
                   value={typed}
                   readOnly={pending}
                   aria-invalid={said ? true : undefined}
@@ -125,35 +143,22 @@ export function SkipThresholdPanel({
             </FieldError>
           )}
         </span>
-        <div className="mt-3 flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-line pt-3">
-          {editing ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={pending}
-                onClick={leave}
-              >
-                キャンセル
-              </Button>
-              <Button type="submit" aria-disabled={pending}>
-                {pending && <Spinner size="control" />}
-                保存する
-              </Button>
-            </>
-          ) : (
+        {editing && (
+          <div className="mt-1 flex flex-wrap items-center justify-end gap-2.5 border-t border-hair pt-3 pb-1">
             <Button
-              key="change"
               type="button"
-              variant="tone"
-              size="sm"
-              autoFocus={returned}
-              onClick={edit}
+              variant="ghost"
+              disabled={pending}
+              onClick={leave}
             >
-              変更
+              キャンセル
             </Button>
-          )}
-        </div>
+            <Button type="submit" aria-disabled={pending}>
+              {pending && <Spinner size="control" />}
+              保存する
+            </Button>
+          </div>
+        )}
       </form>
     </Surface>
   )

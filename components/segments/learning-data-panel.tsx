@@ -2,7 +2,11 @@ import { formatBytes, formatHours } from '@/lib/format'
 import { repeatedSoundsOf } from '@/lib/segment-detection'
 import type { LearningData, SegmentCatalog } from '@/repository/segment-status'
 import { Surface } from '@/components/vela/surface'
-import { ValueRow, ValueRows } from '@/components/segments/value-rows'
+import {
+  VALUE_FACE,
+  ValueRow,
+  ValueRows,
+} from '@/components/segments/value-rows'
 
 export const LEARNING_DATA_SLOT = 'learning-data'
 
@@ -14,7 +18,7 @@ export function LearningDataPanel({
   catalog: SegmentCatalog
 }) {
   return (
-    <Surface data-slot={LEARNING_DATA_SLOT}>
+    <Surface data-slot={LEARNING_DATA_SLOT} className={VALUE_FACE}>
       <ValueRows>
         <ValueRow name="データのある録画">{data.recordings} 件</ValueRow>
         <ValueRow name="時間">{formatHours(data.seconds)}</ValueRow>
