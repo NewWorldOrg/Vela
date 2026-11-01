@@ -28,13 +28,13 @@ export function RecentSpells({
       ) : (
         <span className={SENTENCE}>
           完了 {spells.jobs} 件の平均{' '}
-          <span className="font-code text-title font-medium tabular-nums text-brand">
+          <span className="text-title font-bold tabular-nums text-ink">
             {formatLength(spells.averageSeconds)}
           </span>
         </span>
       )}
       {spells.from && spells.to && (
-        <span className="font-code text-note tabular-nums text-ink-2">
+        <span className="text-note tabular-nums text-ink-2">
           {spells.from} 〜 {spells.to}
         </span>
       )}

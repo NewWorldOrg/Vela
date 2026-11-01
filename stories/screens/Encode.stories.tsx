@@ -106,7 +106,7 @@ const THE_LAST_ONE = 'この保存先は最後の 1 つのため、撤去でき�
 
 const JOB_STATE_COLUMN = 1
 
-const STARTED_COLUMN = 6
+const STARTED_COLUMN = 4
 
 const meta = {
   title: 'Screens/設定・エンコード',
@@ -504,7 +504,7 @@ export const 中止: Story = {
   },
 }
 
-const WHERE_THE_TYPE_STEPS_UP_PX = 1920
+const WHERE_THE_TYPE_STEPS_UP_PX = 1440
 
 export const 字の段が上がる幅でも枠に収まる表: Story = {
   parameters: { screen: { width: WHERE_THE_TYPE_STEPS_UP_PX, height: 1000 } },
@@ -584,7 +584,7 @@ export const 狭い幅で収まらないほどのジョブ: Story = {
   },
 }
 
-const SETTINGS_BESIDE_PX = 460
+const SETTINGS_BESIDE_PX = 212
 
 export const 設定の枠に収まるジョブ表: Story = {
   args: { screen: MORE_JOBS_THAN_FIT },
@@ -605,6 +605,22 @@ export const 設定の枠に収まるジョブ表: Story = {
     const started = cellOf(rows[0], STARTED_COLUMN)
 
     await expect(await tipIn(started)).toHaveTextContent(/^登録 /)
+
+    for (const gone of ['プロファイル', '保存先', '終了', '作成']) {
+      await expect(
+        within(canvasElement).queryByRole('columnheader', { name: gone }),
+      ).toBeNull()
+    }
+
+    await expect(
+      started.querySelector('[data-slot="job-ended"]'),
+    ).toHaveTextContent(/^終了 /)
+    await expect(
+      cellOf(rows[0], 0).querySelector('[data-slot="job-made"]'),
+    ).toHaveTextContent(/プロファイル .+保存先 /)
+    await expect(
+      canvasElement.querySelectorAll('[data-slot="defined-at"]').length,
+    ).toBeGreaterThan(0)
   },
 }
 

@@ -30,6 +30,7 @@ import {
 } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
 import { ActionRow } from '@/components/vela/action-row'
+import { SectionHeading } from '@/components/vela/section-heading'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { AddProfileDialog } from '@/components/encode/add-profile-dialog'
 import { ChangeProfileButton } from '@/components/encode/change-definition-button'
@@ -37,29 +38,34 @@ import {
   DefinitionName,
   RemovalNotice,
   RETIRED_ROW,
-  STAMP,
   STICKY_HEAD,
 } from '@/components/encode/definition-list'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
-const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
-  { label: '名称', width: 'calc(200rem/16)' },
-  { label: 'コーデック', width: 'calc(124rem/16)' },
-  { label: '解像度', width: 'calc(112rem/16)' },
-  { label: '品質(CRF)', width: 'calc(104rem/16)' },
-  { label: '品質(QP)', width: 'calc(104rem/16)' },
-  { label: 'インタレース解除', width: 'calc(148rem/16)' },
-  { label: '作成', width: 'calc(122rem/16)' },
-  { label: '操作', width: 'calc(192rem/16)', hidden: true },
+/** When a profile was made is said under its name, so the table fits the settings frame. */
+const COLUMNS: {
+  label: string
+  width: string | undefined
+  hidden?: boolean
+}[] = [
+  { label: '名称', width: undefined },
+  { label: 'コーデック', width: 'calc(96rem/16)' },
+  { label: '解像度', width: 'calc(108rem/16)' },
+  { label: '品質(CRF)', width: 'calc(92rem/16)' },
+  { label: '品質(QP)', width: 'calc(84rem/16)' },
+  { label: 'インタレース解除', width: 'calc(128rem/16)' },
+  { label: '操作', width: 'calc(180rem/16)', hidden: true },
 ]
 
 export function ProfileList({
+  heading,
   profiles,
   defaults,
   onDefine,
   onRevise,
   onRemove,
 }: {
+  heading: string
   profiles: EncodeProfile[]
   defaults: EncodeProfileDefaults
   onDefine: (draft: EncodeProfileDraft) => Promise<EncodeWrite>
@@ -73,14 +79,15 @@ export function ProfileList({
 
   return (
     <>
-      <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <SectionHeading className="mb-0">{heading}</SectionHeading>
         <RemovalNotice removed={removed} />
         <AddProfileDialog size="sm" defaults={defaults} onDefine={onDefine} />
       </div>
 
       <Table
         cards
-        className="table-fixed min-w-[calc(930rem/16)]"
+        className="table-fixed min-w-[calc(820rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
         <TableColumns widths={COLUMNS.map((column) => column.width)} />
@@ -107,12 +114,10 @@ export function ProfileList({
                 <DefinitionName
                   label={profile.label}
                   retired={profile.retired}
+                  definedAt={profile.definedAt}
                 />
               </TableCell>
-              <TableCell
-                {...cardPlace('field', 'コーデック')}
-                className="font-code"
-              >
+              <TableCell {...cardPlace('field', 'コーデック')}>
                 {wordFor(CODEC_LABEL, profile.codec)}
               </TableCell>
               <TableCell {...cardPlace('field', '解像度')}>
@@ -120,21 +125,18 @@ export function ProfileList({
               </TableCell>
               <TableCell
                 {...cardPlace('field', '品質(CRF)')}
-                className="font-code tabular-nums"
+                className="tabular-nums"
               >
                 {profile.rateFactor}
               </TableCell>
               <TableCell
                 {...cardPlace('field', '品質(QP)')}
-                className="font-code tabular-nums"
+                className="tabular-nums"
               >
                 {profile.quantiser}
               </TableCell>
               <TableCell {...cardPlace('field', 'インタレース解除')}>
                 {wordFor(DEINTERLACE_LABEL, profile.deinterlace)}
-              </TableCell>
-              <TableCell {...cardPlace('field', '作成')} className={STAMP}>
-                {profile.definedAt}
               </TableCell>
               <TableCell {...cardPlace('actions')} className="text-right">
                 {!profile.retired && (

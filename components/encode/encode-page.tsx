@@ -31,6 +31,10 @@ import { ProfileList } from '@/components/encode/profile-list'
 import { RecentSpells } from '@/components/encode/recent-spells'
 import { RunningJob } from '@/components/encode/running-job'
 
+const PROFILES = 'プロファイル'
+
+const DESTINATIONS = '保存先'
+
 export interface EncodeActions {
   onDefineProfile: (draft: EncodeProfileDraft) => Promise<EncodeWrite>
   onReviseProfile: (
@@ -101,9 +105,9 @@ export function EncodeView({
       </section>
 
       <section className="mt-9">
-        <SectionHeading>プロファイル</SectionHeading>
         {profiles.length > 0 ? (
           <ProfileList
+            heading={PROFILES}
             profiles={profiles}
             defaults={screen.profileDefaults}
             onDefine={actions.onDefineProfile}
@@ -111,22 +115,25 @@ export function EncodeView({
             onRemove={actions.onRemoveProfile}
           />
         ) : (
-          <EmptyState
-            title="プロファイルがありません"
-            action={
-              <AddProfileDialog
-                defaults={screen.profileDefaults}
-                onDefine={actions.onDefineProfile}
-              />
-            }
-          />
+          <>
+            <SectionHeading>{PROFILES}</SectionHeading>
+            <EmptyState
+              title="プロファイルがありません"
+              action={
+                <AddProfileDialog
+                  defaults={screen.profileDefaults}
+                  onDefine={actions.onDefineProfile}
+                />
+              }
+            />
+          </>
         )}
       </section>
 
       <section className="mt-9">
-        <SectionHeading>保存先</SectionHeading>
         {destinations.length > 0 ? (
           <DestinationList
+            heading={DESTINATIONS}
             destinations={destinations}
             profiles={offered}
             roots={roots}
@@ -135,16 +142,19 @@ export function EncodeView({
             onRemove={actions.onRemoveDestination}
           />
         ) : (
-          <EmptyState
-            title="保存先がありません"
-            action={
-              <AddDestinationDialog
-                profiles={offered}
-                roots={roots}
-                onDefine={actions.onDefineDestination}
-              />
-            }
-          />
+          <>
+            <SectionHeading>{DESTINATIONS}</SectionHeading>
+            <EmptyState
+              title="保存先がありません"
+              action={
+                <AddDestinationDialog
+                  profiles={offered}
+                  roots={roots}
+                  onDefine={actions.onDefineDestination}
+                />
+              }
+            />
+          </>
         )}
       </section>
     </>

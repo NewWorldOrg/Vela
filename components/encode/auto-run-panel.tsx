@@ -21,8 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { InlineAlert } from '@/components/vela/banner'
-import { FieldHint, FieldLabel } from '@/components/vela/field'
-import { Surface } from '@/components/vela/surface'
+import { SettingsGroup } from '@/components/vela/settings-rows'
 import { TermTip } from '@/components/vela/term-tip'
 
 const SIGNED_OUT = signedOut('保存')
@@ -43,9 +42,13 @@ const RUNS_ITSELF_ID = 'auto-run-runs-itself'
 
 const MOST_CORES_ID = 'auto-run-most-cores'
 
-const NAME = 'self-start pt-1 text-ui text-ink-2'
+const ROW =
+  'flex min-h-14 items-center gap-4 border-b border-hair px-4 py-2 last:border-b-0'
 
-const VALUE = 'self-start pt-1 text-ui text-ink-2'
+const NAME =
+  'min-w-0 flex-1 text-[calc(14.5rem/16)] leading-5 font-medium text-ink'
+
+const VALUE = 'min-w-0 text-right text-body text-ink-2'
 
 interface Settled {
   automatically: boolean
@@ -140,73 +143,86 @@ export function AutoRunPanel({
   )
 
   return (
-    <Surface data-slot="auto-run">
-      <dl className="grid gap-x-5 gap-y-3.5 sm:grid-cols-[minmax(0,calc(180rem/16))_1fr]">
-        <dt className="self-start">
-          <FieldLabel htmlFor={RUNS_ITSELF_ID}>{RUNS_ITSELF}</FieldLabel>
-        </dt>
-        <dd className="self-start">
-          <Switch
-            id={RUNS_ITSELF_ID}
-            checked={shown.automatically}
-            aria-disabled={pending}
-            className="aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
-            onCheckedChange={(next) =>
-              settle({ ...shown, automatically: next })
-            }
-          />
-        </dd>
+    <div data-slot="auto-run" className="max-w-[calc(720rem/16)]">
+      <SettingsGroup>
+        <dl>
+          <div className={ROW}>
+            <dt className={NAME}>
+              <label htmlFor={RUNS_ITSELF_ID}>{RUNS_ITSELF}</label>
+            </dt>
+            <dd>
+              <Switch
+                id={RUNS_ITSELF_ID}
+                checked={shown.automatically}
+                aria-disabled={pending}
+                className="aria-disabled:cursor-not-allowed aria-disabled:opacity-45"
+                onCheckedChange={(next) =>
+                  settle({ ...shown, automatically: next })
+                }
+              />
+            </dd>
+          </div>
 
-        <dt className="self-start pt-1">
-          <FieldLabel htmlFor={MOST_CORES_ID}>{MOST_CORES}</FieldLabel>
-        </dt>
-        <dd className="self-start">
-          <Select
-            value={String(shown.mostCores)}
-            onValueChange={(next) =>
-              settle({ ...shown, mostCores: Number(next) })
-            }
-          >
-            <SelectTrigger
-              id={MOST_CORES_ID}
-              size="sm"
-              aria-disabled={pending}
-              className="w-fit min-w-[calc(150rem/16)] font-code tabular-nums"
-            >
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {cores.map((count) => (
-                <SelectItem
-                  key={count}
-                  value={String(count)}
-                  className="font-code tabular-nums"
+          <div className={ROW}>
+            <dt className={NAME}>
+              <label htmlFor={MOST_CORES_ID}>{MOST_CORES}</label>
+            </dt>
+            <dd className="flex items-center gap-3">
+              {!autoRun.stored && (
+                <span
+                  data-slot="field-hint"
+                  className="text-sub tabular-nums text-ink-2"
                 >
-                  {count}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {!autoRun.stored && (
-            <FieldHint className="mt-1.5 font-code tabular-nums">
-              {THE_DEFAULT} {autoRun.mostCores}
-            </FieldHint>
-          )}
-        </dd>
+                  {THE_DEFAULT} {autoRun.mostCores}
+                </span>
+              )}
+              <Select
+                value={String(shown.mostCores)}
+                onValueChange={(next) =>
+                  settle({ ...shown, mostCores: Number(next) })
+                }
+              >
+                <SelectTrigger
+                  id={MOST_CORES_ID}
+                  size="sm"
+                  aria-disabled={pending}
+                  className="w-fit min-w-[calc(96rem/16)] tabular-nums"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {cores.map((count) => (
+                    <SelectItem
+                      key={count}
+                      value={String(count)}
+                      className="tabular-nums"
+                    >
+                      {count}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </dd>
+          </div>
 
-        <dt className={NAME}>{SUBJECT}</dt>
-        <dd className={VALUE}>{subjectSaying(autoRun.subject)}</dd>
+          <div className={ROW}>
+            <dt className={NAME}>{SUBJECT}</dt>
+            <dd className={VALUE}>{subjectSaying(autoRun.subject)}</dd>
+          </div>
 
-        <dt className={NAME}>{DESTINATION}</dt>
-        <dd className={VALUE} data-slot="where-artefacts-go">
-          <WhereArtefactsGoSay
-            where={autoRun.whereArtefactsGo}
-            destination={destination}
-          />
-        </dd>
-      </dl>
+          <div className={ROW}>
+            <dt className={NAME}>{DESTINATION}</dt>
+            <dd className={VALUE} data-slot="where-artefacts-go">
+              <WhereArtefactsGoSay
+                where={autoRun.whereArtefactsGo}
+                destination={destination}
+              />
+            </dd>
+          </div>
+        </dl>
+      </SettingsGroup>
 
-      <p className="mt-3.5 font-code text-note tabular-nums text-ink-2">
+      <p className="mx-4 mt-2 text-note tabular-nums text-ink-2">
         {autoRun.stored && autoRun.updatedAt
           ? `${autoRun.updatedAt} 更新`
           : STILL_AS_DEPLOYED}
@@ -219,6 +235,6 @@ export function AutoRunPanel({
           </InlineAlert>
         )}
       </span>
-    </Surface>
+    </div>
   )
 }

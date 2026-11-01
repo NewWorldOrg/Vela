@@ -14,7 +14,6 @@ import {
 } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { EncodeIcon } from '@/components/vela/icons'
 import { ProgressBar } from '@/components/vela/progress'
 import { ChipDot } from '@/components/vela/status'
 import { Surface } from '@/components/vela/surface'
@@ -32,8 +31,7 @@ export function RunningJob({
   return (
     <Surface data-slot="running-job">
       <div className="flex flex-wrap items-center gap-2.5">
-        <EncodeIcon className="size-[calc(17rem/16)] text-brand" />
-        <b className="heading min-w-0 flex-1 text-title">
+        <b className="heading min-w-0 flex-1 text-heading">
           {job.title ?? (
             <span className="text-ink-2">{RECORDING_REMOVED_LABEL}</span>
           )}
@@ -44,7 +42,7 @@ export function RunningJob({
             {STALLED_LABEL}
           </Badge>
         )}
-        <span className="font-code text-title font-medium tabular-nums text-brand">
+        <span className="text-heading font-bold tabular-nums text-ink">
           {percent !== undefined ? `${percent}%` : EMPTY_VALUE}
         </span>
       </div>
@@ -54,7 +52,7 @@ export function RunningJob({
         label="エンコードの進捗"
         className="mt-2.5 h-1.5"
       />
-      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 font-code text-note tabular-nums text-ink-2">
+      <div className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1 text-sub tabular-nums text-ink-2">
         {job.recordedAt && <span>{job.recordedAt} の録画</span>}
         {job.elapsedSeconds !== undefined && (
           <span>経過 {formatLength(job.elapsedSeconds)}</span>
@@ -64,7 +62,7 @@ export function RunningJob({
         )}
         {job.headway && <span>最終更新 {job.headway.at}</span>}
         {job.stalled && job.quietForSeconds !== undefined && (
-          <span className="text-lemon">
+          <span className="text-warn-text">
             {STALLED_LABEL} {formatSpan(job.quietForSeconds)}
           </span>
         )}

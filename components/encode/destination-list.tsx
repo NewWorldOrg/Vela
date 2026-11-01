@@ -25,6 +25,7 @@ import {
 } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
 import { ActionRow } from '@/components/vela/action-row'
+import { SectionHeading } from '@/components/vela/section-heading'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
 import { ChangeDestinationButton } from '@/components/encode/change-definition-button'
@@ -32,20 +33,24 @@ import {
   DefinitionName,
   RemovalNotice,
   RETIRED_ROW,
-  STAMP,
   STICKY_HEAD,
 } from '@/components/encode/definition-list'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
-const COLUMNS: { label: string; width: string; hidden?: boolean }[] = [
-  { label: '名称', width: 'calc(180rem/16)' },
-  { label: '出力ルート', width: 'calc(320rem/16)' },
-  { label: '既定のプロファイル', width: 'calc(180rem/16)' },
-  { label: '作成', width: 'calc(122rem/16)' },
-  { label: '操作', width: 'calc(192rem/16)', hidden: true },
+/** When a destination was made is said under its name, so the table fits the settings frame. */
+const COLUMNS: {
+  label: string
+  width: string | undefined
+  hidden?: boolean
+}[] = [
+  { label: '名称', width: undefined },
+  { label: '出力ルート', width: 'calc(260rem/16)' },
+  { label: '既定のプロファイル', width: 'calc(160rem/16)' },
+  { label: '操作', width: 'calc(180rem/16)', hidden: true },
 ]
 
 export function DestinationList({
+  heading,
   destinations,
   profiles,
   roots,
@@ -53,6 +58,7 @@ export function DestinationList({
   onRevise,
   onRemove,
 }: {
+  heading: string
   destinations: EncodeDestination[]
   profiles: Pick<EncodeProfile, 'id' | 'label'>[]
   roots: string[]
@@ -67,7 +73,8 @@ export function DestinationList({
 
   return (
     <>
-      <div className="mb-2.5 flex flex-wrap items-center justify-end gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-x-3 gap-y-2">
+        <SectionHeading className="mb-0">{heading}</SectionHeading>
         <RemovalNotice removed={removed} />
         <AddDestinationDialog
           size="sm"
@@ -79,7 +86,7 @@ export function DestinationList({
 
       <Table
         cards
-        className="table-fixed min-w-[calc(810rem/16)]"
+        className="table-fixed min-w-[calc(760rem/16)]"
         containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
       >
         <TableColumns widths={COLUMNS.map((column) => column.width)} />
@@ -106,11 +113,12 @@ export function DestinationList({
                 <DefinitionName
                   label={destination.label}
                   retired={destination.retired}
+                  definedAt={destination.definedAt}
                 />
               </TableCell>
               <TableCell
                 {...cardPlace('field', '出力ルート')}
-                className="font-code wrap-anywhere"
+                className="wrap-anywhere whitespace-normal"
               >
                 {destination.outputRoot}
               </TableCell>
@@ -118,9 +126,6 @@ export function DestinationList({
                 {destination.defaultProfileLabel ?? (
                   <span className="text-ink-2">{EMPTY_VALUE}</span>
                 )}
-              </TableCell>
-              <TableCell {...cardPlace('field', '作成')} className={STAMP}>
-                {destination.definedAt}
               </TableCell>
               <TableCell {...cardPlace('actions')} className="text-right">
                 {!destination.retired && (
