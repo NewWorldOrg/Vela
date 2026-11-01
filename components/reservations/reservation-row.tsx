@@ -1,10 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { ChannelMark } from '@/components/vela/channel-mark'
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 
 import { reservationAnchor } from '@/lib/reservations'
+import { formatClock } from '@/lib/format'
 import { signedOut } from '@/lib/signed-out'
 import type {
   ConflictEntry,
@@ -24,30 +24,15 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { TableCell, TableRow } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
-import { OriginCell } from '@/components/reservations/origin-cell'
-import { StatusCell } from '@/components/recordings/status-cell'
-import { ActionRow } from '@/components/vela/action-row'
 import { InlineAlert } from '@/components/vela/banner'
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  ChevronUpIcon,
-  CloseIcon,
-  EditIcon,
-  LibraryIcon,
-  RebuildIcon,
-  TrashIcon,
-  TunerIcon,
-  WarningIcon,
-} from '@/components/vela/icons'
+import { IconButton } from '@/components/vela/icon-button'
+import { CloseIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
+import { useToast } from '@/components/vela/toast'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
-import { Unfold } from '@/components/vela/unfold'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
-import { ConflictEntries } from '@/components/reservations/conflict-entries'
 import { DisplacedNotice } from '@/components/reservations/displaced-notice'
-import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
+import { GenreDot } from '@/components/reservations/genre-dot'
+import { ReservationAttention } from '@/components/reservations/reservation-state-chip'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { cn } from '@/lib/utils'
 
@@ -64,35 +49,89 @@ export interface ReservationActions {
 
 const SIGNED_OUT = signedOut('操作')
 
+/** The grid of a row in the list: the times, the title and its line, then the chips and the press at its end. With a check before them while reservations are being picked. */
+export const ROW_GRID =
+  'grid min-h-[calc(62rem/16)] grid-cols-[calc(76rem/16)_minmax(0,1fr)_auto] items-center gap-x-5 px-2.5 py-2'
+
+export const PICKING_GRID =
+  'grid-cols-[calc(24rem/16)_calc(76rem/16)_minmax(0,1fr)_auto]'
+
+/** A hairline between rows from the title on, gone beside a row a pointer rests on or one that is open. */
+export const ROW_LINE =
+  "relative before:absolute before:top-0 before:right-2.5 before:left-[calc(116rem/16)] before:border-t before:border-hair before:content-[''] before:transition-opacity before:duration-[140ms] first:before:hidden has-[>div:first-child:hover]:before:opacity-0 data-open:before:opacity-0 [&:has(>div:first-child:hover)+li]:before:opacity-0 [&[data-open]+li]:before:opacity-0 data-[picking]:before:left-[calc(160rem/16)]"
+
+export const ROW_GROUND =
+  'rounded-md transition-[background-color] duration-[140ms] ease-toy hover:bg-surface'
+
+function clockOf(at: string): string {
+  return formatClock(new Date(at).getTime())
+}
+
+/** The start in the row's own size and the end under it, quieter. */
+export function RowTimes({
+  span,
+  whenLabel,
+}: {
+  span?: { startAt: string; endAt: string }
+  whenLabel: string
+}) {
+  if (!span) {
+    return (
+      <span className="font-code text-sub leading-[calc(18rem/16)] text-ink-2">
+        {whenLabel}
+      </span>
+    )
+  }
+
+  return (
+    <span className="flex flex-col font-code leading-[calc(18rem/16)] tabular-nums">
+      <span className="text-title font-semibold text-ink">
+        {clockOf(span.startAt)}
+      </span>
+      <span className="text-sub text-ink-2">– {clockOf(span.endAt)}</span>
+    </span>
+  )
+}
+
+/** The line under a title: the channel, then where the reservation came from, with the rule's name when a rule made it. */
+export function whereFrom(reservation: Reservation): string {
+  return reservation.ruleName
+    ? `${reservation.origin}「${reservation.ruleName}」`
+    : reservation.origin
+}
+
 export function ReservationRow({
   reservation,
   nth,
-  expanded,
-  shown,
+  open,
   onToggle,
+  picking,
   selected,
   onSelect,
   actions,
   segment,
+  loses,
 }: {
   reservation: Reservation
   segment?: { nth: number; of: number }
   nth: number
-  expanded: boolean
-  shown: boolean
+  open: boolean
   onToggle: () => void
+  picking: boolean
   selected: boolean
   onSelect: (chosen: boolean) => void
   actions: ReservationActions
+  loses?: string
 }) {
-  const conflict = reservation.standing === 'conflict'
-  const cancellable = conflict || reservation.standing === 'scheduled'
-  const restorable = reservation.restorable
+  const cancellable =
+    reservation.standing === 'conflict' || reservation.standing === 'scheduled'
+  const changeable = cancellable
   const [pending, startTransition] = useTransition()
   const [refusal, setRefusal] = useState<string>()
   const [displaced, setDisplaced] = useState<ConflictEntry[]>()
-  const [editing, setEditing] = useState(false)
   const [removing, setRemoving] = useState(false)
+  const say = useToast()
+  const panel = useId()
 
   const settle = (result: ReservationWrite) => {
     setRefusal(
@@ -113,6 +152,26 @@ export function ReservationRow({
     })
   }
 
+  const takeBack = () =>
+    startTransition(async () => {
+      setRefusal(undefined)
+      setDisplaced(undefined)
+
+      const result = await actions.onCancel(reservation.id)
+
+      settle(result)
+
+      if (result.state === 'ok') {
+        say({
+          text: '予約を取り消しました',
+          action: {
+            label: '元に戻す',
+            onPress: () => void actions.onRestore(reservation.id),
+          },
+        })
+      }
+    })
+
   const revise = async (id: string, revision: ReservationRevision) => {
     setDisplaced(undefined)
 
@@ -125,144 +184,152 @@ export function ReservationRow({
     return result
   }
 
-  return (
+  const title = (
     <>
-      <TableRow
-        id={reservationAnchor(reservation.id)}
-        data-state={selected ? 'selected' : undefined}
-        data-segment={segment ? '' : undefined}
-        style={delayOf(rowDelayMs(nth))}
-        className={cn(rowArrivesIn(nth), segment && 'bg-surface-2')}
+      <GenreDot genre={reservation.genre} />
+      <span className="min-w-0 truncate">{reservation.title}</span>
+    </>
+  )
+
+  return (
+    <li
+      id={reservationAnchor(reservation.id)}
+      data-reservation={reservation.id}
+      data-state={selected ? 'selected' : undefined}
+      data-segment={segment ? '' : undefined}
+      data-open={open ? '' : undefined}
+      data-picking={picking ? '' : undefined}
+      style={delayOf(rowDelayMs(nth))}
+      className={cn(rowArrivesIn(nth), ROW_LINE)}
+    >
+      <div
+        className={cn(
+          'relative',
+          ROW_GRID,
+          ROW_GROUND,
+          picking && PICKING_GRID,
+          (open || selected) && 'bg-surface',
+          open && 'rounded-b-none',
+        )}
       >
-        <TableCell {...cardPlace('select')} className="h-11 align-top">
+        {picking && (
           <Checkbox
             checked={selected}
             onCheckedChange={(next) => onSelect(next === true)}
             aria-label={`${reservation.title} を選ぶ`}
+            className="relative z-[2]"
           />
-        </TableCell>
-        <TableCell {...cardPlace('end')} className="align-top">
-          {conflict && (
+        )}
+        <RowTimes span={reservation.span} whenLabel={reservation.whenLabel} />
+        <span className="min-w-0">
+          {changeable ? (
             <button
               type="button"
-              aria-expanded={expanded}
-              aria-label="競合の詳細"
+              aria-expanded={open}
+              aria-controls={open ? panel : undefined}
               onClick={onToggle}
-              className="tap-target flex size-6 cursor-pointer items-center justify-center rounded-full text-coral transition-colors duration-150 hover:bg-coral-soft [&_svg]:size-3.5"
+              className="flex w-full min-w-0 cursor-pointer items-center gap-2 text-left text-title font-semibold tracking-[-0.008em] text-ink outline-none after:absolute after:inset-0 after:z-[1] after:rounded-md after:content-[''] focus-visible:after:shadow-ring"
             >
-              {expanded ? <ChevronDownIcon /> : <ChevronRightIcon />}
+              {title}
             </button>
-          )}
-        </TableCell>
-        <TableCell
-          {...cardPlace('lead')}
-          className="align-top whitespace-normal"
-        >
-          <b className="block text-[calc(13rem/16)] font-bold">
-            {reservation.title}
-          </b>
-          {segment ? (
-            <span className="text-note text-ink-2">
-              区切り {segment.nth} / {segment.of}
-            </span>
           ) : (
-            reservation.note && (
-              <span className="text-note text-ink-2">{reservation.note}</span>
+            <span className="flex min-w-0 items-center gap-2 text-title font-semibold tracking-[-0.008em] text-ink">
+              {title}
+            </span>
+          )}
+          <span className="mt-0.5 block truncate text-sub text-ink-2">
+            {reservation.channelName}
+            {segment && ` · 区切り ${segment.nth} / ${segment.of}`}
+            {` · ${whereFrom(reservation)}`}
+          </span>
+        </span>
+        <span className="relative z-[2] flex min-w-0 items-center justify-end gap-2">
+          <span
+            data-slot="row-chips"
+            className="flex flex-wrap items-center justify-end gap-1.5"
+          >
+            <ReservationAttention reservation={reservation} loses={loses} />
+          </span>
+          {reservation.recordingId && (
+            <Button variant="ghost" size="sm" asChild>
+              <Link href={`/recordings/${reservation.recordingId}`}>
+                この予約の録画へ
+              </Link>
+            </Button>
+          )}
+          {reservation.restorable && (
+            <Button
+              variant="ghost"
+              size="sm"
+              disabled={pending}
+              onClick={() => run(() => actions.onRestore(reservation.id))}
+            >
+              復元
+            </Button>
+          )}
+          {reservation.discardable && (
+            <IconButton
+              variant="quiet"
+              aria-label="削除"
+              disabled={pending}
+              onClick={() => setRemoving(true)}
+            >
+              <TrashIcon />
+            </IconButton>
+          )}
+          {cancellable ? (
+            <IconButton
+              variant="quiet"
+              aria-label="取り消し"
+              disabled={pending}
+              onClick={takeBack}
+            >
+              <CloseIcon />
+            </IconButton>
+          ) : (
+            !reservation.discardable && (
+              <span aria-hidden="true" className="w-[calc(34rem/16)]" />
             )
           )}
-        </TableCell>
-        <TableCell {...cardPlace('meta')} className="align-top">
-          <span className="flex items-center gap-2">
-            <ChannelMark
-              logo={reservation.channelLogo}
-              no={reservation.channelNo}
-              keepsTheSlot
-            />
-            <span className="min-w-0">{reservation.channelName}</span>
-          </span>
-        </TableCell>
-        <TableCell
-          {...cardPlace('meta')}
-          className="align-top font-code text-ink-2"
+        </span>
+      </div>
+      {open && changeable && (
+        <div
+          id={panel}
+          className="rounded-b-md bg-surface pt-1.5 pr-4 pb-4 pl-[calc(116rem/16)]"
         >
-          {reservation.whenLabel}
-        </TableCell>
-        <OriginCell
-          origin={reservation.origin}
-          ruleName={reservation.ruleName}
-        />
-        <TableCell {...cardPlace('field', '状態')} className="align-top">
-          <StatusCell>
-            <ReservationStateChip reservation={reservation} say />
-          </StatusCell>
-        </TableCell>
-        <TableCell {...cardPlace('actions')} className="text-right align-top">
-          <ActionRow>
-            {reservation.recordingId && (
-              <Button variant="tone" size="sm" asChild>
-                <Link href={`/recordings/${reservation.recordingId}`}>
-                  <LibraryIcon />
-                  この予約の録画へ
-                </Link>
-              </Button>
-            )}
-            {restorable && (
-              <Button
-                variant="tone"
-                size="sm"
-                disabled={pending}
-                onClick={() => run(() => actions.onRestore(reservation.id))}
-              >
-                <RebuildIcon />
-                復元
-              </Button>
-            )}
-            {cancellable && (
-              <Button variant="tone" size="sm" onClick={() => setEditing(true)}>
-                <EditIcon />
-                変更
-              </Button>
-            )}
-            {cancellable && (
-              <Button
-                variant="tone"
-                size="sm"
-                disabled={pending}
-                onClick={() => run(() => actions.onCancel(reservation.id))}
-              >
-                <CloseIcon />
-                取り消し
-              </Button>
-            )}
-            {reservation.discardable && (
-              <Button
-                variant="danger"
-                size="sm"
-                disabled={pending}
-                onClick={() => setRemoving(true)}
-              >
-                <TrashIcon />
-                削除
-              </Button>
-            )}
-          </ActionRow>
-          {editing && (
-            <EditReservationDialog
-              booking={{
-                id: reservation.id,
-                title: reservation.title,
-                priority: reservation.priority,
-                marginBeforeSeconds: reservation.marginBeforeSeconds,
-                marginAfterSeconds: reservation.marginAfterSeconds,
-                encodeWhenRecorded: reservation.encodeWhenRecorded,
-              }}
-              open
-              onOpenChange={setEditing}
-              onRevise={revise}
-            />
+          {reservation.note && (
+            <p className="mb-3.5 text-sub text-ink-2">{reservation.note}</p>
           )}
-        </TableCell>
-      </TableRow>
+          <EditReservationDialog
+            key={reservation.id}
+            layout="row"
+            open
+            onOpenChange={(next) => !next && onToggle()}
+            onRevise={revise}
+            booking={{
+              id: reservation.id,
+              title: reservation.title,
+              priority: reservation.priority,
+              marginBeforeSeconds: reservation.marginBeforeSeconds,
+              marginAfterSeconds: reservation.marginAfterSeconds,
+              encodeWhenRecorded: reservation.encodeWhenRecorded,
+            }}
+          />
+        </div>
+      )}
+      {(refusal || displaced) && (
+        <div
+          aria-live="polite"
+          className="pt-1.5 pr-2.5 pb-3 pl-[calc(116rem/16)]"
+        >
+          {refusal ? (
+            <InlineAlert tone="warn">{refusal}</InlineAlert>
+          ) : (
+            <DisplacedNotice entries={displaced} />
+          )}
+        </div>
+      )}
       <AlertDialog open={removing} onOpenChange={setRemoving}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -280,7 +347,7 @@ export function ReservationRow({
               </dl>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <p className="flex items-start gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
+          <p className="flex items-start gap-2 rounded-md bg-rec-soft px-3.5 py-2.5 text-ui font-medium text-rec-text">
             <WarningIcon className="mt-0.5 size-4 shrink-0" />
             <span>
               予約の記録が消えます。元に戻せません。
@@ -305,77 +372,6 @@ export function ReservationRow({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      {shown && conflict && reservation.conflict && (
-        <TableRow className="hover:bg-transparent">
-          <TableCell colSpan={8} className="border-b-0 p-0">
-            <Unfold open={expanded} bodyClassName="px-3.5 pb-3">
-              <div className="rounded-lg bg-surface px-4 py-3.5">
-                <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
-                  <WarningIcon className="size-4" />
-                  {reservation.conflict.headline}
-                </div>
-                <p className="mt-1 text-sub leading-relaxed whitespace-normal text-ink-2">
-                  {reservation.conflict.body}
-                </p>
-                <ConflictEntries
-                  entries={reservation.conflict.entries}
-                  className="mt-2.5"
-                />
-                <ActionRow className="mt-2.5 max-[900px]:grid-flow-row max-[900px]:gap-y-4">
-                  <Button
-                    variant="tone"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() =>
-                      run(() =>
-                        actions.onRaise(
-                          reservation.id,
-                          reservation.conflict?.raiseTo ??
-                            reservation.priority + 1,
-                        ),
-                      )
-                    }
-                  >
-                    <ChevronUpIcon />
-                    この予約を優先
-                  </Button>
-                  <Button
-                    variant="tone"
-                    size="sm"
-                    disabled={pending}
-                    onClick={() => run(() => actions.onCancel(reservation.id))}
-                  >
-                    <CloseIcon />
-                    この予約を取り消し
-                  </Button>
-                  <Button variant="tone" size="sm" asChild>
-                    <Link href="/settings/tuners">
-                      <TunerIcon />
-                      チューナーへ
-                    </Link>
-                  </Button>
-                </ActionRow>
-              </div>
-            </Unfold>
-          </TableCell>
-        </TableRow>
-      )}
-      {(refusal || displaced) && (
-        <TableRow className="hover:bg-transparent">
-          <TableCell
-            colSpan={8}
-            className="border-b-0 px-3.5 pb-3 whitespace-normal"
-          >
-            <span aria-live="polite">
-              {refusal ? (
-                <InlineAlert tone="warn">{refusal}</InlineAlert>
-              ) : (
-                <DisplacedNotice entries={displaced} />
-              )}
-            </span>
-          </TableCell>
-        </TableRow>
-      )}
-    </>
+    </li>
   )
 }

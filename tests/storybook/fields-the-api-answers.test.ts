@@ -223,7 +223,6 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'the reservation screens show what was asked for and how it ended; the rest of what the guide said about the programme, and what was taken in its place, have no part of a screen drawn for them yet',
     fields: [
       'ReservationProgrammeResponder.extended',
-      'ReservationProgrammeResponder.genres',
       'ReservationResponder.recordingOutcome',
       'ReservationSettlementResponder.instead',
       'ReservationSettlementResponder.seatsLeftOut',

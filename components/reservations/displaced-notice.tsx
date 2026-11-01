@@ -21,15 +21,15 @@ export function DisplacedNotice({
       data-slot="displaced"
       role="status"
       className={cn(
-        'rounded-lg bg-surface px-4 py-3.5 whitespace-normal',
+        'rounded-md bg-surface px-4 py-3.5 whitespace-normal',
         className,
       )}
     >
-      <div className="flex items-center gap-1.5 text-ui font-bold text-coral">
+      <div className="flex items-center gap-1.5 text-ui font-semibold text-warn-text">
         <WarningIcon className="size-4 shrink-0" />
         {DISPLACED}
       </div>
-      <ConflictEntries entries={entries} className="mt-2.5" />
+      <ConflictEntries entries={entries} className="mt-1.5" />
     </div>
   )
 }

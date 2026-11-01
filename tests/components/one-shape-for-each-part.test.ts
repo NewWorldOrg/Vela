@@ -185,7 +185,7 @@ test('the heading of an actions column is read out and not drawn, in every table
   }
 
   assert.ok(
-    headed.length > 4,
+    headed.length > 3,
     `only ${headed.length} actions columns were read`,
   )
 })

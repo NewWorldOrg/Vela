@@ -30,7 +30,7 @@ const A_WIDTH_IN_PX = /(^|[\s'"])w-\[\d+(\.\d+)?px\]/
 
 const A_WIDTH = /width: ((?:'|`|calc)[^,\n]+)/g
 
-const A_ROW = /<(tr|TableRow)\b([\s\S]*?)\n {6}>/
+const A_ROW = /<(tr|TableRow|li)\b([\s\S]*?)\n {6}>/
 
 const THE_TINTS = /bg-(brand|coral|lemon|mint|sky)-soft/
 

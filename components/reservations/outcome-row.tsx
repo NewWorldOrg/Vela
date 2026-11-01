@@ -50,7 +50,7 @@ export function OutcomeRow({
           {...cardPlace('lead')}
           className="align-top whitespace-normal"
         >
-          <b className="block text-[calc(13rem/16)] font-bold">
+          <b className="block text-ui font-semibold text-ink">
             {outcome.title}
           </b>
         </TableCell>
@@ -94,14 +94,14 @@ export function OutcomeRow({
           <TableCell colSpan={OUTCOME_COLUMN_COUNT} className="border-b-0 p-0">
             <Unfold open={expanded} bodyClassName="px-3.5 pb-3">
               <div className="rounded-lg bg-surface px-4 py-3.5">
-                <div className="text-cap font-bold tracking-[0.04em] text-ink-2">
+                <div className="text-sub font-semibold text-ink-2">
                   代わりに録られた予約
                 </div>
                 <div className="mt-2 space-y-1.5">
                   {instead.map((one) => (
                     <div
                       key={one.key}
-                      className="flex flex-wrap items-center gap-3 rounded-md bg-surface-2 px-3 py-2 text-sub"
+                      className="flex flex-wrap items-center gap-3 border-t border-hair py-2 text-sub first:border-t-0"
                     >
                       <span className="min-w-0 flex-1 font-medium">
                         {one.title ?? GONE}
