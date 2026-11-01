@@ -334,7 +334,7 @@
     --edge: var(--hair-strong);
     --brand: var(--acc-text);
     --brand-hover: var(--acc-text);
-    --on-brand: var(--on-accent);
+    --on-brand: var(--on-ink);
     --brand-soft: var(--accent-tint);
     --brand-line: transparent;
     --btn-fill: var(--btn);
