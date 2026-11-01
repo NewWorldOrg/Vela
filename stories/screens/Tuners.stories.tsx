@@ -251,9 +251,11 @@ function withSatellitePower(saved: boolean, applied: boolean) {
     ...TUNERS,
     notices: [],
     cardReaders: undefined,
-    rows: TUNERS.rows.map((row) =>
-      row.device === SATELLITE ? { ...row, lnb: { saved, applied } } : row,
-    ),
+    rows: TUNERS.rows
+      .filter((row) => row.device === SATELLITE || row.device === 'adapter1')
+      .map((row) =>
+        row.device === SATELLITE ? { ...row, lnb: { saved, applied } } : row,
+      ),
   }
 }
 

@@ -72,7 +72,10 @@ export function HardwareLine({
             {title}
           </p>
           {sub && (
-            <p className="mt-0.5 text-sub leading-[1.45] break-all text-ink-2 @[36rem]/line:truncate">
+            <p
+              title={sub}
+              className="mt-0.5 text-sub leading-[1.45] break-all text-ink-2 @[36rem]/line:truncate"
+            >
               {sub}
             </p>
           )}
@@ -116,7 +119,7 @@ export function StatusSaid({
         word
       )}
       {status.line && (
-        <p className="truncate text-sub leading-[1.45] text-ink-2 tabular-nums @[36rem]/line:mt-0.5">
+        <p className="text-sub leading-[1.45] text-ink-2 tabular-nums @[36rem]/line:mt-0.5">
           {status.line}
         </p>
       )}
