@@ -1,7 +1,7 @@
 import { TRY_AGAIN_LATER, couldNot } from '@/lib/try-again'
 import type { Route } from 'next'
 
-import { formatMoment } from '@/lib/format'
+import { formatMoment, formatRecentMoment } from '@/lib/format'
 import { SILENCE_RANGE } from '@/lib/tuners'
 import { shapeFor, wordFor } from '@/lib/not-yet-in-this-build'
 import { carinaClient } from '@/repository/client/carina'
@@ -38,6 +38,11 @@ type DetectedTunersResponder = components['schemas']['DetectedTunersResponder']
 type DetectedDeviceResponder = components['schemas']['DetectedDeviceResponder']
 type TunerHealthResponder = components['schemas']['TunerHealthResponder']
 type ServiceReachLevel = components['schemas']['ServiceReachLevel']
+type TunerHardwareResponder = components['schemas']['TunerHardwareResponder']
+type CardReaderResponder = components['schemas']['CardReaderResponder']
+type CardReaderSlotResponder = components['schemas']['CardReaderSlotResponder']
+type CardState = components['schemas']['CardState']
+type CardProblem = components['schemas']['CardProblem']
 
 export interface SystemReach {
   system: ScanSystem
@@ -49,15 +54,33 @@ export interface SystemReach {
 
 export interface TunerSession {
   label: string
+  title?: string
   saying?: string
   tone: 'recording' | 'epg'
   code?: string
   endsAt?: string
 }
 
+/** How a state is drawn: plain words, or a chip in red for recording or trouble, or in amber for a warning. */
+export type StatusTone = 'plain' | 'rec' | 'warn' | 'err'
+
+/** A state in one word or phrase, and the line under it that says since when or until when. */
+export interface StatusLine {
+  word: string
+  tone: StatusTone
+  line?: string
+}
+
 export interface TunerRow {
   id: string
   device: string
+  /** The machine the tuner belongs to when it is not the driver's own. */
+  machine?: string
+  /** What the hardware calls itself, when the driver says. */
+  name?: string
+  /** Where it sits: its kernel driver and device path, or the USB port. */
+  place?: string
+  status: StatusLine
   kind?: '地上波' | '衛星'
   enabled: boolean
   session?: TunerSession
@@ -79,6 +102,9 @@ export interface DetectionDiffRow {
   kind: 'add' | 'del' | 'kind'
   tag: string
   device: string
+  /** What the hardware calls itself and where it sits, for a device found anew. */
+  name?: string
+  place?: string
   note: string
 }
 
@@ -115,12 +141,30 @@ export interface DriverRestartOffer {
 
 export type DriverLink = 'connected' | 'draining' | 'disconnected' | 'unknown'
 
+/** What the driver says of itself, spelled for the screen. */
+export interface DriverFacts {
+  version?: string
+  startedAt?: string
+  respondedAt?: string
+  machine?: string
+}
+
+export interface CardReaderRow {
+  id: string
+  title: string
+  sub?: string
+  status: StatusLine
+}
+
 interface DriverState {
   connection: DriverLink
   instanceId?: string
+  facts: DriverFacts
 }
 
 export interface TunerResult extends DriverState {
+  /** The card reader, or undefined where the driver does not answer for it. */
+  cardReaders?: CardReaderRow[]
   notices: TunerNotice[]
   thresholdHours: number
   reach: SystemReach[]
@@ -189,10 +233,11 @@ const MAX_BUDGET_SECONDS = 60
 export async function getTuners(): Promise<TunerScreenResult> {
   const client = carinaClient()
 
-  const [ledger, driver, health] = await Promise.all([
+  const [ledger, driver, health, reader] = await Promise.all([
     client.GET('/api/tuners'),
     client.GET('/api/driver/status'),
     client.GET('/api/tuners/health'),
+    client.GET('/api/driver/card-reader'),
   ])
 
   if (ledger.response.status === 401 || driver.response.status === 401) {
@@ -213,15 +258,19 @@ export async function getTuners(): Promise<TunerScreenResult> {
   }
 
   const reported = health.data?.data ?? undefined
+  const readerSeen = reader.data?.status === true ? reader.data.data : null
 
   return {
     state: 'ok',
-    result: toResult(
-      body.data,
-      toDriver(driver.data),
-      reported == null ? THRESHOLD_HOURS : toInt(reported.hoursOfSilence),
-      toReach(reported),
-    ),
+    result: {
+      ...toResult(
+        body.data,
+        toDriver(driver.data),
+        reported == null ? THRESHOLD_HOURS : toInt(reported.hoursOfSilence),
+        toReach(reported),
+      ),
+      cardReaders: readerSeen === null ? undefined : toCardReaders(readerSeen),
+    },
   }
 }
 
@@ -368,7 +417,7 @@ export function parseRestartTicket(
 
 export function toRestartWindow(
   ticket: RestartTicket | undefined,
-  driver: DriverState | undefined,
+  driver: Pick<DriverState, 'connection' | 'instanceId'> | undefined,
   now: number = Date.now(),
 ): RestartWindow | undefined {
   if (ticket === undefined) {
@@ -636,6 +685,7 @@ function toDetection(detected: DetectedTunersResponder): DetectionResult {
         kind: 'add' as const,
         tag: '新規',
         device: deviceId,
+        ...hardwareOf(devices.get(deviceId)?.hardware),
         note: unsavable.has(deviceId)
           ? wordFor(
               UNSAVABLE_NOTE,
@@ -661,6 +711,18 @@ function toDetection(detected: DetectedTunersResponder): DetectionResult {
   }
 }
 
+function hardwareOf(
+  hardware: TunerHardwareResponder | null | undefined,
+): Pick<DetectionDiffRow, 'name' | 'place'> {
+  const name = nameOf(hardware)
+  const place = placeOf(hardware)
+
+  return {
+    ...(name === undefined ? {} : { name }),
+    ...(place === undefined ? {} : { place }),
+  }
+}
+
 function toAddedNote(device: DetectedDeviceResponder | undefined): string {
   if (device === undefined) {
     return '新しく検出されました'
@@ -677,22 +739,40 @@ function toDriver(envelope: DriverStatusEnvelope | undefined): DriverState {
   const status = envelope?.status === true ? envelope.data : null
 
   if (status === null) {
-    return { connection: 'unknown' }
+    return { connection: 'unknown', facts: {} }
   }
 
   const instanceId = status.hello?.instanceId ?? undefined
+  const facts = toFacts(status)
 
   switch (status.connection) {
     case 'notConnected':
-      return { connection: 'disconnected' }
+      return { connection: 'disconnected', facts }
     case 'draining':
-      return { connection: 'draining', instanceId }
+      return { connection: 'draining', instanceId, facts }
     case 'connected':
       return status.hello?.draining
-        ? { connection: 'draining', instanceId }
-        : { connection: 'connected', instanceId }
+        ? { connection: 'draining', instanceId, facts }
+        : { connection: 'connected', instanceId, facts }
     default:
-      return { connection: 'unknown' }
+      return { connection: 'unknown', facts }
+  }
+}
+
+function toFacts(
+  status: NonNullable<DriverStatusEnvelope['data']>,
+): DriverFacts {
+  const hello = status.hello
+
+  if (!hello?.version && !hello?.startedAt && !hello?.name) {
+    return {}
+  }
+
+  return {
+    version: hello.version ?? undefined,
+    startedAt: hello.startedAt ? formatMoment(hello.startedAt) : undefined,
+    respondedAt: formatRecentMoment(status.observedAt),
+    machine: hello.name ?? undefined,
   }
 }
 
@@ -826,18 +906,226 @@ function toRow(
       ? !entry.disabled
       : observation.state !== 'disabled'
 
+  const session = toSession(observation)
+  const lastService = toLastService(observation, reach)
+
   return {
     id: entry.deviceId,
     device: entry.deviceId,
+    machine: observation?.machine ?? undefined,
+    name: nameOf(observation?.hardware),
+    place: placeOf(observation?.hardware),
+    status: toStatus(observation, session, lastService),
     kind,
     enabled,
     draining:
       observation?.state === 'draining' || observation?.disablePending === true,
-    session: toSession(observation),
+    session,
     idleLabel: toIdleLabel(observation),
     lnb: toLnb(entry, observation),
-    lastService: toLastService(observation, reach),
+    lastService,
     ...toState(observation),
+  }
+}
+
+export const SYNTHETIC_TUNER = '偽のチューナー'
+
+function nameOf(
+  hardware: TunerHardwareResponder | null | undefined,
+): string | undefined {
+  if (!hardware) {
+    return undefined
+  }
+
+  return hardware.bus === 'synthetic'
+    ? SYNTHETIC_TUNER
+    : (hardware.name ?? undefined)
+}
+
+function placeOf(
+  hardware: TunerHardwareResponder | null | undefined,
+): string | undefined {
+  if (!hardware) {
+    return undefined
+  }
+
+  if (hardware.usbPort) {
+    return `usb ${hardware.usbPort}`
+  }
+
+  const parts = [hardware.kernelDriver, hardware.devicePath].filter(
+    (part): part is string => Boolean(part),
+  )
+
+  return parts.length === 0 ? undefined : parts.join(' · ')
+}
+
+function toStatus(
+  observation: TunerObservationResponder | undefined,
+  session: TunerSession | undefined,
+  lastService: TunerRow['lastService'],
+): StatusLine {
+  const seenAt = observation?.hardware?.lastSeenAt
+  const since = seenAt
+    ? `${formatRecentMoment(seenAt)} に確認`
+    : lastService && `${lastService.at} に受信`
+  const line = session ? sessionLine(session) : (since ?? undefined)
+
+  return { ...statusWordOf(observation, session), line }
+}
+
+function sessionLine(session: TunerSession): string | undefined {
+  const parts = [
+    session.title ?? session.code,
+    session.endsAt && `${session.endsAt} まで`,
+  ].filter((part): part is string => Boolean(part))
+
+  return parts.length === 0 ? undefined : parts.join(' · ')
+}
+
+function statusWordOf(
+  observation: TunerObservationResponder | undefined,
+  session: TunerSession | undefined,
+): Pick<StatusLine, 'word' | 'tone'> {
+  if (observation === undefined) {
+    return { word: TUNER_STATE_LABEL.unread, tone: 'warn' }
+  }
+
+  if (observation.hardware?.present === false) {
+    return { word: '見当たらない', tone: 'err' }
+  }
+
+  if (observation.state === 'faulted' || observation.health === 'faulted') {
+    return {
+      word: observation.machine ? 'つながらない' : TUNER_STATE_LABEL.faulted,
+      tone: 'err',
+    }
+  }
+
+  return quietWordOf(observation, session)
+}
+
+function quietWordOf(
+  observation: TunerObservationResponder,
+  session: TunerSession | undefined,
+): Pick<StatusLine, 'word' | 'tone'> {
+  if (observation.state === 'draining') {
+    return { word: '停止準備中', tone: 'plain' }
+  }
+
+  if (observation.state === 'disabled') {
+    return { word: '無効', tone: 'plain' }
+  }
+
+  if (session) {
+    return session.tone === 'recording'
+      ? { word: '録画中', tone: 'rec' }
+      : { word: session.label, tone: 'plain' }
+  }
+
+  return observation.health === 'degraded'
+    ? { word: TUNER_STATE_LABEL.degraded, tone: 'warn' }
+    : { word: '空き', tone: 'plain' }
+}
+
+const CARD_WORD: Record<CardState, Pick<StatusLine, 'word' | 'tone'>> = {
+  unspecified: { word: '不明', tone: 'warn' },
+  inserted: { word: '挿入', tone: 'plain' },
+  empty: { word: '未挿入', tone: 'warn' },
+  unresponsive: { word: '応答なし', tone: 'err' },
+  borrowed: { word: '借用中', tone: 'plain' },
+  noReader: { word: 'リーダーなし', tone: 'warn' },
+  notUsed: { word: '復号しない', tone: 'plain' },
+}
+
+const CARD_PROBLEM: Record<NonNullable<CardProblem>, string | undefined> = {
+  unspecified: undefined,
+  serviceDown: 'pcscd が止まっています',
+  libraryMissing: 'libpcsclite がありません',
+  cardSilent: 'カードが答えません',
+  lenderUnreachable: '貸し手に届きません',
+  lenderRefused: '貸し手に断られました',
+}
+
+function cardStatus(
+  state: CardState,
+  problem: CardProblem | undefined,
+  line: string | undefined,
+): StatusLine {
+  const { word, tone } = shapeFor(CARD_WORD, state, CARD_WORD.unspecified)
+  const why = problem ? shapeFor(CARD_PROBLEM, problem, undefined) : undefined
+
+  return {
+    word: why ? `${word} · ${why}` : word,
+    tone: why ? 'err' : tone,
+    line,
+  }
+}
+
+function toCardReaders(reader: CardReaderResponder): CardReaderRow[] {
+  const answered =
+    reader.lastAnsweredAt &&
+    `${formatRecentMoment(reader.lastAnsweredAt)} に応答`
+  const checked =
+    reader.checkedAt && `${formatRecentMoment(reader.checkedAt)} に確認`
+  const lent =
+    reader.leasesOut === null || reader.leasesOut === undefined
+      ? undefined
+      : `貸し出し ${reader.leasesOut}`
+
+  if (reader.use === 'borrowed') {
+    return [
+      {
+        id: 'reader-borrowed',
+        title: reader.lenderHostName ?? 'カードリーダー',
+        status: cardStatus(
+          reader.state,
+          reader.problem,
+          answered ?? checked ?? undefined,
+        ),
+      },
+    ]
+  }
+
+  if (reader.readers.length === 0) {
+    return [
+      {
+        id: 'reader-none',
+        title: 'カードリーダー',
+        status: cardStatus(reader.state, reader.problem, checked ?? undefined),
+      },
+    ]
+  }
+
+  return reader.readers.map((slot, index) =>
+    toSlotRow(slot, index, reader, {
+      answered: answered ?? undefined,
+      checked: checked ?? undefined,
+      lent,
+    }),
+  )
+}
+
+function toSlotRow(
+  slot: CardReaderSlotResponder,
+  index: number,
+  reader: CardReaderResponder,
+  said: { answered?: string; checked?: string; lent?: string },
+): CardReaderRow {
+  const sub = slot.inUse
+    ? [slot.inUse && '使用中', said.lent].filter(Boolean).join(' · ')
+    : undefined
+  const problem = slot.state === reader.state ? reader.problem : null
+
+  return {
+    id: `reader-${index}`,
+    title: slot.name,
+    sub,
+    status: cardStatus(
+      slot.state,
+      problem,
+      slot.inUse ? (said.answered ?? said.checked) : said.checked,
+    ),
   }
 }
 
@@ -881,9 +1169,10 @@ function toSession(
   return {
     label,
     saying: saying === label ? undefined : saying,
+    title: observation.sessionTitle ?? undefined,
     tone: observation.sessionPurpose === 'recording' ? 'recording' : 'epg',
     code: tuningLabelOf(observation.sessionTuning),
-    endsAt: endsAt === undefined ? undefined : formatMoment(endsAt),
+    endsAt: endsAt === undefined ? undefined : formatRecentMoment(endsAt),
   }
 }
 

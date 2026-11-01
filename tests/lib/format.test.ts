@@ -18,6 +18,7 @@ import {
   formatSpanToTheMillisecond,
   formatSpokenHour,
   formatSpokenMoment,
+  formatRecentMoment,
 } from '@/lib/format'
 
 const ZONES = ['Etc/UTC', 'Asia/Tokyo', 'America/New_York', 'Pacific/Auckland']
@@ -283,5 +284,25 @@ inEveryZone(
     assert.equal(formatSpokenMoment('2026-10-19T18:06:00Z'), '10月20日 3:06')
     assert.equal(formatSpokenMoment('2026-12-31T14:59:00Z'), '12月31日 23:59')
     assert.equal(formatSpokenHour('2026-10-20T18:00:00Z'), '10月21日 3時')
+  },
+)
+
+inEveryZone(
+  'formatRecentMoment spells only the clock for a moment of the same day in Japan',
+  () => {
+    assert.equal(
+      formatRecentMoment('2026-08-20T10:20:00Z', '2026-08-20T12:00:00Z'),
+      '19:20',
+    )
+  },
+)
+
+inEveryZone(
+  'formatRecentMoment spells the whole moment for another day',
+  () => {
+    assert.equal(
+      formatRecentMoment('2026-08-19T10:20:00Z', '2026-08-20T12:00:00Z'),
+      formatMoment('2026-08-19T10:20:00Z', '2026-08-20T12:00:00Z'),
+    )
   },
 )
