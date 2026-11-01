@@ -762,16 +762,13 @@ function toFacts(
   status: NonNullable<DriverStatusEnvelope['data']>,
 ): DriverFacts {
   const hello = status.hello
-  const said = {
-    version: hello?.version ?? undefined,
-    startedAt: hello?.startedAt ? formatMoment(hello.startedAt) : undefined,
-    respondedAt: hello ? formatRecentMoment(status.observedAt) : undefined,
-    machine: hello?.name ?? undefined,
-  }
 
-  return Object.fromEntries(
-    Object.entries(said).filter(([, value]) => value !== undefined),
-  )
+  return {
+    ...(hello?.version ? { version: hello.version } : {}),
+    ...(hello?.startedAt ? { startedAt: formatMoment(hello.startedAt) } : {}),
+    ...(hello ? { respondedAt: formatRecentMoment(status.observedAt) } : {}),
+    ...(hello?.name ? { machine: hello.name } : {}),
+  }
 }
 
 function toResult(
