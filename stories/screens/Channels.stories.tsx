@@ -229,7 +229,7 @@ export const 候補を開いた状態: Story = {
     )
     await afterTheArrival(canvasElement)
 
-    await expect(canvas.getByText('● 選択中')).toBeVisible()
+    await expect(canvas.getByText('選択中')).toBeVisible()
   },
 }
 
@@ -275,7 +275,7 @@ export const 候補の開閉は取得を伴わない: Story = {
 
     await userEvent.click(caret)
     await expect(caret).toHaveAttribute('aria-expanded', 'false')
-    await waitFor(() => expect(canvas.queryByText('● 選択中')).toBeNull())
+    await waitFor(() => expect(canvas.queryByText('選択中')).toBeNull())
   },
 }
 
@@ -329,7 +329,7 @@ export const 閉じるときは縮んでから消える: Story = {
     await userEvent.click(caret)
     await expect(folded).resolves.toBe('grid-template-rows')
     await expect(unfold).toHaveAttribute('inert')
-    await waitFor(() => expect(canvas.queryByText('● 選択中')).toBeNull())
+    await waitFor(() => expect(canvas.queryByText('選択中')).toBeNull())
   },
 }
 
