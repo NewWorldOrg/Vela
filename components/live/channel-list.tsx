@@ -144,7 +144,7 @@ export function ChannelList({
                           <i
                             data-slot="watching-mark"
                             aria-hidden="true"
-                            className="absolute inset-0 rounded-sm shadow-[inset_0_0_0_2px_var(--ink)] not-italic"
+                            className="absolute inset-0 rounded-sm shadow-[inset_0_0_0_2px_var(--accent)] not-italic"
                           />
                         )}
                       </span>
