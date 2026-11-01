@@ -169,6 +169,7 @@ const THE_SUITE = [
   'tests/lib/theme.test.ts',
   'tests/lib/thumbnail-redraw.test.ts',
   'tests/lib/tuning-entry.test.ts',
+  'tests/lib/utils.test.ts',
   'tests/lib/version.test.ts',
   'tests/lib/viewing.test.ts',
   'tests/lib/when-terms.test.ts',
