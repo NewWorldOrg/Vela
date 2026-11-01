@@ -40,9 +40,7 @@ export const Rows: Story = {
 
     return (
       <div className="mx-auto max-w-[720px] p-6">
-        <SectionHeading mark={ListIcon}>
-          データ行・展開行(チューナー一覧)
-        </SectionHeading>
+        <SectionHeading>データ行・展開行(チューナー一覧)</SectionHeading>
         <DataList columns={COLUMNS} minWidth={520}>
           <DataListHeader>
             <span />
@@ -182,7 +180,7 @@ export const Rows: Story = {
 export const Empty: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkStar}>空状態</SectionHeading>
+      <SectionHeading>空状態</SectionHeading>
       <DataList columns={COLUMNS} minWidth={520}>
         <DataListHeader>
           <span />

@@ -62,7 +62,7 @@ function Sample({
 export const TextInputs: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkRuler}>テキスト入力</SectionHeading>
+      <SectionHeading>テキスト入力</SectionHeading>
       <Surface>
         <div className="grid gap-[17px] sm:grid-cols-2">
           <Sample caption="通常">
@@ -136,7 +136,7 @@ export const TextInputs: Story = {
 function PasswordSamples() {
   return (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkRuler}>パスワード入力</SectionHeading>
+      <SectionHeading>パスワード入力</SectionHeading>
       <Surface>
         <div className="grid gap-[17px] sm:grid-cols-2">
           <Sample caption="通常">
@@ -188,7 +188,7 @@ export const パスワードを表示中: Story = {
 export const Selects: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkSplit}>セレクト</SectionHeading>
+      <SectionHeading>セレクト</SectionHeading>
       <Surface>
         <div className="grid gap-[17px] sm:grid-cols-2">
           <Field>
@@ -244,9 +244,7 @@ export const Selects: Story = {
 export const Toggles: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
-      <SectionHeading mark={MarkPill}>
-        スイッチ・チェックボックス・ラジオ
-      </SectionHeading>
+      <SectionHeading>スイッチ・チェックボックス・ラジオ</SectionHeading>
       <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-2.5">
         <OptionGroup title="スイッチ" className="col-span-full bg-brand-soft">
           <div className="flex items-center gap-[11px]">

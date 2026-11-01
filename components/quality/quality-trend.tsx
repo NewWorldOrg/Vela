@@ -152,7 +152,7 @@ function Axis({ trend }: { trend: QualityTrend }) {
 export function QualityTrendPanel({ trend }: { trend: QualityTrend }) {
   return (
     <Surface>
-      <SectionHeading mark={MarkStar}>{HEADING}</SectionHeading>
+      <SectionHeading>{HEADING}</SectionHeading>
       <SegmentedControl
         aria-label={SUBJECT}
         options={segmentsOf(trend.subjects)}

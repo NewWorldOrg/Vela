@@ -255,7 +255,7 @@ export function QualityView({
       </div>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkDots}>チャンネル別ドロップ率</SectionHeading>
+        <SectionHeading>チャンネル別ドロップ率</SectionHeading>
         {result.channels.length > 0 ? (
           <ChannelMeters
             channels={result.channels}
@@ -269,7 +269,7 @@ export function QualityView({
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkSlashes}>BS / CS のドロップ率</SectionHeading>
+        <SectionHeading>BS / CS のドロップ率</SectionHeading>
         {result.satellites.length > 0 ? (
           <ChannelMeters
             channels={result.satellites}
@@ -283,7 +283,7 @@ export function QualityView({
       </section>
 
       <section className="mt-5">
-        <SectionHeading mark={MarkSplit}>チューナー別ヘルス</SectionHeading>
+        <SectionHeading>チューナー別ヘルス</SectionHeading>
         {result.tuners.length > 0 ? (
           <Table
             cards
@@ -363,7 +363,7 @@ export function QualityView({
 
       <div className="mt-5 grid gap-2.5 min-[900px]:grid-cols-2">
         <Surface>
-          <SectionHeading mark={MarkDots}>問題のある録画</SectionHeading>
+          <SectionHeading>問題のある録画</SectionHeading>
           {result.problemRecordings.length > 0 ? (
             <div className="space-y-2">
               {result.problemRecordings.map((recording) => (

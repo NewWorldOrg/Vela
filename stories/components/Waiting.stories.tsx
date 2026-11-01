@@ -15,7 +15,7 @@ type Story = StoryObj<typeof meta>
 export const 一覧の中: Story = {
   render: () => (
     <div className="mx-auto max-w-[840px] p-6">
-      <SectionHeading mark={MarkDots}>一覧</SectionHeading>
+      <SectionHeading>一覧</SectionHeading>
       <WaitingRows rows={3} />
     </div>
   ),

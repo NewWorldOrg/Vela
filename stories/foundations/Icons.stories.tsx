@@ -135,19 +135,17 @@ export const IconSet: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <section className="mb-7">
-        <SectionHeading mark={Icons.MarkStar}>
-          ナビゲーション・領域
-        </SectionHeading>
+        <SectionHeading>ナビゲーション・領域</SectionHeading>
         <IconGrid items={NAVIGATION} />
       </section>
 
       <section className="mb-7">
-        <SectionHeading mark={Icons.MarkPill}>操作・状態</SectionHeading>
+        <SectionHeading>操作・状態</SectionHeading>
         <IconGrid items={ACTIONS} />
       </section>
 
       <section className="mb-7">
-        <SectionHeading mark={Icons.MarkDots}>セクションマーク</SectionHeading>
+        <SectionHeading>セクションマーク</SectionHeading>
         <IconGrid items={MARKS} />
         <p className="mt-[9px] text-note text-ink-2">
           セクション見出しの前に置く小さなマーク。同じ形を使い回さず、区画ごとに変える。

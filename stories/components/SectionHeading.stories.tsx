@@ -23,23 +23,23 @@ type Story = StoryObj<typeof meta>
 export const Marks: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkStar}>配色</SectionHeading>
+      <SectionHeading>配色</SectionHeading>
       <Surface className="mb-5">
         <p className="text-sub text-ink-2">
           セクション見出しの前に小さなマークを置き、後ろは破線の罫で埋める。
         </p>
       </Surface>
-      <SectionHeading mark={MarkDoubleCircle}>触感</SectionHeading>
+      <SectionHeading>触感</SectionHeading>
       <Surface className="mb-5">
         <p className="text-sub text-ink-2">
           同じ形を使い回さず、区画ごとに変える。
         </p>
       </Surface>
-      <SectionHeading mark={MarkSlashes}>装飾</SectionHeading>
+      <SectionHeading>装飾</SectionHeading>
       <Surface className="mb-5">
         <p className="text-sub text-ink-2">装飾は情報を持つものだけ。</p>
       </Surface>
-      <SectionHeading mark={MarkCup}>パステルの面</SectionHeading>
+      <SectionHeading>パステルの面</SectionHeading>
       <Surface>
         <p className="text-sub text-ink-2">区切りは実線一辺倒にしない。</p>
       </Surface>

@@ -17,7 +17,7 @@ type Story = StoryObj<typeof meta>
 export const ScanProgress: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={SearchIcon}>スキャン進捗</SectionHeading>
+      <SectionHeading>スキャン進捗</SectionHeading>
       <Surface>
         <div className="mb-[13px] flex items-start justify-between gap-3">
           <div>
@@ -48,7 +48,7 @@ export const ScanProgress: Story = {
 export const Meters: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={TunerIcon}>信号品質メーター(CNR)</SectionHeading>
+      <SectionHeading>信号品質メーター(CNR)</SectionHeading>
       <Surface className="flex flex-col gap-3.5">
         <SignalMeter
           channel="みなと総合1(27ch)"
@@ -83,7 +83,7 @@ export const Meters: Story = {
 export const BarAndSpinner: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={EncodeIcon}>細プログレスとスピナー</SectionHeading>
+      <SectionHeading>細プログレスとスピナー</SectionHeading>
       <Surface>
         <div className="mb-[7px] flex items-baseline justify-between gap-3">
           <span className="truncate text-ui">

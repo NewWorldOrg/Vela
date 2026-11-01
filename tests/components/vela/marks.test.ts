@@ -13,10 +13,10 @@ const ROOT = path.resolve(
 
 const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
 
-test('the mark at the top left is the small cut', async () => {
+test('the mark at the top left is drawn at 24px', async () => {
   assert.match(
     await read('components/vela/app-shell.tsx'),
-    /<VelaMark small className="size-4" \/>/,
+    /<VelaMark className="size-6" \/>/,
   )
 })
 
@@ -29,12 +29,21 @@ test('the marks are painted by the tokens, never by a colour of their own', asyn
     ['#000', '#fff'],
     'a colour other than the black and white of a mask is written into the marks',
   )
-  for (const token of ['stroke-brand', 'stroke-sky', 'stroke-spark']) {
-    assert.match(source, new RegExp(token))
-  }
-  for (const token of ['fill-brand', 'fill-sky', 'fill-spark']) {
-    assert.match(source, new RegExp(token))
-  }
+  const mark = source.slice(
+    source.indexOf('export function VelaMark('),
+    source.indexOf('export type UsherMood'),
+  )
+
+  assert.match(
+    mark,
+    /className="stroke-ink"/,
+    'the strokes of the mark are not ink',
+  )
+  assert.match(
+    mark,
+    /className="fill-accent"/,
+    'the dot of the mark is not the accent',
+  )
 })
 
 const USHER_MOVEMENTS = [

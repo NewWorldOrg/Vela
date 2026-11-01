@@ -49,7 +49,7 @@ function AnomalyRow({ anomaly }: { anomaly: QualityAnomaly }) {
 export function AnomalyList({ anomalies }: { anomalies: QualityAnomalies }) {
   return (
     <Surface>
-      <SectionHeading mark={MarkDoubleCircle}>
+      <SectionHeading>
         {HEADING}
         {anomalies.owned > 0 && (
           <QualityChip level="bad">所有 {anomalies.owned} 件</QualityChip>

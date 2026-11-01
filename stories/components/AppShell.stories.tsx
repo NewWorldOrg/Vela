@@ -18,7 +18,6 @@ import {
 import { PageHeading } from '@/components/vela/section-heading'
 import { TintPanel } from '@/components/vela/surface'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import {
   ChannelIcon,
   EncodeIcon,
@@ -54,7 +53,6 @@ function ServiceTopBar({ settingsActive }: { settingsActive?: boolean }) {
         ))}
       </GlobalNav>
       <div className="flex items-center gap-[7px]">
-        <ThemeToggle />
         <SettingsLink href="#" active={settingsActive} />
       </div>
     </TopBar>

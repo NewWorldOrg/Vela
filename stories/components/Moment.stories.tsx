@@ -61,15 +61,15 @@ type Story = StoryObj<typeof meta>
 export const ひとつの語とひとつの形: Story = {
   render: () => (
     <div className="mx-auto max-w-[680px] p-6">
-      <SectionHeading mark={MarkRuler}>日時の見出し語</SectionHeading>
+      <SectionHeading>日時の見出し語</SectionHeading>
       <Surface className="mb-5">
         <Rows rows={HEADINGS} />
       </Surface>
-      <SectionHeading mark={MarkAxis}>同じ形で書く 4 か所</SectionHeading>
+      <SectionHeading>同じ形で書く 4 か所</SectionHeading>
       <Surface className="mb-5">
         <Rows rows={PLACES} />
       </Surface>
-      <SectionHeading mark={MarkRuler}>端</SectionHeading>
+      <SectionHeading>端</SectionHeading>
       <Surface>
         <Rows rows={EDGES} />
       </Surface>

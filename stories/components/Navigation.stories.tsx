@@ -29,7 +29,7 @@ type Story = StoryObj<typeof meta>
 export const UnderlineTabs: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkSplit}>下線タブ(種別切替)</SectionHeading>
+      <SectionHeading>下線タブ(種別切替)</SectionHeading>
       <Surface>
         <Tabs defaultValue="gr">
           <TabsList>
@@ -64,9 +64,7 @@ export const Segmented: Story = {
     const [value, setValue] = useState('all')
     return (
       <div className="mx-auto max-w-[620px] p-6">
-        <SectionHeading mark={MarkPill}>
-          セグメント切替(絞り込み)
-        </SectionHeading>
+        <SectionHeading>セグメント切替(絞り込み)</SectionHeading>
         <Surface>
           <SegmentedControl
             aria-label="チューナー種別で絞り込み"
@@ -116,7 +114,7 @@ export const DatePagerStory: StoryObj<typeof meta> = {
   name: 'Date pager',
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPanel}>日付ページャ</SectionHeading>
+      <SectionHeading>日付ページャ</SectionHeading>
       <Surface>
         <DatePager label="8/7(木)" />
       </Surface>
@@ -130,7 +128,7 @@ export const DatePagerStory: StoryObj<typeof meta> = {
 export const IconButtons: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPill}>アイコンボタン</SectionHeading>
+      <SectionHeading>アイコンボタン</SectionHeading>
       <Surface>
         <div className="flex flex-wrap items-center gap-4">
           <IconButton aria-label="検索">

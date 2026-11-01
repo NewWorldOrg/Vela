@@ -278,7 +278,7 @@ export function SystemView({
       </div>
 
       <section className="mt-[calc(26rem/16)]">
-        <SectionHeading mark={MarkDots}>詳細</SectionHeading>
+        <SectionHeading>詳細</SectionHeading>
         <Surface>
           <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-2.5 text-ui">
             <DetailRow label={SYSTEM_DETAIL_LABELS.observedAt}>

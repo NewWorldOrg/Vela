@@ -35,12 +35,11 @@ function tokenOf(name: string): string {
 export const しるし: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
-      <SectionHeading mark={MarkStar}>しるし</SectionHeading>
+      <SectionHeading>しるし</SectionHeading>
       <Surface className="flex flex-wrap items-end gap-6">
         <VelaMark className="size-[140px]" />
         <VelaMark className="size-[34px]" />
-        <VelaMark small className="size-8" />
-        <VelaMark small className="size-4" />
+        <VelaMark className="size-6" />
         <Brand />
       </Surface>
     </div>
@@ -52,35 +51,28 @@ export const しるし: Story = {
       ),
     ]
 
-    await expect(marks.map((mark) => mark.dataset.cut)).toEqual([
-      'full',
-      'full',
-      'small',
-      'small',
-      'small',
-    ])
+    await expect(marks).toHaveLength(4)
 
     for (const mark of marks) {
-      const [keel, sail, star] = [...mark.querySelectorAll(':scope > path')]
-      const thick = mark.dataset.cut === 'small' ? '21' : '16'
+      const strokes = [...mark.querySelectorAll(':scope > path')]
+      const dot = mark.querySelector(':scope > circle')
 
-      await expect(keel.getAttribute('stroke-width')).toBe(thick)
-      await expect(getComputedStyle(keel).stroke).toBe(tokenOf('--sky'))
-      await expect(getComputedStyle(sail).stroke).toBe(tokenOf('--brand'))
-      await expect(getComputedStyle(star).stroke).toBe(tokenOf('--spark'))
-      await expect(star.getAttribute('mask')).toMatch(/^url\(#vela-mark-/)
+      await expect(strokes).toHaveLength(2)
+
+      for (const stroke of strokes) {
+        await expect(getComputedStyle(stroke).stroke).toBe(tokenOf('--ink'))
+      }
+
+      await expect(getComputedStyle(dot!).fill).toBe(tokenOf('--accent'))
       await expect(mark).toHaveAttribute('aria-hidden', 'true')
     }
-
-    const masks = marks.map((mark) => mark.querySelector('mask')?.id)
-    await expect(new Set(masks).size).toBe(marks.length)
   },
 }
 
 export const 案内役: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
-      <SectionHeading mark={MarkDots}>案内役</SectionHeading>
+      <SectionHeading>案内役</SectionHeading>
       <Surface className="flex flex-wrap items-end justify-around gap-6">
         {MOODS.map(([mood, label]) => (
           <div key={mood} className="flex flex-col items-center gap-1.5">

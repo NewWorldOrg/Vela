@@ -37,7 +37,7 @@ const BASE: [string, string, string, string][] = [
 export const DotAndText: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkDots}>ドット+テキスト(基本形)</SectionHeading>
+      <SectionHeading>ドット+テキスト(基本形)</SectionHeading>
       <Surface className="py-0.5">
         {BASE.map(([tone, label, desc, token]) => (
           <div
@@ -63,7 +63,7 @@ export const DotAndText: Story = {
 export const Chips: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPill}>チップ型バッジ</SectionHeading>
+      <SectionHeading>チップ型バッジ</SectionHeading>
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="selected">選択中</Badge>
         <Badge variant="info">予約済み</Badge>
@@ -84,7 +84,7 @@ export const Chips: Story = {
         ドットを伴うのは録画中のみ。同系色のチップは文言で区別し、色数を増やさない。
       </p>
 
-      <SectionHeading mark={SignalIcon} className="mt-7">
+      <SectionHeading className="mt-7">
         区分チップ(TV / ワンセグ / データ)
       </SectionHeading>
       <div className="flex flex-wrap items-center gap-2">
@@ -103,7 +103,7 @@ export const Chips: Story = {
 export const 録画中: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPill}>録画中</SectionHeading>
+      <SectionHeading>録画中</SectionHeading>
       <div className="flex flex-wrap items-center gap-2">
         <RecordingInProgressChip />
         <RecordingInProgressChip mark="ledger" />
@@ -138,7 +138,7 @@ export const 録画中: Story = {
 export const InUse: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkDots}>適用例</SectionHeading>
+      <SectionHeading>適用例</SectionHeading>
       <p className="mb-0.5 text-sub text-ink-2">
         一覧の行ではドット+テキストを基本にし、チップは補助情報に限る。
       </p>
@@ -173,7 +173,7 @@ export const InUse: Story = {
 export const 状態バッジの説明: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
-      <SectionHeading mark={MarkPill}>吹き出しの付く語</SectionHeading>
+      <SectionHeading>吹き出しの付く語</SectionHeading>
       <p className="mb-3 text-note leading-[1.7] text-ink-2">
         ここでの意味が普段の読みより狭い語にだけ付ける。自明な語には付けない。
       </p>
@@ -185,9 +185,7 @@ export const 状態バッジの説明: Story = {
         ))}
       </div>
 
-      <SectionHeading mark={MarkDots} className="mt-7">
-        付けない語
-      </SectionHeading>
+      <SectionHeading className="mt-7">付けない語</SectionHeading>
       <div className="flex flex-wrap items-center gap-2">
         <Badge variant="ok">受信可</Badge>
         <Badge variant="mute">未計測</Badge>

@@ -159,7 +159,7 @@ export function ThresholdPanel({
 
   return (
     <Surface>
-      <SectionHeading mark={MarkPill}>適用中の閾値</SectionHeading>
+      <SectionHeading>適用中の閾値</SectionHeading>
       <form noValidate onSubmit={save}>
         <div className="space-y-2">
           {thresholds.map((threshold, index) => (

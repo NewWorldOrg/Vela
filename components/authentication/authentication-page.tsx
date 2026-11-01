@@ -57,12 +57,12 @@ export function AuthenticationView({
       )}
 
       <section className="mt-[calc(26rem/16)]">
-        <SectionHeading mark={KeyIcon}>ID プロバイダー(OIDC)</SectionHeading>
+        <SectionHeading>ID プロバイダー(OIDC)</SectionHeading>
         <OidcSettings config={oidc} onSave={onSaveOidc} />
       </section>
 
       <section className="mt-[calc(26rem/16)]">
-        <SectionHeading mark={MarkDevices}>セッション</SectionHeading>
+        <SectionHeading>セッション</SectionHeading>
 
         {notice?.kind === 'revoked' && (
           <Banner tone="success" className="mb-3.5">

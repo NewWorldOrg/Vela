@@ -805,15 +805,6 @@ test('an arrival comes to rest without going past it, and the curtain ends on a 
   assert.match(curtain, /curtain-tassel/)
 
   assert.match(
-    await readFile(
-      path.join(ROOT, 'components/vela/section-heading.tsx'),
-      'utf8',
-    ),
-    /drawn stamps/,
-    'the section heading draws its mark without the stamp at the end',
-  )
-
-  assert.match(
     await readFile(path.join(ROOT, 'components/vela/empty-state.tsx'), 'utf8'),
     /usher-arrives/,
     'the usher of an empty state arrives without its stamp',
