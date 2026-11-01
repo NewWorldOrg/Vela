@@ -16,7 +16,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          'bg-btn text-on-ink not-disabled:not-aria-disabled:hover:bg-btn-hover',
+          'bg-accent-fill text-on-accent not-disabled:not-aria-disabled:hover:bg-accent-fill-hover',
         tone: 'bg-surface-2 text-ink not-disabled:not-aria-disabled:hover:bg-surface-3',
         ghost:
           'bg-transparent text-ink-2 not-disabled:not-aria-disabled:hover:bg-surface not-disabled:not-aria-disabled:hover:text-ink',

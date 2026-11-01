@@ -20,7 +20,7 @@ export type TintName =
   'accent' | 'lavender' | 'salmon' | 'butter' | 'sage' | 'sky' | 'blush'
 
 export const TINT_CLASS: Record<TintName, string> = {
-  accent: 'bg-brand-soft',
+  accent: 'bg-surface',
   lavender: 'bg-tint-lavender',
   salmon: 'bg-tint-salmon',
   butter: 'bg-tint-butter',

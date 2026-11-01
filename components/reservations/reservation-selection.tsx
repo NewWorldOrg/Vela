@@ -69,7 +69,7 @@ export function ReservationSelection({
     <div
       role="group"
       aria-label="選択した予約の操作"
-      className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-brand-soft px-[calc(17rem/16)] py-[calc(13rem/16)]"
+      className="mb-3.5 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]"
     >
       <span className="text-ui font-medium whitespace-nowrap text-ink">
         <b className="font-code font-bold">{chosen.length}</b> 件を選択

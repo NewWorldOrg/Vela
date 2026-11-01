@@ -26,7 +26,7 @@ const SAY_TONE: Record<StateTone, string> = {
   ok: 'text-mint',
   warn: 'text-lemon',
   err: 'text-coral',
-  info: 'text-brand',
+  info: 'text-ink',
   mute: 'text-ink-2',
 }
 

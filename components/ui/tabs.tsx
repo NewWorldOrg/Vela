@@ -68,7 +68,7 @@ function TabsTrigger({
         'transition-[background-color,color,box-shadow] duration-[140ms] ease-toy',
         'not-disabled:hover:text-ink focus-visible:shadow-ring',
         'cursor-pointer disabled:cursor-not-allowed disabled:opacity-40',
-        'data-[state=active]:bg-raised data-[state=active]:text-ink data-[state=active]:shadow-chosen dark:data-[state=active]:shadow-none',
+        'data-[state=active]:bg-accent-tint data-[state=active]:text-acc-text',
         "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
         className,
       )}
