@@ -1077,7 +1077,7 @@ export const 表: Story = {
       (one) => one.getBoundingClientRect().width > 0,
     )
 
-    await expect(resumes).toHaveLength(4)
+    await expect(resumes).toHaveLength(window.innerWidth >= 1300 ? 4 : 3)
     await expect(within(resumes[0]).getByRole('link')).toHaveAttribute(
       'href',
       '/recordings/2098?play=1',
