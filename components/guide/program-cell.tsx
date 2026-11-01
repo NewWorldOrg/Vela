@@ -87,7 +87,12 @@ export const ProgramCell = memo(function ProgramCell({
             {halfWidthOf(p.title)}
           </span>
           {mark && (
-            <span className="guide-cell-marks">
+            <span
+              className={cn(
+                'guide-cell-marks',
+                mark === 'recording' && 'text-rec-text',
+              )}
+            >
               <BookingMarkOf mark={mark} />
             </span>
           )}
