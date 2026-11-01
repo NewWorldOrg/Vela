@@ -6,6 +6,10 @@ import { cn } from '@/lib/utils'
 export const SETTINGS_GROUP_TITLE =
   'mx-4 mt-[calc(26rem/16)] mb-2 text-sub font-semibold text-ink-2'
 
+/** A switch that is off on the group's surface: a deeper track than the surface it would otherwise share. */
+const SWITCH_OFF_ON_THE_GROUP =
+  '[&_[data-slot=switch][data-state=unchecked]]:bg-[color-mix(in_srgb,var(--ink)_17%,var(--surface))]'
+
 /** A group of settings: one surface with round corners, its rows parted by a hair that starts where their words do. */
 export function SettingsGroup({ className, ...props }: ComponentProps<'div'>) {
   return (
@@ -13,6 +17,7 @@ export function SettingsGroup({ className, ...props }: ComponentProps<'div'>) {
       data-slot="settings-group"
       className={cn(
         'max-w-[calc(720rem/16)] overflow-hidden rounded-lg bg-surface',
+        SWITCH_OFF_ON_THE_GROUP,
         className,
       )}
       {...props}

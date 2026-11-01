@@ -399,7 +399,7 @@ function SearchScreen({
             {...waitsWhile(waiting)}
             className={cn(
               waitsWhile(waiting).className,
-              'mt-2 sideways:flex sideways:min-h-0 sideways:flex-1 sideways:flex-col',
+              'mt-5 phone:mt-0 sideways:flex sideways:min-h-0 sideways:flex-1 sideways:flex-col',
             )}
           >
             <h2 className="sr-only">検索結果</h2>
