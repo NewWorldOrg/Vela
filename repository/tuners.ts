@@ -1142,7 +1142,7 @@ function toLastService(
     .sort((a, b) => Date.parse(a) - Date.parse(b))
     .at(-1)
 
-  return seen === undefined ? undefined : { at: formatMoment(seen) }
+  return seen === undefined ? undefined : { at: formatRecentMoment(seen) }
 }
 
 function toSession(
