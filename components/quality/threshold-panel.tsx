@@ -177,10 +177,10 @@ export function ThresholdPanel({
           ))}
         </div>
         {thresholds.length > 0 && (
-          <div className="mt-3 flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-line pt-3">
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-2.5 border-t border-hair pt-3">
             <span aria-live="polite" className="mr-auto min-w-0">
               {!editing && saved && (
-                <span className="text-note text-mint">{SAVED}</span>
+                <span className="text-note text-ink">{SAVED}</span>
               )}
               {editing && refusal && (
                 <InlineAlert tone="warn">{refusal}</InlineAlert>
@@ -247,7 +247,7 @@ function ThresholdRow({
   return (
     <div
       data-slot="threshold-row"
-      className="border-b border-dashed border-line pb-2 last:border-b-0 last:pb-0"
+      className="border-b border-hair pb-2 last:border-b-0 last:pb-0"
     >
       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
         {editing ? (
@@ -257,7 +257,7 @@ function ThresholdRow({
         ) : (
           <span className="text-ui font-bold">{threshold.label}</span>
         )}
-        <span className="font-code text-ui tabular-nums text-brand">
+        <span className="text-ui font-semibold tabular-nums text-ink">
           {threshold.value}
         </span>
         {threshold.sourceLabel && (
@@ -322,7 +322,7 @@ function ThresholdRow({
               </FieldError>
             )}
             {outcome?.state === 'saved' && (
-              <span className="mt-1.5 block text-note text-mint">{SAVED}</span>
+              <span className="mt-1.5 block text-note text-ink">{SAVED}</span>
             )}
           </span>
         </>

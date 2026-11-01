@@ -35,27 +35,22 @@ export type BannerActions =
   readonly [BannerAction] | readonly [BannerAction, BannerAction]
 
 const ACTION_CLASS =
-  'tap-target font-bold whitespace-nowrap text-inherit underline underline-offset-[3px]'
+  'tap-target font-semibold whitespace-nowrap text-acc-text underline-offset-[3px] hover:underline'
 
-const DISABLED_ON_BAND: Record<BannerTone, string> = {
-  info: 'border-sky-line bg-sky-soft text-sky hover:border-sky-line hover:bg-sky-soft',
-  warn: 'border-lemon-line bg-lemon-soft text-lemon hover:border-lemon-line hover:bg-lemon-soft',
-  danger:
-    'border-coral-line bg-coral-soft text-coral hover:border-coral-line hover:bg-coral-soft',
-  success:
-    'border-mint-line bg-mint-soft text-mint hover:border-mint-line hover:bg-mint-soft',
+const DISABLED_MOTION = cn(still, 'opacity-40 hover:opacity-40')
+
+/** A notice sits on the quiet face like any group; only its sign wears the colour of what it says. */
+const TONE_SIGN: Record<BannerTone, string> = {
+  info: 'text-ink-2',
+  warn: 'text-warn',
+  danger: 'text-rec',
+  success: 'text-ink-2',
 }
 
-const DISABLED_MOTION = cn(
-  still,
-  'shadow-pop-none hover:shadow-pop-none active:shadow-pop-none',
-)
-
-const TONE_CLASS: Record<BannerTone, string> = {
-  info: 'bg-sky-soft text-sky',
-  warn: 'bg-lemon-soft text-lemon',
-  danger: 'bg-coral-soft text-coral',
-  success: 'bg-mint-soft text-mint',
+/** An alert inside a form or a dialog is small enough to wear its colour as a soft ground. */
+const ALERT_CLASS: Record<'warn' | 'danger', string> = {
+  warn: 'bg-warn-soft text-warn-text',
+  danger: 'bg-rec-soft text-rec-text',
 }
 
 const TONE_ICON = {
@@ -67,11 +62,9 @@ const TONE_ICON = {
 
 function BannerActionControl({
   action,
-  tone,
   bodyId,
 }: {
   action: BannerAction
-  tone: BannerTone
   bodyId: string
 }) {
   if ('control' in action) {
@@ -88,9 +81,7 @@ function BannerActionControl({
               }
             : action.onClick
         }
-        className={cn(
-          action.disabled && [DISABLED_ON_BAND[tone], DISABLED_MOTION],
-        )}
+        className={cn(action.disabled && DISABLED_MOTION)}
       >
         {action.label}
       </Button>
@@ -133,31 +124,31 @@ export function Banner({
       data-tone={tone}
       role={tone === 'danger' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-[calc(11rem/16)] rounded-lg px-[calc(15rem/16)] py-3 text-ui',
-        TONE_CLASS[tone],
+        'flex items-start gap-3 rounded-lg bg-surface px-4 py-3.5 text-body text-ink',
         className,
       )}
       {...props}
     >
-      <ToneIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)]" />
+      <ToneIcon
+        className={cn('mt-0.5 size-[calc(17rem/16)] shrink-0', TONE_SIGN[tone])}
+      />
       <div id={bodyId} className="min-w-0 flex-1">
         {children}
         {progress !== undefined && (
-          <div className="mt-[calc(9rem/16)] h-1 overflow-hidden rounded-full bg-surface">
+          <div className="mt-2.5 h-1 overflow-hidden rounded-full bg-surface-2">
             <div
-              className="h-full rounded-full bg-current transition-[width] duration-150 ease-out"
+              className="h-full rounded-full bg-accent transition-[width] duration-150 ease-out"
               style={{ width: `${progress}%` }}
             />
           </div>
         )}
       </div>
       {actions && (
-        <div className="ml-auto flex shrink-0 items-center gap-[calc(14rem/16)] self-center pl-[calc(14rem/16)] text-ui">
+        <div className="ml-auto flex shrink-0 items-center gap-3.5 self-center pl-3.5 text-ui">
           {actions.map((action) => (
             <BannerActionControl
               key={action.label}
               action={action}
-              tone={tone}
               bodyId={bodyId}
             />
           ))}
@@ -182,7 +173,7 @@ export function InlineAlert({
       role={tone === 'danger' ? 'alert' : 'status'}
       className={cn(
         'flex items-start gap-[calc(9rem/16)] rounded-md px-3 py-2 text-sub',
-        TONE_CLASS[tone],
+        ALERT_CLASS[tone],
         className,
       )}
       {...props}

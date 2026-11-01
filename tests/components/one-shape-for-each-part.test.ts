@@ -627,61 +627,14 @@ test('a spinner is one of two sizes, chosen by name and declared once', async ()
   assert.ok(spinning.length > 10, `only ${spinning.length} spinners were read`)
 })
 
-const NOTHING_IS_WRONG = [
-  'components/integrity/integrity-page.tsx',
-  'components/quality/anomaly-list.tsx',
-  'components/quality/quality-page.tsx',
-  'components/reservations/outcomes-page.tsx',
-]
-
-const NOTHING_TO_SHOW = ['app/(app)/error.tsx', 'app/not-found.tsx']
-
-async function moodsIn(
-  mood: string,
-): Promise<{ file: string; opening: string }[]> {
-  const found: { file: string; opening: string }[] = []
-
+test('an empty state says it in words, with no drawing of its own', async () => {
   for (const { file, source } of await everySource(['app', 'components'])) {
-    for (const opening of source.matchAll(
-      new RegExp(
-        `<(?:EmptyState|ScreenPlaceholder)\\b(?:(?!<(?:EmptyState|ScreenPlaceholder)\\b)[^>])*?usher="${mood}"`,
-        'g',
-      ),
-    )) {
-      found.push({ file, opening: opening[0] })
-    }
-  }
-
-  return found
-}
-
-test('the usher is glad only where nothing is wrong', async () => {
-  const glad = await moodsIn('glad')
-
-  for (const { file, opening } of glad) {
-    assert.ok(
-      NOTHING_IS_WRONG.includes(file),
-      `${file} is glad about an empty state that is not all clear: ` +
-        opening.slice(0, 80),
+    assert.doesNotMatch(
+      source,
+      /\busher[=?:]|AnsweringUsher|<Usher\b|TelevisionBoat/,
+      `${file} draws the v3 usher, and v4 states an empty page in words`,
     )
   }
-
-  assert.deepEqual(
-    [...new Set(glad.map(({ file }) => file))].sort(),
-    NOTHING_IS_WRONG,
-    'a screen that says nothing is wrong no longer says it gladly',
-  )
-})
-
-test('the usher is troubled only where the page could not be shown', async () => {
-  const troubled = await moodsIn('troubled')
-
-  assert.deepEqual(
-    [...new Set(troubled.map(({ file }) => file))].sort(),
-    NOTHING_TO_SHOW,
-    'the troubled face is for a page that is missing or failed, and those ' +
-      'two screens are the ones that wear it',
-  )
 })
 
 test('nothing turns under the pointer, and only a picture grows, by the one amount', async () => {

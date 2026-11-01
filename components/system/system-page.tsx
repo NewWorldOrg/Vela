@@ -36,10 +36,14 @@ import {
   WarningIcon,
   type IconProps,
 } from '@/components/vela/icons'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/section-heading'
+import {
+  SETTINGS_GROUP_TITLE,
+  SettingsGroup,
+  SettingsRow,
+} from '@/components/vela/settings-rows'
 import { StatusDot, type StatusTone } from '@/components/vela/status'
-import { Surface } from '@/components/vela/surface'
-import { pressable, still, tactile } from '@/components/vela/tactile'
+import { pressable, still } from '@/components/vela/tactile'
 
 const API_TROUBLE: Record<Exclude<ApiHealthResult['state'], 'ok'>, string> = {
   unconfigured: 'API の接続先が設定されていません',
@@ -65,20 +69,14 @@ const DEGRADED_LABEL: Record<string, string> = {
   oidc: 'ID プロバイダー',
 }
 
-const PANEL_TONE: Record<StatusTone, string> = {
-  ok: 'bg-surface',
-  warn: 'bg-lemon-soft',
-  err: 'bg-coral-soft',
-  off: 'bg-surface-2',
-}
-
 const HEAD_TONE: Record<StatusTone, string> = {
   ok: 'text-ink',
-  warn: 'text-lemon',
-  err: 'text-coral',
+  warn: 'text-warn-text',
+  err: 'text-rec-text',
   off: 'text-ink-2',
 }
 
+/** A row of the state: its name over its facts at the left, the state at the right, and an arrow when it leads somewhere. */
 function Part({
   name,
   mark: Mark,
@@ -98,42 +96,58 @@ function Part({
 }) {
   const body = (
     <>
-      <span className="heading flex items-center gap-[calc(7rem/16)] text-note text-ink-2">
-        <Mark className="size-[calc(15rem/16)] text-brand" />
-        {name}
-        {href && <ChevronRightIcon className="ml-auto size-3.5 text-ink-2" />}
+      <span className="flex min-w-0 flex-1 items-start gap-3">
+        <span className="grid size-7 shrink-0 place-items-center rounded-sm bg-surface-2 text-ink-2">
+          <Mark className="size-4" />
+        </span>
+        <span className="flex min-w-0 flex-col gap-0.5 pt-[calc(3rem/16)]">
+          <span
+            data-slot="state-name"
+            className="text-[calc(14.5rem/16)] leading-5 font-semibold text-ink"
+          >
+            {name}
+          </span>
+          {children && (
+            <span className="flex flex-col gap-1 text-sub text-ink-2">
+              {children}
+            </span>
+          )}
+        </span>
       </span>
       <span
+        data-slot="state-head"
         className={cn(
-          'heading mt-1.5 flex items-baseline gap-2.5 text-section',
+          'flex shrink-0 items-baseline gap-1.5 self-start pt-0.5 tabular-nums',
           HEAD_TONE[tone],
         )}
       >
-        <StatusDot tone={tone} className="size-2.5 self-center" />
-        {head}
-        {unit && (
-          <small className="font-sans text-note font-medium text-ink-2">
-            {unit}
-          </small>
+        {(tone === 'warn' || tone === 'err') && (
+          <StatusDot tone={tone} className="size-2 self-center" />
         )}
+        <span className="text-heading font-bold">{head}</span>
+        {unit && <small className="text-sub text-ink-2">{unit}</small>}
       </span>
-      {children && <div className="mt-2.5 text-ui text-ink-2">{children}</div>}
+      {href ? (
+        <ChevronRightIcon className="mt-1.5 size-4 shrink-0 self-start text-ink-3" />
+      ) : (
+        <span className="w-4 shrink-0" />
+      )}
     </>
   )
 
   const skin = cn(
-    'block rounded-lg border border-transparent px-[calc(18rem/16)] py-[calc(15rem/16)] text-ink',
-    PANEL_TONE[tone],
+    'relative flex items-start gap-3 px-4 py-3.5 text-ink',
+    'before:absolute before:top-0 before:right-0 before:left-[calc(56rem/16)] before:h-px before:bg-hair first:before:hidden',
   )
 
   return href ? (
     <Link
       href={href}
       data-slot="state-tile"
+      data-tone={tone}
       className={cn(
         skin,
-        'border-line shadow-pop hover:shadow-pop-lg active:shadow-pop-none',
-        tactile,
+        'outline-none hover:bg-surface-2 focus-visible:bg-surface-2 hover:before:hidden [&:hover+*]:before:hidden',
         pressable,
         still,
       )}
@@ -141,14 +155,14 @@ function Part({
       {body}
     </Link>
   ) : (
-    <div data-slot="state-tile" className={skin}>
+    <div data-slot="state-tile" data-tone={tone} className={skin}>
       {body}
     </div>
   )
 }
 
 function Figure({ children }: { children: ReactNode }) {
-  return <span className="font-code tabular-nums">{children}</span>
+  return <span className="tabular-nums">{children}</span>
 }
 
 function Fact({
@@ -171,10 +185,10 @@ function Fact({
             </Badge>
           ))
         ) : (
-          <b className="font-medium text-ink">なし</b>
+          <b className="font-medium text-ink-2">なし</b>
         )
       ) : (
-        <b className="font-medium text-ink">{value}</b>
+        <b className="font-medium text-ink-2">{value}</b>
       )}
     </span>
   )
@@ -211,10 +225,9 @@ function DetailRow({
   children: ReactNode
 }) {
   return (
-    <>
-      <dt className="text-ink-2">{label}</dt>
-      <dd className="min-w-0">{children}</dd>
-    </>
+    <SettingsRow name={label}>
+      <span className="min-w-0 truncate">{children}</span>
+    </SettingsRow>
   )
 }
 
@@ -243,7 +256,7 @@ export function SystemView({
       <PageHeading>システム</PageHeading>
 
       {trouble && (
-        <Banner tone="danger" className="mt-3.5">
+        <Banner tone="danger" className="mt-3.5 max-w-[calc(720rem/16)]">
           {api.state === 'failed' ? (
             <InFull says={`HTTP ${api.httpStatus}`} wraps="inline-block">
               <b>{trouble}</b>
@@ -254,7 +267,7 @@ export function SystemView({
         </Banner>
       )}
 
-      <div className="mt-3.5 grid gap-2.5 min-[720px]:grid-cols-2 min-[1100px]:grid-cols-3">
+      <SettingsGroup className="mt-[calc(18rem/16)]">
         <Part
           name="API"
           mark={MarkDoubleCircle}
@@ -275,42 +288,35 @@ export function SystemView({
         <StoragePart reading={status.storage} />
         <CollectionPart reading={status.collection} />
         <LivePart reading={status.live} />
-      </div>
+      </SettingsGroup>
 
-      <section className="mt-[calc(26rem/16)]">
-        <SectionHeading>詳細</SectionHeading>
-        <Surface>
-          <dl className="grid grid-cols-[auto_1fr] items-baseline gap-x-5 gap-y-2.5 text-ui">
-            <DetailRow label={SYSTEM_DETAIL_LABELS.observedAt}>
-              {reading ? (
-                <span className="font-code tabular-nums text-ink-2">
-                  {formatMoment(reading.observedAt)}
-                </span>
-              ) : (
-                NOTHING
-              )}
-            </DetailRow>
-            <DetailRow label={SYSTEM_DETAIL_LABELS.health}>
-              {api.state === 'ok' ? (
-                <span className="font-code text-ink-2">{api.status}</span>
-              ) : (
-                NOTHING
-              )}
-            </DetailRow>
-            <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
-              <span className="font-code text-ink-2">
-                Carina {status.carinaVersion ?? EMPTY_VALUE} / Vela{' '}
-                {velaVersion}
+      <section>
+        <h2 className={SETTINGS_GROUP_TITLE}>詳細</h2>
+        <SettingsGroup>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.observedAt}>
+            {reading ? (
+              <span className="tabular-nums">
+                {formatMoment(reading.observedAt)}
               </span>
-            </DetailRow>
-            <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
-              <span className="font-code text-ink-2">
-                driver {reading?.hello?.protocolVersion ?? EMPTY_VALUE} / アプリ{' '}
-                {reading?.appProtocolVersion ?? EMPTY_VALUE}
-              </span>
-            </DetailRow>
-          </dl>
-        </Surface>
+            ) : (
+              NOTHING
+            )}
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.health}>
+            {api.state === 'ok' ? <span>{api.status}</span> : NOTHING}
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
+            <span>
+              Carina {status.carinaVersion ?? EMPTY_VALUE} / Vela {velaVersion}
+            </span>
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
+            <span>
+              driver {reading?.hello?.protocolVersion ?? EMPTY_VALUE} / アプリ{' '}
+              {reading?.appProtocolVersion ?? EMPTY_VALUE}
+            </span>
+          </DetailRow>
+        </SettingsGroup>
       </section>
     </>
   )
@@ -376,11 +382,11 @@ function DriverReading({ status }: { status: DriverStatus }) {
       {status.driverUpdateRequired && (
         <span
           className={cn(
-            'mt-2.5 flex items-start gap-[calc(9rem/16)] text-sub font-bold',
+            'flex items-center gap-1.5 text-sub font-semibold',
             HEAD_TONE[tone],
           )}
         >
-          <WarningIcon className="mt-[calc(3rem/16)] size-[calc(15rem/16)]" />
+          <WarningIcon className="size-3.5 text-warn" />
           driver の更新が必要です。
         </span>
       )}

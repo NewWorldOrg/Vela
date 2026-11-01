@@ -43,7 +43,9 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
         <SectionHeading>実行情報</SectionHeading>
         <Surface>
           <div className="flex flex-wrap items-center gap-2.5">
-            <b className="text-ui font-bold">{run.heading}</b>
+            <b className="text-[calc(14.5rem/16)] font-semibold">
+              {run.heading}
+            </b>
             <Badge variant="selected">{run.kind}</Badge>
             <Badge variant="mute">{run.rehearsals}</Badge>
           </div>
@@ -64,14 +66,17 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
 
       <section className="mt-5">
         <SectionHeading>母集団サマリ</SectionHeading>
-        <div className="space-y-2.5">
+        <div className="overflow-hidden rounded-lg bg-surface">
           {result.populations.map((population) => (
-            <Surface
+            <div
               key={population.name}
-              className="grid gap-3 min-[900px]:grid-cols-[calc(240rem/16)_1fr] min-[900px]:items-center"
+              data-slot="migration-population"
+              className="grid gap-3 border-b border-hair px-4 py-3.5 last:border-b-0 min-[900px]:grid-cols-[calc(240rem/16)_1fr] min-[900px]:items-center"
             >
               <div>
-                <b className="text-ui font-bold">{population.name}</b>
+                <b className="text-[calc(14.5rem/16)] font-semibold">
+                  {population.name}
+                </b>
                 <span className="ml-2 font-code text-note break-keep text-ink-2">
                   {population.source}
                 </span>
@@ -85,19 +90,16 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 <MigrationCountCell
-                  tint="bg-tint-sage"
                   label="取り込み済み"
                   value={population.taken}
                   unit={population.unit}
                 />
                 <MigrationCountCell
-                  tint="bg-tint-salmon"
                   label="未取り込み"
                   value={population.notTaken}
                   unit={population.unit}
                 />
                 <MigrationCountCell
-                  tint="bg-tint-sky"
                   label="未分類"
                   value={population.unclassified}
                   unit={population.unit}
@@ -105,20 +107,20 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                 {population.link && (
                   <Link
                     href={population.link.href}
-                    className="tap-target ml-auto text-note font-bold text-brand underline-offset-[3px] hover:underline"
+                    className="tap-target ml-auto text-ui font-semibold text-acc-text underline-offset-[3px] hover:underline"
                   >
                     {population.link.label}
                   </Link>
                 )}
               </div>
-            </Surface>
+            </div>
           ))}
         </div>
 
-        <div className="mt-2.5 flex items-start gap-[calc(11rem/16)] rounded-lg bg-mint-soft px-[calc(15rem/16)] py-3 text-mint">
-          <CheckIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)]" />
+        <div className="mt-3 flex items-center gap-2 px-1 text-ink">
+          <CheckIcon className="size-4 text-ink-2" />
           <div className="min-w-0">
-            <b className="block text-ui">
+            <b className="block text-ui font-semibold">
               未分類{' '}
               <span className="font-code tabular-nums">
                 {result.unclassified}
@@ -152,7 +154,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                 <TableCell colSpan={3} className="border-b-0 pt-3.5 pb-1.5">
                   <span className="flex flex-wrap items-baseline gap-2.5 max-[600px]:px-3.5 max-[600px]:pt-3.5 max-[600px]:pb-1.5">
                     <b className="text-ui font-bold">{group.name}</b>
-                    <span className="font-code text-ui tabular-nums text-brand">
+                    <span className="text-ui font-semibold tabular-nums text-ink">
                       {group.count}
                       <em className="ml-0.5 font-sans text-note text-ink-2 not-italic">
                         {group.unit}
@@ -172,7 +174,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
                     {...cardPlace('lead')}
                     className="w-[calc(260rem/16)] align-top whitespace-normal"
                   >
-                    <b className="text-ui font-bold wrap-anywhere">
+                    <b className="text-ui font-semibold wrap-anywhere">
                       {row.subject}
                     </b>
                   </TableCell>
@@ -211,15 +213,18 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
 
       <section className="mt-5">
         <SectionHeading>移行後の欠落</SectionHeading>
-        <div className="space-y-2">
+        <div className="overflow-hidden rounded-lg bg-surface text-ui">
           {result.losses.map((loss) => (
-            <Surface key={loss.id} className="text-ui">
-              <b className="font-bold">{loss.subject}</b>
+            <div
+              key={loss.id}
+              className="border-b border-hair px-4 py-3.5 last:border-b-0"
+            >
+              <b className="font-semibold">{loss.subject}</b>
               <span className="text-ink-2"> — {loss.fact}</span>
-            </Surface>
+            </div>
           ))}
           {result.losses.length === 0 && (
-            <Surface className="text-ui text-ink-2">{NO_LOSSES}</Surface>
+            <Surface className="text-ink-2">{NO_LOSSES}</Surface>
           )}
         </div>
       </section>

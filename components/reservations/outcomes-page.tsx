@@ -37,7 +37,7 @@ import { useArrived } from '@/hooks/useArrived'
 
 const COLUMNS: {
   label: string
-  width: string
+  width: string | undefined
   hidden?: boolean
   narrow?: boolean
 }[] = [
@@ -47,13 +47,12 @@ const COLUMNS: {
     hidden: true,
     narrow: true,
   },
-  { label: '番組', width: 'calc(300rem/16)' },
+  { label: '番組', width: undefined },
   { label: 'チャンネル', width: 'calc(168rem/16)' },
-  { label: WHEN_LABELS.broadcast, width: 'calc(210rem/16)' },
-  { label: '由来', width: 'calc(180rem/16)' },
+  { label: WHEN_LABELS.broadcast, width: 'calc(160rem/16)' },
   { label: '優先度', width: 'calc(76rem/16)' },
   { label: '分類', width: OUTCOME_KIND_COLUMN },
-  { label: WHEN_LABELS.taken, width: 'calc(168rem/16)' },
+  { label: WHEN_LABELS.taken, width: 'calc(160rem/16)' },
 ]
 
 const EVERY = '__every__'
@@ -160,7 +159,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         <>
           <Table
             cards
-            className="table-fixed min-w-[calc(1040rem/16)]"
+            className="table-fixed min-w-[calc(900rem/16)]"
             waiting={waiting}
             containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
           >
@@ -225,7 +224,6 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         />
       ) : (
         <EmptyState
-          usher="glad"
           title="録れなかった予約がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"

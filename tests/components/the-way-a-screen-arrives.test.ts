@@ -40,29 +40,7 @@ const NOT_SOURCE = new Set([
 
 const THE_VOCABULARY = [
   'breathe',
-  'curtain-side',
-  'curtain-gather',
-  'curtain-squeeze',
-  'curtain-sway',
-  'curtain-idle',
-  'curtain-cinch-up',
-  'curtain-cinch-lo',
-  'curtain-loop',
-  'curtain-tassel',
-  'curtain-valance',
-  'curtain-cord',
-  'curtain-boat-x',
-  'curtain-boat-y',
-  'curtain-boat-z',
-  'curtain-boat-s',
-  'curtain-rig',
-  'curtain-sail',
-  'curtain-leg',
-  'curtain-plain',
-  'curtain-glad',
-  'curtain-star',
-  'curtain-twinkle',
-  'curtain-dock',
+  'curtain-lift',
   'draw',
   'ink',
   'item',
@@ -73,23 +51,6 @@ const THE_VOCABULARY = [
   'swell',
   'row',
   'hop-in',
-  'usher-hull',
-  'usher-leap',
-  'usher-squash',
-  'usher-sway',
-  'usher-blink',
-  'usher-star',
-  'usher-spark',
-  'usher-peek',
-  'usher-peek-squash',
-  'usher-wilt',
-  'usher-blink-once',
-  'usher-star-sink',
-  'usher-sweat',
-  'usher-answer',
-  'usher-answer-sway',
-  'usher-answer-star',
-  'usher-bob',
 ]
 
 const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
@@ -690,27 +651,18 @@ test('the guide builds its other columns once it has settled', async () => {
   assert.match(hook, /if \(settled\) \{\s*stopGrowing = whenIdle\(grow\)/)
 })
 
-test('the spark colour is kept to the curtain and the star of the marks', async () => {
-  const files = await sourceFiles('components')
-  const users: string[] = []
-
-  for (const file of files) {
-    if (
-      /\b(bg|text|border|fill)-spark\b/.test(
-        await readFile(path.join(ROOT, file), 'utf8'),
-      )
-    ) {
-      users.push(file)
-    }
+test('no part paints with the spark colour, which left with the v3 drawings', async () => {
+  for (const file of await sourceFiles('components')) {
+    assert.doesNotMatch(
+      await readFile(path.join(ROOT, file), 'utf8'),
+      /\b(bg|text|border|fill|stroke)-spark\b/,
+      file,
+    )
   }
-
-  assert.deepEqual(users, [
-    'components/vela/curtain.tsx',
-    'components/vela/marks.tsx',
-  ])
+  assert.doesNotMatch(await theSheet(), /--(color-)?spark:/)
 })
 
-test('an arrival comes to rest without going past it, and the curtain ends on a small echo, once', async () => {
+test('an arrival comes to rest without going past it, and so does the curtain', async () => {
   const sheet = await theSheet()
   const bodies = keyframeBodies(sheet)
 
@@ -727,39 +679,16 @@ test('an arrival comes to rest without going past it, and the curtain ends on a 
     'rows that move one after another leave neighbouring rows at different ' +
       'heights, and the table ripples',
   )
-  assert.match(
-    bodies.get('curtain-sway') ?? '',
-    /86% \{[^}]*var\(--th\) \* -0\.07/,
-    'the hem of the curtain stops at once instead of swinging out',
-  )
-  assert.match(
-    bodies.get('curtain-tassel') ?? '',
-    /72% \{[^}]*rotate\(-4deg\)/,
-    'the tassel stops at once instead of swinging twice',
+  assert.doesNotMatch(
+    bodies.get('curtain-lift') ?? '',
+    /\d+% \{/,
+    'the curtain goes past its end on the way out, and v4 has no overshoot',
   )
   assert.doesNotMatch(
     bodies.get('disappear') ?? '',
     /\d+% \{/,
     'a surface going away does not bounce; only the arrival carries the echo',
   )
-
-  const curtain = await readFile(
-    path.join(ROOT, 'components/vela/curtain.tsx'),
-    'utf8',
-  )
-
-  assert.match(curtain, /curtain-tassel/)
-
-  assert.match(
-    await readFile(path.join(ROOT, 'components/vela/empty-state.tsx'), 'utf8'),
-    /usher-arrives/,
-    'the usher of an empty state arrives without its stamp',
-  )
-  const usher = sheet.slice(
-    sheet.indexOf('@utility usher-arrives {'),
-    sheet.indexOf('\n}\n', sheet.indexOf('@utility usher-arrives {')),
-  )
-  assert.match(usher, /animation: var\(--animate-usher-leap\);/)
 })
 
 test('every part that moves hears the switch in the settings, not the machine alone', async () => {

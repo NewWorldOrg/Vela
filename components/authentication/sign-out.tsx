@@ -40,7 +40,7 @@ export function SignOut({ method }: { method: AuthMethod }) {
       </Button>
       <span aria-live="polite">
         {refused && (
-          <small className="mt-1 block text-cap text-coral">
+          <small className="mt-1 block text-cap text-rec-text">
             サインアウトの要求が届きませんでした。もう一度お試しください。
           </small>
         )}

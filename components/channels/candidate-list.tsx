@@ -114,7 +114,7 @@ function DeleteCandidateDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         {shown?.selected && (
-          <p className="flex items-center gap-2 rounded-md bg-coral-soft px-3.5 py-2.5 text-ui font-medium text-coral">
+          <p className="flex items-center gap-2 rounded-md bg-rec-soft px-3.5 py-2.5 text-ui font-medium text-rec-text">
             <WarningIcon className="size-4 shrink-0" />
             現在の選局先です。
           </p>
@@ -181,8 +181,8 @@ export function CandidateList({
           key={candidate.id}
           className={
             candidate.selected
-              ? 'mb-1.5 flex flex-wrap items-center gap-4 rounded-lg border border-brand-line bg-brand-soft px-3.5 py-2.5'
-              : 'mb-1.5 flex flex-wrap items-center gap-4 rounded-lg border border-transparent bg-surface px-3.5 py-2.5'
+              ? 'mb-1.5 flex flex-wrap items-center gap-4 rounded-md bg-accent-tint px-3.5 py-2.5'
+              : 'mb-1.5 flex flex-wrap items-center gap-4 rounded-md bg-surface px-3.5 py-2.5'
           }
         >
           <span className="w-[calc(52rem/16)] font-code text-body font-medium tabular-nums">
@@ -206,8 +206,12 @@ export function CandidateList({
           </span>
           <span className="ml-auto flex items-center gap-2">
             {candidate.selected && (
-              <span className="rounded-full border border-brand-line bg-surface px-[calc(11rem/16)] py-[calc(3rem/16)] text-note font-bold whitespace-nowrap text-brand">
-                ● 選択中
+              <span className="inline-flex items-center gap-1.5 px-1 text-note font-semibold whitespace-nowrap text-acc-text">
+                <span
+                  aria-hidden="true"
+                  className="size-1.5 rounded-full bg-accent"
+                />
+                選択中
               </span>
             )}
             <ActionRow>

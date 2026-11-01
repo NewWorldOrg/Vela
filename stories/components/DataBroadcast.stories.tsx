@@ -1471,8 +1471,8 @@ async function asTheColumnMock(canvasElement: HTMLElement) {
   await near(disc.top - line.getBoundingClientRect().bottom, REMOTE_GROUP_GAP)
   await near(dot.top - back.bottom, REMOTE_GROUP_GAP)
   await near(at('1').top - dot.bottom, REMOTE_GROUP_GAP)
-  await near(card.top + 21, groups[0].top)
-  await near(card.bottom - 21, groups[groups.length - 1].bottom)
+  await near(card.top + 20, groups[0].top)
+  await near(card.bottom - 20, groups[groups.length - 1].bottom)
   await fingerSized(remote)
 
   return remote
@@ -1543,7 +1543,7 @@ export const リモコン_列_Hybridcast: Story = {
     await near(close.getBoundingClientRect().height, 44)
     await near(
       close.getBoundingClientRect().right,
-      remote.getBoundingClientRect().right - 21,
+      remote.getBoundingClientRect().right - 20,
     )
     await expect(close.getBoundingClientRect().bottom).toBeLessThan(disc.top)
 

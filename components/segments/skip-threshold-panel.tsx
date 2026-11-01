@@ -15,7 +15,11 @@ import { Input } from '@/components/ui/input'
 import { FieldError } from '@/components/vela/field'
 import { Spinner } from '@/components/vela/progress'
 import { Surface } from '@/components/vela/surface'
-import { ValueRow, ValueRows } from '@/components/segments/value-rows'
+import {
+  VALUE_FACE,
+  ValueRow,
+  ValueRows,
+} from '@/components/segments/value-rows'
 import { SKIP_THRESHOLD_SLOT } from '@/components/segments/wording'
 
 const THRESHOLD = '閾値'
@@ -91,57 +95,37 @@ export function SkipThresholdPanel({
   }
 
   return (
-    <Surface data-slot={SKIP_THRESHOLD_SLOT}>
+    <Surface data-slot={SKIP_THRESHOLD_SLOT} className={VALUE_FACE}>
       <form noValidate onSubmit={save}>
-        <ValueRows>
-          <ValueRow
-            name={editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD}
-          >
-            {editing ? (
-              <span className="flex items-center font-sans">
-                <Input
-                  id={id}
-                  inputMode="decimal"
-                  autoComplete="off"
-                  autoFocus
-                  areaClassName="w-[calc(110rem/16)]"
-                  className="font-code tabular-nums"
-                  value={typed}
-                  readOnly={pending}
-                  aria-invalid={said ? true : undefined}
-                  aria-describedby={said ? errorId : undefined}
-                  onChange={(event) => retype(event.target.value)}
-                />
-              </span>
-            ) : (
-              thresholdOf(current)
-            )}
-          </ValueRow>
-        </ValueRows>
-        <span aria-live="polite">
-          {editing && said && (
-            <FieldError id={errorId} className="mt-2.5">
-              {said}
-            </FieldError>
-          )}
-        </span>
-        <div className="mt-3 flex flex-wrap items-center justify-end gap-2.5 border-t border-dashed border-line pt-3">
-          {editing ? (
-            <>
-              <Button
-                type="button"
-                variant="ghost"
-                disabled={pending}
-                onClick={leave}
-              >
-                キャンセル
-              </Button>
-              <Button type="submit" aria-disabled={pending}>
-                {pending && <Spinner size="control" />}
-                保存する
-              </Button>
-            </>
-          ) : (
+        <div className="flex items-center gap-3">
+          <ValueRows className="flex-1">
+            <ValueRow
+              name={
+                editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD
+              }
+            >
+              {editing ? (
+                <span className="flex items-center font-sans">
+                  <Input
+                    id={id}
+                    inputMode="decimal"
+                    autoComplete="off"
+                    autoFocus
+                    areaClassName="w-[calc(110rem/16)]"
+                    className="tabular-nums"
+                    value={typed}
+                    readOnly={pending}
+                    aria-invalid={said ? true : undefined}
+                    aria-describedby={said ? errorId : undefined}
+                    onChange={(event) => retype(event.target.value)}
+                  />
+                </span>
+              ) : (
+                thresholdOf(current)
+              )}
+            </ValueRow>
+          </ValueRows>
+          {!editing && (
             <Button
               key="change"
               type="button"
@@ -154,6 +138,29 @@ export function SkipThresholdPanel({
             </Button>
           )}
         </div>
+        <span aria-live="polite">
+          {editing && said && (
+            <FieldError id={errorId} className="mt-2.5">
+              {said}
+            </FieldError>
+          )}
+        </span>
+        {editing && (
+          <div className="mt-1 flex flex-wrap items-center justify-end gap-2.5 border-t border-hair pt-3 pb-1">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={pending}
+              onClick={leave}
+            >
+              キャンセル
+            </Button>
+            <Button type="submit" aria-disabled={pending}>
+              {pending && <Spinner size="control" />}
+              保存する
+            </Button>
+          </div>
+        )}
       </form>
     </Surface>
   )

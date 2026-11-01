@@ -64,10 +64,10 @@ async function bannerSays(
   )
   await expect(banner).toHaveTextContent(text)
   await expect(getComputedStyle(banner).backgroundColor).toBe(
-    groundOf(
-      canvasElement,
-      tone === 'danger' ? 'bg-coral-soft' : 'bg-lemon-soft',
-    ),
+    groundOf(canvasElement, 'bg-surface'),
+  )
+  await expect(getComputedStyle(banner.querySelector('svg')!).color).toBe(
+    groundOf(canvasElement, tone === 'danger' ? 'bg-rec' : 'bg-warn'),
   )
 }
 

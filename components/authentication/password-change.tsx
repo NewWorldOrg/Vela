@@ -80,7 +80,7 @@ export function ChangePassword({
         <AlertDialogContent className="sm:max-w-[calc(520rem/16)]">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-[calc(9rem/16)]">
-              <LockIcon className="size-[calc(19rem/16)] text-coral" />
+              <LockIcon className="size-[calc(19rem/16)] text-rec-text" />
               ローカルアカウントのパスワードを変更します
             </AlertDialogTitle>
             <AlertDialogDescription>

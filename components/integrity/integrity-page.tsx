@@ -241,7 +241,7 @@ export function IntegrityView({
       )}
 
       {findings.length === 0 ? (
-        <EmptyState usher="glad" title="食い違いがありません" titleLevel={2} />
+        <EmptyState title="食い違いがありません" titleLevel={2} />
       ) : (
         <Table
           cards

@@ -96,7 +96,7 @@ export function LnbPowerSwitch({
         }}
       />
       {notApplied && (
-        <span className="mt-1 block text-cap leading-[1.5] text-lemon">
+        <span className="mt-1 block text-cap leading-[1.5] text-warn-text">
           {LNB_NOT_APPLIED}
         </span>
       )}
@@ -105,7 +105,7 @@ export function LnbPowerSwitch({
         className={cn(
           'block text-cap leading-[1.5]',
           refusal
-            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-coral'
+            ? 'mt-1 max-w-[calc(180rem/16)] whitespace-normal text-rec-text'
             : 'sr-only',
         )}
       >

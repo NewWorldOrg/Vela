@@ -113,7 +113,7 @@ export function LocalSignIn({
         <Button
           type="submit"
           size="lg"
-          className="mt-0.5 w-full gap-[calc(9rem/16)] text-body"
+          className="mt-1 w-full gap-2 text-body"
           disabled={busy}
         >
           <SignInIcon className="size-4" />
@@ -132,7 +132,7 @@ export function LocalSignIn({
   }
 
   return (
-    <div className="mt-[calc(18rem/16)] border-t border-dashed border-line-strong pt-[calc(18rem/16)]">
+    <div className="mt-5">
       <div className="flex justify-center">
         <Button
           type="button"
@@ -147,7 +147,7 @@ export function LocalSignIn({
         </Button>
       </div>
       {open && (
-        <div id={panelId} className="mt-3.5 text-left">
+        <div id={panelId} className="mt-4 text-left">
           {form}
         </div>
       )}

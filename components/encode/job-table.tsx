@@ -36,28 +36,29 @@ import {
 
 interface Column {
   label: string
-  width: string
+  width: string | undefined
   hidden?: boolean
   right?: boolean
 }
 
-const STAMP_WIDTH = 'calc(122rem/16)'
-
+/**
+ * The profile and the destination are said on the line under the programme,
+ * and the end under the start, so the table fits the settings frame.
+ */
 const COLUMNS: Column[] = [
-  { label: '番組', width: 'calc(288rem/16)' },
+  { label: '番組', width: undefined },
   { label: '状態', width: JOB_STATUS_COLUMN },
-  { label: 'プロファイル', width: 'calc(104rem/16)' },
-  { label: '保存先', width: 'calc(76rem/16)' },
-  { label: '進捗', width: 'calc(60rem/16)', right: true },
-  { label: '経路', width: 'calc(168rem/16)' },
-  { label: '開始', width: STAMP_WIDTH },
-  { label: '終了', width: STAMP_WIDTH },
+  { label: '進捗', width: 'calc(64rem/16)', right: true },
+  { label: '経路', width: 'calc(150rem/16)' },
+  { label: '開始', width: 'calc(146rem/16)' },
   { label: '操作', width: 'calc(96rem/16)', hidden: true },
 ]
 
-const TABLE_MIN = 'min-w-[calc(1100rem/16)]'
+const TABLE_MIN = 'min-w-[calc(820rem/16)]'
 
-const STAMP = 'font-code text-sub tabular-nums whitespace-nowrap text-ink-2'
+const STAMP = 'text-sub tabular-nums whitespace-nowrap text-ink-2'
+
+const BESIDE = 'block text-note tabular-nums text-ink-2'
 
 function Standing({ job }: { job: EncodeJob }) {
   const chip = (
@@ -157,12 +158,6 @@ export function JobTable({
                 <Standing job={job} />
               </StatusCell>
             </TableCell>
-            <TableCell {...cardPlace('field', 'プロファイル')}>
-              {job.profileLabel ?? <Dash />}
-            </TableCell>
-            <TableCell {...cardPlace('field', '保存先')}>
-              <Destination job={job} />
-            </TableCell>
             <TableCell {...cardPlace('field', '進捗')} className="text-right">
               <Headway job={job} />
             </TableCell>
@@ -171,9 +166,9 @@ export function JobTable({
             </TableCell>
             <TableCell {...cardPlace('field', '開始')} className={STAMP}>
               <Started job={job} />
-            </TableCell>
-            <TableCell {...cardPlace('field', '終了')} className={STAMP}>
-              {job.endedAt ?? <Dash />}
+              <span data-slot="job-ended" className={BESIDE}>
+                終了 {job.endedAt ?? EMPTY_VALUE}
+              </span>
             </TableCell>
             <TableCell {...cardPlace('actions')} className="text-right">
               {job.cancellable && (
@@ -187,24 +182,48 @@ export function JobTable({
   )
 }
 
+function JobMade({ job }: { job: EncodeJob }) {
+  return (
+    <span
+      data-slot="job-made"
+      className="flex flex-wrap gap-x-3 text-note text-ink-2"
+    >
+      <span>
+        プロファイル{' '}
+        <span className="text-ink">{job.profileLabel ?? EMPTY_VALUE}</span>
+      </span>
+      <span>
+        保存先{' '}
+        <span className="text-ink">
+          <Destination job={job} />
+        </span>
+      </span>
+    </span>
+  )
+}
+
 function JobTitle({ job }: { job: EncodeJob }) {
   if (job.title === undefined) {
-    return <span className="text-ink-2">{RECORDING_REMOVED_LABEL}</span>
+    return (
+      <div className={READABLE_LINE}>
+        <span className="block text-ink-2">{RECORDING_REMOVED_LABEL}</span>
+        <JobMade job={job} />
+      </div>
+    )
   }
 
   return (
     <div className={READABLE_LINE}>
       <Link
         href={`/recordings/${job.recordingId}` as Route}
-        className="tap-target block text-[calc(13rem/16)] font-bold text-ink no-underline underline-offset-[3px] hover:text-brand hover:underline [font-feature-settings:'palt']"
+        className="tap-target block text-ui leading-[calc(22rem/16)] font-semibold text-ink no-underline underline-offset-[3px] hover:text-acc-text hover:underline [font-feature-settings:'palt']"
       >
         <span className="block">{job.title}</span>
       </Link>
       {job.recordedAt && (
-        <span className="block font-code text-micro text-ink-2">
-          {job.recordedAt} の録画
-        </span>
+        <span className={BESIDE}>{job.recordedAt} の録画</span>
       )}
+      <JobMade job={job} />
     </div>
   )
 }
@@ -227,14 +246,11 @@ function Headway({ job }: { job: EncodeJob }) {
   ].filter((one): one is string => one !== undefined)
 
   if (more.length === 0) {
-    return <span className="font-code text-ui tabular-nums">{percent}</span>
+    return <span className="text-ui tabular-nums">{percent}</span>
   }
 
   return (
-    <InFull
-      says={more.join('\n')}
-      wraps="inline-block font-code text-ui tabular-nums"
-    >
+    <InFull says={more.join('\n')} wraps="inline-block text-ui tabular-nums">
       {percent}
     </InFull>
   )

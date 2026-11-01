@@ -66,7 +66,7 @@ export function RevokeSession({
         <AlertDialogContent className="sm:max-w-[calc(520rem/16)]">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-[calc(9rem/16)]">
-              <CloseIcon className="size-[calc(19rem/16)] text-coral" />
+              <CloseIcon className="size-[calc(19rem/16)] text-rec-text" />
               このセッションを失効させます
             </AlertDialogTitle>
             <AlertDialogDescription>

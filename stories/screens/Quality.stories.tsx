@@ -21,6 +21,7 @@ import {
 } from '@/stories/pills-in-a-column'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheSettings } from '@/stories/frames'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import {
   FROM_600,
   laysRowsAsATable,
@@ -144,15 +145,9 @@ export const 何も計測されていない: Story = {
       canvas.getByText('期間内に録画したチューナーがありません。'),
     ).toBeVisible()
 
-    const moods = [
-      ...canvasElement.querySelectorAll<SVGSVGElement>(
-        '[data-slot="empty-state"] [data-slot="usher"]',
-      ),
-    ].map((usher) => usher.dataset.mood)
-
-    await expect(moods.filter((mood) => mood === 'plain').length).toBe(3)
-    await expect(moods.filter((mood) => mood === 'glad').length).toBe(2)
-    await expect(moods.length).toBe(5)
+    await expect(
+      canvasElement.querySelectorAll('[data-slot="empty-state"] svg'),
+    ).toHaveLength(0)
   },
 }
 
@@ -171,9 +166,9 @@ export const 移行直後で全面未計測: Story = {
         .getAllByText(label)
         .find((one) => one.closest('[data-slot="section-heading"]') === null)
 
-      await expect(tile?.closest('[data-slot="surface"]')).toHaveTextContent(
-        '未計測',
-      )
+      await expect(
+        tile?.closest('[data-slot="quality-stat"]'),
+      ).toHaveTextContent('未計測')
     }
 
     await expect(canvas.queryByText('良好')).toBeNull()
@@ -531,8 +526,9 @@ export const 放送日の刻みが2つだけの24時間: Story = {
 
 export const 推移_7日: Story = {
   args: { result: A_WEEK },
-  parameters: { screen: { width: 1800, height: 1000 } },
   play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
     const panel = within(trendPanel(canvasElement))
     const whole = panel.getByRole('img', { name: '全体の推移' })
     const rules = [...whole.querySelectorAll('line[stroke-dasharray="1 3"]')]
@@ -575,7 +571,7 @@ export const 受信不可のチューナーと録画の無い信号の警告: St
     const tile = canvas
       .getAllByText('チューナーヘルス')
       .find((one) => one.closest('[data-slot="section-heading"]') === null)
-      ?.closest('[data-slot="surface"]')
+      ?.closest('[data-slot="quality-stat"]')
 
     await expect(tile).toHaveTextContent('0 / 3')
     await expect(tile).toHaveTextContent('受信不可 2 本')
@@ -598,7 +594,7 @@ export const 選局の失敗が続く衛星チューナー: Story = {
     const tile = canvas
       .getAllByText('チューナーヘルス')
       .find((one) => one.closest('[data-slot="section-heading"]') === null)
-      ?.closest('[data-slot="surface"]')
+      ?.closest('[data-slot="quality-stat"]')
 
     await expect(tile).toHaveTextContent('選局失敗 2 本')
 

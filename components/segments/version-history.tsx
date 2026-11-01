@@ -151,7 +151,7 @@ export function VersionHistory({
           <TableBody>
             {versions.map((version) => (
               <TableRow key={version.number}>
-                <TableCell {...cardPlace('lead')} className="font-bold">
+                <TableCell {...cardPlace('lead')} className="font-semibold">
                   {versionLabel(version.number)}
                 </TableCell>
                 <TableCell

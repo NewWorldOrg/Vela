@@ -677,7 +677,6 @@ export const 閾値の範囲の外: Story = {
 }
 
 export const 閾値を断られる: Story = {
-  parameters: { screen: { width: 1440, height: 1100 } },
   args: {
     actions: {
       ...ACTIONS,
@@ -699,7 +698,6 @@ export const 閾値を断られる: Story = {
 }
 
 export const 閾値を保存できない: Story = {
-  parameters: { screen: { width: 1440, height: 1100 } },
   args: {
     actions: {
       ...ACTIONS,

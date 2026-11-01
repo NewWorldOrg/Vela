@@ -62,8 +62,8 @@ function AttemptResult({ attempt }: { attempt: ScanAttemptRow }) {
   if (attempt.failure === undefined) {
     return (
       <span className="inline-flex items-center gap-2 text-ui text-ink">
-        <span className="inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-mint-soft">
-          <CheckIcon className="size-[calc(11rem/16)] text-mint" />
+        <span className="inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-surface-2">
+          <CheckIcon className="size-[calc(11rem/16)] text-ink" />
         </span>
         サービスを取得
       </span>
@@ -198,7 +198,7 @@ export function ScanRunPanel({
 
   return (
     <>
-      <div className="mt-5 rounded-xl bg-surface px-[calc(18rem/16)] pt-[calc(15rem/16)] pb-4">
+      <div className="mt-4 rounded-lg bg-surface px-4 pt-3.5 pb-4">
         <div className="mb-[calc(13rem/16)] flex flex-wrap items-center gap-[calc(11rem/16)]">
           <span className="text-ui font-medium whitespace-nowrap text-ink-2">
             スキャン範囲
@@ -211,13 +211,10 @@ export function ScanRunPanel({
               progress?.systems.length === 1 ? progress.systems[0] : undefined
             }
           />
-          <span className="text-note text-ink-2">
-            スキャン中のため、変更できません。
-          </span>
         </div>
 
         <div className="mb-3 flex flex-wrap items-start gap-3">
-          <Spinner className="mt-[calc(3rem/16)] text-brand" />
+          <Spinner className="mt-[calc(3rem/16)] text-accent" />
           <div className="min-w-0 flex-1">
             <h2 className="heading text-ui leading-[1.5]">
               スキャン中 —{' '}

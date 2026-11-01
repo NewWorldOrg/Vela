@@ -67,8 +67,8 @@ export async function compact(remote: HTMLElement) {
     .getBoundingClientRect()
 
   await expect(Math.abs(card.top - head.bottom - 14)).toBeLessThan(1)
-  await near(card.top + 21, groups[0].top)
-  await near(card.bottom - 21, groups[groups.length - 1].bottom)
+  await near(card.top + 20, groups[0].top)
+  await near(card.bottom - 20, groups[groups.length - 1].bottom)
   await near(blue.top - back.bottom, gap)
 
   for (const [above, below] of groups

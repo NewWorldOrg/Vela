@@ -25,13 +25,17 @@ import {
 import { cardPlace } from '@/components/ui/table-cards'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { Surface } from '@/components/vela/surface'
-import { ValueRow, ValueRows } from '@/components/segments/value-rows'
+import {
+  VALUE_FACE,
+  ValueRow,
+  ValueRows,
+} from '@/components/segments/value-rows'
 
 export const PRECISION_SLOT = 'segment-precision'
 
 const STATION_COLUMNS = ['局', CHECKED_RECORDINGS, '境目の一致']
 
-const NUMBERS = 'font-code tabular-nums text-ink-2'
+const NUMBERS = 'tabular-nums text-ink-2'
 
 function said<T>(
   metrics: SegmentMetrics | undefined,
@@ -46,7 +50,7 @@ export function PrecisionPanel({ status }: { status: SegmentStatus }) {
 
   return (
     <>
-      <Surface data-slot={PRECISION_SLOT}>
+      <Surface data-slot={PRECISION_SLOT} className={VALUE_FACE}>
         <ValueRows>
           <ValueRow name="モデルのバージョン">
             <span className="inline-flex flex-wrap items-baseline gap-x-2.5 gap-y-1">

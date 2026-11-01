@@ -13,7 +13,6 @@ import type {
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
-import { KeyIcon, MarkDevices } from '@/components/vela/icons'
 import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
 import { OidcSettings } from '@/components/authentication/oidc-settings'
 import { ChangePassword } from '@/components/authentication/password-change'
@@ -50,7 +49,7 @@ export function AuthenticationView({
       <PageHeading>認証</PageHeading>
 
       {oidc.reach === 'outOfReach' && (
-        <Banner tone="danger" className="mt-3.5">
+        <Banner tone="danger" className="mt-3.5 max-w-[calc(720rem/16)]">
           ID プロバイダーの discovery 文書を読めていないため、OIDC
           でのサインインは通りません。
         </Banner>
@@ -62,7 +61,15 @@ export function AuthenticationView({
       </section>
 
       <section className="mt-[calc(26rem/16)]">
-        <SectionHeading>セッション</SectionHeading>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+          <SectionHeading className="mb-0">セッション</SectionHeading>
+          <ChangePassword
+            username={
+              signedIn.method === 'local' ? signedIn.subject : undefined
+            }
+            onChangePassword={onChangePassword}
+          />
+        </div>
 
         {notice?.kind === 'revoked' && (
           <Banner tone="success" className="mb-3.5">
@@ -75,15 +82,6 @@ export function AuthenticationView({
             ほかの端末のセッション {notice.sessionsEnded} 件を失効させました。
           </Banner>
         )}
-
-        <div className="mb-3.5 flex justify-end">
-          <ChangePassword
-            username={
-              signedIn.method === 'local' ? signedIn.subject : undefined
-            }
-            onChangePassword={onChangePassword}
-          />
-        </div>
 
         <SessionTable
           sessions={sessions}

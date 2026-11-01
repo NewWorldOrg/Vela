@@ -8,16 +8,15 @@ export const metadata: Metadata = { title: 'ページが見つかりません' }
 
 export default function NotFound() {
   return (
-    <div className="dot-grid flex min-h-dvh flex-col bg-bg">
-      <ScreenPlaceholder usher="troubled">
-        <b className="mb-1 block text-ui text-ink">ページが見つかりません</b>
-        URL が間違っているか、すでに存在しないページです。
-        <span className="mt-3 flex justify-center">
-          <Button variant="tone" size="sm" asChild>
+    <div className="flex min-h-dvh flex-col bg-bg">
+      <ScreenPlaceholder
+        title="ページが見つかりません"
+        action={
+          <Button variant="tone" asChild>
             <Link href="/library">ライブラリへ</Link>
           </Button>
-        </span>
-      </ScreenPlaceholder>
+        }
+      />
     </div>
   )
 }

@@ -7,7 +7,6 @@ import type { ScanSystem } from '@/repository/scan-systems'
 import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
-import { SearchIcon } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import {
   TuningFields,
@@ -68,8 +67,7 @@ export function ScanBar({
 
   return (
     <>
-      <div className="mt-3.5 flex flex-wrap items-center gap-x-3 gap-y-[calc(18rem/16)] rounded-xl bg-surface px-[calc(17rem/16)] py-[calc(13rem/16)]">
-        <SearchIcon className="size-4 text-brand" />
+      <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-4 rounded-lg bg-surface px-4 py-3">
         <SegmentedControl
           label="スキャン範囲"
           options={RANGES}
@@ -80,7 +78,7 @@ export function ScanBar({
           <TuningFields
             id="scan"
             hold={hold}
-            className="basis-full flex-row flex-wrap items-start gap-x-6 gap-y-3.5 border-t border-dashed border-line pt-3.5"
+            className="basis-full flex-row flex-wrap items-start gap-x-6 gap-y-3.5 border-t border-hair pt-3.5"
             inputAreaClassName="w-[calc(192rem/16)]"
           />
         )}
