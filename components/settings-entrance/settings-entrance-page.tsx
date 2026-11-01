@@ -28,16 +28,16 @@ const TONE_DOT: Record<Tone, string> = {
   err: 'bg-rec',
 }
 
-/** The colour of each setting's tile: the setting's own, as a phone's settings colour theirs, the same in both themes. */
+/** Every setting's tile is the same quiet plate: colour on this screen is kept for what is chosen, what is recording and what needs a look. */
 const TILE = {
-  viewing: 'bg-[#2F6FEB]',
-  display: 'bg-[#5E5CE6]',
-  encode: 'bg-[#E8590C]',
-  segments: 'bg-[#D9480F]',
-  quality: 'bg-[#2B8A3E]',
-  tuners: 'bg-[#495057]',
-  channels: 'bg-[#1098AD]',
-  keeping: 'bg-[#868E96]',
+  viewing: 'bg-surface-2',
+  display: 'bg-surface-2',
+  encode: 'bg-surface-2',
+  segments: 'bg-surface-2',
+  quality: 'bg-surface-2',
+  tuners: 'bg-surface-2',
+  channels: 'bg-surface-2',
+  keeping: 'bg-surface-2',
 } as const
 
 export interface SettingsEntranceValues {
@@ -304,8 +304,9 @@ function ItemRow({
       >
         <span
           className={cn(
-            'flex size-7 shrink-0 items-center justify-center rounded-sm text-white [&_svg]:size-4 [&_svg]:stroke-[1.9]',
+            'flex size-7 shrink-0 items-center justify-center rounded-sm text-ink-2 [&_svg]:size-4 [&_svg]:stroke-[1.9]',
             item.tile,
+            here && 'bg-accent-fill text-on-accent',
           )}
         >
           <Icon />
