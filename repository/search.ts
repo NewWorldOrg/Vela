@@ -38,6 +38,8 @@ export interface SearchHit {
   channelNo?: string
   channelLogo?: StationLogo
   dayLabel: string
+  /** `今日` or `明日`, when the hit is on one of those days. */
+  dayNear?: string
   startLabel: string
   endLabel?: string
   endUndecided: boolean
@@ -78,6 +80,21 @@ function dayEndOf(date: string): Date {
   return new Date(windowStartOf(date).getTime() + 24 * 60 * 60 * 1000)
 }
 
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** `今日` or `明日` for a hit on today or tomorrow in Tokyo, which the list heads its day with. */
+function nearDayOf(day: string, now: Date): string | undefined {
+  if (day === calendarDateOf(now)) {
+    return '今日'
+  }
+
+  if (day === calendarDateOf(new Date(now.getTime() + DAY_MS))) {
+    return '明日'
+  }
+
+  return undefined
+}
+
 function toHit(
   programme: Programme,
   channels: GuideChannel[],
@@ -87,6 +104,8 @@ function toHit(
   const channel = channels.find((c) => c.id === channelId)
   const startsAt = new Date(programme.startsAt)
   const genre = genreDisplayOf(programme)
+  const day = calendarDateOf(startsAt)
+  const near = nearDayOf(day, new Date())
 
   return {
     id: programme.id,
@@ -94,7 +113,8 @@ function toHit(
     channelName: channel?.name || channelId,
     channelNo: channel?.no,
     channelLogo: channel?.logo,
-    dayLabel: dayLabel(calendarDateOf(startsAt)),
+    dayLabel: dayLabel(day),
+    ...(near ? { dayNear: near } : {}),
     startLabel: clockLabel(startsAt),
     endLabel: programme.endsAt
       ? clockLabel(new Date(programme.endsAt))

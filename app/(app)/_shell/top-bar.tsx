@@ -29,6 +29,8 @@ const RESERVATIONS = '/reservations'
 
 const GUIDE = '/guide'
 
+const SEARCH = '/search'
+
 /** The field in the bar that opens the programme search with its words. */
 function BarSearch() {
   return (
@@ -71,7 +73,7 @@ export function AppTopBar({ conflicts }: { conflicts?: ReactNode }) {
         ))}
       </GlobalNav>
       <div className="ml-auto flex items-center gap-1.5 phone:hidden">
-        {current === GUIDE && <BarSearch />}
+        {current === GUIDE && pathname !== SEARCH && <BarSearch />}
         <SettingsLink asChild active={current === SETTINGS_HREF}>
           <Link href="/settings/system" />
         </SettingsLink>
