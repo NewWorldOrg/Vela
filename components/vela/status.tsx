@@ -5,9 +5,9 @@ import { cn } from '@/lib/utils'
 export type StatusTone = 'ok' | 'warn' | 'err' | 'off'
 
 const DOT_TONE: Record<StatusTone, string> = {
-  ok: 'bg-mint',
-  warn: 'bg-lemon',
-  err: 'bg-coral',
+  ok: 'bg-ink-2',
+  warn: 'bg-warn',
+  err: 'bg-rec',
   off: 'bg-ink-3',
 }
 

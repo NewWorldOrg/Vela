@@ -9,7 +9,6 @@ import {
 import { SystemView } from '@/components/system/system-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
-import { groundOf } from '@/stories/ground-of'
 
 const meta = {
   title: 'Screens/設定・システム',
@@ -33,11 +32,11 @@ type Story = StoryObj<typeof meta>
 
 type Tone = 'ok' | 'warn' | 'err' | 'off'
 
-const GROUND: Record<Tone, string> = {
-  ok: 'bg-surface',
-  warn: 'bg-warn-soft',
-  err: 'bg-rec-soft',
-  off: 'bg-surface-2',
+const HEAD: Record<Tone, string> = {
+  ok: 'text-ink',
+  warn: 'text-warn-text',
+  err: 'text-rec-text',
+  off: 'text-ink-2',
 }
 
 const PARTS = ['API', 'driver', 'チューナー', '保存先', '番組表', 'ライブ']
@@ -45,7 +44,11 @@ const PARTS = ['API', 'driver', 'チューナー', '保存先', '番組表', '�
 function tileNamed(canvasElement: HTMLElement, name: string): HTMLElement {
   const tile = [
     ...canvasElement.querySelectorAll<HTMLElement>('[data-slot="state-tile"]'),
-  ].find((one) => one.firstElementChild?.textContent?.trim() === name)
+  ].find(
+    (one) =>
+      one.querySelector('[data-slot="state-name"]')?.textContent?.trim() ===
+      name,
+  )
 
   if (!tile) {
     throw new Error(`no state tile is named ${name}`)
@@ -54,28 +57,42 @@ function tileNamed(canvasElement: HTMLElement, name: string): HTMLElement {
   return tile
 }
 
+function inkOf(canvasElement: HTMLElement, one: string): string {
+  const probe = canvasElement.ownerDocument.createElement('span')
+
+  probe.className = one
+  canvasElement.append(probe)
+  const ink = getComputedStyle(probe).color
+
+  probe.remove()
+
+  return ink
+}
+
 async function tonesAre(
   canvasElement: HTMLElement,
   heads: Record<string, [Tone, string]>,
 ): Promise<void> {
   await afterTheArrival(canvasElement)
 
-  const grounds = Object.values(GROUND).map((one) =>
-    groundOf(canvasElement, one),
-  )
-
-  await expect(new Set(grounds).size).toBe(new Set(Object.values(GROUND)).size)
-
   for (const name of PARTS) {
     const [tone, head] = heads[name] ?? ['ok', '']
     const tile = tileNamed(canvasElement, name)
+    const said = tile.querySelector<HTMLElement>('[data-slot="state-head"]')!
 
+    await expect(tile).toHaveAttribute('data-tone', tone)
     await expect(getComputedStyle(tile).backgroundColor).toBe(
-      groundOf(canvasElement, GROUND[tone]),
+      'rgba(0, 0, 0, 0)',
+    )
+    await expect(getComputedStyle(said).color).toBe(
+      inkOf(canvasElement, HEAD[tone]),
+    )
+    await expect(said.querySelectorAll('[data-slot="status-dot"]').length).toBe(
+      tone === 'warn' || tone === 'err' ? 1 : 0,
     )
 
     if (head !== '') {
-      await expect(tile.children[1]?.textContent).toContain(head)
+      await expect(said.textContent).toContain(head)
     }
   }
 }

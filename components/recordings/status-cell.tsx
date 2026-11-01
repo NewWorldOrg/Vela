@@ -23,9 +23,9 @@ const BASE_FONT_PX = 16
 export type StateTone = 'ok' | 'warn' | 'err' | 'info' | 'mute'
 
 const SAY_TONE: Record<StateTone, string> = {
-  ok: 'text-mint',
-  warn: 'text-lemon',
-  err: 'text-coral',
+  ok: 'text-ink',
+  warn: 'text-warn-text',
+  err: 'text-rec-text',
   info: 'text-ink',
   mute: 'text-ink-2',
 }
