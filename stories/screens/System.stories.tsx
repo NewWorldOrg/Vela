@@ -35,8 +35,8 @@ type Tone = 'ok' | 'warn' | 'err' | 'off'
 
 const GROUND: Record<Tone, string> = {
   ok: 'bg-surface',
-  warn: 'bg-accent-soft',
-  err: 'bg-accent-soft',
+  warn: 'bg-warn-soft',
+  err: 'bg-rec-soft',
   off: 'bg-surface-2',
 }
 
