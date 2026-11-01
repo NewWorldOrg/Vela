@@ -1523,7 +1523,7 @@ export function LivePlayer({
                 {!compact && phase !== 'starting' && (
                   <i
                     aria-hidden="true"
-                    className="size-1.5 rounded-full bg-(--pl-accent) not-italic"
+                    className="size-1.5 rounded-full bg-(--pl-rec) not-italic"
                   />
                 )}
                 <b className={cn('font-bold', !compact && 'sr-only')}>

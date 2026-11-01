@@ -15,6 +15,11 @@ import { ChannelKinds } from '@/components/live/channel-kinds'
 import { useSettled } from '@/components/live/channel-fold'
 
 /** The column's fold: a chevron pointing where the column goes, named for what the column holds. */
+/** Whether the station's own logo is drawn; when it is not, the badge already says the number. */
+function drawsALogo(logo: LiveChannel['logo']): boolean {
+  return logo?.declaration === 'inTheCommonDataTable'
+}
+
 export function FoldButton({
   folded,
   onFold,
@@ -127,30 +132,30 @@ export function ChannelList({
                       aria-pressed={on}
                       onClick={() => onSelect(channel)}
                       className={cn(
-                        'grid min-h-11 w-full grid-cols-[calc(112rem/16)_minmax(0,1fr)] items-center gap-3.5 rounded-md p-[calc(7rem/16)] text-left outline-none',
+                        'block min-h-11 w-full rounded-md px-3 py-2.5 text-left outline-none',
                         'transition-[background-color] duration-(--dur) ease-(--ease) hover:bg-surface focus-visible:shadow-ring',
                         on && 'bg-surface-2 hover:bg-surface-2',
                         pressable,
                       )}
                     >
-                      <span className="relative">
-                        <ChannelMark
-                          logo={channel.logo}
-                          no={channel.no}
-                          shape="tile"
-                          keepsTheSlot
-                        />
-                        {on && (
-                          <i
-                            data-slot="watching-mark"
-                            aria-hidden="true"
-                            className="absolute inset-0 rounded-sm shadow-[inset_0_0_0_2px_var(--accent)] not-italic"
-                          />
-                        )}
-                      </span>
-                      <span className="min-w-0">
-                        <span className="flex items-center gap-1.5 text-sub text-ink-2">
-                          {channel.no && (
+                      <span className="block min-w-0">
+                        <span className="flex items-center gap-2 text-sub leading-5 text-ink-2">
+                          <span className="relative inline-flex">
+                            <ChannelMark
+                              logo={channel.logo}
+                              no={channel.no}
+                              shape="tile"
+                              keepsTheSlot
+                            />
+                            {on && (
+                              <i
+                                data-slot="watching-mark"
+                                aria-hidden="true"
+                                className="absolute -inset-[3px] rounded-sm shadow-[inset_0_0_0_2px_var(--accent)] not-italic"
+                              />
+                            )}
+                          </span>
+                          {channel.no && drawsALogo(channel.logo) && (
                             <span className="font-code">{channel.no}</span>
                           )}
                           <span className="[overflow-wrap:anywhere]">
