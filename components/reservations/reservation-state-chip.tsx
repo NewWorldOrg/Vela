@@ -44,8 +44,8 @@ const STANDING: Record<
     bold?: boolean
   }
 > = {
-  scheduled: { variant: 'ok', dot: true, bold: true },
-  conflict: { variant: 'err', dot: true, bold: true },
+  scheduled: { variant: 'warn', dot: true, bold: true },
+  conflict: { variant: 'warn', dot: true, bold: true },
   cancelled: { variant: 'mute' },
   missed: { variant: 'err' },
   complete: { variant: 'ok' },

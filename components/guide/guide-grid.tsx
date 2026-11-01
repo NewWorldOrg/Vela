@@ -362,7 +362,7 @@ export function GuideGrid({
                 return (
                   <div
                     data-now-line
-                    className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-accent"
+                    className="pointer-events-none absolute right-0 left-0 z-[5] h-0.5 text-rec"
                     style={{
                       top: nowLineTopOf(nowMin, HOUR_REM, windowHours),
                     }}
@@ -384,7 +384,7 @@ export function GuideGrid({
                     </svg>
                     <span
                       className={cn(
-                        'guide-now-pop absolute left-0 bg-bg py-px pr-0.5 font-code text-micro font-bold text-acc-text',
+                        'guide-now-pop absolute left-0 bg-bg py-px pr-0.5 font-code text-micro font-bold text-rec-text',
                         nowMin < NOW_LABEL_BELOW_MIN
                           ? 'top-1'
                           : 'top-1/2 -translate-y-1/2',
@@ -394,7 +394,7 @@ export function GuideGrid({
                     </span>
                     <span
                       aria-hidden="true"
-                      className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-accent"
+                      className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rec"
                       style={{ left: `${GUTTER_PX}px` }}
                     />
                   </div>

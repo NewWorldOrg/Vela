@@ -150,7 +150,7 @@ export function NavCount({ count, saying }: { count: number; saying: string }) {
   return (
     <span
       data-slot="nav-count"
-      className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-accent-fill px-[5px] font-code text-micro leading-none font-bold text-on-accent"
+      className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-warn-fill px-[5px] font-code text-micro leading-none font-bold text-on-warn"
     >
       <span aria-hidden="true">{count}</span>
       <span className="sr-only">{saying}</span>
@@ -242,7 +242,7 @@ export function TabBarItem({
   )
 }
 
-/** A count a tab carries of things waiting on the person, on the accent over the corner of its icon. Read aloud after the tab's name. */
+/** A count a tab carries of things waiting on the person, in amber over the corner of its icon. Read aloud after the tab's name. */
 export function TabBadge({
   count,
   saying,
@@ -256,7 +256,7 @@ export function TabBadge({
     <span
       data-slot="tab-badge"
       className={cn(
-        'absolute top-[calc(3rem/16)] left-[calc(50%+10rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-accent-fill px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-on-accent',
+        'absolute top-[calc(3rem/16)] left-[calc(50%+10rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-warn-fill px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-on-warn',
         className,
       )}
     >

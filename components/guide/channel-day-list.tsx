@@ -286,12 +286,12 @@ export function ChannelDayList({
                   <span
                     data-row-now-line
                     aria-hidden="true"
-                    className="pointer-events-none absolute inset-x-0 h-0.5 bg-accent"
+                    className="pointer-events-none absolute inset-x-0 h-0.5 bg-rec"
                     style={{ top: `${elapsed * 100}%` }}
                   >
-                    <span className="absolute top-1/2 left-0 size-2 -translate-y-1/2 rounded-full bg-accent" />
+                    <span className="absolute top-1/2 left-0 size-2 -translate-y-1/2 rounded-full bg-rec" />
                     {nowLabel && (
-                      <span className="absolute top-1 right-14 font-code text-micro font-bold text-acc-text">
+                      <span className="absolute top-1 right-14 font-code text-micro font-bold text-rec-text">
                         {nowLabel}
                       </span>
                     )}
@@ -348,11 +348,11 @@ function BookingGlyph({ mark }: { mark: 'booked' | 'recording' }) {
       className={cn('mr-1.5 inline-flex items-center align-[1px]')}
     >
       {mark === 'recording' ? (
-        <span aria-hidden="true" className="size-2 rounded-full bg-accent" />
+        <span aria-hidden="true" className="size-2 rounded-full bg-rec" />
       ) : (
         <span
           aria-hidden="true"
-          className="size-2.5 rounded-full border-[1.5px] border-acc-text"
+          className="size-2.5 rounded-full border-[1.5px] border-warn"
         />
       )}
       <span className="sr-only">

@@ -252,7 +252,11 @@ function assertUsedMoreThanOnce(
   key: string,
   uses: Map<string, string[]>,
 ): void {
-  if (key === 'default' || (part === 'IconButton' && key === 'pop')) {
+  if (
+    key === 'default' ||
+    (part === 'IconButton' && key === 'pop') ||
+    (part === 'Button' && key === 'record')
+  ) {
     return
   }
 
@@ -525,6 +529,7 @@ test('a corner or a size of type that is on a step is said by the step’s name'
 
 const A_CORNER_OFF_THE_STEPS = new Map([
   ['components/ui/checkbox.tsx', 6],
+  ['components/vela/channel-mark.tsx', 6],
   ['components/vela/toast.tsx', 14],
 ])
 

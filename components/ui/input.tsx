@@ -23,7 +23,7 @@ function Input({
           'file:inline-flex file:h-7 file:border-0 file:bg-transparent file:text-sub file:font-medium file:text-ink',
           'enabled:hover:bg-surface-2',
           'focus-visible:bg-surface focus-visible:shadow-ring',
-          'aria-invalid:bg-accent-soft',
+          'aria-invalid:bg-rec-soft',
           'disabled:cursor-not-allowed disabled:opacity-40',
           className,
         )}

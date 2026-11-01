@@ -12,7 +12,7 @@ function Textarea({ className, ...props }: React.ComponentProps<'textarea'>) {
         'placeholder:text-ink-3 selection:bg-accent-soft',
         'enabled:hover:bg-surface-2',
         'focus-visible:bg-surface focus-visible:shadow-ring',
-        'aria-invalid:bg-accent-soft',
+        'aria-invalid:bg-rec-soft',
         'disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}

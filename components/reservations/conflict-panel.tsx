@@ -243,7 +243,7 @@ export function ConflictPanel({
           {line.overlap && (
             <span
               data-slot="conflict-overlap"
-              className="absolute h-(--bar) bg-[repeating-linear-gradient(135deg,var(--accent-soft)_0_5px,transparent_5px_10px)] shadow-[inset_0_0_0_1.5px_var(--accent)]"
+              className="absolute h-(--bar) bg-[repeating-linear-gradient(135deg,var(--warn-soft)_0_5px,transparent_5px_10px)] shadow-[inset_0_0_0_1.5px_var(--warn)]"
               style={{
                 top: `${line.kept.length * pitch + 0.125}rem`,
                 left: percent(line.overlap.left),
@@ -288,7 +288,7 @@ export function ConflictPanel({
               {reservation.title}
             </span>
             {loses ? (
-              <span className="mt-0.5 block text-sub font-semibold text-acc-text">
+              <span className="mt-0.5 block text-sub font-semibold text-warn-text">
                 {loses}
               </span>
             ) : (

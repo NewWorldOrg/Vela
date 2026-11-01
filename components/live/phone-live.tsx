@@ -134,7 +134,7 @@ function Watching() {
     <span className="flex shrink-0 items-center gap-1.5 text-note font-semibold whitespace-nowrap text-ink-2">
       <i
         aria-hidden="true"
-        className="size-1.5 rounded-full bg-accent not-italic"
+        className="size-1.5 rounded-full bg-rec not-italic"
       />
       視聴中
     </span>
@@ -270,7 +270,7 @@ export function ReserveRing({ className }: { className?: string }) {
     <span
       aria-hidden="true"
       className={cn(
-        'size-3.5 shrink-0 rounded-full border-2 border-accent',
+        'size-3.5 shrink-0 rounded-full border-2 border-warn',
         className,
       )}
     />
@@ -294,6 +294,7 @@ export function RecordThisButton({
 
   return (
     <Button
+      variant="record"
       size={size}
       disabled={pending}
       onClick={() => record(programmeId)}
