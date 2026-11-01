@@ -40,7 +40,7 @@ export function FilterChips({
             className={cn(
               'tap-target inline-flex h-8 cursor-pointer items-center rounded-full px-[calc(13rem/16)] text-ui font-medium whitespace-nowrap outline-none transition-[background-color,color,transform] duration-[140ms] ease-toy active:scale-[0.98] focus-visible:shadow-ring',
               chosen
-                ? 'bg-btn text-on-ink'
+                ? 'bg-accent-tint font-semibold text-acc-text'
                 : 'bg-surface text-ink hover:bg-surface-2',
             )}
           >
