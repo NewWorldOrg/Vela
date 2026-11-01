@@ -62,7 +62,7 @@ export const ProgramCell = memo(function ProgramCell({
       }}
       className={cn(
         'guide-cell',
-        selected && 'z-[3] shadow-[inset_0_0_0_2px_var(--ink)]',
+        selected && 'z-[3] shadow-[inset_0_0_0_2px_var(--accent)]',
       )}
     >
       <span className="guide-cell-body">

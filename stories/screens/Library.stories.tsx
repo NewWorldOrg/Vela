@@ -1070,6 +1070,23 @@ export const 表: Story = {
 
       return found!
     })
+    const going = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="continue-row"]',
+    )!
+    const resumes = [...going.querySelectorAll('li')].filter(
+      (one) => one.getBoundingClientRect().width > 0,
+    )
+
+    await expect(resumes).toHaveLength(4)
+    await expect(within(resumes[0]).getByRole('link')).toHaveAttribute(
+      'href',
+      '/recordings/2098?play=1',
+    )
+    await expect(going.getBoundingClientRect().bottom).toBeLessThan(
+      table.getBoundingClientRect().top,
+    )
+    await expect(going.getBoundingClientRect().height).toBeLessThan(110)
+
     const sorted = within(table).getByRole('columnheader', {
       name: /録画日時/,
     })

@@ -62,7 +62,7 @@ export function ChannelStrip({
               pressable,
               tactileQuiet,
               'flex h-11 max-w-[calc(150rem/16)] shrink-0 items-center gap-1.5 rounded-md bg-surface pr-3 pl-1.5 text-sub font-semibold text-ink hover:bg-surface-2',
-              on && 'bg-btn text-on-ink hover:bg-btn',
+              on && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
             )}
           >
             <ChannelMark logo={c.logo} no={c.no} on={on} />

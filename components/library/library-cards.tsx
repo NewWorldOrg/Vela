@@ -167,7 +167,7 @@ function PickMark({ taken }: { taken: boolean }) {
       data-slot="pick-mark"
       className={cn(
         'absolute top-2 right-2 z-[2] grid size-6 place-items-center rounded-full shadow-[0_0_0_1.5px_#fff]',
-        taken ? 'bg-btn text-on-ink' : 'bg-black/25',
+        taken ? 'bg-accent-fill text-on-accent' : 'bg-black/25',
       )}
     >
       {taken && <CheckIcon className="size-3.5" strokeWidth={2.4} />}
@@ -216,8 +216,14 @@ function clockOf(recording: Recording): string {
 const SHELF_HEADING =
   'text-heading leading-[calc(22rem/16)] font-bold tracking-[-0.015em] text-ink'
 
-/** The recordings left part-way, in one row: as many as the width holds, each going on from where it was left. */
-export function ContinueRow({ recordings }: { recordings: Recording[] }) {
+/** The recordings left part-way, in one row: as many as the width holds, each going on from where it was left. Over the table the row is compact, its pictures small and its titles on one line. */
+export function ContinueRow({
+  recordings,
+  compact = false,
+}: {
+  recordings: Recording[]
+  compact?: boolean
+}) {
   if (recordings.length === 0) {
     return null
   }
@@ -235,7 +241,12 @@ export function ContinueRow({ recordings }: { recordings: Recording[] }) {
             <li key={recording.id} className="min-w-0">
               <Link
                 href={playingOnHref(recording.id) as Route}
-                className="group -m-1.5 grid grid-cols-[calc(148rem/16)_minmax(0,1fr)] items-center gap-3 rounded-lg p-1.5 text-ink no-underline outline-none transition-[background-color] duration-[140ms] ease-toy hover:bg-surface focus-visible:shadow-ring"
+                className={cn(
+                  'group -m-1.5 grid items-center gap-3 rounded-lg p-1.5 text-ink no-underline outline-none transition-[background-color] duration-[140ms] ease-toy hover:bg-surface focus-visible:shadow-ring',
+                  compact
+                    ? 'grid-cols-[calc(96rem/16)_minmax(0,1fr)]'
+                    : 'grid-cols-[calc(148rem/16)_minmax(0,1fr)]',
+                )}
               >
                 <Picture
                   recording={recording}
@@ -246,13 +257,25 @@ export function ContinueRow({ recordings }: { recordings: Recording[] }) {
                     aria-hidden="true"
                     className="absolute inset-0 z-[1] grid place-items-center bg-black/18 opacity-0 transition-opacity duration-[140ms] ease-toy group-hover:opacity-100 group-focus-visible:opacity-100"
                   >
-                    <span className="grid size-[calc(34rem/16)] place-items-center rounded-full bg-white/95 text-[#111] [&_svg]:ml-0.5 [&_svg]:size-3.5 [&_svg]:fill-current">
+                    <span
+                      className={cn(
+                        'grid place-items-center rounded-full bg-white/95 text-[#111] [&_svg]:ml-0.5 [&_svg]:fill-current',
+                        compact
+                          ? 'size-7 [&_svg]:size-3'
+                          : 'size-[calc(34rem/16)] [&_svg]:size-3.5',
+                      )}
+                    >
                       <PlayIcon />
                     </span>
                   </span>
                 </Picture>
                 <span className="min-w-0">
-                  <span className="line-clamp-2 text-body leading-[calc(19rem/16)] font-semibold tracking-[-0.008em]">
+                  <span
+                    className={cn(
+                      'text-body leading-[calc(19rem/16)] font-semibold tracking-[-0.008em]',
+                      compact ? 'block truncate' : 'line-clamp-2',
+                    )}
+                  >
                     {recording.title}
                   </span>
                   <span className="mt-[3px] block truncate text-sub text-ink-2">
@@ -444,7 +467,7 @@ function SeriesCard({
         <span
           className={cn(
             'relative z-[1] block rounded-md transition-shadow duration-[140ms] ease-toy group-focus-visible:shadow-ring',
-            chosen && 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--ink)]',
+            chosen && 'shadow-[0_0_0_2px_var(--bg),0_0_0_4px_var(--accent)]',
           )}
         >
           <Picture
@@ -465,7 +488,7 @@ function SeriesCard({
       </span>
       <span className="mt-[3px] flex items-center gap-1.5 truncate text-sub text-ink-2">
         {unwatched > 0 && (
-          <span className="inline-flex items-center gap-[5px] font-semibold text-ink">
+          <span className="inline-flex items-center gap-[5px] font-semibold text-acc-text">
             <span className="size-1.5 rounded-full bg-accent" />
             未視聴 <span className="font-code">{unwatched}</span>
           </span>
@@ -503,7 +526,10 @@ function SeriesOpen({
           <span className="font-code">{series.items.length}</span> 話
           {unwatched > 0 && (
             <>
-              {' · '}未視聴 <span className="font-code">{unwatched}</span>
+              {' · '}
+              <span className="text-acc-text">
+                未視聴 <span className="font-code">{unwatched}</span>
+              </span>
             </>
           )}
         </small>

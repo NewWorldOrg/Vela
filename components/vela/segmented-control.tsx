@@ -52,8 +52,7 @@ function Said({ option }: { option: SegmentedOption }) {
   )
 }
 
-const CHOSEN =
-  'bg-raised text-ink shadow-chosen dark:shadow-none hover:text-ink'
+const CHOSEN = 'bg-accent-tint text-acc-text hover:text-acc-text'
 
 type Naming =
   | { label: string; 'aria-label'?: string }
