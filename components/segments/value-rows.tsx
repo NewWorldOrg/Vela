@@ -26,11 +26,9 @@ export function ValueRows({
 
 export function ValueRow({
   name,
-  aside,
   children,
 }: {
   name: ReactNode
-  aside?: ReactNode
   children: ReactNode
 }) {
   return (
@@ -39,7 +37,6 @@ export function ValueRow({
         {name}
       </dt>
       <dd className="min-w-0 text-right tabular-nums text-ink-2">{children}</dd>
-      {aside}
     </div>
   )
 }

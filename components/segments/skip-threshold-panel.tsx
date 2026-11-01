@@ -97,45 +97,47 @@ export function SkipThresholdPanel({
   return (
     <Surface data-slot={SKIP_THRESHOLD_SLOT} className={VALUE_FACE}>
       <form noValidate onSubmit={save}>
-        <ValueRows>
-          <ValueRow
-            name={editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD}
-            aside={
-              editing ? undefined : (
-                <Button
-                  key="change"
-                  type="button"
-                  variant="tone"
-                  size="sm"
-                  autoFocus={returned}
-                  onClick={edit}
-                >
-                  変更
-                </Button>
-              )
-            }
-          >
-            {editing ? (
-              <span className="flex items-center font-sans">
-                <Input
-                  id={id}
-                  inputMode="decimal"
-                  autoComplete="off"
-                  autoFocus
-                  areaClassName="w-[calc(110rem/16)]"
-                  className="tabular-nums"
-                  value={typed}
-                  readOnly={pending}
-                  aria-invalid={said ? true : undefined}
-                  aria-describedby={said ? errorId : undefined}
-                  onChange={(event) => retype(event.target.value)}
-                />
-              </span>
-            ) : (
-              thresholdOf(current)
-            )}
-          </ValueRow>
-        </ValueRows>
+        <div className="flex items-center gap-3">
+          <ValueRows className="flex-1">
+            <ValueRow
+              name={
+                editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD
+              }
+            >
+              {editing ? (
+                <span className="flex items-center font-sans">
+                  <Input
+                    id={id}
+                    inputMode="decimal"
+                    autoComplete="off"
+                    autoFocus
+                    areaClassName="w-[calc(110rem/16)]"
+                    className="tabular-nums"
+                    value={typed}
+                    readOnly={pending}
+                    aria-invalid={said ? true : undefined}
+                    aria-describedby={said ? errorId : undefined}
+                    onChange={(event) => retype(event.target.value)}
+                  />
+                </span>
+              ) : (
+                thresholdOf(current)
+              )}
+            </ValueRow>
+          </ValueRows>
+          {!editing && (
+            <Button
+              key="change"
+              type="button"
+              variant="tone"
+              size="sm"
+              autoFocus={returned}
+              onClick={edit}
+            >
+              変更
+            </Button>
+          )}
+        </div>
         <span aria-live="polite">
           {editing && said && (
             <FieldError id={errorId} className="mt-2.5">
