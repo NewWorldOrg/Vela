@@ -102,7 +102,7 @@ export function PhoneBarButton({
       {count !== undefined && count > 0 && (
         <span
           aria-hidden="true"
-          className="absolute -top-[calc(3rem/16)] -right-[calc(3rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-brand px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-on-brand"
+          className="absolute -top-[calc(3rem/16)] -right-[calc(3rem/16)] h-[calc(18rem/16)] min-w-[calc(18rem/16)] rounded-full bg-accent-fill px-[calc(5rem/16)] text-center font-code text-micro leading-[calc(18rem/16)] font-bold text-on-accent"
         >
           {count}
         </span>
