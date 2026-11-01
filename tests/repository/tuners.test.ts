@@ -1433,6 +1433,24 @@ test('a driver that gives no version leaves the facts empty', async () => {
   assert.deepEqual((await screen()).facts, {})
 })
 
+test('a driver that gives no version is still said to have answered', async () => {
+  standing()
+  store.driver = {
+    connection: 'connected',
+    hello: {
+      protocolVersion: 1,
+      instanceId: 'b7f2c9',
+      capabilities: [],
+      draining: false,
+    },
+    observedAt: SEEN_AT,
+  }
+
+  assert.deepEqual((await screen()).facts, {
+    respondedAt: formatRecentMoment(SEEN_AT),
+  })
+})
+
 test('a driver that does not answer for its reader leaves the reader off the screen', async () => {
   standing()
 
