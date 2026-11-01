@@ -2,13 +2,6 @@ import type { FailureClass } from '@/repository/scan-failures'
 import { cn } from '@/lib/utils'
 import { FAILURE_CLASSES } from '@/repository/scan-failures'
 
-const MARK_CLASS: Record<1 | 2 | 3 | 4, string> = {
-  1: 'bg-coral-soft text-coral',
-  2: 'bg-lemon-soft text-lemon',
-  3: 'bg-sky-soft text-sky',
-  4: 'bg-brand-soft text-brand',
-}
-
 export function FailureMark({
   failure,
   className,
@@ -20,8 +13,7 @@ export function FailureMark({
     <span
       aria-hidden="true"
       className={cn(
-        'inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full font-code text-cap leading-none font-medium',
-        MARK_CLASS[failure.no],
+        'inline-flex size-[calc(19rem/16)] shrink-0 items-center justify-center rounded-full bg-surface-2 text-cap leading-none font-semibold text-ink-2 tabular-nums',
         className,
       )}
     >
@@ -41,7 +33,7 @@ export function FailureLabel({
     <span className="inline-flex min-w-0 items-center gap-2">
       <FailureMark failure={failure} />
       <span className="min-w-0">
-        <b className="block text-ui leading-[1.55] font-bold text-ink">
+        <b className="block text-ui leading-[1.55] font-semibold text-ink">
           {failure.label}
         </b>
         {children && (
@@ -56,12 +48,12 @@ export function FailureLabel({
 
 export function FailureLegend() {
   return (
-    <div className="mb-[calc(13rem/16)] grid gap-[calc(9rem/16)] rounded-xl bg-surface px-4 py-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
+    <div className="mb-3 grid gap-2.5 rounded-lg bg-surface px-4 py-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4 [&_[aria-hidden]]:bg-surface-3">
       {FAILURE_CLASSES.map((failure) => (
         <div key={failure.no} className="flex items-start gap-[calc(9rem/16)]">
           <FailureMark failure={failure} className="mt-0.5" />
           <span className="min-w-0">
-            <b className="block text-ui leading-[1.5] font-bold">
+            <b className="block text-ui leading-[1.5] font-semibold">
               {failure.label}
             </b>
           </span>

@@ -1,6 +1,6 @@
 import type { ZeroDiagnosis } from '@/repository/services'
 import { numbered } from '@/repository/scan-failures'
-import { DangerIcon } from '@/components/vela/icons'
+import { DangerIcon, WarningIcon } from '@/components/vela/icons'
 
 export function ZeroDiagnosisPanel({
   label,
@@ -10,11 +10,11 @@ export function ZeroDiagnosisPanel({
   diagnosis: ZeroDiagnosis
 }) {
   return (
-    <div className="rounded-xl bg-surface pt-0.5 pb-1">
-      <div className="flex items-start gap-[calc(9rem/16)] px-[calc(18rem/16)] pt-4 pb-1">
-        <DangerIcon className="mt-[calc(3rem/16)] size-[calc(17rem/16)] text-coral" />
+    <div className="rounded-lg bg-surface pt-0.5 pb-1">
+      <div className="flex items-start gap-2.5 px-4 pt-4 pb-1">
+        <DangerIcon className="mt-0.5 size-[calc(17rem/16)] shrink-0 text-rec" />
         <div>
-          <h3 className="heading text-[calc(14.5rem/16)] text-coral">
+          <h3 className="text-[calc(14.5rem/16)] font-semibold text-ink">
             {label} のサービスがありません
           </h3>
           <p className="mt-px text-sub text-ink-2">
@@ -23,7 +23,7 @@ export function ZeroDiagnosisPanel({
           </p>
         </div>
       </div>
-      <div className="grid gap-2.5 px-[calc(18rem/16)] pt-3 pb-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
+      <div className="grid gap-2 px-4 pt-3 pb-3.5 sm:grid-cols-2 min-[1020px]:grid-cols-4">
         {diagnosis.counts.map(({ class: failure, count }) => {
           const sole = count > 0 && count === diagnosis.attempted
 
@@ -32,14 +32,14 @@ export function ZeroDiagnosisPanel({
               key={failure.no}
               className={
                 sole
-                  ? 'rounded-lg bg-coral-soft px-[calc(13rem/16)] py-[calc(11rem/16)]'
-                  : 'rounded-lg bg-surface-2 px-[calc(13rem/16)] py-[calc(11rem/16)]'
+                  ? 'rounded-md bg-rec-soft px-3 py-2.5'
+                  : 'rounded-md bg-surface-2 px-3 py-2.5'
               }
             >
               <div
                 className={
                   sole
-                    ? 'mb-0.5 text-cap font-medium text-coral'
+                    ? 'mb-0.5 text-cap font-medium text-rec-text'
                     : 'mb-0.5 text-cap font-medium text-ink-2'
                 }
               >
@@ -48,8 +48,8 @@ export function ZeroDiagnosisPanel({
               <div
                 className={
                   sole
-                    ? 'font-code text-[calc(19rem/16)] leading-[1.5] font-medium tabular-nums text-coral'
-                    : 'font-code text-[calc(19rem/16)] leading-[1.5] font-medium tabular-nums'
+                    ? 'text-section font-bold tabular-nums text-rec-text'
+                    : 'text-section font-bold tabular-nums'
                 }
               >
                 {count}
@@ -65,7 +65,8 @@ export function ZeroDiagnosisPanel({
         })}
       </div>
       {diagnosis.verdict && (
-        <p className="mx-[calc(18rem/16)] mb-4 rounded-xl bg-lemon-soft px-[calc(15rem/16)] py-[calc(11rem/16)] text-ui leading-[1.7] text-lemon">
+        <p className="mx-4 mb-4 flex items-start gap-2 border-t border-hair pt-3 text-ui text-ink">
+          <WarningIcon className="mt-0.5 size-4 shrink-0 text-warn" />
           {diagnosis.verdict}
         </p>
       )}

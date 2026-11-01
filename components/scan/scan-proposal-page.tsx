@@ -19,7 +19,6 @@ import { ServiceId } from '@/components/channels/service-id'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/section-heading'
-import { SearchIcon } from '@/components/vela/icons'
 import { ApplyScanAction } from '@/components/scan/apply-scan-button'
 import { ScanAttemptsTable } from '@/components/scan/scan-run-panel'
 import { FailureLegend } from '@/components/scan/failure-mark'
@@ -39,17 +38,17 @@ const CHANNEL_KIND_VARIANT = {
 function ProposalRows({ services }: { services: ProposalService[] }) {
   return (
     <>
-      <div className="rounded-xl bg-surface px-[calc(17rem/16)]">
+      <div className="rounded-lg bg-surface px-4">
         {services.map((service) => (
           <div
             key={service.key}
-            className="flex flex-wrap items-start gap-3 border-b border-dashed border-line py-3 last:border-b-0"
+            className="flex flex-wrap items-start gap-3 border-b border-hair py-3 last:border-b-0"
           >
             <div className="min-w-0 flex-1">
               <div
                 className={cn(
                   READABLE_LINE,
-                  'flex items-center gap-2 text-[calc(13rem/16)] leading-[1.6] font-bold',
+                  'flex items-center gap-2 text-[calc(14.5rem/16)] leading-[1.6] font-semibold',
                 )}
               >
                 <ChannelMark logo={service.logo} no={service.no} keepsTheSlot />
@@ -62,7 +61,7 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
                 {service.channels.map((channel) => (
                   <span
                     key={`${channel.kind}-${channel.channel}`}
-                    className="inline-flex items-center gap-2 rounded-full bg-surface-2 px-[calc(11rem/16)] py-[calc(3rem/16)] text-note"
+                    className="inline-flex items-center gap-2 pr-2 text-note"
                   >
                     <Badge
                       variant={shapeFor(
@@ -96,11 +95,11 @@ function ProposalRows({ services }: { services: ProposalService[] }) {
 function DepartureRows({ departures }: { departures: RotationDeparture[] }) {
   return (
     <>
-      <div className="rounded-xl bg-surface px-[calc(17rem/16)]">
+      <div className="rounded-lg bg-surface px-4">
         {departures.map((departure) => (
           <div
             key={`${departure.key}-${departure.channel}`}
-            className="flex flex-wrap items-center gap-3 border-b border-dashed border-line py-3 last:border-b-0"
+            className="flex flex-wrap items-center gap-3 border-b border-hair py-3 last:border-b-0"
           >
             <span className="font-code text-body font-medium tabular-nums">
               {departure.channel}
@@ -128,39 +127,41 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
       label: '新規',
       value: proposal.added.length,
       unit: 'サービス',
-      tint: 'bg-tint-sage',
     },
     {
       label: '更新',
       value: proposal.updated.length,
       unit: 'サービス',
-      tint: 'bg-tint-sky',
     },
     {
       label: '消失',
       value: proposal.missing.length,
       unit: 'サービス',
-      tint: 'bg-tint-salmon',
     },
     {
       label: '失敗',
       value: proposal.failures.length,
       unit: '物理ch',
-      tint: 'bg-tint-butter',
+      failed: proposal.failures.length > 0,
     },
   ]
 
   return (
-    <div className="mb-3 grid gap-[calc(11rem/16)] sm:grid-cols-2 min-[1020px]:grid-cols-4">
+    <div
+      data-slot="scan-summary"
+      className="mt-2 grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-hair min-[1020px]:grid-cols-4"
+    >
       {cells.map((cell) => (
-        <div
-          key={cell.label}
-          className={`rounded-xl px-4 py-[calc(13rem/16)] ${cell.tint}`}
-        >
+        <div key={cell.label} className="bg-surface px-4 py-3">
           <div className="text-note font-medium text-ink-2">{cell.label}</div>
-          <div className="font-code text-section leading-[1.4] font-medium tabular-nums">
+          <div
+            className={cn(
+              'mt-0.5 text-section font-bold tabular-nums',
+              'failed' in cell && cell.failed && 'text-rec-text',
+            )}
+          >
             {cell.value}
-            <small className="ml-[calc(3rem/16)] text-cap font-normal text-ink-2">
+            <small className="ml-1 text-note font-normal text-ink-2">
               {cell.unit}
             </small>
           </div>
@@ -173,7 +174,7 @@ function Summary({ proposal }: { proposal: ScanProposal }) {
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
     <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
-      <h2 className="heading text-title">{title}</h2>
+      <h2 className="heading text-heading">{title}</h2>
       <span className="text-note tabular-nums text-ink-2">{stat}</span>
     </div>
   )
@@ -234,13 +235,12 @@ export function ScanProposalView({
       {crumb}
       <PageHeading>スキャン結果</PageHeading>
 
-      <div className="mt-4 flex flex-wrap items-start gap-3 rounded-xl bg-surface px-[calc(18rem/16)] py-4">
-        <SearchIcon className="mt-1 size-[calc(17rem/16)] shrink-0 text-brand" />
+      <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-surface px-4 py-3.5">
         <div className="min-w-0 flex-1">
-          <h2 className="heading text-ui leading-[1.5]">
+          <h2 className="heading text-heading">
             スキャン{proposal.run.stateLabel}
           </h2>
-          <p className="text-ui text-ink-2">
+          <p className="mt-0.5 text-ui text-ink-2">
             {proposal.run.finishedAt ?? proposal.run.startedAt} · 所要{' '}
             <b className="font-code font-medium tabular-nums text-ink">
               {proposal.run.took ?? EMPTY_VALUE}
@@ -315,7 +315,7 @@ export function ScanProposalView({
         </section>
       )}
 
-      <div className="mt-7 flex flex-wrap items-center gap-3 rounded-xl bg-surface px-[calc(18rem/16)] py-4">
+      <div className="mt-7 flex flex-wrap items-center gap-3 rounded-lg bg-surface px-4 py-3.5">
         <p className="min-w-0 flex-1 text-sub leading-[1.7] text-ink-2">
           保存対象: 新規{' '}
           <b className="font-code font-medium tabular-nums text-ink">

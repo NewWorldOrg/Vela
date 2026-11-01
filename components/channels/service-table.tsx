@@ -35,17 +35,17 @@ import { WHEN_LABELS } from '@/lib/when-terms'
 
 const SERVICE_COLUMNS: {
   label: string
-  width: string
+  width: string | undefined
   hidden?: boolean
 }[] = [
   { label: '候補チャンネルの開閉', width: 'calc(34rem/16)', hidden: true },
-  { label: 'サービス', width: 'calc(300rem/16)' },
+  { label: 'サービス', width: undefined },
   { label: '区分', width: 'calc(84rem/16)' },
-  { label: '現在の物理ch', width: 'calc(124rem/16)' },
-  { label: '候補', width: 'calc(124rem/16)' },
-  { label: '有効', width: 'calc(92rem/16)' },
+  { label: '現在の物理ch', width: 'calc(110rem/16)' },
+  { label: '候補', width: 'calc(104rem/16)' },
+  { label: '有効', width: 'calc(80rem/16)' },
   { label: WHEN_LABELS.taken, width: 'calc(122rem/16)' },
-  { label: '状態', width: 'calc(200rem/16)', hidden: true },
+  { label: '状態', width: 'calc(150rem/16)', hidden: true },
 ]
 
 export interface CandidateActions {
@@ -118,7 +118,7 @@ function Standing({ service }: { service: ServiceRow }) {
   }
 
   return (
-    <span className="text-ui text-sky">
+    <span className="text-ui text-ink">
       {A_BETTER_ONE} {service.betterChannel}
     </span>
   )
@@ -138,7 +138,7 @@ function UnfoldedCandidates({
       <TableCell colSpan={SERVICE_COLUMNS.length} className="border-0 p-0">
         <Unfold
           open={expanded}
-          bodyClassName="border-b border-dashed border-line bg-surface-2 py-3.5 pr-[calc(18rem/16)] pl-10"
+          bodyClassName="border-b border-hair bg-surface-2 py-3.5 pr-[calc(18rem/16)] pl-10"
         >
           <CandidateList
             serviceKey={service.key}
@@ -195,7 +195,7 @@ const ServiceLine = memo(function ServiceLine({
       </TableCell>
       <TableCell {...cardPlace('field', '現在の物理ch')}>
         {service.currentChannel === undefined ? (
-          <span className="text-ui font-bold text-lemon">選局先なし</span>
+          <span className="text-ui font-bold text-warn-text">選局先なし</span>
         ) : (
           <span className="font-code font-medium tabular-nums">
             {service.currentChannel}
@@ -207,7 +207,7 @@ const ServiceLine = memo(function ServiceLine({
           {service.candidateCount}
         </span>
         {service.needsAttentionCount > 0 && (
-          <span className="ml-1.5 text-sub text-lemon">
+          <span className="ml-1.5 text-sub text-warn-text">
             (要確認 {service.needsAttentionCount})
           </span>
         )}
@@ -244,7 +244,7 @@ export function ServiceTable({
   return (
     <Table
       cards
-      className="table-fixed min-w-[calc(860rem/16)]"
+      className="table-fixed min-w-[calc(840rem/16)]"
       containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
     >
       <TableColumns widths={SERVICE_COLUMNS.map((column) => column.width)} />
