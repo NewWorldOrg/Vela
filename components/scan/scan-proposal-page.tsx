@@ -236,7 +236,7 @@ export function ScanProposalView({
       <PageHeading>スキャン結果</PageHeading>
 
       <div className="mt-4 flex flex-wrap items-center gap-3 rounded-lg bg-surface px-4 py-3.5">
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[min(100%,calc(260rem/16))] flex-1">
           <h2 className="heading text-heading">
             スキャン{proposal.run.stateLabel}
           </h2>
@@ -316,7 +316,7 @@ export function ScanProposalView({
       )}
 
       <div className="mt-7 flex flex-wrap items-center gap-3 rounded-lg bg-surface px-4 py-3.5">
-        <p className="min-w-0 flex-1 text-sub leading-[1.7] text-ink-2">
+        <p className="min-w-[min(100%,calc(260rem/16))] flex-1 text-sub leading-[1.7] text-ink-2">
           保存対象: 新規{' '}
           <b className="font-code font-medium tabular-nums text-ink">
             {proposal.added.length}
