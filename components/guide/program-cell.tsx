@@ -117,12 +117,15 @@ export function BookingMarkOf({
     <span
       data-booking-mark={mark}
       aria-hidden="true"
-      className="inline-flex items-center gap-1.5 text-acc-text"
+      className={cn(
+        'inline-flex items-center gap-1.5',
+        mark === 'recording' ? 'text-rec-text' : 'text-warn-text',
+      )}
     >
       {mark === 'recording' ? (
-        <span className="size-2 rounded-full bg-accent" />
+        <span className="size-2 rounded-full bg-rec" />
       ) : (
-        <span className="size-2.5 rounded-full border-[1.5px] border-acc-text" />
+        <span className="size-2.5 rounded-full border-[1.5px] border-warn" />
       )}
       {!glyphOnly && (mark === 'recording' ? MARK_SAYS.recording : '予約')}
     </span>

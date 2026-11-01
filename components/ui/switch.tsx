@@ -20,7 +20,7 @@ function Switch({
         'tap-target peer group/switch inline-flex shrink-0 cursor-pointer items-center rounded-full bg-surface-2 p-[3px] outline-none',
         'transition-[background-color,box-shadow] duration-[140ms] ease-toy',
         'data-[size=default]:h-7 data-[size=default]:w-[46px] data-[size=sm]:h-6 data-[size=sm]:w-[40px]',
-        'data-[state=checked]:bg-accent-fill',
+        'data-[state=checked]:bg-accent-deep',
         'focus-visible:shadow-ring disabled:cursor-not-allowed disabled:opacity-40',
         className,
       )}

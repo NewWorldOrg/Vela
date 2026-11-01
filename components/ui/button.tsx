@@ -21,9 +21,9 @@ const buttonVariants = cva(
         ghost:
           'bg-transparent text-ink-2 not-disabled:not-aria-disabled:hover:bg-surface not-disabled:not-aria-disabled:hover:text-ink',
         danger:
-          'bg-transparent text-acc-text not-disabled:not-aria-disabled:hover:bg-accent-soft',
+          'bg-transparent text-rec-text not-disabled:not-aria-disabled:hover:bg-rec-soft',
         dangerFill:
-          'bg-accent-soft text-acc-text not-disabled:not-aria-disabled:hover:bg-accent/20',
+          'bg-rec-soft text-rec-text not-disabled:not-aria-disabled:hover:bg-rec/20',
       },
       size: {
         default: 'h-10 px-[18px] text-body',

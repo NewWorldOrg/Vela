@@ -28,8 +28,8 @@ const BY_KIND: Record<string, [string, string]> = {
   default: ['bg-accent-fill', 'text-on-accent'],
   tone: ['bg-surface-2', 'text-ink'],
   ghost: ['bg-transparent', 'text-ink-2'],
-  danger: ['bg-transparent', 'text-acc-text'],
-  dangerFill: ['bg-accent-soft', 'text-acc-text'],
+  danger: ['bg-transparent', 'text-rec-text'],
+  dangerFill: ['bg-rec-soft', 'text-rec-text'],
 }
 
 const THE_GROUPS = ['ActionRow', 'AlertDialogFooter', 'DialogFooter']
