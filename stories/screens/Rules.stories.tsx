@@ -295,10 +295,10 @@ export const 一覧と編集の面: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
-    const rules = within(canvas.getByRole('region', { name: 'ルール' }))
+    const rules = canvas.getByRole('region', { name: 'ルール' })
 
-    await expect(rules.getByText(/今後 12 件/)).toBeVisible()
-    await expect(rules.getByText(/今後 0 件/)).toBeVisible()
+    await expect(rules).toHaveTextContent('今後 12 件')
+    await expect(rules).toHaveTextContent('今後 0 件')
     await expect(
       await canvas.findByText('星のさまよいびと 第1話'),
     ).toBeVisible()
