@@ -5,27 +5,27 @@ import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 import type { TunerWriteResult } from '@/repository/tuners'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import {
+  CARD_READERS,
   DETECTION,
   DETECTION_MISMATCH_ONLY,
   TUNERS,
 } from '@/repository/tuners.fixtures'
 import { TunersView } from '@/components/tuners/tuners-page'
-import {
-  cellOf,
-  rowsOfTheTableHeaded,
-  tipIn,
-} from '@/stories/pills-in-a-column'
+import { tipIn } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
-import {
-  FROM_600,
-  laysRowsAsATable,
-  laysRowsAsCards,
-  PHONE,
-} from '@/stories/rows-as-cards'
+import { FROM_600, PHONE } from '@/stories/rows-as-cards'
 
-const SESSION_COLUMN = 3
+function lineOf(canvasElement: HTMLElement, id: string): HTMLElement {
+  const line = canvasElement.querySelector<HTMLElement>(
+    `[data-slot="hardware-line"][id="${id}"]`,
+  )
 
-const STATE_COLUMN = 4
+  if (!line) {
+    throw new Error(`no line for ${id}`)
+  }
+
+  return line
+}
 
 const meta = {
   title: 'Screens/設定・チューナー',
@@ -58,25 +58,11 @@ export const 通常: Story = {
 export const 進行中のセッションが物理選局値で分かる: Story = {
   args: { result: { state: 'ok', result: TUNERS } },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
+    const recording = await tipIn(lineOf(canvasElement, 'adapter1'))
 
-    const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')
-    const said = await Promise.all(
-      rows
-        .filter((row) =>
-          cellOf(row, SESSION_COLUMN).querySelector(
-            '[data-slot="tooltip-trigger"], [data-state-say], [data-slot="badge"]',
-          ),
-        )
-        .map(
-          async (row) =>
-            (await tipIn(cellOf(row, SESSION_COLUMN))).textContent ?? '',
-        ),
-    )
-
-    await expect(said.join(' ')).toContain('57ch')
-    await expect(said.join(' ')).toContain('53ch')
-    await expect(said.join(' ')).toContain('終了予定 08/07 21:15')
+    await expect(recording).toHaveTextContent('57ch')
+    await expect(recording).toHaveTextContent('終了予定 08/07 21:15')
+    await expect(lineOf(canvasElement, 'adapter3')).toHaveTextContent('53ch')
   },
 }
 
@@ -208,6 +194,7 @@ export const 異常と警告は理由を画面の語で出す: Story = {
             device: 'adapter4',
             session: undefined,
             idleLabel: '割当停止中',
+            status: { word: '異常', tone: 'err' },
             state: 'faulted',
             stateLabel: '異常',
             stateSub: TUNED_AND_FAILED,
@@ -218,6 +205,7 @@ export const 異常と警告は理由を画面の語で出す: Story = {
             device: 'adapter5',
             session: undefined,
             idleLabel: '割当停止中',
+            status: { word: '異常', tone: 'err' },
             state: 'faulted',
             stateLabel: '異常',
             stateSub: THE_LEDGER_DISAGREES,
@@ -228,6 +216,7 @@ export const 異常と警告は理由を画面の語で出す: Story = {
             device: 'adapter6',
             session: undefined,
             idleLabel: 'アイドル',
+            status: { word: '警告', tone: 'warn' },
             state: 'warn',
             stateLabel: '警告',
             stateSub: A_CHANNEL_FAILED,
@@ -240,25 +229,21 @@ export const 異常と警告は理由を画面の語で出す: Story = {
     await afterTheArrival(canvasElement)
     const canvas = within(canvasElement)
 
-    const rows = rowsOfTheTableHeaded(canvasElement, 'デバイス')
-
     await expect(canvas.getAllByText('異常')).toHaveLength(2)
-    await expect(await tipIn(cellOf(rows[0], STATE_COLUMN))).toHaveTextContent(
-      TUNED_AND_FAILED,
-    )
-    await expect(await tipIn(cellOf(rows[1], STATE_COLUMN))).toHaveTextContent(
-      THE_LEDGER_DISAGREES,
-    )
+    await expect(
+      await tipIn(lineOf(canvasElement, 'adapter4')),
+    ).toHaveTextContent(TUNED_AND_FAILED)
+    await expect(
+      await tipIn(lineOf(canvasElement, 'adapter5')),
+    ).toHaveTextContent(THE_LEDGER_DISAGREES)
     await expect(canvas.getByText('警告')).toBeVisible()
-    await expect(await tipIn(cellOf(rows[2], STATE_COLUMN))).toHaveTextContent(
-      A_CHANNEL_FAILED,
-    )
+    await expect(
+      await tipIn(lineOf(canvasElement, 'adapter6')),
+    ).toHaveTextContent(A_CHANNEL_FAILED)
   },
 }
 
 const SATELLITE = 'adapter0'
-
-const LNB_COLUMN = 6
 
 function withSatellitePower(saved: boolean, applied: boolean) {
   return {
@@ -271,15 +256,7 @@ function withSatellitePower(saved: boolean, applied: boolean) {
 }
 
 function lnbCellOf(canvasElement: HTMLElement, device: string): HTMLElement {
-  const row = rowsOfTheTableHeaded(canvasElement, 'デバイス').find(
-    (one) => one.id === device,
-  )
-
-  if (!row) {
-    throw new Error(`no row for ${device}`)
-  }
-
-  return cellOf(row, LNB_COLUMN)
+  return lineOf(canvasElement, device)
 }
 
 export const LNB給電は衛星の行だけで切り替えられる: Story = {
@@ -295,9 +272,9 @@ export const LNB給電は衛星の行だけで切り替えられる: Story = {
         name: `${SATELLITE} の LNB 給電`,
       }),
     ).not.toBeChecked()
-    await expect(lnbCellOf(canvasElement, 'adapter1')).toHaveTextContent(
-      EMPTY_VALUE,
-    )
+    await expect(
+      within(lnbCellOf(canvasElement, 'adapter1')).queryByText('LNB'),
+    ).not.toBeInTheDocument()
   },
 }
 
@@ -471,18 +448,181 @@ export const サービスが0件の種別を最上部で言う: Story = {
   },
 }
 
-export const 電話の幅では一行をカードに組む: Story = {
+function placeOfParts(line: HTMLElement) {
+  const [what, state] = Array.from(line.children) as HTMLElement[]
+
+  return {
+    what: what.getBoundingClientRect(),
+    state: state.getBoundingClientRect(),
+  }
+}
+
+export const 電話の幅では状態を名前の下に置く: Story = {
   args: 通常.args,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
-    await laysRowsAsCards(canvasElement)
+    await afterTheArrival(canvasElement)
+    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
+
+    await expect(state.top).toBeGreaterThanOrEqual(what.bottom - 1)
   },
 }
 
-export const 幅600pxからは表のまま: Story = {
+export const 幅600pxからは状態を名前の右に置く: Story = {
   args: 通常.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
-    await laysRowsAsATable(canvasElement)
+    await afterTheArrival(canvasElement)
+    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
+
+    await expect(state.left).toBeGreaterThanOrEqual(what.right)
+  },
+}
+
+export const 機械ごとに組を分けカードリーダーをその下に置く: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...TUNERS,
+        notices: [],
+        rows: [
+          ...TUNERS.rows,
+          {
+            ...TUNERS.rows[0],
+            id: 'usb1-2',
+            device: 'usb1-2',
+            machine: 'study',
+            name: 'Example USB tuner',
+            place: 'usb 1-2',
+            session: undefined,
+            status: { word: 'つながらない', tone: 'err', line: '20:12 に確認' },
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const titles = Array.from(
+      canvasElement.querySelectorAll('section > h2'),
+    ).map((title) => title.textContent)
+
+    await expect(titles).toEqual([
+      'living-room4 台',
+      'カードリーダー',
+      'study1 台',
+    ])
+    await expect(canvas.getByText('つながらない')).toBeVisible()
+    await expect(canvas.getByText('driver 0.3.7')).toBeVisible()
+    await expect(canvas.queryByText(/借り/)).not.toBeInTheDocument()
+  },
+}
+
+export const 名前の無い機械はこの機械と呼ぶ: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...TUNERS,
+        notices: [],
+        facts: { ...TUNERS.facts, machine: undefined },
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('heading', { name: /^この機械/ }),
+    ).toBeVisible()
+  },
+}
+
+export const 古いdriverでは名前の代わりに装置のidを出しカードリーダーを出さない: Story =
+  {
+    args: {
+      result: {
+        state: 'ok',
+        result: {
+          ...TUNERS,
+          notices: [],
+          facts: {},
+          cardReaders: undefined,
+          rows: TUNERS.rows.map((row) => ({
+            ...row,
+            name: undefined,
+            place: undefined,
+          })),
+        },
+      },
+    },
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+
+      await expect(canvas.getByText(`driver ${EMPTY_VALUE}`)).toBeVisible()
+      await expect(canvas.getAllByText('adapter1')[0]).toBeVisible()
+      await expect(
+        canvas.queryByRole('heading', { name: 'カードリーダー' }),
+      ).not.toBeInTheDocument()
+    },
+  }
+
+export const カードリーダーの状態: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...TUNERS,
+        notices: [],
+        cardReaders: [
+          ...CARD_READERS,
+          {
+            id: 'reader-1',
+            title: 'Example Dual Reader',
+            status: { word: '未挿入', tone: 'warn', line: '20:58 に確認' },
+          },
+          {
+            id: 'reader-2',
+            title: 'Example Spare Reader',
+            status: {
+              word: '応答なし · カードが答えません',
+              tone: 'err',
+              line: '20:58 に確認',
+            },
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('挿入')).toBeVisible()
+    await expect(canvas.getByText('未挿入')).toBeVisible()
+    await expect(
+      canvas.getByText('応答なし · カードが答えません'),
+    ).toBeVisible()
+  },
+}
+
+export const pcscdが止まっている: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...TUNERS,
+        notices: [],
+        cardReaders: [
+          {
+            id: 'reader-none',
+            title: 'カードリーダー',
+            status: {
+              word: '応答なし · pcscd が止まっています',
+              tone: 'err',
+              line: '20:58 に確認',
+            },
+          },
+        ],
+      },
+    },
   },
 }

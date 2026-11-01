@@ -123,6 +123,8 @@ export const DETECTION: DetectionResult = {
       kind: 'add',
       tag: '新規',
       device: 'adapter4',
+      name: 'Example ISDB-T frontend',
+      place: 'example_dvb · /dev/dvb/adapter4/frontend0',
       note: '地上波として検出されました',
     },
     {

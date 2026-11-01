@@ -307,7 +307,8 @@ export function SystemView({
           </DetailRow>
           <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
             <span>
-              Carina {status.carinaVersion ?? EMPTY_VALUE} / Vela {velaVersion}
+              Carina {status.carinaVersion ?? EMPTY_VALUE} / driver{' '}
+              {reading?.hello?.version ?? EMPTY_VALUE} / Vela {velaVersion}
             </span>
           </DetailRow>
           <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>

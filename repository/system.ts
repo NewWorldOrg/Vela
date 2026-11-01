@@ -13,6 +13,8 @@ export interface DriverHello {
   protocolVersion: string
   instanceId: string | null
   draining: boolean
+  /** The version the driver was built as, which runs on a release stream of its own. */
+  version?: string
 }
 
 export interface DriverStatus {
@@ -323,6 +325,7 @@ function toDriverStatus(responder: DriverStatusResponder): DriverStatus {
       protocolVersion: String(hello.protocolVersion),
       instanceId: hello.instanceId,
       draining: hello.draining,
+      ...(hello.version ? { version: hello.version } : {}),
     },
     appProtocolVersion: String(responder.appProtocolVersion),
     missingCapabilities: responder.missingCapabilities,
