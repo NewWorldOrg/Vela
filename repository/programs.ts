@@ -678,7 +678,9 @@ export function genreDisplayOf(programme: {
 } {
   const genreKind = programme.genres[0]?.kind
 
-  return (genreKind != null ? GENRES[toInt(genreKind)] : undefined) ?? GENRE_OTHER
+  return (
+    (genreKind != null ? GENRES[toInt(genreKind)] : undefined) ?? GENRE_OTHER
+  )
 }
 
 export function calendarDateOf(at: Date): string {

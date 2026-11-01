@@ -15,11 +15,7 @@ import type { components } from '@/repository/client/schema'
 import type { ChannelKind } from '@/repository/channels'
 import { fetchProgramme, toInt } from '@/repository/programmes'
 import { listRecordingsByReservation } from '@/repository/recordings'
-import type {
-  Genre,
-  GuideChannel,
-  ProgramBooking,
-} from '@/repository/programs'
+import type { Genre, GuideChannel, ProgramBooking } from '@/repository/programs'
 import {
   fetchServiceChannels,
   genreDisplayOf,
@@ -181,7 +177,11 @@ const HOLDS_A_SEAT: ReservationStanding[] = ['scheduled', 'recording']
 
 export const CONFLICT_HEADLINE = '録画が重なっています'
 
-const STILL_AHEAD: ReservationStanding[] = ['scheduled', 'conflict', 'recording']
+const STILL_AHEAD: ReservationStanding[] = [
+  'scheduled',
+  'conflict',
+  'recording',
+]
 
 /** How many reservations each rule still has ahead of it, recording or to come: the count beside a rule in the list of rules. */
 export async function countAheadByRule(): Promise<Map<string, number>> {
