@@ -8266,6 +8266,69 @@
         }
       }
     },
+    "/api/driver/card-reader": {
+      "get": {
+        "tags": [
+          "driver"
+        ],
+        "operationId": "getDriverCardReader",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCardReaderResponder"
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "Not Implemented",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCardReaderResponder"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Bad Gateway",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCardReaderResponder"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCardReaderResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfCardReaderResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/driver/status": {
       "get": {
         "tags": [
@@ -9222,6 +9285,32 @@
               },
               {
                 "$ref": "#/components/schemas/CaptionWindowResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfCardReaderResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardReaderResponder"
               }
             ]
           }
@@ -12140,6 +12229,127 @@
           }
         }
       },
+      "CardProblem": {
+        "enum": [
+          "unspecified",
+          "serviceDown",
+          "libraryMissing",
+          "cardSilent",
+          "lenderUnreachable",
+          "lenderRefused",
+          null
+        ],
+        "type": [
+          "null",
+          "string"
+        ]
+      },
+      "CardReaderResponder": {
+        "required": [
+          "use",
+          "state",
+          "problem",
+          "readers",
+          "lenderHostName",
+          "leasesOut",
+          "lastAnsweredAt",
+          "checkedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "use": {
+            "$ref": "#/components/schemas/CardReaderUse"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CardState"
+          },
+          "problem": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardProblem"
+              }
+            ]
+          },
+          "readers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CardReaderSlotResponder"
+            }
+          },
+          "lenderHostName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "leasesOut": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "lastAnsweredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "checkedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "CardReaderSlotResponder": {
+        "required": [
+          "name",
+          "state",
+          "inUse"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "state": {
+            "$ref": "#/components/schemas/CardState"
+          },
+          "inUse": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CardReaderUse": {
+        "enum": [
+          "unspecified",
+          "local",
+          "borrowed",
+          "none"
+        ],
+        "type": "string"
+      },
+      "CardState": {
+        "enum": [
+          "unspecified",
+          "inserted",
+          "empty",
+          "unresponsive",
+          "borrowed",
+          "noReader",
+          "notUsed"
+        ],
+        "type": "string"
+      },
       "CatalogResponder": {
         "required": [
           "cm",
@@ -12735,7 +12945,9 @@
           "deviceId",
           "detection",
           "kinds",
-          "detail"
+          "detail",
+          "machine",
+          "hardware"
         ],
         "type": "object",
         "properties": {
@@ -12755,6 +12967,22 @@
             "type": [
               "null",
               "string"
+            ]
+          },
+          "machine": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hardware": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerHardwareResponder"
+              }
             ]
           }
         }
@@ -12841,7 +13069,10 @@
           "protocolVersion",
           "instanceId",
           "capabilities",
-          "draining"
+          "draining",
+          "version",
+          "startedAt",
+          "name"
         ],
         "type": "object",
         "properties": {
@@ -12867,6 +13098,25 @@
           },
           "draining": {
             "type": "boolean"
+          },
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "startedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -22140,6 +22390,16 @@
           "string"
         ]
       },
+      "TunerBus": {
+        "enum": [
+          "unspecified",
+          "pci",
+          "usb",
+          "synthetic",
+          "lent"
+        ],
+        "type": "string"
+      },
       "TunerDegradedKind": {
         "enum": [
           "unspecified",
@@ -22197,6 +22457,60 @@
           "repeatedTuneFailure"
         ],
         "type": "string"
+      },
+      "TunerHardwareResponder": {
+        "required": [
+          "name",
+          "kernelDriver",
+          "bus",
+          "devicePath",
+          "usbPort",
+          "present",
+          "lastSeenAt"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "kernelDriver": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bus": {
+            "$ref": "#/components/schemas/TunerBus"
+          },
+          "devicePath": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "usbPort": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "present": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "lastSeenAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
       },
       "TunerHealthLevel": {
         "enum": [
@@ -22364,7 +22678,10 @@
           "sessionPurpose",
           "sessionStartedAt",
           "sessionEndsAt",
-          "sessionTuning"
+          "sessionTuning",
+          "sessionTitle",
+          "machine",
+          "hardware"
         ],
         "type": "object",
         "properties": {
@@ -22457,6 +22774,28 @@
               },
               {
                 "$ref": "#/components/schemas/ScanTargetResponder"
+              }
+            ]
+          },
+          "sessionTitle": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "machine": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hardware": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/TunerHardwareResponder"
               }
             ]
           }
