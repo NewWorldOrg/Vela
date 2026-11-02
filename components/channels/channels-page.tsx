@@ -109,7 +109,7 @@ function ScanHistory({ history }: { history: ScanRun[] }) {
     <section id="scan-history" className="mt-10">
       <SectionHeading>スキャン履歴</SectionHeading>
       {history.length === 0 ? (
-        <EmptyState title="まだスキャン履歴がありません" />
+        <EmptyState usher={null} title="まだスキャン履歴がありません" />
       ) : (
         <Table
           cards

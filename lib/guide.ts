@@ -342,6 +342,40 @@ export const GUTTER_PX = 46
 /** The hour gutter's width as CSS, growing with the window past 2560px as every length set in pixels does. */
 export const GUTTER_WIDTH = `calc(${GUTTER_PX} * var(--px))`
 
+const SEAM_SLACK_PX = 1
+
+export interface OpeningSeam {
+  top: number
+  line: boolean
+}
+
+/** 番組表の入りで覆いが割れる高さと、そこを今の線として玉が走るかどうか。 */
+export function openingSeamOf({
+  nowMin,
+  hourPx,
+  scrollTop,
+  headingPx,
+  viewPx,
+}: {
+  nowMin: number | undefined
+  hourPx: number
+  scrollTop: number
+  headingPx: number
+  viewPx: number
+}): OpeningSeam {
+  const middle = (headingPx + viewPx) / 2
+
+  if (nowMin !== undefined) {
+    const top = headingPx + (nowMin / 60) * hourPx - scrollTop
+
+    if (Math.abs(top - middle) <= SEAM_SLACK_PX) {
+      return { top, line: true }
+    }
+  }
+
+  return { top: middle, line: false }
+}
+
 export const COLUMN_MIN_REM = 13.75
 
 /** The narrowest the grid is drawn, as CSS: the hour gutter and every column at its narrowest. */

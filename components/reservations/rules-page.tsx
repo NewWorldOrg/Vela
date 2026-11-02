@@ -268,7 +268,7 @@ function RulesScreen({
             ルール
           </h2>
           {result.items.length === 0 ? (
-            <EmptyState title="まだルールがありません" />
+            <EmptyState usher={null} title="まだルールがありません" />
           ) : (
             <ul>
               {result.items.map((rule) => (
@@ -1153,7 +1153,7 @@ function RuleEditor({
             </span>
             <Excluded excluded={preview.excluded} as="p" />
             {preview.takes.length === 0 ? (
-              <EmptyState title="条件に合う番組がありません" />
+              <EmptyState usher={null} title="条件に合う番組がありません" />
             ) : (
               <>
                 <ul className="flex flex-col">

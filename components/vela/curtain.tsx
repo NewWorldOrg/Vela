@@ -111,12 +111,12 @@ const TWINKLES: {
 function Tassel() {
   return (
     <svg viewBox="0 0 34 74" className="block size-full overflow-visible">
-      <g className="fill-(--mark-star)">
+      <g className="fill-spark">
         <circle cx="17" cy="8" r="7" />
         <rect x="11" y="13" width="12" height="8" rx="3" />
         <path
           d="M9 22 H25 L31 66 Q17 74 3 66 Z"
-          className="stroke-(--mark-star)"
+          className="stroke-spark"
           strokeWidth={3}
           strokeLinejoin="round"
         />
@@ -162,7 +162,7 @@ function Side() {
         </div>
       ))}
       <div className="curtain-tie">
-        <span className="curtain-tie-loop bg-(--mark-star)" />
+        <span className="curtain-tie-loop bg-spark" />
         <span className="curtain-tassel">
           <Tassel />
         </span>
@@ -218,7 +218,7 @@ export function Curtain() {
       ref={raised}
       data-slot="curtain"
       aria-hidden="true"
-      className="curtain pointer-events-none fixed inset-0 z-50 overflow-hidden"
+      className="curtain moment-colours pointer-events-none fixed inset-0 z-50 overflow-hidden"
     >
       <div className="curtain-half" data-side="left">
         <Side />
@@ -237,7 +237,7 @@ export function Curtain() {
                 <span key={nth} className="curtain-twinkle block" style={at}>
                   <svg
                     viewBox="-10 -10 20 20"
-                    className={`block size-full overflow-visible ${tone === 'spark' ? 'fill-(--mark-star)' : 'fill-ink'}`}
+                    className={`block size-full overflow-visible ${tone === 'spark' ? 'fill-spark' : 'fill-ink'}`}
                   >
                     {shape === 'star' ? (
                       <path d="M0 -9 Q2 -2 9 0 Q2 2 0 9 Q-2 2 -9 0 Q-2 -2 0 -9Z" />

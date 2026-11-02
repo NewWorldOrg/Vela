@@ -73,6 +73,35 @@ const THE_VOCABULARY = [
   'swell',
   'row',
   'hop-in',
+  'usher-hull',
+  'usher-leap',
+  'usher-squash',
+  'usher-sway',
+  'usher-blink',
+  'usher-star',
+  'usher-spark',
+  'usher-peek',
+  'usher-peek-squash',
+  'usher-wilt',
+  'usher-blink-once',
+  'usher-star-sink',
+  'usher-sweat',
+  'usher-answer',
+  'usher-answer-sway',
+  'usher-answer-star',
+  'usher-bob',
+  'guide-settle',
+  'opening-above',
+  'opening-below',
+  'opening-line',
+  'opening-ring',
+  'opening-piece',
+  'ball-across',
+  'ball-hop',
+  'ball-appear',
+  'ball-bump',
+  'ball-landing',
+  'ball-burst',
 ]
 
 const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
@@ -80,6 +109,8 @@ const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
 const THE_UTILITIES = [
   'row-arrives',
   'curtain',
+  'guide-settles',
+  'guide-opening',
   'drawn',
   'screen-rises',
   'screen-hops',
@@ -662,29 +693,39 @@ test('a guide opened directly is scrolled to now before its first paint, by its 
   )
 })
 
-test('the guide builds its other columns once it has settled', async () => {
+test('the guide builds its other columns once its opening is over', async () => {
   const grid = await readFile(
     path.join(ROOT, 'components/guide/guide-grid.tsx'),
     'utf8',
   )
   const hook = await readFile(path.join(ROOT, 'hooks/useDrawnRange.ts'), 'utf8')
 
-  assert.match(grid, /settled: true/)
+  assert.match(grid, /settled: done/)
   assert.match(hook, /if \(settled\) \{\s*stopGrowing = whenIdle\(grow\)/)
 })
 
-test('no part paints with the spark colour, which left with the v3 drawings', async () => {
-  for (const file of await sourceFiles('components')) {
-    assert.doesNotMatch(
-      await readFile(path.join(ROOT, file), 'utf8'),
-      /\b(bg|text|border|fill|stroke)-spark\b/,
-      file,
-    )
+test('the spark colour is kept to the moments: the opening of the guide, the curtain and the usher', async () => {
+  const files = await sourceFiles('components')
+  const users: string[] = []
+
+  for (const file of files) {
+    if (
+      /\b(bg|text|border|fill)-spark\b/.test(
+        await readFile(path.join(ROOT, file), 'utf8'),
+      )
+    ) {
+      users.push(file)
+    }
   }
-  assert.doesNotMatch(await theSheet(), /--(color-)?spark:/)
+
+  assert.deepEqual(users, [
+    'components/guide/guide-opening.tsx',
+    'components/vela/curtain.tsx',
+    'components/vela/marks.tsx',
+  ])
 })
 
-test('an arrival comes to rest without going past it; the loading curtain keeps the movements it was drawn with', async () => {
+test('an arrival comes to rest without going past it, and the curtain ends on a small echo, once', async () => {
   const sheet = await theSheet()
   const bodies = keyframeBodies(sheet)
 
@@ -701,11 +742,39 @@ test('an arrival comes to rest without going past it; the loading curtain keeps 
     'rows that move one after another leave neighbouring rows at different ' +
       'heights, and the table ripples',
   )
+  assert.match(
+    bodies.get('curtain-sway') ?? '',
+    /86% \{[^}]*var\(--th\) \* -0\.07/,
+    'the hem of the curtain stops at once instead of swinging out',
+  )
+  assert.match(
+    bodies.get('curtain-tassel') ?? '',
+    /72% \{[^}]*rotate\(-4deg\)/,
+    'the tassel stops at once instead of swinging twice',
+  )
   assert.doesNotMatch(
     bodies.get('disappear') ?? '',
     /\d+% \{/,
     'a surface going away does not bounce; only the arrival carries the echo',
   )
+
+  const curtain = await readFile(
+    path.join(ROOT, 'components/vela/curtain.tsx'),
+    'utf8',
+  )
+
+  assert.match(curtain, /curtain-tassel/)
+
+  assert.match(
+    await readFile(path.join(ROOT, 'components/vela/empty-state.tsx'), 'utf8'),
+    /usher-arrives/,
+    'the usher of an empty state arrives without its stamp',
+  )
+  const usher = sheet.slice(
+    sheet.indexOf('@utility usher-arrives {'),
+    sheet.indexOf('\n}\n', sheet.indexOf('@utility usher-arrives {')),
+  )
+  assert.match(usher, /animation: var\(--animate-usher-leap\);/)
 })
 
 test('every part that moves hears the switch in the settings, not the machine alone', async () => {
@@ -759,4 +828,68 @@ test('the cards that join the live grid are cut at the same twelve', async () =>
       'switched on moves every card it adds at once',
   )
   assert.doesNotMatch(grid, /\? 'joins'/)
+})
+
+test('the guide opens with a show only when it was not in the HTML and may move', async () => {
+  const hook = await readFile(
+    path.join(ROOT, 'hooks/useOpensWithAShow.ts'),
+    'utf8',
+  )
+
+  assert.match(hook, /!cameWithTheHtml &&/)
+  assert.match(hook, /movesNow\(/)
+  assert.match(hook, /prefers-reduced-motion: reduce/)
+})
+
+test('a hand on the guide during its opening ends the opening at once, and the other columns wait for it', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/guide/guide-grid.tsx'),
+    'utf8',
+  )
+
+  assert.match(grid, /for \(const input of MOVED_BY_HAND\)/)
+  assert.match(grid, /addEventListener\(input, markDone/)
+  assert.match(grid, /settled: done/)
+})
+
+test('the opening of the guide is taken away where movement is switched off', async () => {
+  const sheet = await theSheet()
+  const at = sheet.indexOf('@utility guide-opening {')
+  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
+
+  assert.match(body, /:root\[data-motion='still'\] & \{\s*display: none;/)
+  assert.match(
+    body,
+    /@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*display: none;/,
+  )
+})
+
+test('the moments keep the colours they were drawn in before v4, in both themes', async () => {
+  const sheet = await theSheet()
+  const at = sheet.indexOf('@utility moment-colours {')
+  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
+
+  for (const said of [
+    '--accent: #3f6461;',
+    '--sky: #356fa5;',
+    '--spark: #efb440;',
+    '--bg: #f7f4ed;',
+    '--accent: #96bbb4;',
+    '--sky: #8fc0ea;',
+    '--bg: #141317;',
+  ]) {
+    assert.ok(body.includes(said), `the moments lost ${said}`)
+  }
+
+  for (const file of [
+    'components/vela/curtain.tsx',
+    'components/guide/guide-opening.tsx',
+    'components/vela/marks.tsx',
+  ]) {
+    assert.match(
+      await readFile(path.join(ROOT, file), 'utf8'),
+      /moment-colours/,
+      `${file} is painted in the v4 palette`,
+    )
+  }
 })

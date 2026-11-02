@@ -378,6 +378,7 @@ async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
         canvasElement.querySelector('[data-guide-scroll]') === null ||
           canvasElement.querySelector('[data-guide-measured]') !== null,
       ).toBe(true)
+      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull()
     },
     { timeout: 5000 },
   )
@@ -2866,6 +2867,89 @@ export const 二週間の日も帯を一段に保ち日の皿の中で横に送�
     await expect(day.right).toBeLessThanOrEqual(tray.right + 1)
     await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
       1180,
+    )
+  },
+}
+
+export const 現れ方: Story = {
+  args: { guide: base },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-guide-opening]'),
+      ).not.toBeNull(),
+    )
+
+    const opening = partOf(canvasElement, '[data-guide-opening]')
+
+    await expect(opening).not.toHaveAttribute('data-open')
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-above')).backgroundColor,
+    ).toBe(
+      getComputedStyle(partOf(opening, '.guide-opening-below')).backgroundColor,
+    )
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-line')).animationName,
+    ).toBe('opening-line')
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-ball')).animationName,
+    ).toBe('ball-across')
+    await expect(canvasElement.querySelector('[data-now-line]')).toBeNull()
+
+    await waitFor(() => expect(opening).toHaveAttribute('data-open'), {
+      timeout: 4000,
+    })
+
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-ball-body'))
+        .animationName,
+    ).toBe('ball-burst')
+    await expect(opening.querySelectorAll('.guide-opening-ring')).toHaveLength(
+      2,
+    )
+    await expect(opening.querySelectorAll('.guide-opening-piece')).toHaveLength(
+      20,
+    )
+    await expect(
+      getComputedStyle(partOf(opening, '.guide-opening-piece')).animationName,
+    ).toBe('opening-piece')
+
+    const label = partOf(canvasElement, '[data-now-line] span')
+
+    await expect(getComputedStyle(label).animationName).toBe('now-pop')
+
+    await waitFor(
+      () =>
+        expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
+      { timeout: 4000 },
+    )
+
+    for (const column of canvasElement.querySelectorAll<HTMLElement>(
+      '[data-guide-column]',
+    )) {
+      await expect(getComputedStyle(column).animationName).toBe('none')
+    }
+  },
+}
+
+export const 途中で操作すると入りを飛ばす: Story = {
+  args: { guide: base },
+  globals: { a11y: { manual: true } },
+  play: async ({ canvasElement }) => {
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-guide-opening]'),
+      ).not.toBeNull(),
+    )
+
+    window.dispatchEvent(new WheelEvent('wheel', { deltaY: 40 }))
+
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-guide-opening]')).toBeNull(),
+    )
+    await waitFor(() =>
+      expect(canvasElement.querySelector('[data-now-line]')).not.toBeNull(),
     )
   },
 }
