@@ -136,6 +136,7 @@ function Segment({
       <Link
         href={option.href}
         aria-current={selected ? 'page' : undefined}
+        onClick={onPick}
         className={cn(
           OPTION,
           OPTION_SIZE[size],

@@ -35,7 +35,11 @@ import { OnAPhone } from '@/components/vela/on-an-upright-phone'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'
 import { goesOnFrom } from '@/lib/library-days'
 import { seriesOf } from '@/lib/library-series'
-import type { LibraryView as View } from '@/lib/library-view'
+import {
+  LIBRARY_LAYOUT_COOKIE,
+  type LibraryView as View,
+} from '@/lib/library-view'
+import { storeText } from '@/hooks/useStoredText'
 import {
   ContinueRow,
   DateGrid,
@@ -222,7 +226,7 @@ export function LibraryView({
               value: 'grid',
               label: '格子',
               icon: <GridIcon />,
-              href: hrefWith({ as: null }),
+              href: hrefWith({ as: 'grid' }),
             },
             {
               value: 'table',
@@ -232,6 +236,7 @@ export function LibraryView({
             },
           ]}
           value={view.as}
+          onValueChange={(layout) => storeText(LIBRARY_LAYOUT_COOKIE, layout)}
         />
         <div className="ml-auto flex min-w-0 items-center gap-2.5">
           {pickToggle}

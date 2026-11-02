@@ -9,12 +9,20 @@ export interface LibraryView {
   as: LibraryLayout
 }
 
-/** The view the address asks for, the date grid where it asks for none. */
+/** The cookie that keeps, on each device, whether the library was last laid as a grid or as a table. */
+export const LIBRARY_LAYOUT_COOKIE = 'vela-library-view'
+
+function layoutOf(said: unknown): LibraryLayout | undefined {
+  return said === 'grid' || said === 'table' ? said : undefined
+}
+
+/** The view the address asks for. A layout the address does not name is the one this device last chose, and the grid on a device that has chosen none. */
 export function libraryViewOf(
   params: Record<string, string | string[] | undefined>,
+  kept?: string,
 ): LibraryView {
   return {
     by: params.by === 'series' ? 'series' : 'date',
-    as: params.as === 'table' ? 'table' : 'grid',
+    as: layoutOf(params.as) ?? layoutOf(kept) ?? 'grid',
   }
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { cookies } from 'next/headers'
 
 import {
   ENCODE_JOBS_EVENT,
@@ -6,7 +7,7 @@ import {
   RECORDINGS_EVENT,
 } from '@/repository/events'
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
-import { libraryViewOf } from '@/lib/library-view'
+import { LIBRARY_LAYOUT_COOKIE, libraryViewOf } from '@/lib/library-view'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { LibraryView } from '@/components/library/library-page'
 import {
@@ -29,7 +30,7 @@ export default async function Page({
     state: typeof params.state === 'string' ? params.state : undefined,
     ch: typeof params.ch === 'string' ? params.ch : undefined,
   }
-  const result = await listRecordings(filter)
+  const [result, jar] = await Promise.all([listRecordings(filter), cookies()])
 
   return (
     <>
@@ -39,7 +40,7 @@ export default async function Page({
       <LibraryView
         result={result}
         filter={result.filter}
-        view={libraryViewOf(params)}
+        view={libraryViewOf(params, jar.get(LIBRARY_LAYOUT_COOKIE)?.value)}
         onDelete={throwRecordingAway}
         onDeleteAll={throwRecordingsAway}
       />

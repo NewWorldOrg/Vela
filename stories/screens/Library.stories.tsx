@@ -13,6 +13,8 @@ import {
 } from '@/stories/fixtures/recordings'
 import { inProgressFirst } from '@/lib/recordings'
 import { LibraryView } from '@/components/library/library-page'
+import { LIBRARY_LAYOUT_COOKIE } from '@/lib/library-view'
+import { cookieIn, forgettingCookie } from '@/lib/stored-flag'
 import { heightOf } from '@/stories/pills-in-a-column'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
@@ -1148,4 +1150,27 @@ export const 電話の棚: Story = {
 export const 横向きの電話の棚: Story = {
   args: { result: shelf, filter: {}, view: GRID },
   parameters: { screen: { width: 844, height: 390 }, coarse: true },
+}
+
+export const 並べ方を選ぶとこの端末に残る: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
+    await afterTheArrival(canvasElement)
+    const layout = within(canvasElement).getByRole('group', { name: '並べ方' })
+
+    await userEvent.click(within(layout).getByRole('link', { name: '表' }))
+    await expect(cookieIn(document.cookie, LIBRARY_LAYOUT_COOKIE)).toBe('table')
+    await expect(
+      within(layout).getByRole('link', { name: '表' }),
+    ).toHaveAttribute('href', expect.stringContaining('as=table'))
+
+    await userEvent.click(within(layout).getByRole('link', { name: '格子' }))
+    await expect(cookieIn(document.cookie, LIBRARY_LAYOUT_COOKIE)).toBe('grid')
+    await expect(
+      within(layout).getByRole('link', { name: '格子' }),
+    ).toHaveAttribute('href', expect.stringContaining('as=grid'))
+
+    document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
+  },
 }
