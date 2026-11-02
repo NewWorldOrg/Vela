@@ -487,6 +487,51 @@ export const 広い面では状態を名前の右に置く: Story = {
   },
 }
 
+const A_LONG_TITLE = {
+  result: {
+    state: 'ok',
+    result: {
+      ...TUNERS,
+      rows: TUNERS.rows.map((row) =>
+        row.id === 'adapter1'
+          ? {
+              ...row,
+              status: {
+                ...row.status,
+                line: 'Example Programme with a title far too long to fit',
+              },
+            }
+          : row,
+      ),
+    },
+  },
+} satisfies Story['args']
+
+async function untilStaysWhole(canvasElement: HTMLElement) {
+  await afterTheArrival(canvasElement)
+  const until = lineOf(canvasElement, 'adapter1').querySelector<HTMLElement>(
+    '[data-slot="status-until"]',
+  )
+  const title = until?.parentElement?.firstElementChild as HTMLElement | null
+
+  await expect(until).toHaveTextContent('21:15 まで')
+  await expect(until!.getClientRects()).toHaveLength(1)
+  await expect(until!.scrollWidth).toBeLessThanOrEqual(until!.clientWidth)
+  await expect(title!.scrollWidth).toBeGreaterThan(title!.clientWidth)
+}
+
+export const 番組名が長ければ番組名を省き終わる時刻は分けない: Story = {
+  args: A_LONG_TITLE,
+  parameters: { screen: WIDE },
+  play: async ({ canvasElement }) => untilStaysWhole(canvasElement),
+}
+
+export const 電話の幅でも番組名を省き終わる時刻は分けない: Story = {
+  args: A_LONG_TITLE,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => untilStaysWhole(canvasElement),
+}
+
 export const 横向きの電話でも面が狭ければ状態を名前の下に置く: Story = {
   args: 通常.args,
   parameters: { screen: LANDSCAPE_PHONE },

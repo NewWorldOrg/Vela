@@ -64,11 +64,12 @@ export interface TunerSession {
 /** How a state is drawn: plain words, or a chip in red for recording or trouble, or in amber for a warning. */
 export type StatusTone = 'plain' | 'rec' | 'warn' | 'err'
 
-/** A state in one word or phrase, and the line under it that says since when or until when. */
+/** A state in one word or phrase, and the line under it that says since when, or what it is busy with and `until` when. */
 export interface StatusLine {
   word: string
   tone: StatusTone
   line?: string
+  until?: string
 }
 
 export interface TunerRow {
@@ -963,18 +964,18 @@ function toStatus(
   const since = seenAt
     ? `${formatRecentMoment(seenAt)} に確認`
     : lastService && `${lastService.at} に受信`
-  const line = session ? sessionLine(session) : (since ?? undefined)
+  const line = session ? sessionLine(session) : { line: since ?? undefined }
 
-  return { ...statusWordOf(observation, session), line }
+  return { ...statusWordOf(observation, session), ...line }
 }
 
-function sessionLine(session: TunerSession): string | undefined {
-  const parts = [
-    session.title ?? session.code,
-    session.endsAt && `${session.endsAt} まで`,
-  ].filter((part): part is string => Boolean(part))
+function sessionLine(
+  session: TunerSession,
+): Pick<StatusLine, 'line' | 'until'> {
+  const until = session.endsAt && `${session.endsAt} まで`
+  const line = session.title ?? session.code
 
-  return parts.length === 0 ? undefined : parts.join(' · ')
+  return until ? { line, until } : { line }
 }
 
 function statusWordOf(

@@ -54,7 +54,8 @@ export const TUNERS: TunerResult = {
       status: {
         word: '録画中',
         tone: 'rec',
-        line: 'Example Programme · 21:15 まで',
+        line: 'Example Programme',
+        until: '21:15 まで',
       },
       kind: '地上波',
       enabled: true,

@@ -60,6 +60,7 @@ export function HardwareLine({
         className={cn(
           'grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-1 px-4 py-3',
           '@[36rem]/line:grid-cols-[minmax(0,1fr)_calc(200rem/16)_calc(148rem/16)]',
+          '@[48rem]/line:grid-cols-[minmax(0,1fr)_calc(240rem/16)_calc(148rem/16)]',
         )}
       >
         <div className="col-span-2 min-w-0 @[36rem]/line:col-span-1">
@@ -118,9 +119,22 @@ export function StatusSaid({
       ) : (
         word
       )}
-      {status.line && (
-        <p className="text-sub leading-[1.45] text-ink-2 tabular-nums @[36rem]/line:mt-0.5">
-          {status.line}
+      {(status.line || status.until) && (
+        <p className="flex min-w-0 text-sub leading-[1.45] text-ink-2 tabular-nums @[36rem]/line:mt-0.5">
+          {status.line && (
+            <span className="min-w-0 truncate">{status.line}</span>
+          )}
+          {status.line && status.until && (
+            <span className="shrink-0 whitespace-pre"> · </span>
+          )}
+          {status.until && (
+            <span
+              data-slot="status-until"
+              className="shrink-0 whitespace-nowrap"
+            >
+              {status.until}
+            </span>
+          )}
         </p>
       )}
     </div>

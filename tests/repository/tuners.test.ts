@@ -1392,7 +1392,8 @@ test('a tuner recording says so in red with the programme and when it ends', asy
   assert.deepEqual(row.status, {
     word: '録画中',
     tone: 'rec',
-    line: `Example Programme · ${formatRecentMoment(endsAt)} まで`,
+    line: 'Example Programme',
+    until: `${formatRecentMoment(endsAt)} まで`,
   })
 })
 
