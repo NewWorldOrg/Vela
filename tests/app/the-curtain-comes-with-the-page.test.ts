@@ -79,7 +79,7 @@ test('with the motion stopped the curtain is not drawn at all, without waiting f
 test('the curtain never takes a press from the page under it', async () => {
   assert.match(
     await read('components/vela/curtain.tsx'),
-    /className="curtain pointer-events-none /,
+    /className="curtain moment-colours pointer-events-none /,
   )
 })
 

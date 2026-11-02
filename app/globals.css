@@ -441,19 +441,9 @@
     --coral-line: transparent;
     --on-coral: var(--on-ink);
     --sky: var(--ink);
-    --fold-deep: var(--surface-3);
-    --fold-shade: var(--surface-2);
-    --fold-face: var(--surface);
-    --fold-lit: var(--surface);
-    --fold-cord: var(--ink-3);
     --sky-soft: var(--surface-2);
     --sky-line: transparent;
     --spark: var(--accent);
-    --fold-deep: var(--surface-3);
-    --fold-shade: var(--surface-2);
-    --fold-face: var(--surface);
-    --fold-lit: var(--surface);
-    --fold-cord: var(--ink-3);
     --pop: transparent;
     --ring: 0 0 0 2px var(--bg), 0 0 0 3.5px var(--accent);
   }
@@ -1062,6 +1052,50 @@
   }
 }
 
+/* The colours the moments were drawn in before v4 (the curtain, the usher of the empty states and the opening of the guide): kept as they were, outside the v4 palette, in both themes. */
+@utility moment-colours {
+  --bg: #f7f4ed;
+  --surface: #fffdf8;
+  --surface-2: #f1ece2;
+  --surface-3: #e7e0d3;
+  --ink: #2e2a38;
+  --ink-2: #514b60;
+  --ink-3: #6e6780;
+  --accent: #3f6461;
+  --accent-hover: #35534f;
+  --accent-soft: #e4eeeb;
+  --accent-line: #c2d6d1;
+  --brand: var(--accent);
+  --sky: #356fa5;
+  --spark: #efb440;
+  --fold-deep: color-mix(in oklab, var(--accent-hover) 72%, var(--ink));
+  --fold-shade: var(--accent-hover);
+  --fold-face: var(--accent);
+  --fold-lit: color-mix(in oklab, var(--accent) 70%, var(--accent-line));
+  --fold-cord: var(--bg);
+
+  @variant dark {
+    --bg: #141317;
+    --surface: #1c1b1f;
+    --surface-2: #252428;
+    --surface-3: #302e34;
+    --ink: #eceaf0;
+    --ink-2: #b8b5bf;
+    --ink-3: #9e9ba6;
+    --accent: #96bbb4;
+    --accent-hover: #a6c9c2;
+    --accent-soft: #23312e;
+    --accent-line: #3a4f4b;
+    --sky: #8fc0ea;
+    --spark: #efb440;
+    --fold-deep: color-mix(in oklab, var(--accent-soft) 70%, var(--bg));
+    --fold-shade: var(--accent-soft);
+    --fold-face: var(--accent-line);
+    --fold-lit: color-mix(in oklab, var(--accent-line) 70%, var(--accent));
+    --fold-cord: var(--accent);
+  }
+}
+
 @utility curtain {
   contain: strict;
   container-type: size;
@@ -1417,7 +1451,7 @@
     top: calc(-22 * var(--px));
     width: calc(44 * var(--px));
     height: calc(44 * var(--px));
-    border: calc(4 * var(--px)) solid var(--mark-star);
+    border: calc(4 * var(--px)) solid var(--spark);
     border-radius: 50%;
     opacity: 0;
     will-change: transform, opacity;

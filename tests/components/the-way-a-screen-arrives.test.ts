@@ -704,7 +704,7 @@ test('the guide builds its other columns once its opening is over', async () => 
   assert.match(hook, /if \(settled\) \{\s*stopGrowing = whenIdle\(grow\)/)
 })
 
-test('the spark colour is kept to the opening of the guide and the usher; the curtain is painted in the colours of the mark', async () => {
+test('the spark colour is kept to the moments: the opening of the guide, the curtain and the usher', async () => {
   const files = await sourceFiles('components')
   const users: string[] = []
 
@@ -720,6 +720,7 @@ test('the spark colour is kept to the opening of the guide and the usher; the cu
 
   assert.deepEqual(users, [
     'components/guide/guide-opening.tsx',
+    'components/vela/curtain.tsx',
     'components/vela/marks.tsx',
   ])
 })
@@ -861,4 +862,34 @@ test('the opening of the guide is taken away where movement is switched off', as
     body,
     /@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*display: none;/,
   )
+})
+
+test('the moments keep the colours they were drawn in before v4, in both themes', async () => {
+  const sheet = await theSheet()
+  const at = sheet.indexOf('@utility moment-colours {')
+  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
+
+  for (const said of [
+    '--accent: #3f6461;',
+    '--sky: #356fa5;',
+    '--spark: #efb440;',
+    '--bg: #f7f4ed;',
+    '--accent: #96bbb4;',
+    '--sky: #8fc0ea;',
+    '--bg: #141317;',
+  ]) {
+    assert.ok(body.includes(said), `the moments lost ${said}`)
+  }
+
+  for (const file of [
+    'components/vela/curtain.tsx',
+    'components/guide/guide-opening.tsx',
+    'components/vela/marks.tsx',
+  ]) {
+    assert.match(
+      await readFile(path.join(ROOT, file), 'utf8'),
+      /moment-colours/,
+      `${file} is painted in the v4 palette`,
+    )
+  }
 })

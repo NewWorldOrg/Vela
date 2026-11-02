@@ -124,7 +124,7 @@ test('the curtain carries the television of the app icon, rimmed in the ground c
   const curtain = await read('components/vela/curtain.tsx')
 
   assert.match(source, /edged && \(\s*<g data-edge=""/)
-  assert.match(source, /'fill-\(--mark-star\)', edged && 'stroke-bg'/)
+  assert.match(source, /'fill-spark', edged && 'stroke-bg'/)
   assert.match(curtain, /<TelevisionBoat edged /)
   assert.doesNotMatch(curtain, /<Usher\b/)
 })

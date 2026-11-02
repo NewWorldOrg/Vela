@@ -83,7 +83,7 @@ export function GuideOpening({
           onDone()
         }
       }}
-      className="guide-opening pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg"
+      className="guide-opening moment-colours pointer-events-none absolute inset-0 z-20 overflow-hidden rounded-lg"
     >
       <span
         className="guide-opening-above absolute inset-x-0 top-0 rounded-b-3xl bg-brand"

@@ -200,7 +200,7 @@ export function Usher({
       data-slot="usher"
       data-mood={mood}
       className={cn(
-        'size-[calc(78rem/16)] shrink-0 overflow-visible',
+        'moment-colours size-[calc(78rem/16)] shrink-0 overflow-visible',
         className,
       )}
     >
@@ -302,13 +302,13 @@ function Boat({ edge }: { edge: boolean }) {
           <rect
             {...MAST}
             transform="rotate(90 32 22.5)"
-            className={paint ?? 'fill-(--mark-sail)'}
+            className={paint ?? 'fill-brand'}
             strokeWidth={width}
           />
           <g data-part="sail">
             <path
               d={BOAT_SAIL}
-              className={paint ?? 'fill-(--mark-sail) stroke-(--mark-sail)'}
+              className={paint ?? 'fill-brand stroke-brand'}
               strokeWidth={6 + width}
               strokeLinejoin="round"
             />
@@ -321,7 +321,7 @@ function Boat({ edge }: { edge: boolean }) {
         width="76"
         height="42"
         rx="16"
-        className={paint ?? 'fill-(--mark-keel)'}
+        className={paint ?? 'fill-sky'}
         strokeWidth={width}
       />
       {LEGS.map(({ side, x, turn }) => (
@@ -333,7 +333,7 @@ function Boat({ edge }: { edge: boolean }) {
             height="8"
             rx="4"
             transform={turn}
-            className={paint ?? 'fill-(--mark-keel)'}
+            className={paint ?? 'fill-sky'}
             strokeWidth={width}
           />
         </g>
@@ -373,11 +373,11 @@ export function TelevisionBoat({
       <Boat edge={false} />
       <rect x="20" y="55" width="60" height="26" rx="8" className="fill-bg" />
       <g data-face="plain" opacity={mood === 'plain' ? 1 : 0}>
-        <circle cx="42" cy="64" r="4.6" className="fill-(--mark-sail)" />
-        <circle cx="58" cy="64" r="4.6" className="fill-(--mark-sail)" />
+        <circle cx="42" cy="64" r="4.6" className="fill-brand" />
+        <circle cx="58" cy="64" r="4.6" className="fill-brand" />
         <path
           d="M46 72 Q50 76 54 72"
-          className="stroke-(--mark-sail)"
+          className="stroke-brand"
           fill="none"
           strokeWidth={3.4}
           strokeLinecap="round"
@@ -386,14 +386,14 @@ export function TelevisionBoat({
       <g data-face="glad" opacity={mood === 'glad' ? 1 : 0}>
         <path
           d="M37.5 66 Q42 59.5 46.5 66 M53.5 66 Q58 59.5 62.5 66"
-          className="stroke-(--mark-sail)"
+          className="stroke-brand"
           fill="none"
           strokeWidth={3.6}
           strokeLinecap="round"
         />
         <path
           d="M45.5 71 Q50 78 54.5 71 Z"
-          className="fill-(--mark-sail) stroke-(--mark-sail)"
+          className="fill-brand stroke-brand"
           strokeWidth={2}
           strokeLinejoin="round"
         />
@@ -401,7 +401,7 @@ export function TelevisionBoat({
       <g data-part="star">
         <path
           d={star(84, 15, 13)}
-          className={cn('fill-(--mark-star)', edged && 'stroke-bg')}
+          className={cn('fill-spark', edged && 'stroke-bg')}
           strokeWidth={edged ? 3 : 0}
           strokeLinejoin="round"
           paintOrder="stroke"
