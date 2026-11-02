@@ -350,6 +350,7 @@ const SCREEN_WIDTHS = {
     'min-[2560px]:max-w-[2240px] min-[3200px]:max-w-[3040px]',
   ),
   full: 'w-full',
+  reading: 'mx-auto w-full max-w-[calc(1260rem/16)]',
 } as const
 
 export type ScreenWidth = keyof typeof SCREEN_WIDTHS
