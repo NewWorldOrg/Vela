@@ -30,7 +30,7 @@ export const しるし: Story = {
       <Surface className="flex flex-wrap items-end gap-6">
         <VelaMark className="size-[140px]" />
         <VelaMark className="size-[34px]" />
-        <VelaMark className="size-6" />
+        <VelaMark small className="size-6" />
         <Brand />
       </Surface>
     </div>
@@ -45,17 +45,20 @@ export const しるし: Story = {
     await expect(marks).toHaveLength(4)
 
     for (const mark of marks) {
-      const strokes = [...mark.querySelectorAll(':scope > path')]
-      const dot = mark.querySelector(':scope > circle')
+      const [keel, sail, star] = [...mark.querySelectorAll(':scope > path')]
 
-      await expect(strokes).toHaveLength(2)
-
-      for (const stroke of strokes) {
-        await expect(getComputedStyle(stroke).stroke).toBe(tokenOf('--ink'))
-      }
-
-      await expect(getComputedStyle(dot!).fill).toBe(tokenOf('--accent'))
+      await expect(getComputedStyle(keel).stroke).toBe(tokenOf('--mark-keel'))
+      await expect(getComputedStyle(sail).stroke).toBe(tokenOf('--mark-sail'))
+      await expect(getComputedStyle(star).stroke).toBe(tokenOf('--mark-star'))
+      await expect(star).toHaveAttribute('mask')
       await expect(mark).toHaveAttribute('aria-hidden', 'true')
     }
+
+    const [large, middle, small, brand] = marks
+
+    await expect(large).toHaveAttribute('data-cut', 'full')
+    await expect(middle).toHaveAttribute('data-cut', 'full')
+    await expect(small).toHaveAttribute('data-cut', 'small')
+    await expect(brand).toHaveAttribute('data-cut', 'small')
   },
 }
