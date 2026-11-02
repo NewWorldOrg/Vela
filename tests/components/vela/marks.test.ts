@@ -50,12 +50,12 @@ test('the mark keeps the colours of the app icon in both themes', async () => {
   }
 })
 
-test('the mark is the only drawing left, and the usher and the television under sail are gone', async () => {
+test('the mark and the television under sail of the loading curtain are the only drawings, and the usher is gone', async () => {
   const source = await read('components/vela/marks.tsx')
 
   assert.deepEqual(
     [...source.matchAll(/export function (\w+)/g)].map(([, name]) => name),
-    ['VelaMark'],
+    ['VelaMark', 'TelevisionBoat'],
   )
   await assert.rejects(read('components/vela/answering-usher.tsx'))
   await assert.rejects(read('components/vela/spot-illustration.tsx'))

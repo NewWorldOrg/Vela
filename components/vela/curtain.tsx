@@ -1,9 +1,14 @@
 'use client'
 
-import { useCallback, useState, useSyncExternalStore } from 'react'
+import {
+  useCallback,
+  useState,
+  useSyncExternalStore,
+  type CSSProperties,
+} from 'react'
 
-import { CURTAIN_HOLD_MS } from '@/lib/curtain'
-import { VelaMark } from '@/components/vela/marks'
+import { CURTAIN_HOLD_MS, CURTAIN_IDLE, FOLDS_ON_A_SIDE } from '@/lib/curtain'
+import { TelevisionBoat } from '@/components/vela/marks'
 
 function nothingChanges(): () => void {
   return () => undefined
@@ -25,19 +30,151 @@ function movementsOf(node: HTMLElement): Animation[] {
   return node.getAnimations({ subtree: true })
 }
 
+function nameOf(running: Animation): string | null {
+  return 'animationName' in running ? String(running.animationName) : null
+}
+
 function openNow(movements: Animation[]): void {
   for (const running of movements) {
     const at = running.currentTime
 
-    if (typeof at === 'number' && at < CURTAIN_HOLD_MS) {
+    if (
+      nameOf(running) !== CURTAIN_IDLE &&
+      typeof at === 'number' &&
+      at < CURTAIN_HOLD_MS
+    ) {
       running.currentTime = CURTAIN_HOLD_MS
     }
   }
 }
 
+const FOLDS: number[] = Array.from(
+  { length: FOLDS_ON_A_SIDE },
+  (_, fold) => fold,
+)
+
+const TWINKLES: {
+  shape: 'star' | 'dot'
+  tone: 'spark' | 'ink'
+  at: CSSProperties
+}[] = [
+  {
+    shape: 'star',
+    tone: 'spark',
+    at: {
+      left: '112%',
+      top: '-10%',
+      width: '12%',
+      height: '12%',
+      '--tx': '34px',
+      '--ty': '-30px',
+    } as CSSProperties,
+  },
+  {
+    shape: 'star',
+    tone: 'spark',
+    at: {
+      left: '72%',
+      top: '-16%',
+      width: '9%',
+      height: '9%',
+      '--tx': '-26px',
+      '--ty': '-38px',
+    } as CSSProperties,
+  },
+  {
+    shape: 'dot',
+    tone: 'spark',
+    at: {
+      left: '118%',
+      top: '20%',
+      width: '8%',
+      height: '8%',
+      '--tx': '40px',
+      '--ty': '6px',
+    } as CSSProperties,
+  },
+  {
+    shape: 'dot',
+    tone: 'ink',
+    at: {
+      left: '14%',
+      top: '34%',
+      width: '7%',
+      height: '7%',
+      '--tx': '-38px',
+      '--ty': '-8px',
+    } as CSSProperties,
+  },
+]
+
+function Tassel() {
+  return (
+    <svg viewBox="0 0 34 74" className="block size-full overflow-visible">
+      <g className="fill-(--mark-star)">
+        <circle cx="17" cy="8" r="7" />
+        <rect x="11" y="13" width="12" height="8" rx="3" />
+        <path
+          d="M9 22 H25 L31 66 Q17 74 3 66 Z"
+          className="stroke-(--mark-star)"
+          strokeWidth={3}
+          strokeLinejoin="round"
+        />
+      </g>
+      <g className="fill-none stroke-(--fold-shade)" opacity={0.55}>
+        <path
+          d="M12 30 L10 64 M17 30 V67 M22 30 L24 64"
+          strokeWidth={2}
+          strokeLinecap="round"
+        />
+      </g>
+      <rect
+        x="8"
+        y="22"
+        width="18"
+        height="5"
+        rx="2.5"
+        className="fill-(--fold-shade)"
+        opacity={0.55}
+      />
+    </svg>
+  )
+}
+
+function Side() {
+  return (
+    <div className="curtain-side">
+      {FOLDS.map((fold) => (
+        <div
+          key={fold}
+          className="curtain-fold"
+          data-lead={fold === FOLDS_ON_A_SIDE - 1 ? '' : undefined}
+          style={{ '--i': fold } as CSSProperties}
+        >
+          <div className="curtain-fold-sway">
+            <div className="curtain-fold-up">
+              <div className="curtain-fold-paint" />
+            </div>
+            <div className="curtain-fold-lo">
+              <div className="curtain-fold-paint" />
+            </div>
+          </div>
+        </div>
+      ))}
+      <div className="curtain-tie">
+        <span className="curtain-tie-loop bg-(--mark-star)" />
+        <span className="curtain-tassel">
+          <Tassel />
+        </span>
+      </div>
+    </div>
+  )
+}
+
 /**
- * The curtain drawn closed in the first HTML of every full load: the ground
- * with the mark at its middle, which fades away once the page under it is ready.
+ * The curtain drawn closed in the first HTML of every full load: folds of cloth
+ * drawn aside and tied back, while the app icon's television under sail pulls
+ * the cord and flies to the mark.
  * It rises only over a page hydrated from the server's HTML, never over one
  * built in the browser by a navigation.
  */
@@ -81,9 +218,42 @@ export function Curtain() {
       ref={raised}
       data-slot="curtain"
       aria-hidden="true"
-      className="curtain pointer-events-none fixed inset-0 z-50 grid place-items-center"
+      className="curtain pointer-events-none fixed inset-0 z-50 overflow-hidden"
     >
-      <VelaMark className="size-12" />
+      <div className="curtain-half" data-side="left">
+        <Side />
+      </div>
+      <div className="curtain-half" data-side="right">
+        <Side />
+      </div>
+      <div className="curtain-valance" />
+      <div className="curtain-cord" />
+      <div className="curtain-boat-x">
+        <div className="curtain-boat-y">
+          <div className="curtain-boat-z">
+            <div className="curtain-boat-s">
+              <TelevisionBoat edged className="curtain-boat size-full" />
+              {TWINKLES.map(({ shape, tone, at }, nth) => (
+                <span key={nth} className="curtain-twinkle block" style={at}>
+                  <svg
+                    viewBox="-10 -10 20 20"
+                    className={`block size-full overflow-visible ${tone === 'spark' ? 'fill-(--mark-star)' : 'fill-ink'}`}
+                  >
+                    {shape === 'star' ? (
+                      <path d="M0 -9 Q2 -2 9 0 Q2 2 0 9 Q-2 2 -9 0 Q-2 -2 0 -9Z" />
+                    ) : (
+                      <circle r="7" />
+                    )}
+                  </svg>
+                </span>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="curtain-dock">
+        <span className="curtain-dock-ring block" />
+      </div>
     </div>
   )
 }
