@@ -1,5 +1,7 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
-  <style>.stroke{stroke:#17171A}.dot{fill:#2F8A76}@media (prefers-color-scheme:dark){.stroke{stroke:#F4F4F6}.dot{fill:#5CC4AB}}</style>
-  <path class="stroke" d="M15 22 47 84 M87 8 47 84" fill="none" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
-  <circle class="dot" cx="47" cy="83" r="13"/>
+  <style>.keel{stroke:#356FA5}.sail{stroke:#3F6461}@media (prefers-color-scheme:dark){.keel{stroke:#8FC0EA}.sail{stroke:#96BBB4}}</style>
+  <defs><mask id="crossing"><path d="M20 32 Q20 68 50 86" stroke="#fff" fill="none" stroke-width="21" stroke-linecap="round"/></mask></defs>
+  <path class="keel" d="M20 32 Q20 68 50 86" fill="none" stroke-width="21" stroke-linecap="round"/>
+  <path class="sail" d="M82 10 Q82 64 50 86" fill="none" stroke-width="21" stroke-linecap="round"/>
+  <path d="M82 10 Q82 64 50 86" stroke="#EFB440" mask="url(#crossing)" fill="none" stroke-width="21" stroke-linecap="round"/>
 </svg>
