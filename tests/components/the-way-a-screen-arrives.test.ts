@@ -90,6 +90,18 @@ const THE_VOCABULARY = [
   'usher-answer-sway',
   'usher-answer-star',
   'usher-bob',
+  'guide-settle',
+  'opening-above',
+  'opening-below',
+  'opening-line',
+  'opening-ring',
+  'opening-piece',
+  'ball-across',
+  'ball-hop',
+  'ball-appear',
+  'ball-bump',
+  'ball-landing',
+  'ball-burst',
 ]
 
 const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
@@ -97,6 +109,8 @@ const THE_LOOPS = ['--animate-breathe', '--animate-waiting-line']
 const THE_UTILITIES = [
   'row-arrives',
   'curtain',
+  'guide-settles',
+  'guide-opening',
   'drawn',
   'screen-rises',
   'screen-hops',
@@ -679,18 +693,18 @@ test('a guide opened directly is scrolled to now before its first paint, by its 
   )
 })
 
-test('the guide builds its other columns once it has settled', async () => {
+test('the guide builds its other columns once its opening is over', async () => {
   const grid = await readFile(
     path.join(ROOT, 'components/guide/guide-grid.tsx'),
     'utf8',
   )
   const hook = await readFile(path.join(ROOT, 'hooks/useDrawnRange.ts'), 'utf8')
 
-  assert.match(grid, /settled: true/)
+  assert.match(grid, /settled: done/)
   assert.match(hook, /if \(settled\) \{\s*stopGrowing = whenIdle\(grow\)/)
 })
 
-test('the spark colour is kept to the usher; the curtain is painted in the colours of the mark', async () => {
+test('the spark colour is kept to the opening of the guide and the usher; the curtain is painted in the colours of the mark', async () => {
   const files = await sourceFiles('components')
   const users: string[] = []
 
@@ -704,7 +718,10 @@ test('the spark colour is kept to the usher; the curtain is painted in the colou
     }
   }
 
-  assert.deepEqual(users, ['components/vela/marks.tsx'])
+  assert.deepEqual(users, [
+    'components/guide/guide-opening.tsx',
+    'components/vela/marks.tsx',
+  ])
 })
 
 test('an arrival comes to rest without going past it, and the curtain ends on a small echo, once', async () => {
@@ -810,4 +827,38 @@ test('the cards that join the live grid are cut at the same twelve', async () =>
       'switched on moves every card it adds at once',
   )
   assert.doesNotMatch(grid, /\? 'joins'/)
+})
+
+test('the guide opens with a show only when it was not in the HTML and may move', async () => {
+  const hook = await readFile(
+    path.join(ROOT, 'hooks/useOpensWithAShow.ts'),
+    'utf8',
+  )
+
+  assert.match(hook, /!cameWithTheHtml &&/)
+  assert.match(hook, /movesNow\(/)
+  assert.match(hook, /prefers-reduced-motion: reduce/)
+})
+
+test('a hand on the guide during its opening ends the opening at once, and the other columns wait for it', async () => {
+  const grid = await readFile(
+    path.join(ROOT, 'components/guide/guide-grid.tsx'),
+    'utf8',
+  )
+
+  assert.match(grid, /for \(const input of MOVED_BY_HAND\)/)
+  assert.match(grid, /addEventListener\(input, markDone/)
+  assert.match(grid, /settled: done/)
+})
+
+test('the opening of the guide is taken away where movement is switched off', async () => {
+  const sheet = await theSheet()
+  const at = sheet.indexOf('@utility guide-opening {')
+  const body = sheet.slice(at, sheet.indexOf('\n}\n', at))
+
+  assert.match(body, /:root\[data-motion='still'\] & \{\s*display: none;/)
+  assert.match(
+    body,
+    /@media \(prefers-reduced-motion: reduce\) \{\s*:root:not\(\[data-motion='moves'\]\) & \{\s*display: none;/,
+  )
 })

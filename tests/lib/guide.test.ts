@@ -21,6 +21,7 @@ import {
   minutesBeforeMeasuringOf,
   NOW_LINE_THICKNESS_PX,
   nowLineTopOf,
+  openingSeamOf,
   nowMinOf,
   openingScrollScriptOf,
   openingScrollTopOf,
@@ -888,4 +889,73 @@ test('the script in the first HTML does not scroll above the start of the day', 
   run({ currentScript: { closest: () => guide } })
 
   assert.equal(guide.scrollTop, 0)
+})
+
+test('the cover opens along the line for now, where the screen shows it', () => {
+  assert.deepEqual(
+    openingSeamOf({
+      nowMin: 960,
+      hourPx: 96,
+      scrollTop: 1536 - 330,
+      headingPx: 40,
+      viewPx: 700,
+    }),
+    { top: 370, line: true },
+  )
+})
+
+test('a day without a line for now opens in the middle of the rows it shows', () => {
+  assert.deepEqual(
+    openingSeamOf({
+      nowMin: undefined,
+      hourPx: 96,
+      scrollTop: 0,
+      headingPx: 40,
+      viewPx: 700,
+    }),
+    { top: 370, line: false },
+  )
+})
+
+test('late at night the cover opens in the middle, not along the line near the bottom', () => {
+  const lateAtNight = 22 * 60 + 13
+  const view = { hourPx: 96, headingPx: 40, viewPx: 700 }
+  const lastScrollTop = 40 + 24 * 96 - 700
+
+  assert.deepEqual(
+    openingSeamOf({ ...view, nowMin: lateAtNight, scrollTop: lastScrollTop }),
+    { top: 370, line: false },
+  )
+  assert.deepEqual(
+    openingSeamOf({ ...view, nowMin: 24 * 60 - 1, scrollTop: lastScrollTop }),
+    { top: 370, line: false },
+  )
+})
+
+test('early in the morning the cover opens in the middle, not along the line near the top', () => {
+  const view = { hourPx: 96, headingPx: 40, viewPx: 700, scrollTop: 0 }
+
+  assert.deepEqual(openingSeamOf({ ...view, nowMin: 0 }), {
+    top: 370,
+    line: false,
+  })
+  assert.deepEqual(openingSeamOf({ ...view, nowMin: 60 }), {
+    top: 370,
+    line: false,
+  })
+})
+
+test('a line for now within a pixel of the middle still carries the ball', () => {
+  const view = { hourPx: 96, headingPx: 40, viewPx: 700 }
+  const scrollTop = openingScrollTopOf(600, 96, 660)
+
+  assert.equal(
+    openingSeamOf({ ...view, nowMin: 600, scrollTop: Math.round(scrollTop) })
+      .line,
+    true,
+  )
+  assert.equal(
+    openingSeamOf({ ...view, nowMin: 600, scrollTop: scrollTop + 3 }).line,
+    false,
+  )
 })
