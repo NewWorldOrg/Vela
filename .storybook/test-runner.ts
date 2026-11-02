@@ -106,6 +106,10 @@ function measureTapTargets(): Findings {
     .querySelector('[data-slot="tab-bar"]')
     ?.getBoundingClientRect()
   const footing = tabBar && drawn(tabBar) ? tabBar.top : height
+  const topBar = document
+    .querySelector('[data-slot="top-bar"]')
+    ?.getBoundingClientRect()
+  const ceiling = topBar && drawn(topBar) ? topBar.bottom : 0
 
   const panesAround = (node: Element): Element[] => {
     const found: Element[] = []
@@ -150,6 +154,7 @@ function measureTapTargets(): Findings {
     return (
       !inSight(box) ||
       (area.bottom > footing && !node.closest('[data-slot="tab-bar"]')) ||
+      (area.top < ceiling && !node.closest('[data-slot="top-bar"]')) ||
       panesAround(node).some((pane) => {
         const edge = pane.getBoundingClientRect()
 
