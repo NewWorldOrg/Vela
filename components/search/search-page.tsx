@@ -122,9 +122,9 @@ export function SearchView({
   )
 }
 
-/** A choice of how the hits are shown, written on the page's ground: what it is set to and its arrow. */
+/** A choice of how the hits are shown, as a chip on its own ground: what it is set to and its arrow. */
 const QUIET_CHOICE =
-  'h-8 w-fit gap-1 rounded-full bg-transparent pr-2 pl-2.5 text-ui font-medium text-ink enabled:hover:bg-surface [&_svg]:size-3.5'
+  'h-8 w-fit gap-1 rounded-full bg-surface pr-2.5 pl-3 text-ui font-medium text-ink transition-[background-color,transform] duration-[140ms] ease-toy enabled:hover:bg-surface-2 enabled:active:scale-[0.98] [&_svg]:size-3.5'
 
 function SearchScreen({
   result,

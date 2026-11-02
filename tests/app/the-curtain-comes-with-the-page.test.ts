@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import { test } from 'node:test'
 
-import { CURTAIN_HOLD_MS } from '@/lib/curtain'
+import { CURTAIN_HOLD_MS, CURTAIN_IDLE } from '@/lib/curtain'
 
 const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
@@ -91,6 +91,9 @@ test('without a script the curtain still opens after its hold, which the script 
   assert.equal(Number(hold[1]) * 1000, CURTAIN_HOLD_MS)
 
   for (const one of rule.matchAll(/animation:([^;]*);/g)) {
+    if (one[1].includes(CURTAIN_IDLE)) {
+      continue
+    }
     assert.match(
       one[1],
       /var\(--curtain-hold\)/,
@@ -101,28 +104,26 @@ test('without a script the curtain still opens after its hold, which the script 
   const curtain = await read('components/vela/curtain.tsx')
 
   assert.match(curtain, /running\.currentTime = CURTAIN_HOLD_MS/)
+  assert.match(curtain, /!== CURTAIN_IDLE/)
 })
 
-test('once its motion has run, nothing of the curtain is left over the page, and it only fades', async () => {
+test('once its motion has run, nothing of the curtain is left over the page', async () => {
   const sheet = await read('app/globals.css')
-  const rule = theCurtainIn(sheet)
+
+  for (const [name, end] of [
+    ['curtain-side', /100% \{\s*transform: translateX\(var\(--out\)\);/],
+    ['curtain-valance', /100% \{\s*transform: translateY\(-170%\);/],
+    ['curtain-cord', /100% \{\s*transform: translateY\(-100cqh\);/],
+    ['curtain-boat-z', /100% \{[^}]*opacity: 0;/],
+    ['curtain-twinkle', /100% \{\s*opacity: 0;/],
+    ['curtain-dock', /100% \{\s*opacity: 0;/],
+  ] as const) {
+    assert.match(keyframesIn(sheet, name), end, `${name} ends over the page`)
+  }
 
   assert.match(
-    keyframesIn(sheet, 'curtain-lift'),
-    /to \{\s*opacity: 0;\s*\}/,
-    'the curtain ends over the page',
+    theCurtainIn(sheet),
+    /--out: calc\(var\(--fold-pinch\) \* -14\.4 - calc\(180 \* var\(--px\)\)\);/,
+    'the folds are not carried further out than the bundle they are tied into',
   )
-  assert.match(rule, /animation: curtain-lift var\(--dur\) var\(--ease\) /)
-  assert.doesNotMatch(
-    keyframesIn(sheet, 'curtain-lift'),
-    /\d+% \{|transform/,
-    'the curtain moves on its way out, and v4 only fades it',
-  )
-})
-
-test('the curtain carries the mark of the top bar, and nothing drawn for it alone', async () => {
-  const curtain = await read('components/vela/curtain.tsx')
-
-  assert.match(curtain, /<VelaMark className="size-12" \/>/)
-  assert.doesNotMatch(curtain, /TelevisionBoat|Usher|svg/)
 })

@@ -40,7 +40,29 @@ const NOT_SOURCE = new Set([
 
 const THE_VOCABULARY = [
   'breathe',
-  'curtain-lift',
+  'curtain-side',
+  'curtain-gather',
+  'curtain-squeeze',
+  'curtain-sway',
+  'curtain-idle',
+  'curtain-cinch-up',
+  'curtain-cinch-lo',
+  'curtain-loop',
+  'curtain-tassel',
+  'curtain-valance',
+  'curtain-cord',
+  'curtain-boat-x',
+  'curtain-boat-y',
+  'curtain-boat-z',
+  'curtain-boat-s',
+  'curtain-rig',
+  'curtain-sail',
+  'curtain-leg',
+  'curtain-plain',
+  'curtain-glad',
+  'curtain-star',
+  'curtain-twinkle',
+  'curtain-dock',
   'draw',
   'ink',
   'item',
@@ -662,7 +684,7 @@ test('no part paints with the spark colour, which left with the v3 drawings', as
   assert.doesNotMatch(await theSheet(), /--(color-)?spark:/)
 })
 
-test('an arrival comes to rest without going past it, and so does the curtain', async () => {
+test('an arrival comes to rest without going past it; the loading curtain keeps the movements it was drawn with', async () => {
   const sheet = await theSheet()
   const bodies = keyframeBodies(sheet)
 
@@ -678,11 +700,6 @@ test('an arrival comes to rest without going past it, and so does the curtain', 
     /transform/,
     'rows that move one after another leave neighbouring rows at different ' +
       'heights, and the table ripples',
-  )
-  assert.doesNotMatch(
-    bodies.get('curtain-lift') ?? '',
-    /\d+% \{/,
-    'the curtain goes past its end on the way out, and v4 has no overshoot',
   )
   assert.doesNotMatch(
     bodies.get('disappear') ?? '',

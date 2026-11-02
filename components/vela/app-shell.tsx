@@ -67,7 +67,7 @@ export function Brand({ className, ...props }: ComponentProps<'div'>) {
       )}
       {...props}
     >
-      <VelaMark className="size-6" />
+      <VelaMark small className="size-5" />
       Vela
     </div>
   )

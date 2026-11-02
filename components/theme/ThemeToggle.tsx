@@ -97,3 +97,26 @@ export function PhoneThemeButton({ className }: ThemeToggleProps) {
     </IconButton>
   )
 }
+
+/** The theme in the bar at the top of a wide window, beside the settings: one press turns the page to the other of light and dark, as on a phone. Following the device's theme is chosen in the settings. */
+export function BarThemeButton({ className }: ThemeToggleProps) {
+  const { mode, setPreference } = useTheme()
+  const Icon = mode === 'dark' ? MoonIcon : SunIcon
+
+  return (
+    <button
+      type="button"
+      data-slot="bar-theme"
+      aria-label="テーマ"
+      onClick={() => setPreference(mode === 'dark' ? 'light' : 'dark')}
+      className={cn(
+        'tap-target relative grid size-[calc(38*var(--px))] cursor-pointer place-items-center rounded-full text-ink-2 outline-none phone:hidden [&_svg]:size-5',
+        'transition-[background-color,color,transform] duration-[140ms] ease-toy',
+        'hover:bg-surface hover:text-ink focus-visible:shadow-ring active:scale-95',
+        className,
+      )}
+    >
+      <Icon />
+    </button>
+  )
+}

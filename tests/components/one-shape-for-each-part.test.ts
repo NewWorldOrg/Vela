@@ -632,9 +632,15 @@ test('a spinner is one of two sizes, chosen by name and declared once', async ()
 
 test('an empty state says it in words, with no drawing of its own', async () => {
   for (const { file, source } of await everySource(['app', 'components'])) {
+    const theLoadingCurtain =
+      file === 'components/vela/curtain.tsx' ||
+      file === 'components/vela/marks.tsx'
+
     assert.doesNotMatch(
       source,
-      /\busher[=?:]|AnsweringUsher|<Usher\b|TelevisionBoat/,
+      theLoadingCurtain
+        ? /\busher[=?:]|AnsweringUsher|<Usher\b/
+        : /\busher[=?:]|AnsweringUsher|<Usher\b|TelevisionBoat/,
       `${file} draws the v3 usher, and v4 states an empty page in words`,
     )
   }
