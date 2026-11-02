@@ -123,7 +123,7 @@ test('once its motion has run, nothing of the curtain is left over the page', as
 
   assert.match(
     theCurtainIn(sheet),
-    /--out: calc\(var\(--fold-pinch\) \* -14\.4 - 180px\);/,
+    /--out: calc\(var\(--fold-pinch\) \* -14\.4 - calc\(180 \* var\(--px\)\)\);/,
     'the folds are not carried further out than the bundle they are tied into',
   )
 })
