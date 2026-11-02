@@ -23,8 +23,9 @@ const MOODS: [UsherMood, string][] = [
   ['troubled', '困った'],
 ]
 
-function tokenOf(name: string): string {
+function tokenOf(name: string, scope: string = ''): string {
   const probe = document.createElement('span')
+  probe.className = scope
   probe.style.color = `var(${name})`
   document.body.append(probe)
   const colour = getComputedStyle(probe).color
@@ -104,10 +105,18 @@ export const 案内役: Story = {
       const sail = usher.querySelector('[data-sail]')
       const antenna = usher.querySelector('[data-part="antenna"] path')
 
-      await expect(getComputedStyle(star!).fill).toBe(tokenOf('--spark'))
-      await expect(getComputedStyle(hull!).fill).toBe(tokenOf('--sky'))
-      await expect(getComputedStyle(sail!).stroke).toBe(tokenOf('--brand'))
-      await expect(getComputedStyle(antenna!).stroke).toBe(tokenOf('--brand'))
+      await expect(getComputedStyle(star!).fill).toBe(
+        tokenOf('--spark', 'moment-colours'),
+      )
+      await expect(getComputedStyle(hull!).fill).toBe(
+        tokenOf('--sky', 'moment-colours'),
+      )
+      await expect(getComputedStyle(sail!).stroke).toBe(
+        tokenOf('--brand', 'moment-colours'),
+      )
+      await expect(getComputedStyle(antenna!).stroke).toBe(
+        tokenOf('--brand', 'moment-colours'),
+      )
       await expect(sail!.getAttribute('mask')).toMatch(/^url\(#vela-usher-/)
       await expect(usher).toHaveAttribute('aria-hidden', 'true')
       antennas.add(antenna!.getAttribute('d'))
