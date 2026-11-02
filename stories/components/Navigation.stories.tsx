@@ -115,9 +115,10 @@ export const DatePagerStory: StoryObj<typeof meta> = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>日付ページャ</SectionHeading>
-      <Surface>
-        <DatePager label="8/7(木)" />
-      </Surface>
+      <div className="flex flex-col items-start gap-3">
+        <DatePager label="8/8(金)" onPrev={() => {}} onNext={() => {}} />
+        <DatePager label="8/14(木)" onPrev={() => {}} onToday={() => {}} />
+      </div>
       <p className="mt-[9px] text-note text-ink-2">
         日付・ch 番号は tabular-nums で桁を揃える。
       </p>

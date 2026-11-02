@@ -356,15 +356,8 @@ const A_LAPTOP = { width: 1280, height: 720 }
 /** The gap between two programmes is laid as two pixels inside each. */
 const HALF_GAP_PX = 2
 
-function dayChip(
-  canvas: ReturnType<typeof within>,
-  day: { label: string },
-): HTMLElement {
-  const [date, weekday] = day.label.replace(')', '').split('(')
-
-  return within(canvas.getByRole('list', { name: '日' })).getByRole('button', {
-    name: new RegExp(`^${date}\\s*${weekday}$`, 'u'),
-  })
+function toolsOf(canvasElement: HTMLElement): ReturnType<typeof within> {
+  return within(partOf(canvasElement, '[data-slot="guide-tools"]'))
 }
 
 async function columnsFilled(canvasElement: HTMLElement): Promise<void> {
@@ -1253,20 +1246,52 @@ export const 別の日: Story = {
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
-    const canvas = within(canvasElement)
+    const tools = toolsOf(canvasElement)
     const scroller = partOf(canvasElement, '[data-guide-scroll]')
     const router = getRouter()
 
     await expect(canvasElement.querySelector('[data-now-line]')).toBeNull()
     await expect(scroller.scrollTop).toBe(0)
-    await expect(dayChip(canvas, GUIDE_DAYS[2])).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    await expect(tools.getByText(GUIDE_DAYS[2].label)).toBeVisible()
+    await expect(tools.getByRole('button', { name: '次の日' })).toBeDisabled()
 
-    await userEvent.click(dayChip(canvas, GUIDE_DAYS[1]))
+    await userEvent.click(tools.getByRole('button', { name: '前の日' }))
 
-    await expect(router.replace).toHaveBeenCalledWith('/guide', {
+    await expect(router.replace).toHaveBeenLastCalledWith('/guide', {
+      scroll: false,
+    })
+
+    await userEvent.click(tools.getByRole('button', { name: '今日' }))
+
+    await expect(router.replace).toHaveBeenLastCalledWith('/guide', {
+      scroll: false,
+    })
+  },
+}
+
+export const 最初の日では前の日を押せない: Story = {
+  args: {
+    guide: {
+      ...base,
+      day: GUIDE_DAYS[0],
+      nowMin: undefined,
+      nowLabel: undefined,
+    },
+  },
+  parameters: { screen: A_LAPTOP },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const tools = toolsOf(canvasElement)
+    const router = getRouter()
+
+    await expect(tools.getByText(GUIDE_DAYS[0].label)).toBeVisible()
+    await expect(tools.getByRole('button', { name: '前の日' })).toBeDisabled()
+    await expect(tools.getByRole('button', { name: '今日' })).toBeVisible()
+
+    await userEvent.click(tools.getByRole('button', { name: '次の日' }))
+
+    await expect(router.replace).toHaveBeenLastCalledWith('/guide', {
       scroll: false,
     })
   },
@@ -1619,24 +1644,25 @@ export const 日を送る: Story = {
   play: async ({ canvasElement }) => {
     await columnsFilled(canvasElement)
 
-    const canvas = within(canvasElement)
+    const tools = toolsOf(canvasElement)
     const router = getRouter()
 
-    await expect(dayChip(canvas, GUIDE_DAYS[1])).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
+    await expect(tools.getByText(GUIDE_DAYS[1].label)).toBeVisible()
+    await expect(tools.queryByRole('button', { name: '今日' })).toBeNull()
+    await expect(
+      canvasElement.querySelector('[aria-label="時刻へ送る"]'),
+    ).toBeNull()
 
-    await userEvent.click(dayChip(canvas, GUIDE_DAYS[2]))
+    await userEvent.click(tools.getByRole('button', { name: '次の日' }))
 
-    await expect(router.replace).toHaveBeenCalledWith(
+    await expect(router.replace).toHaveBeenLastCalledWith(
       `/guide?date=${GUIDE_DAYS[2].date}`,
       { scroll: false },
     )
 
-    await userEvent.click(dayChip(canvas, GUIDE_DAYS[0]))
+    await userEvent.click(tools.getByRole('button', { name: '前の日' }))
 
-    await expect(router.replace).toHaveBeenCalledWith(
+    await expect(router.replace).toHaveBeenLastCalledWith(
       `/guide?date=${GUIDE_DAYS[0].date}`,
       { scroll: false },
     )
@@ -2846,25 +2872,20 @@ const TWO_WEEKS = Array.from({ length: 14 }, (_, nth) => {
   }
 })
 
-export const 二週間の日も帯を一段に保ち日の皿の中で横に送る: Story = {
+export const 今日でない日も帯は一段に収まる: Story = {
   args: { guide: { ...base, days: TWO_WEEKS, day: TWO_WEEKS[12] } },
   parameters: { screen: { width: 1180, height: 820 } },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
-    const tools = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="guide-tools"]',
-    )!
-    const days = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="guide-days"]',
-    )!
-    const chosen = within(days).getByRole('button', { pressed: true })
-    const tray = days.getBoundingClientRect()
-    const day = chosen.getBoundingClientRect()
+    const tools = partOf(canvasElement, '[data-slot="guide-tools"]')
+    const today = within(tools).getByRole('button', { name: '今日' })
+    const collection = within(tools).getByRole('button', { name: '収集状態' })
 
+    await expect(within(tools).getByText(TWO_WEEKS[12].label)).toBeVisible()
     await expect(tools.offsetHeight).toBeLessThanOrEqual(48)
-    await expect(days.scrollWidth).toBeGreaterThan(days.clientWidth)
-    await expect(day.left).toBeGreaterThanOrEqual(tray.left - 1)
-    await expect(day.right).toBeLessThanOrEqual(tray.right + 1)
+    await expect(today.getBoundingClientRect().right).toBeLessThan(
+      collection.getBoundingClientRect().left,
+    )
     await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
       1180,
     )

@@ -23,7 +23,12 @@ import type {
   CollectionStatus,
   RebuildResult,
 } from '@/repository/collection'
-import type { GuideResult, Program, ProgramExtras } from '@/repository/programs'
+import type {
+  GuideDay,
+  GuideResult,
+  Program,
+  ProgramExtras,
+} from '@/repository/programs'
 import type {
   ReservationRevision,
   ReservationWrite,
@@ -33,6 +38,7 @@ import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { pressable } from '@/components/vela/tactile'
+import { DatePager } from '@/components/vela/date-pager'
 import {
   PhoneBarButton,
   PhoneBarLead,
@@ -51,7 +57,6 @@ import {
 } from '@/components/vela/icons'
 import { CollectionDrawer } from '@/components/guide/collection-drawer'
 import { GuideGrid } from '@/components/guide/guide-grid'
-import { hourPxIn } from '@/components/guide/guide-metrics'
 import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { ProgramBooking } from '@/components/guide/program-booking'
@@ -213,6 +218,12 @@ export function GuideView({
     [router, pathname, searchParams],
   )
 
+  const dayIndex = guide.days.findIndex((day) => day.date === guide.day.date)
+  const prev = dayIndex > 0 ? guide.days[dayIndex - 1] : undefined
+  const next = dayIndex >= 0 ? guide.days[dayIndex + 1] : undefined
+  const toDay = (day: GuideDay) =>
+    patch({ date: day.isToday ? null : day.date })
+
   const loaded = shown ? extras[extrasKeyOf(shown)] : undefined
   const detailed =
     shown && typeof loaded === 'object' ? { ...shown, ...loaded } : shown
@@ -284,71 +295,12 @@ export function GuideView({
           }
           className="shrink-0"
         />
-        <div className={cn(TRAY, 'min-w-0 px-0')}>
-          <ul
-            aria-label="日"
-            data-slot="guide-days"
-            className="-my-1.5 flex min-w-0 items-center gap-0.5 overflow-x-auto overflow-y-hidden overscroll-x-contain px-1 py-1.5 [scrollbar-width:none]"
-          >
-            {guide.days.map((day) => {
-              const [date, weekday] = dayPartsOf(day.label)
-              const chosen = day.date === guide.day.date
-
-              return (
-                <li key={day.date} className="shrink-0">
-                  <button
-                    type="button"
-                    aria-pressed={chosen}
-                    ref={chosen ? keepInView : undefined}
-                    onClick={() =>
-                      patch({ date: day.isToday ? null : day.date })
-                    }
-                    className={cn(
-                      IN_THE_TRAY,
-                      'items-baseline gap-1 pt-[calc(6rem/16)] font-code text-title font-bold',
-                      chosen &&
-                        'bg-accent-tint text-acc-text hover:bg-accent-tint hover:text-acc-text',
-                    )}
-                  >
-                    {date}
-                    {weekday && (
-                      <span className="text-note font-medium">{weekday}</span>
-                    )}
-                  </button>
-                </li>
-              )
-            })}
-          </ul>
-        </div>
-        <div
-          role="group"
-          aria-label="時刻へ送る"
-          className={cn(TRAY, 'shrink-0')}
-        >
-          {JUMPS.map((jump) => (
-            <button
-              key={jump.label}
-              type="button"
-              onClick={() =>
-                jump.label === '今' && !guide.day.isToday
-                  ? patch({ date: null })
-                  : scrollGuideTo(
-                      jump.label === '今'
-                        ? guide.nowMin === undefined
-                          ? undefined
-                          : guide.nowMin - 30
-                        : (jump.hour - guide.windowStartHour) * 60,
-                    )
-              }
-              className={cn(
-                IN_THE_TRAY,
-                'min-w-11 items-center justify-center text-ui font-semibold',
-              )}
-            >
-              {jump.label}
-            </button>
-          ))}
-        </div>
+        <DatePager
+          label={guide.day.label}
+          onPrev={prev && (() => toDay(prev))}
+          onNext={next && (() => toDay(next))}
+          onToday={guide.day.isToday ? undefined : () => patch({ date: null })}
+        />
         <div className="ml-auto flex shrink-0 items-center gap-2">
           {foldable && (
             <SubChannelToggle
@@ -618,50 +570,4 @@ export function GuideView({
       />
     </ScreenMain>
   )
-}
-
-/** A tray of choices on the guide's bar: the same ground and inset as the switch of the broadcast kinds beside it, its choices on one line. The days scroll sideways inside theirs when the bar is too narrow, their list reaching past the tray above and below so that each day still answers a press 44px tall. */
-const TRAY = 'flex items-center gap-0.5 rounded-xl bg-surface p-1'
-
-/** A choice in a tray: the ground steps up under the pointer and the choice gives a little when pressed. */
-const IN_THE_TRAY = cn(
-  'tap-target flex h-8 shrink-0 rounded-full px-3 whitespace-nowrap text-ink-2 outline-none',
-  'transition-[background-color,color,transform] duration-[140ms] ease-toy',
-  'hover:bg-surface-2 hover:text-ink active:scale-[0.98] focus-visible:shadow-ring',
-  pressable,
-)
-
-/** Brings the chosen day into the tray's view when the strip is wider than the bar. */
-function keepInView(day: HTMLButtonElement | null) {
-  day?.scrollIntoView({ block: 'nearest', inline: 'nearest' })
-}
-
-const JUMPS = [
-  { label: '今', hour: 0 },
-  { label: '朝', hour: 6 },
-  { label: '昼', hour: 12 },
-  { label: '夜', hour: 19 },
-  { label: '深夜', hour: 23 },
-] as const
-
-/** A day's label cut into its date and its day of the week: 8/8(金) is 8/8 and 金. */
-function dayPartsOf(label: string): [string, string | undefined] {
-  const parts = label.match(/^(.*)\((.)\)$/u)
-
-  return parts ? [parts[1], parts[2]] : [label, undefined]
-}
-
-/** Sends the guide to a minute of its day, that minute at the top under the channels' heads. */
-function scrollGuideTo(minute: number | undefined): void {
-  const scroller = document.querySelector<HTMLElement>('[data-guide-scroll]')
-
-  if (!scroller || minute === undefined) {
-    return
-  }
-
-  scroller.scrollTo({
-    top: Math.max(0, (minute / 60) * hourPxIn(document)),
-    behavior:
-      document.documentElement.dataset.motion === 'still' ? 'auto' : 'smooth',
-  })
 }
