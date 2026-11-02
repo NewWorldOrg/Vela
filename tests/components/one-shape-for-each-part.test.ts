@@ -687,11 +687,11 @@ test('the usher is troubled only where the page could not be shown', async () =>
   )
 })
 
-test('nothing turns under the pointer, and only a picture grows, by the one amount', async () => {
-  assert.doesNotMatch(
+test('only the drawing in a control turns under the pointer, and only a picture grows, by the one amount', async () => {
+  assert.match(
     await read('components/vela/tactile.ts'),
-    /iconTilt/,
-    'an icon tilts under the pointer again, and v4 leaves it where it is',
+    /export const iconTilt =\s*'\[&_svg\]:transition-transform \[&_svg\]:duration-150 \[&_svg\]:ease-toy hover:\[&_svg\]:scale-\[1\.08\] hover:\[&_svg\]:rotate-\[-7deg\]'/,
+    'the drawing in a control no longer grows and turns under the pointer',
   )
 
   const offenders: string[] = []
@@ -702,7 +702,13 @@ test('nothing turns under the pointer, and only a picture grows, by the one amou
     for (const found of (await read(file)).matchAll(
       /hover:(?:\[&_svg\]:)?(?:-?rotate-\d+|-?rotate-\[[^\]]+\]|scale-\d+|scale-\[[^\]]+\])/g,
     )) {
-      if (found[0] !== 'hover:scale-[1.04]') {
+      if (
+        found[0] !== 'hover:scale-[1.04]' &&
+        !(
+          file === 'components/vela/tactile.ts' &&
+          /^hover:\[&_svg\]:(scale-\[1\.08\]|rotate-\[-7deg\])$/.test(found[0])
+        )
+      ) {
         offenders.push(`${file}: ${found[0]}`)
       }
     }
