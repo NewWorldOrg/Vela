@@ -423,29 +423,35 @@ export function LibraryView({
           data-slot="library-shelves"
           className="-mx-3.5 mt-[calc(22rem/16)] flex min-h-0 flex-1 flex-col gap-[calc(26rem/16)] overflow-y-auto px-3.5 pb-10 phone:hidden min-[701px]:-mx-6 min-[701px]:px-6 min-[1366px]:-mx-10 min-[1366px]:px-10"
         >
-          {view.as === 'table' ? (
-            <>
-              {view.by !== 'series' && (
-                <ContinueRow recordings={items.filter(goesOnFrom)} compact />
-              )}
-              <RecordingsTable
-                items={items}
-                groups={view.by === 'series' ? series : undefined}
-                waiting={waiting}
-                onDelete={onDelete}
-                picking={picking}
-                picked={picked}
-                onPick={setPicked}
-              />
-            </>
-          ) : view.by === 'series' ? (
-            <SeriesGrid series={series} now={now} picking={pickingCards} />
-          ) : (
-            <>
-              <ContinueRow recordings={items.filter(goesOnFrom)} />
-              <DateGrid recordings={items} now={now} picking={pickingCards} />
-            </>
-          )}
+          <div
+            key={`${view.by}-${view.as}`}
+            data-slot="library-view"
+            className="screen-hops flex min-h-0 flex-1 flex-col gap-[calc(26rem/16)]"
+          >
+            {view.as === 'table' ? (
+              <>
+                {view.by !== 'series' && (
+                  <ContinueRow recordings={items.filter(goesOnFrom)} compact />
+                )}
+                <RecordingsTable
+                  items={items}
+                  groups={view.by === 'series' ? series : undefined}
+                  waiting={waiting}
+                  onDelete={onDelete}
+                  picking={picking}
+                  picked={picked}
+                  onPick={setPicked}
+                />
+              </>
+            ) : view.by === 'series' ? (
+              <SeriesGrid series={series} now={now} picking={pickingCards} />
+            ) : (
+              <>
+                <ContinueRow recordings={items.filter(goesOnFrom)} />
+                <DateGrid recordings={items} now={now} picking={pickingCards} />
+              </>
+            )}
+          </div>
         </div>
       ) : hasFilter ? (
         <EmptyState

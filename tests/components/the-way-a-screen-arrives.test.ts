@@ -725,17 +725,26 @@ test('the spark colour is kept to the moments: the opening of the guide, the cur
   ])
 })
 
-test('an arrival comes to rest without going past it, and the curtain ends on a small echo, once', async () => {
+test('an arrival goes a little past its resting place and comes back, once, and the curtain ends on a small echo', async () => {
   const sheet = await theSheet()
   const bodies = keyframeBodies(sheet)
 
-  for (const name of ['rise', 'swell', 'hop-in', 'appear', 'now-pop']) {
-    assert.doesNotMatch(
+  for (const name of [
+    'rise',
+    'swell',
+    'hop-in',
+    'appear',
+    'now-pop',
+    'stamp',
+  ]) {
+    assert.match(
       bodies.get(name) ?? '',
       /\d+% \{/,
-      `${name} passes its resting place and comes back, and v4 has no overshoot`,
+      `${name} comes straight to rest, and lost the echo it was drawn with`,
     )
   }
+  assert.match(sheet, /--ease: cubic-bezier\(0\.34, 1\.4, 0\.64, 1\);/)
+  assert.match(sheet, /--ease-item: cubic-bezier\(0\.93, 0, 0\.1, 1\.01\);/)
   assert.doesNotMatch(
     bodies.get('row') ?? '',
     /transform/,
