@@ -25,7 +25,7 @@ export function FilterSelect({
   value?: string
   options: { value: string; label: string }[]
   onChange: (next: string | null) => void
-  /** Its name and choice written on the page's ground, `期間 すべて`, where the band has no surface of its own. */
+  /** A condition chip, `期間 すべて`, for a band with no surface of its own: the chip's own ground, and the accent's tint while it narrows the list. */
   quiet?: boolean
 }) {
   const current = value
@@ -43,11 +43,13 @@ export function FilterSelect({
           aria-label={label}
           className={cn(
             BAND_CONTROL,
-            'w-fit gap-1 rounded-full bg-transparent pr-2 pl-2.5 text-ink-2 enabled:hover:bg-surface [&_svg]:size-3.5',
+            'w-fit gap-1 rounded-full bg-surface pr-2.5 pl-3 text-ink transition-[background-color,color,transform] duration-[140ms] ease-toy enabled:hover:bg-surface-2 enabled:active:scale-[0.98] [&_svg]:size-3.5',
+            value &&
+              'bg-accent-tint text-acc-text enabled:hover:bg-accent-tint',
           )}
         >
           <span aria-hidden="true">{label}</span>
-          <b className="font-semibold text-ink">{current}</b>
+          <b className="font-semibold">{current}</b>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value={ALL}>{EVERY}</SelectItem>

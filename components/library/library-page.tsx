@@ -264,7 +264,7 @@ export function LibraryView({
           value={filter.genre}
           onChange={(next) => onFiltersChange({ genre: next })}
         />
-        <div className="ml-auto flex flex-wrap items-center gap-1">
+        <div className="ml-auto flex flex-wrap items-center gap-2">
           <FilterSelect
             quiet
             label="期間"
