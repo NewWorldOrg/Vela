@@ -65,7 +65,7 @@ export function OidcSettings({
     })
 
   return (
-    <div className="flex max-w-[calc(720rem/16)] flex-col gap-[calc(18rem/16)]">
+    <div className="flex flex-col gap-[calc(18rem/16)]">
       <div>
         <span className="block text-ui font-bold text-ink">
           登録すべき redirect URI

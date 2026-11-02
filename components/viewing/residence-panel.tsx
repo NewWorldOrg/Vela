@@ -133,12 +133,7 @@ export function ResidencePanel({
   }
 
   return (
-    <form
-      noValidate
-      onSubmit={save}
-      data-slot={RESIDENCE_SLOT}
-      className="max-w-[calc(720rem/16)]"
-    >
+    <form noValidate onSubmit={save} data-slot={RESIDENCE_SLOT}>
       <div className="flex items-end justify-between gap-3">
         <h2 className={SETTINGS_GROUP_TITLE}>{heading}</h2>
         {!editing && (

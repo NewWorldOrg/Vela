@@ -7,7 +7,7 @@ import { StatusText } from '@/components/vela/status'
 import { Surface } from '@/components/vela/surface'
 
 /** The face a group of values sits on: as wide as a group of settings, its rows reaching its sides. */
-export const VALUE_FACE = 'max-w-[calc(720rem/16)] px-4 py-1.5'
+export const VALUE_FACE = 'px-4 py-1.5'
 
 /** Values in a group: one row each, the name at the left and the value at the right, parted by a hair. */
 export function ValueRows({
@@ -49,7 +49,7 @@ export function UnreadSurface({
   reading: Exclude<Reading<unknown>, { state: 'ok' }>
 }) {
   return (
-    <Surface data-slot={slot} className="max-w-[calc(720rem/16)] bg-surface-2">
+    <Surface data-slot={slot} className="bg-surface-2">
       <StatusText tone="off" className="text-ui">
         {reading.state === 'unauthenticated'
           ? SYSTEM_STATE_LABELS.signedOut
