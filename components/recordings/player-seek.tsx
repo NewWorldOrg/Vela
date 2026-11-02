@@ -253,7 +253,7 @@ export function PlayerSeek({
             key={second}
             aria-hidden="true"
             title="チャプターの区切り"
-            className="absolute top-1/2 -ml-px h-[9px] w-[2px] -translate-y-1/2 rounded-[1px] bg-(--pl-lemon) opacity-85 transition-[height] duration-100 ease-out group-hover:h-[11px] group-focus-visible:h-[11px] group-data-[wanted]:h-[11px]"
+            className="absolute top-1/2 -ml-px h-[9px] w-[2px] -translate-y-1/2 rounded-[1px] bg-(--pl-lemon) opacity-85 transition-[height] duration-100 ease-out group-hover:h-[calc(11*var(--px))] group-focus-visible:h-[calc(11*var(--px))] group-data-[wanted]:h-[calc(11*var(--px))]"
             style={{ left: `${share(second)}%` }}
           />
         ))}

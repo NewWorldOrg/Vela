@@ -448,7 +448,9 @@ const THE_PLAYER = /^components\/(recordings\/player|live\/live-player)/
 
 function pxOf(written: string): number | undefined {
   const value = written.replace(/\s+/g, '')
-  const px = value.match(/^([\d.]+)px$/)
+  const px =
+    value.match(/^([\d.]+)px$/) ??
+    value.match(/^calc\(([\d.]+)\*var\(--px\)\)$/)
 
   if (px) {
     return Number(px[1])
@@ -462,10 +464,11 @@ function pxOf(written: string): number | undefined {
 async function stepsOf(prefix: string): Promise<Map<number, string>> {
   const tokens = await read('app/globals.css')
   const plain = new Map(
-    [...tokens.matchAll(/^\s*(--r-[a-z]+): ([\d.]+)px;/gm)].map((found) => [
-      found[1],
-      Number(found[2]),
-    ]),
+    [
+      ...tokens.matchAll(
+        /^\s*(--r-[a-z]+): (?:([\d.]+)px|calc\(([\d.]+) \* var\(--px\)\));/gm,
+      ),
+    ].map((found) => [found[1], Number(found[2] ?? found[3])]),
   )
   const declared = [...tokens.matchAll(/^@theme(?: inline)? \{([\s\S]*?)^\}/gm)]
     .map((found) => found[1])

@@ -74,7 +74,7 @@ export function RecordingRecord({
         技術情報
       </summary>
       <div
-        style={{ '--row-label': '176px' } as CSSProperties}
+        style={{ '--row-label': 'calc(176 * var(--px))' } as CSSProperties}
         className="max-w-[calc(900rem/16)] border-t border-dashed border-line pt-4 pb-5"
       >
         {d.outcome === 'complete' && (

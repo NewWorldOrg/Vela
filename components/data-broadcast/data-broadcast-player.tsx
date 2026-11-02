@@ -850,17 +850,17 @@ export function DataBroadcastRemote({
       data-slot="data-broadcast-remote"
       className={cn(
         IN_THE_COLUMN,
-        'flex flex-col gap-y-(--group-gap) rounded-xl bg-(--pl-bg) p-[20px] text-(--pl-ink)',
+        'flex flex-col gap-y-(--group-gap) rounded-xl bg-(--pl-bg) p-[calc(20*var(--px))] text-(--pl-ink)',
         className,
       )}
     >
-      <div className="flex h-[44px] shrink-0 items-center gap-[12px]">
+      <div className="flex h-[calc(44*var(--px))] shrink-0 items-center gap-[calc(12*var(--px))]">
         {application ? (
           <div
             role="group"
             aria-label={HYBRIDCAST_NAME}
             data-slot="hybridcast-on-the-band"
-            className="flex min-w-0 flex-1 items-center gap-[12px]"
+            className="flex min-w-0 flex-1 items-center gap-[calc(12*var(--px))]"
           >
             <StationLine
               station={station}
@@ -926,7 +926,7 @@ export function DataBroadcastRemote({
       <div
         role="group"
         aria-label="数字"
-        className="mx-auto grid w-full max-w-[330px] shrink-0 grid-cols-3 gap-x-[18px] gap-y-(--digit-row-gap)"
+        className="mx-auto grid w-full max-w-[calc(330*var(--px))] shrink-0 grid-cols-3 gap-x-[calc(18*var(--px))] gap-y-(--digit-row-gap)"
       >
         {DIGIT_GRID.map((digit, nth) =>
           digit === null ? (

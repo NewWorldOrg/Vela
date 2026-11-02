@@ -461,7 +461,7 @@ function SeriesCard({
         className={cn(
           'relative block',
           !single &&
-            'before:absolute before:inset-x-[12%] before:-top-[11px] before:h-3 before:rounded-t-md before:bg-[color-mix(in_srgb,var(--ink)_10%,var(--bg))] after:absolute after:inset-x-[6%] after:-top-1.5 after:h-3 after:rounded-t-md after:bg-[color-mix(in_srgb,var(--ink)_20%,var(--bg))]',
+            'before:absolute before:inset-x-[12%] before:-top-[calc(11*var(--px))] before:h-3 before:rounded-t-md before:bg-[color-mix(in_srgb,var(--ink)_10%,var(--bg))] after:absolute after:inset-x-[6%] after:-top-1.5 after:h-3 after:rounded-t-md after:bg-[color-mix(in_srgb,var(--ink)_20%,var(--bg))]',
         )}
       >
         <span

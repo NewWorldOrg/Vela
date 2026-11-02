@@ -232,8 +232,8 @@ test('a copy does not follow a relay back, only a shared broadcast', () => {
 const TELEVISION_SERVICES = 27
 
 test('a channel is given a column a programme name fits in, in rem', () => {
-  assert.equal(gridMinWidthOf(1), 'calc(46px + 13.75rem)')
-  assert.equal(gridMinWidthOf(4), 'calc(46px + 55rem)')
+  assert.equal(gridMinWidthOf(1), 'calc(calc(46 * var(--px)) + 13.75rem)')
+  assert.equal(gridMinWidthOf(4), 'calc(calc(46 * var(--px)) + 55rem)')
 })
 
 test('a whole aerial is wider than the screen it is read on', () => {
@@ -241,7 +241,7 @@ test('a whole aerial is wider than the screen it is read on', () => {
 })
 
 test('a grid with no channels is the hour gutter and nothing else', () => {
-  assert.equal(gridMinWidthOf(0), 'calc(46px + 0rem)')
+  assert.equal(gridMinWidthOf(0), 'calc(calc(46 * var(--px)) + 0rem)')
 })
 
 const COLUMN_PX = 200

@@ -19,8 +19,8 @@ const iconButtonVariants = cva(
           'bg-transparent text-ink-2 not-disabled:hover:bg-surface-2 not-disabled:hover:text-ink',
       },
       size: {
-        sm: "size-7 [&_svg:not([class*='size-'])]:size-[14px]",
-        default: 'size-[34px]',
+        sm: "size-7 [&_svg:not([class*='size-'])]:size-[calc(14*var(--px))]",
+        default: 'size-[calc(34*var(--px))]',
       },
     },
     defaultVariants: { variant: 'pop', size: 'default' },

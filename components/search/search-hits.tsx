@@ -108,7 +108,7 @@ export function SearchHits({
                   'before:absolute before:top-0 before:right-2.5 before:left-[calc(116rem/16)] before:h-px before:bg-hair first:before:hidden hover:before:opacity-0 [&:hover+li]:before:opacity-0 max-[1000px]:before:left-[calc(96rem/16)]',
                 )}
               >
-                <span className="leading-[18px] tabular-nums">
+                <span className="leading-[calc(18*var(--px))] tabular-nums">
                   <b className="block text-title font-semibold text-ink">
                     {hit.startLabel}
                   </b>
@@ -117,7 +117,7 @@ export function SearchHits({
                     {hit.endUndecided ? '終了未定' : hit.endLabel}
                   </span>
                 </span>
-                <span className="text-[calc(13rem/16)] leading-[18px] [overflow-wrap:anywhere] text-ink-2 max-[1000px]:hidden">
+                <span className="text-[calc(13rem/16)] leading-[calc(18*var(--px))] [overflow-wrap:anywhere] text-ink-2 max-[1000px]:hidden">
                   {hit.channelName}
                 </span>
                 <span className="min-w-0">
