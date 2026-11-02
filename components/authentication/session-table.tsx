@@ -61,7 +61,7 @@ export function SessionTable({
           'calc(220rem/16)',
           'calc(164rem/16)',
           'calc(164rem/16)',
-          'calc(140rem/16)',
+          'calc(120rem/16)',
         ]}
       />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
