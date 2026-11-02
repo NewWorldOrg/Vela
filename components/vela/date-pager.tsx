@@ -3,10 +3,11 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { Button } from '@/components/ui/button'
+import { BAND_PRESS } from '@/components/vela/band'
 import { IconButton } from '@/components/vela/icon-button'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/vela/icons'
 
+/** Steps a day at a time: a side without a day to go to cannot be pressed, and `今日` is there only away from today. */
 export function DatePager({
   label,
   onPrev,
@@ -29,25 +30,27 @@ export function DatePager({
   return (
     <div
       data-slot="date-pager"
-      className={cn('flex items-center gap-2.5', className)}
+      className={cn('flex shrink-0 items-center gap-2', className)}
       {...props}
     >
-      <IconButton aria-label={prevLabel} onClick={onPrev}>
+      <IconButton aria-label={prevLabel} disabled={!onPrev} onClick={onPrev}>
         <ChevronLeftIcon />
       </IconButton>
-      <span className="min-w-[calc(88rem/16)] text-center font-code text-title font-medium tabular-nums">
+      <span className="min-w-[calc(88rem/16)] text-center font-code text-title font-bold whitespace-nowrap tabular-nums">
         {label}
       </span>
-      <IconButton aria-label={nextLabel} onClick={onNext}>
+      <IconButton aria-label={nextLabel} disabled={!onNext} onClick={onNext}>
         <ChevronRightIcon />
       </IconButton>
-      <span
-        aria-hidden="true"
-        className="mx-0.5 h-[calc(22rem/16)] w-px border-l border-dashed border-line-strong"
-      />
-      <Button variant="tone" size="sm" onClick={onToday}>
-        {todayLabel}
-      </Button>
+      {onToday && (
+        <button
+          type="button"
+          onClick={onToday}
+          className={cn(BAND_PRESS, 'ml-1 h-9')}
+        >
+          {todayLabel}
+        </button>
+      )}
     </div>
   )
 }
