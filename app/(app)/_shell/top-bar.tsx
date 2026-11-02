@@ -21,7 +21,10 @@ import {
   PhoneBarToolsSlot,
 } from '@/components/vela/phone-bar-tools'
 import { SearchIcon } from '@/components/vela/icons'
-import { PhoneThemeButton } from '@/components/theme/ThemeToggle'
+import {
+  BarThemeButton,
+  PhoneThemeButton,
+} from '@/components/theme/ThemeToggle'
 
 const SERVICES = DESTINATIONS.filter(({ href }) => href !== SETTINGS_HREF)
 
@@ -74,6 +77,7 @@ export function AppTopBar({ conflicts }: { conflicts?: ReactNode }) {
       </GlobalNav>
       <div className="ml-auto flex items-center gap-1.5 phone:hidden">
         {current === GUIDE && pathname !== SEARCH && <BarSearch />}
+        <BarThemeButton />
         <SettingsLink asChild active={current === SETTINGS_HREF}>
           <Link href="/settings/system" />
         </SettingsLink>
