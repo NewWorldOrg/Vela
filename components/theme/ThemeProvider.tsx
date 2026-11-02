@@ -10,12 +10,18 @@ import {
 } from 'react'
 
 import { statusBarColours } from '@/lib/app-colours'
-import { THEME_COOKIE, type ThemeMode, type ThemePreference } from '@/lib/theme'
+import {
+  THEME_COOKIE,
+  themeAfterPress,
+  type ThemeMode,
+  type ThemePreference,
+} from '@/lib/theme'
 
 interface ThemeContextValue {
   mode: ThemeMode
   preference: ThemePreference
   setPreference: (pref: ThemePreference) => void
+  press: () => void
 }
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined)
@@ -116,8 +122,13 @@ export function ThemeProvider({
     paintStatusBar(next)
   }, [])
 
+  const press = useCallback(
+    () => setPreference(themeAfterPress(mode, systemMode(systemDark))),
+    [mode, systemDark, setPreference],
+  )
+
   return (
-    <ThemeContext.Provider value={{ mode, preference, setPreference }}>
+    <ThemeContext.Provider value={{ mode, preference, setPreference, press }}>
       {children}
     </ThemeContext.Provider>
   )
