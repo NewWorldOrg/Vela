@@ -82,25 +82,25 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
   )
 }
 
-/** The theme in the bar at the top of a phone held upright: one press turns the page to the other of light and dark, from whichever it is showing. */
+/** The theme in the bar at the top of a phone held upright: one press turns the page to the other of light and dark, from whichever it is showing, and goes back to following the device when that other is the device's theme. */
 export function PhoneThemeButton({ className }: ThemeToggleProps) {
-  const { mode, setPreference } = useTheme()
+  const { mode, press } = useTheme()
   const Icon = mode === 'dark' ? MoonIcon : SunIcon
 
   return (
     <IconButton
       aria-label="テーマ"
       className={cn(PHONE_BAR_BUTTON, className)}
-      onClick={() => setPreference(mode === 'dark' ? 'light' : 'dark')}
+      onClick={press}
     >
       <Icon />
     </IconButton>
   )
 }
 
-/** The theme in the bar at the top of a wide window, beside the settings: one press turns the page to the other of light and dark, as on a phone. Following the device's theme is chosen in the settings. */
+/** The theme in the bar at the top of a wide window, beside the settings: one press turns the page to the other of light and dark, as on a phone. */
 export function BarThemeButton({ className }: ThemeToggleProps) {
-  const { mode, setPreference } = useTheme()
+  const { mode, press } = useTheme()
   const Icon = mode === 'dark' ? MoonIcon : SunIcon
 
   return (
@@ -108,7 +108,7 @@ export function BarThemeButton({ className }: ThemeToggleProps) {
       type="button"
       data-slot="bar-theme"
       aria-label="テーマ"
-      onClick={() => setPreference(mode === 'dark' ? 'light' : 'dark')}
+      onClick={press}
       className={cn(
         'tap-target relative grid size-[calc(38*var(--px))] cursor-pointer place-items-center rounded-full text-ink-2 outline-none phone:hidden [&_svg]:size-5',
         'transition-[background-color,color,transform] duration-[140ms] ease-toy',
