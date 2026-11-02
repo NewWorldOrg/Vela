@@ -2833,3 +2833,39 @@ export const 電話では上の帯に日付と番組を検索と絞り込みを�
     ).toBe(bar.getByRole('link', { name: '番組を検索' }))
   },
 }
+
+const TWO_WEEKS = Array.from({ length: 14 }, (_, nth) => {
+  const at = new Date(Date.UTC(2026, 7, 1 + nth))
+  const weekday = '日月火水木金土'[at.getUTCDay()]
+
+  return {
+    date: at.toISOString().slice(0, 10),
+    label: `${at.getUTCMonth() + 1}/${at.getUTCDate()}(${weekday})`,
+    isToday: nth === 7,
+  }
+})
+
+export const 二週間の日も帯を一段に保ち日の皿の中で横に送る: Story = {
+  args: { guide: { ...base, days: TWO_WEEKS, day: TWO_WEEKS[12] } },
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const tools = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="guide-tools"]',
+    )!
+    const days = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="guide-days"]',
+    )!
+    const chosen = within(days).getByRole('button', { pressed: true })
+    const tray = days.getBoundingClientRect()
+    const day = chosen.getBoundingClientRect()
+
+    await expect(tools.offsetHeight).toBeLessThanOrEqual(48)
+    await expect(days.scrollWidth).toBeGreaterThan(days.clientWidth)
+    await expect(day.left).toBeGreaterThanOrEqual(tray.left - 1)
+    await expect(day.right).toBeLessThanOrEqual(tray.right + 1)
+    await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+      1180,
+    )
+  },
+}
