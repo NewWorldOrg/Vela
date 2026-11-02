@@ -268,9 +268,9 @@
     --logo-plate: #ffffff;
 
     --g-neutral: #f7f7f8;
-    --g-news-light: #f7f8fa;
-    --g-news-deep: #edeff3;
-    --g-news-dot: #6d86b4;
+    --g-news-light: #f2f8ff;
+    --g-news-deep: #e5f1ff;
+    --g-news-dot: #4087de;
     --g-info-light: #effafe;
     --g-info-deep: #dff4fb;
     --g-info-dot: #0395b7;
@@ -341,9 +341,9 @@
       --logo-plate: #f4f4f6;
 
       --g-neutral: #141416;
-      --g-news-light: #2c2e31;
-      --g-news-deep: #1f2228;
-      --g-news-dot: #95acd5;
+      --g-news-light: #242f3c;
+      --g-news-deep: #0d223d;
+      --g-news-dot: #70adfb;
       --g-info-light: #1e3138;
       --g-info-deep: #012732;
       --g-info-dot: #25bce5;
