@@ -49,7 +49,7 @@ export function AuthenticationView({
       <PageHeading>認証</PageHeading>
 
       {oidc.reach === 'outOfReach' && (
-        <Banner tone="danger" className="mt-3.5 max-w-[calc(720rem/16)]">
+        <Banner tone="danger" className="mt-3.5">
           ID プロバイダーの discovery 文書を読めていないため、OIDC
           でのサインインは通りません。
         </Banner>

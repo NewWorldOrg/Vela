@@ -339,11 +339,14 @@ export function primaryKeyOfShadow(
 
 export const GUTTER_PX = 46
 
+/** The hour gutter's width as CSS, growing with the window past 2560px as every length set in pixels does. */
+export const GUTTER_WIDTH = `calc(${GUTTER_PX} * var(--px))`
+
 export const COLUMN_MIN_REM = 13.75
 
 /** The narrowest the grid is drawn, as CSS: the hour gutter and every column at its narrowest. */
 export function gridMinWidthOf(columns: number): string {
-  return `calc(${GUTTER_PX}px + ${columns * COLUMN_MIN_REM}rem)`
+  return `calc(${GUTTER_WIDTH} + ${columns * COLUMN_MIN_REM}rem)`
 }
 
 export const COLUMNS_DRAWN_BEFORE_MEASURING = 12

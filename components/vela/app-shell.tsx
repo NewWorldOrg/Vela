@@ -104,7 +104,7 @@ export function GlobalNavItem({
       data-slot="global-nav-item"
       aria-current={active ? 'page' : undefined}
       className={cn(
-        'tap-target relative flex h-9 items-center gap-1.5 rounded-full px-[13px] text-title font-semibold text-ink-2 no-underline outline-none',
+        'tap-target relative flex h-9 items-center gap-1.5 rounded-full px-[calc(13*var(--px))] text-title font-semibold text-ink-2 no-underline outline-none',
         'transition-[background-color,color] duration-[140ms] ease-toy',
         'hover:bg-surface focus-visible:shadow-ring',
         active && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
@@ -130,7 +130,7 @@ export function SettingsLink({
       aria-current={active ? 'page' : undefined}
       aria-label="設定"
       className={cn(
-        'tap-target relative grid size-[38px] place-items-center rounded-full text-ink-2 no-underline outline-none phone:hidden [&_svg]:size-5',
+        'tap-target relative grid size-[calc(38*var(--px))] place-items-center rounded-full text-ink-2 no-underline outline-none phone:hidden [&_svg]:size-5',
         'transition-[background-color,color] duration-[140ms] ease-toy',
         'hover:bg-surface hover:text-ink focus-visible:shadow-ring',
         active &&
@@ -150,7 +150,7 @@ export function NavCount({ count, saying }: { count: number; saying: string }) {
   return (
     <span
       data-slot="nav-count"
-      className="inline-grid h-[18px] min-w-[18px] place-items-center rounded-full bg-warn-fill px-[5px] font-code text-micro leading-none font-bold text-on-warn"
+      className="inline-grid h-[calc(18*var(--px))] min-w-[calc(18*var(--px))] place-items-center rounded-full bg-warn-fill px-[5px] font-code text-micro leading-none font-bold text-on-warn"
     >
       <span aria-hidden="true">{count}</span>
       <span className="sr-only">{saying}</span>
@@ -347,9 +347,10 @@ const SCREEN_WIDTHS = {
   default: cn(
     'mx-auto w-full max-w-full',
     'min-[1441px]:max-w-[1600px] min-[1920px]:max-w-[1760px]',
-    'min-[2560px]:max-w-[2240px] min-[3200px]:max-w-[3040px]',
+    'min-[2560px]:max-w-[calc(100vw-320px)]',
   ),
   full: 'w-full',
+  reading: 'mx-auto w-full max-w-[calc(1260rem/16)]',
 } as const
 
 export type ScreenWidth = keyof typeof SCREEN_WIDTHS

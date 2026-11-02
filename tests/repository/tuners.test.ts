@@ -1,6 +1,10 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
-import { formatMoment, formatMomentSpan } from '@/lib/format'
+import {
+  formatMoment,
+  formatMomentSpan,
+  formatRecentMoment,
+} from '@/lib/format'
 
 interface Sent {
   method: string
@@ -21,6 +25,7 @@ const store: {
   writeMessage: string
   written: Reply
   detected: Reply
+  cardReader: Reply
 } = {
   ledger: undefined,
   ledgerStatus: 200,
@@ -32,6 +37,7 @@ const store: {
   writeMessage: '',
   written: { status: 200 },
   detected: { status: 200 },
+  cardReader: { status: 501 },
 }
 
 interface Reply {
@@ -135,6 +141,10 @@ mock.module('@/repository/client/carina', {
           return replying(store.detected)
         }
 
+        if (path === '/api/driver/card-reader') {
+          return replying(store.cardReader)
+        }
+
         if (path === '/api/tuners/health') {
           return store.healthStatus === 200
             ? {
@@ -220,6 +230,7 @@ function standing(hoursOfSilence: number | string = 24): void {
   store.writeMessage = ''
   store.written = { status: 200 }
   store.detected = { status: 200 }
+  store.cardReader = { status: 501 }
 }
 
 const threshold = async () => {
@@ -340,7 +351,10 @@ test('the last service a tuner saw is the one the API reports for its system', a
     systems: [reaching('isdbT', 'reaching', SEEN_AT)],
   }
 
-  assert.equal((await screen()).rows[0]?.lastService?.at, formatMoment(SEEN_AT))
+  assert.equal(
+    (await screen()).rows[0]?.lastService?.at,
+    formatRecentMoment(SEEN_AT),
+  )
 })
 
 test('a system the API calls silent is put on the screen as the API judged it', async () => {
@@ -1246,4 +1260,376 @@ test('a detection saved over a ledger that changed since it was read is refused 
     message:
       'チューナーの一覧が保存のあいだに変わったため、保存できませんでした。検出し直してから保存してください。',
   })
+})
+
+const HARDWARE = {
+  name: 'Example ISDB-T frontend',
+  kernelDriver: 'example_dvb',
+  bus: 'pci',
+  devicePath: '/dev/dvb/adapter0/frontend0',
+  usbPort: null,
+  present: true,
+  lastSeenAt: SEEN_AT,
+}
+
+function observingWith(fields: Record<string, unknown>): void {
+  observing('terrestrial')
+  const held = store.ledger as { observed: Record<string, unknown>[] }
+  held.observed[0] = { ...held.observed[0], ...fields }
+}
+
+test('a tuner is named by its hardware and placed by its driver and path', async () => {
+  standing()
+  observingWith({ hardware: HARDWARE, machine: null })
+
+  const [row] = (await screen()).rows
+
+  assert.equal(row.name, 'Example ISDB-T frontend')
+  assert.equal(row.place, 'example_dvb · /dev/dvb/adapter0/frontend0')
+  assert.equal(row.machine, undefined)
+  assert.deepEqual(row.status, {
+    word: '空き',
+    tone: 'plain',
+    line: `${formatRecentMoment(SEEN_AT)} に確認`,
+  })
+})
+
+test('a usb tuner is placed by the port it hangs on', async () => {
+  standing()
+  observingWith({
+    hardware: {
+      ...HARDWARE,
+      name: 'Example USB tuner',
+      kernelDriver: null,
+      bus: 'usb',
+      devicePath: '/dev/bus/usb/001/002',
+      usbPort: '1-2',
+    },
+  })
+
+  assert.equal((await screen()).rows[0].place, 'usb 1-2')
+})
+
+test('a synthetic tuner is called one, having no name of its own', async () => {
+  standing()
+  observingWith({
+    hardware: {
+      ...HARDWARE,
+      name: null,
+      kernelDriver: null,
+      bus: 'synthetic',
+      devicePath: null,
+    },
+  })
+
+  const [row] = (await screen()).rows
+
+  assert.equal(row.name, '偽のチューナー')
+  assert.equal(row.place, undefined)
+})
+
+test('a tuner from a driver that names no hardware has no name and keeps the reception time', async () => {
+  standing()
+  observing('terrestrial')
+  store.health = {
+    ...(health(24) as Record<string, unknown>),
+    systems: [reaching('isdbT', 'reaching', SEEN_AT)],
+  }
+
+  const [row] = (await screen()).rows
+
+  assert.equal(row.name, undefined)
+  assert.equal(row.status.line, `${formatRecentMoment(SEEN_AT)} に受信`)
+})
+
+test('a tuner gone from its place is said to be missing whatever the driver held it as', async () => {
+  standing()
+  observingWith({
+    hardware: { ...HARDWARE, present: false },
+    state: 'faulted',
+    health: 'faulted',
+    faultKind: 'deviceFailed',
+  })
+
+  assert.deepEqual((await screen()).rows[0].status, {
+    word: '見当たらない',
+    tone: 'err',
+    line: `${formatRecentMoment(SEEN_AT)} に確認`,
+  })
+})
+
+test('a tuner of another machine that has stopped answering is said not to connect', async () => {
+  standing()
+  observingWith({
+    hardware: HARDWARE,
+    machine: 'example-machine',
+    state: 'faulted',
+    health: 'faulted',
+  })
+
+  const [row] = (await screen()).rows
+
+  assert.equal(row.machine, 'example-machine')
+  assert.equal(row.status.word, 'つながらない')
+  assert.equal(row.status.tone, 'err')
+})
+
+test('a tuner recording says so in red with the programme and when it ends', async () => {
+  standing()
+  const endsAt = '2026-08-08T10:30:00Z'
+  observingWith({
+    hardware: HARDWARE,
+    state: 'busy',
+    sessionId: 'rec-1',
+    sessionPurpose: 'recording',
+    sessionEndsAt: endsAt,
+    sessionTitle: 'Example Programme',
+  })
+
+  const [row] = (await screen()).rows
+
+  assert.equal(row.session?.title, 'Example Programme')
+  assert.deepEqual(row.status, {
+    word: '録画中',
+    tone: 'rec',
+    line: 'Example Programme',
+    until: `${formatRecentMoment(endsAt)} まで`,
+  })
+})
+
+test('a disabled tuner says so quietly', async () => {
+  standing()
+  observingWith({ hardware: HARDWARE, state: 'disabled' })
+
+  assert.equal((await screen()).rows[0].status.word, '無効')
+  assert.equal((await screen()).rows[0].status.tone, 'plain')
+})
+
+test("the driver's version, start and name come from its greeting", async () => {
+  standing()
+  store.driver = {
+    connection: 'connected',
+    hello: {
+      protocolVersion: 1,
+      instanceId: 'b7f2c9',
+      capabilities: [],
+      draining: false,
+      version: '0.3.7',
+      startedAt: '2026-08-08T03:40:00Z',
+      name: 'example-machine',
+    },
+    observedAt: SEEN_AT,
+  }
+
+  const result = await screen()
+
+  assert.deepEqual(result.facts, {
+    version: '0.3.7',
+    startedAt: formatMoment('2026-08-08T03:40:00Z'),
+    respondedAt: formatRecentMoment(SEEN_AT),
+    machine: 'example-machine',
+  })
+})
+
+test('a driver that gives no version leaves the facts empty', async () => {
+  standing()
+
+  assert.deepEqual((await screen()).facts, {})
+})
+
+test('a driver that gives no version is still said to have answered', async () => {
+  standing()
+  store.driver = {
+    connection: 'connected',
+    hello: {
+      protocolVersion: 1,
+      instanceId: 'b7f2c9',
+      capabilities: [],
+      draining: false,
+    },
+    observedAt: SEEN_AT,
+  }
+
+  assert.deepEqual((await screen()).facts, {
+    respondedAt: formatRecentMoment(SEEN_AT),
+  })
+})
+
+test('a driver that does not answer for its reader leaves the reader off the screen', async () => {
+  standing()
+
+  assert.equal((await screen()).cardReaders, undefined)
+})
+
+const READER = {
+  use: 'local',
+  state: 'inserted',
+  problem: null,
+  readers: [{ name: 'Example Reader', state: 'inserted', inUse: true }],
+  lenderHostName: null,
+  leasesOut: null,
+  lastAnsweredAt: SEEN_AT,
+  checkedAt: SEEN_AT,
+}
+
+const answering = (reader: Record<string, unknown>): Reply => ({
+  status: 200,
+  body: { status: true, message: '', data: reader },
+})
+
+test('the reader the card answered in says it is in use and when the card last answered', async () => {
+  standing()
+  store.cardReader = answering(READER)
+
+  assert.deepEqual((await screen()).cardReaders, [
+    {
+      id: 'reader-0',
+      title: 'Example Reader',
+      sub: '使用中',
+      status: {
+        word: '挿入',
+        tone: 'plain',
+        line: `${formatRecentMoment(SEEN_AT)} に応答`,
+      },
+    },
+  ])
+})
+
+test('a reader without a card asks for a hand in amber', async () => {
+  standing()
+  store.cardReader = answering({
+    ...READER,
+    state: 'empty',
+    readers: [{ name: 'Example Reader', state: 'empty', inUse: false }],
+  })
+
+  const [reader] = (await screen()).cardReaders ?? []
+
+  assert.equal(reader.status.word, '未挿入')
+  assert.equal(reader.status.tone, 'warn')
+  assert.equal(reader.status.line, `${formatRecentMoment(SEEN_AT)} に確認`)
+})
+
+test('a smart-card service that is down is said in red with its reason', async () => {
+  standing()
+  store.cardReader = answering({
+    ...READER,
+    state: 'unresponsive',
+    problem: 'serviceDown',
+    readers: [],
+  })
+
+  const [reader] = (await screen()).cardReaders ?? []
+
+  assert.equal(reader.status.word, '応答なし · pcscd が止まっています')
+  assert.equal(reader.status.tone, 'err')
+})
+
+test('a card that will not answer is said in red with its reason', async () => {
+  standing()
+  store.cardReader = answering({
+    ...READER,
+    state: 'unresponsive',
+    problem: 'cardSilent',
+    readers: [{ name: 'Example Reader', state: 'unresponsive', inUse: false }],
+  })
+
+  assert.equal(
+    (await screen()).cardReaders?.[0].status.word,
+    '応答なし · カードが答えません',
+  )
+})
+
+test('no reader attached is one row saying so', async () => {
+  standing()
+  store.cardReader = answering({ ...READER, state: 'noReader', readers: [] })
+
+  const readers = (await screen()).cardReaders ?? []
+
+  assert.equal(readers.length, 1)
+  assert.equal(readers[0].status.word, 'リーダーなし')
+  assert.equal(readers[0].status.tone, 'warn')
+})
+
+test('a borrowed card names the lender and whether it can be reached', async () => {
+  standing()
+  store.cardReader = answering({
+    ...READER,
+    use: 'borrowed',
+    state: 'borrowed',
+    problem: 'lenderUnreachable',
+    readers: [],
+    lenderHostName: 'example-lender',
+  })
+
+  const [reader] = (await screen()).cardReaders ?? []
+
+  assert.equal(reader.title, 'example-lender')
+  assert.equal(reader.status.word, '借用中 · 貸し手に届きません')
+  assert.equal(reader.status.tone, 'err')
+})
+
+test('a driver that descrambles nothing says so in one quiet row', async () => {
+  standing()
+  store.cardReader = answering({
+    ...READER,
+    use: 'none',
+    state: 'notUsed',
+    readers: [],
+    lastAnsweredAt: null,
+  })
+
+  const readers = (await screen()).cardReaders ?? []
+
+  assert.equal(readers.length, 1)
+  assert.equal(readers[0].status.word, '復号しない')
+  assert.equal(readers[0].status.tone, 'plain')
+})
+
+test('a card lent to other tuners says how many', async () => {
+  standing()
+  store.cardReader = answering({ ...READER, leasesOut: 2 })
+
+  assert.equal((await screen()).cardReaders?.[0].sub, '使用中 · 貸し出し 2')
+})
+
+test('a device found anew is named by its hardware so it can be told apart before it is kept', async () => {
+  standing()
+  store.ledger = ledger()
+  store.detected = {
+    status: 200,
+    body: {
+      status: true,
+      message: '',
+      data: {
+        devices: [
+          {
+            deviceId: 'usb1-2',
+            detection: 'detected',
+            kinds: ['terrestrial'],
+            detail: null,
+            machine: null,
+            hardware: {
+              ...HARDWARE,
+              name: 'Example USB tuner',
+              kernelDriver: null,
+              bus: 'usb',
+              devicePath: '/dev/bus/usb/001/002',
+              usbPort: '1-2',
+            },
+          },
+        ],
+        added: ['usb1-2'],
+        missing: [],
+        mismatched: [],
+      },
+    },
+  }
+
+  const answer = await getDetectedTuners()
+
+  assert.equal(answer.state, 'ok')
+  const [row] = answer.state === 'ok' ? answer.detection.rows : []
+  assert.equal(row.name, 'Example USB tuner')
+  assert.equal(row.place, 'usb 1-2')
 })

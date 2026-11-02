@@ -37,7 +37,7 @@ function BarSearch() {
     <Form
       action="/search"
       role="search"
-      className="relative w-[min(300px,28vw)] max-[1100px]:hidden"
+      className="relative w-[min(calc(300*var(--px)),28vw)] max-[1100px]:hidden"
     >
       <SearchIcon className="pointer-events-none absolute top-1/2 left-4 size-4 -translate-y-1/2 text-ink-2" />
       <label className="tap-area block">
@@ -46,7 +46,7 @@ function BarSearch() {
           type="search"
           name="q"
           placeholder="番組を検索"
-          className="h-10 w-full rounded-full bg-surface pr-4 pl-[42px] text-body text-ink outline-none placeholder:text-ink-3 focus-visible:shadow-ring [&::-webkit-search-cancel-button]:hidden"
+          className="h-10 w-full rounded-full bg-surface pr-4 pl-[calc(42*var(--px))] text-body text-ink outline-none placeholder:text-ink-3 focus-visible:shadow-ring [&::-webkit-search-cancel-button]:hidden"
         />
       </label>
     </Form>

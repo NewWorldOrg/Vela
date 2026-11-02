@@ -28,9 +28,9 @@ const buttonVariants = cva(
           'bg-rec-soft text-rec-text not-disabled:not-aria-disabled:hover:bg-rec/20',
       },
       size: {
-        default: 'h-10 px-[18px] text-body',
-        sm: "h-[34px] px-3 text-sub [&_svg:not([class*='size-'])]:size-[15px]",
-        lg: 'h-11 px-[22px] text-title',
+        default: 'h-10 px-[calc(18*var(--px))] text-body',
+        sm: "h-[calc(34*var(--px))] px-3 text-sub [&_svg:not([class*='size-'])]:size-[calc(15*var(--px))]",
+        lg: 'h-11 px-[calc(22*var(--px))] text-title',
         icon: 'size-10 px-0',
       },
     },

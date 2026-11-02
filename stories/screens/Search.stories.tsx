@@ -1496,9 +1496,7 @@ export const 電話では上の帯が検索の欄で結果を番組表の行で�
       name: /^ジャンル /,
     })
 
-    await expect(genre.getBoundingClientRect().height).toBeGreaterThanOrEqual(
-      40,
-    )
+    await expect(genre.offsetHeight).toBeGreaterThanOrEqual(40)
     await userEvent.click(genre)
     await expect(genre).toHaveAttribute('aria-expanded', 'true')
 

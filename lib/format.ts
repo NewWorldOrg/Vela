@@ -69,6 +69,19 @@ export function formatMoment(at: Moment, now: Moment = Date.now()): string {
   return `${year}${it.month}/${it.day}(${WEEKDAY.format(new Date(at))}) ${it.hour}:${it.minute}`
 }
 
+/** A moment of the same day in Japan as its clock alone, any other as {@link formatMoment} spells it. */
+export function formatRecentMoment(
+  at: Moment,
+  now: Moment = Date.now(),
+): string {
+  const it = stampOf(at)
+  const today = stampOf(now)
+  const sameDay =
+    it.year === today.year && it.month === today.month && it.day === today.day
+
+  return sameDay ? `${it.hour}:${it.minute}` : formatMoment(at, now)
+}
+
 export function formatMomentSpan(
   from: Moment,
   until: Moment,

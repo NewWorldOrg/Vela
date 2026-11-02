@@ -23,7 +23,7 @@ export function DataList({
         {
           ...style,
           '--data-list-cols': columns,
-          '--data-list-min': minWidth ? `${minWidth}px` : '0px',
+          '--data-list-min': minWidth ? `calc(${minWidth} * var(--px))` : '0px',
         } as ListVars
       }
       {...props}

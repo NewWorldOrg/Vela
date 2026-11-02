@@ -1,8 +1,28 @@
-import type { DetectionResult, TunerResult } from '@/repository/tuners'
+import type {
+  CardReaderRow,
+  DetectionResult,
+  TunerResult,
+} from '@/repository/tuners'
+
+export const CARD_READERS: CardReaderRow[] = [
+  {
+    id: 'reader-0',
+    title: 'Example Card Reader',
+    sub: '使用中',
+    status: { word: '挿入', tone: 'plain', line: '20:58 に応答' },
+  },
+]
 
 export const TUNERS: TunerResult = {
   connection: 'connected',
   instanceId: 'b7f2c9',
+  facts: {
+    version: '0.3.7',
+    startedAt: '08/05(水) 12:40',
+    respondedAt: '20:58',
+    machine: 'living-room',
+  },
+  cardReaders: CARD_READERS,
   notices: [
     {
       tone: 'danger',
@@ -29,10 +49,19 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter1',
       device: 'adapter1',
+      name: 'Example ISDB-T frontend',
+      place: 'example_dvb · /dev/dvb/adapter1/frontend0',
+      status: {
+        word: '録画中',
+        tone: 'rec',
+        line: 'Example Programme',
+        until: '21:15 まで',
+      },
       kind: '地上波',
       enabled: true,
       session: {
         label: '録画',
+        title: 'Example Programme',
         tone: 'recording',
         code: '57ch',
         endsAt: '08/07 21:15',
@@ -44,6 +73,9 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter3',
       device: 'adapter3',
+      name: 'Example ISDB-T frontend',
+      place: 'example_dvb · /dev/dvb/adapter3/frontend0',
+      status: { word: '停止準備中', tone: 'plain', line: '53ch' },
       kind: '地上波',
       enabled: false,
       draining: true,
@@ -55,9 +87,11 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter0',
       device: 'adapter0',
+      name: 'Example ISDB-S frontend',
+      place: 'example_dvb · /dev/dvb/adapter0/frontend0',
+      status: { word: '警告', tone: 'warn', line: '20:58 に確認' },
       kind: '衛星',
       enabled: true,
-      idleLabel: 'アイドル',
       state: 'warn',
       stateLabel: '警告',
       stateSub: 'BS のサービスが 26 時間 0 件',
@@ -67,9 +101,11 @@ export const TUNERS: TunerResult = {
     {
       id: 'adapter2',
       device: 'adapter2',
+      name: 'Example ISDB-S frontend',
+      place: 'example_dvb · /dev/dvb/adapter2/frontend0',
+      status: { word: '異常', tone: 'err', line: '20:58 に確認' },
       kind: '地上波',
       enabled: true,
-      idleLabel: '割当停止中',
       state: 'faulted',
       stateLabel: '異常',
       stateSub:
@@ -86,6 +122,8 @@ export const DETECTION: DetectionResult = {
       kind: 'add',
       tag: '新規',
       device: 'adapter4',
+      name: 'Example ISDB-T frontend',
+      place: 'example_dvb · /dev/dvb/adapter4/frontend0',
       note: '地上波として検出されました',
     },
     {

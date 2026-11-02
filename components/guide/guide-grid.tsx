@@ -4,7 +4,7 @@ import { Fragment, memo, useCallback, useMemo, useRef } from 'react'
 
 import { halfWidthOf } from '@/lib/guide-cell'
 import {
-  GUTTER_PX,
+  GUTTER_WIDTH,
   gridMinWidthOf,
   fallsWithin,
   isDrawn,
@@ -34,7 +34,7 @@ import { useFilledSoon } from '@/hooks/useFilledSoon'
 import { useGlyphsAhead } from '@/hooks/useGlyphsAhead'
 import { useNewcomers } from '@/hooks/useNewcomers'
 
-const GUTTER_FLEX = `0 0 ${GUTTER_PX}px`
+const GUTTER_FLEX = `0 0 ${GUTTER_WIDTH}`
 
 const COLUMN_FLEX = '1 1 0'
 
@@ -395,7 +395,7 @@ export function GuideGrid({
                     <span
                       aria-hidden="true"
                       className="absolute top-1/2 size-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-rec"
-                      style={{ left: `${GUTTER_PX}px` }}
+                      style={{ left: GUTTER_WIDTH }}
                     />
                   </div>
                 )

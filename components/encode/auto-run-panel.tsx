@@ -143,7 +143,7 @@ export function AutoRunPanel({
   )
 
   return (
-    <div data-slot="auto-run" className="max-w-[calc(720rem/16)]">
+    <div data-slot="auto-run">
       <SettingsGroup>
         <dl>
           <div className={ROW}>

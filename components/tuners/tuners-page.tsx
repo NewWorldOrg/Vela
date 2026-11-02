@@ -6,28 +6,17 @@ import type {
   DriverLink,
   DriverRestartResult,
   RestartWindow,
+  TunerResult,
   TunerRow,
   TunerScreenResult,
   TunerToggleResult,
   TunerWriteResult,
 } from '@/repository/tuners'
-import { SESSION_PILL_LABEL } from '@/repository/driver-capabilities'
-import { EMPTY_VALUE } from '@/lib/empty-value'
 import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/banner'
-import {
-  Table,
-  TableBody,
-  TableColumns,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
 import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -37,40 +26,20 @@ import {
   SettingsGroup,
   SettingsRow,
 } from '@/components/vela/settings-rows'
-import {
-  SearchIcon,
-  TunerSatelliteIcon,
-  TunerTerrestrialIcon,
-} from '@/components/vela/icons'
-import {
-  StateSay,
-  StatusCell,
-  stateColumnFor,
-  tipBoxOf,
-} from '@/components/recordings/status-cell'
-import { InFull } from '@/components/vela/in-full'
-import { TunerStateChip } from '@/components/tuners/tuner-state-chip'
+import { SearchIcon } from '@/components/vela/icons'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'
 import { DetectionSave } from '@/components/tuners/detection-save'
 import { ThresholdControl } from '@/components/tuners/threshold-control'
 import { LnbPowerSwitch } from '@/components/tuners/lnb-power-switch'
-import { WHEN_LABELS } from '@/lib/when-terms'
-
-function whatTheSessionIs(session: {
-  label: string
-  saying?: string
-  code?: string
-  endsAt?: string
-}): string {
-  return [
-    session.saying ?? session.label,
-    session.code,
-    session.endsAt && `終了予定 ${session.endsAt}`,
-  ]
-    .filter((one): one is string => Boolean(one))
-    .join('\n')
-}
+import {
+  CardReaderLine,
+  DriverLine,
+  HardwareLine,
+  tunerSubOf,
+  tunerTitleOf,
+  tunerWhyOf,
+} from '@/components/tuners/hardware-rows'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route
 const SCAN_HISTORY_HREF = '/settings/channels#scan-history' as Route
@@ -81,35 +50,6 @@ const DIFF_VARIANT = {
   del: 'err',
   kind: 'warn',
 } as const
-
-const STATE_COLUMNS: string[] = ['現在のセッション', '状態']
-
-const COLUMNS: { label: string; width: string }[] = [
-  { label: 'デバイス', width: 'calc(180rem/16)' },
-  { label: '種別', width: 'calc(96rem/16)' },
-  { label: '有効', width: 'calc(124rem/16)' },
-  { label: '現在のセッション', width: 'calc(240rem/16)' },
-  { label: '状態', width: 'calc(104rem/16)' },
-  { label: WHEN_LABELS.taken, width: 'calc(122rem/16)' },
-  { label: 'LNB 給電', width: 'calc(124rem/16)' },
-]
-
-const DRIVER_LABEL: Record<DriverLink, string> = {
-  connected: 'driver 接続中',
-  draining: 'driver 終了処理中',
-  disconnected: 'driver 未接続',
-  unknown: 'driver の接続状態は取得できていません',
-}
-
-function DeviceIcon({ row }: { row: TunerRow }) {
-  const Icon = row.kind === '衛星' ? TunerSatelliteIcon : TunerTerrestrialIcon
-
-  return (
-    <span className="flex size-7 shrink-0 items-center justify-center rounded-sm bg-surface-2">
-      <Icon className="size-4 text-ink-2" />
-    </span>
-  )
-}
 
 function DetectionCard({
   lede,
@@ -203,7 +143,14 @@ function DetectionPanel({
             <Badge variant={DIFF_VARIANT[diff.kind]} className="font-bold">
               {diff.tag}
             </Badge>
-            <span className="font-code text-sub">{diff.device}</span>
+            <span className="min-w-0">
+              <span className="block font-code text-sub">{diff.device}</span>
+              {diff.name && (
+                <span className="block truncate text-sub text-ink-2">
+                  {[diff.name, diff.place].filter(Boolean).join(' · ')}
+                </span>
+              )}
+            </span>
             <small className="ml-auto pl-2.5 text-note whitespace-nowrap text-ink-2">
               {diff.note}
             </small>
@@ -214,6 +161,90 @@ function DetectionPanel({
         {notes.filter(Boolean).join('')}
       </p>
     </DetectionCard>
+  )
+}
+
+const THIS_MACHINE = 'この機械'
+
+interface MachineGroup {
+  key: string
+  title: string
+  local: boolean
+  rows: TunerRow[]
+}
+
+function groupsOf(tuners: TunerResult): MachineGroup[] {
+  const local: MachineGroup = {
+    key: 'local',
+    title: tuners.facts.machine ?? THIS_MACHINE,
+    local: true,
+    rows: tuners.rows.filter((row) => row.machine === undefined),
+  }
+  const others = new Map<string, TunerRow[]>()
+
+  for (const row of tuners.rows) {
+    if (row.machine !== undefined) {
+      others.set(row.machine, [...(others.get(row.machine) ?? []), row])
+    }
+  }
+
+  return [
+    ...(local.rows.length > 0 || tuners.cardReaders ? [local] : []),
+    ...[...others].map(([machine, rows]) => ({
+      key: `machine-${machine}`,
+      title: machine,
+      local: false,
+      rows,
+    })),
+  ]
+}
+
+function TunerLine({
+  row,
+  onToggle,
+  onSaveLnb,
+}: {
+  row: TunerRow
+  onToggle: (deviceId: string, enabled: boolean) => Promise<TunerToggleResult>
+  onSaveLnb: (deviceId: string, on: boolean) => Promise<TunerWriteResult>
+}) {
+  const { title, code } = tunerTitleOf(row)
+
+  return (
+    <HardwareLine
+      id={row.id}
+      title={title}
+      code={code}
+      sub={tunerSubOf(row)}
+      status={row.status}
+      why={tunerWhyOf(row)}
+      controls={
+        <>
+          {row.lnb && (
+            <span className="flex items-center gap-2">
+              <span className="text-cap text-ink-2">LNB</span>
+              <LnbPowerSwitch
+                deviceId={row.device}
+                lnb={row.lnb}
+                onSave={onSaveLnb}
+              />
+            </span>
+          )}
+          <span className="flex flex-col items-end">
+            <TunerEnableSwitch
+              deviceId={row.device}
+              checked={row.enabled && !row.draining}
+              onToggle={onToggle}
+            />
+            {row.draining && (
+              <span className="mt-1 block text-cap leading-[1.5] whitespace-nowrap text-warn-text">
+                無効化を受け付け済み
+              </span>
+            )}
+          </span>
+        </>
+      }
+    />
   )
 }
 
@@ -281,7 +312,6 @@ export function TunersView({
         設定 / <CrumbCurrent>チューナー</CrumbCurrent>
       </Crumb>
       <PageHeading
-        description={DRIVER_LABEL[tuners.connection]}
         action={
           <div className="flex flex-wrap gap-2">
             <Button variant="ghost" size="sm" asChild>
@@ -319,7 +349,11 @@ export function TunersView({
         />
       </div>
 
-      <SettingsGroup className="mt-[calc(18rem/16)] mb-4">
+      <SettingsGroup className="mt-[calc(18rem/16)]">
+        <DriverLine facts={tuners.facts} connection={tuners.connection} />
+      </SettingsGroup>
+
+      <SettingsGroup className="mt-3">
         <SettingsRow name="健全性の閾値">
           <span className="text-ink">{tuners.thresholdHours} 時間</span>
           <ThresholdControl
@@ -329,97 +363,36 @@ export function TunersView({
         </SettingsRow>
       </SettingsGroup>
 
-      <Table
-        cards
-        className="table-fixed min-w-[calc(1000rem/16)]"
-        containerClassName="pb-1"
-      >
-        <TableColumns widths={COLUMNS.map((column) => column.width)} />
-        <TableHeader>
-          <TableRow>
-            {COLUMNS.map((column) => (
-              <TableHead key={column.label}>{column.label}</TableHead>
+      {groupsOf(tuners).map((group) => (
+        <section key={group.key} aria-label={group.title}>
+          <h2 className={SETTINGS_GROUP_TITLE}>
+            {group.title}
+            <span className="ml-2 font-normal tabular-nums">
+              {group.rows.length} 台
+            </span>
+          </h2>
+          <SettingsGroup>
+            {group.rows.map((row) => (
+              <TunerLine
+                key={row.id}
+                row={row}
+                onToggle={onToggle}
+                onSaveLnb={onSaveLnb}
+              />
             ))}
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {tuners.rows.map((row) => (
-            <TableRow key={row.id} id={row.id}>
-              <TableCell {...cardPlace('lead')}>
-                <span className="flex items-center gap-2.5">
-                  <DeviceIcon row={row} />
-                  <b className="font-code text-[calc(13rem/16)] leading-[1.4] font-medium">
-                    {row.device}
-                  </b>
-                </span>
-              </TableCell>
-              <TableCell {...cardPlace('field', COLUMNS[1].label)}>
-                <span className="text-ui text-ink-2">
-                  {row.kind ?? EMPTY_VALUE}
-                </span>
-              </TableCell>
-              <TableCell {...cardPlace('field', COLUMNS[2].label)}>
-                <TunerEnableSwitch
-                  deviceId={row.device}
-                  checked={row.enabled && !row.draining}
-                  onToggle={onToggle}
-                />
-                {row.draining && (
-                  <span className="mt-1 block text-cap leading-[1.5] text-warn-text">
-                    無効化を受け付け済み
-                  </span>
-                )}
-              </TableCell>
-              <TableCell {...cardPlace('field', COLUMNS[3].label)}>
-                {row.session ? (
-                  <StatusCell>
-                    <InFull
-                      says={whatTheSessionIs(row.session)}
-                      wraps={tipBoxOf(true)}
-                    >
-                      <StateSay
-                        tone={row.session.tone === 'recording' ? 'err' : 'info'}
-                        bold
-                      >
-                        {row.session.label}
-                      </StateSay>
-                    </InFull>
-                  </StatusCell>
-                ) : (
-                  <span className="text-ui text-ink-2">
-                    {row.idleLabel ?? EMPTY_VALUE}
-                  </span>
-                )}
-              </TableCell>
-              <TableCell {...cardPlace('field', COLUMNS[4].label)}>
-                <StatusCell>
-                  <TunerStateChip row={row} say also={row.stateSub} />
-                </StatusCell>
-              </TableCell>
-              <TableCell {...cardPlace('meta')}>
-                {row.lastService ? (
-                  <span className="font-code text-sub whitespace-nowrap text-ink-2">
-                    {row.lastService.at}
-                  </span>
-                ) : (
-                  <span className="font-sans text-ink-2">{EMPTY_VALUE}</span>
-                )}
-              </TableCell>
-              <TableCell {...cardPlace('field', COLUMNS[6].label)}>
-                {row.lnb ? (
-                  <LnbPowerSwitch
-                    deviceId={row.device}
-                    lnb={row.lnb}
-                    onSave={onSaveLnb}
-                  />
-                ) : (
-                  <span className="font-sans text-ink-2">{EMPTY_VALUE}</span>
-                )}
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+          </SettingsGroup>
+          {group.local && tuners.cardReaders && (
+            <section aria-label="カードリーダー">
+              <h2 className={SETTINGS_GROUP_TITLE}>カードリーダー</h2>
+              <SettingsGroup>
+                {tuners.cardReaders.map((reader) => (
+                  <CardReaderLine key={reader.id} row={reader} />
+                ))}
+              </SettingsGroup>
+            </section>
+          )}
+        </section>
+      ))}
 
       {(detection !== undefined || empty) && (
         <section className="mt-9">

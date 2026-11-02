@@ -167,7 +167,7 @@ export function ViewingView({
           onSettle={onSettleResidence}
         />
       ) : (
-        <section className="max-w-[calc(720rem/16)]">
+        <section>
           <h2 className={SETTINGS_GROUP_TITLE}>{RESIDENCE_HEADING}</h2>
           <UnreadSurface slot={RESIDENCE_SLOT} reading={residence} />
         </section>

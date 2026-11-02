@@ -16,7 +16,7 @@ export function SettingsGroup({ className, ...props }: ComponentProps<'div'>) {
     <div
       data-slot="settings-group"
       className={cn(
-        'max-w-[calc(720rem/16)] overflow-hidden rounded-lg bg-surface',
+        'overflow-hidden rounded-lg bg-surface',
         SWITCH_OFF_ON_THE_GROUP,
         className,
       )}

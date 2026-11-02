@@ -1485,6 +1485,22 @@ export interface paths {
     patch: operations['reviseEncodeProfile']
     trace?: never
   }
+  '/api/driver/card-reader': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getDriverCardReader']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/driver/status': {
     parameters: {
       query?: never
@@ -1740,6 +1756,11 @@ export interface components {
       status: boolean
       message: string
       data: null | components['schemas']['CaptionWindowResponder']
+    }
+    BaseResponderOfCardReaderResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['CardReaderResponder']
     }
     BaseResponderOfCollectionStatusResponder: {
       status: boolean
@@ -2319,6 +2340,44 @@ export interface components {
       untilSec: number | string
       cues: components['schemas']['CaptionCueResponder'][]
     }
+    /** @enum {null|string} */
+    CardProblem:
+      | 'unspecified'
+      | 'serviceDown'
+      | 'libraryMissing'
+      | 'cardSilent'
+      | 'lenderUnreachable'
+      | 'lenderRefused'
+      | null
+    CardReaderResponder: {
+      use: components['schemas']['CardReaderUse']
+      state: components['schemas']['CardState']
+      problem: null | components['schemas']['CardProblem']
+      readers: components['schemas']['CardReaderSlotResponder'][]
+      lenderHostName: null | string
+      /** Format: int32 */
+      leasesOut: null | number | string
+      /** Format: date-time */
+      lastAnsweredAt: null | string
+      /** Format: date-time */
+      checkedAt: null | string
+    }
+    CardReaderSlotResponder: {
+      name: string
+      state: components['schemas']['CardState']
+      inUse: boolean
+    }
+    /** @enum {string} */
+    CardReaderUse: 'unspecified' | 'local' | 'borrowed' | 'none'
+    /** @enum {string} */
+    CardState:
+      | 'unspecified'
+      | 'inserted'
+      | 'empty'
+      | 'unresponsive'
+      | 'borrowed'
+      | 'noReader'
+      | 'notUsed'
     CatalogResponder: {
       /** Format: int32 */
       cm: number | string
@@ -2456,6 +2515,8 @@ export interface components {
       detection: components['schemas']['DeviceDetection']
       kinds: components['schemas']['TunerKind'][]
       detail: null | string
+      machine: null | string
+      hardware: null | components['schemas']['TunerHardwareResponder']
     }
     DetectedTunersResponder: {
       devices: components['schemas']['DetectedDeviceResponder'][]
@@ -2485,6 +2546,10 @@ export interface components {
       instanceId: null | string
       capabilities: string[]
       draining: boolean
+      version: null | string
+      /** Format: date-time */
+      startedAt: null | string
+      name: null | string
     }
     DriverRestartResponder: {
       instanceId: null | string
@@ -4826,6 +4891,8 @@ export interface components {
     TuneFailureKind:
       'noLock' | 'noData' | 'incompletePsi' | 'streamMismatch' | null
     /** @enum {string} */
+    TunerBus: 'unspecified' | 'pci' | 'usb' | 'synthetic' | 'lent'
+    /** @enum {string} */
     TunerDegradedKind: 'unspecified' | 'tuneFailing'
     TunerEntryRequest: {
       deviceId?: null | string
@@ -4845,6 +4912,16 @@ export interface components {
       | 'deviceFailed'
       | 'deviceFailedAgain'
       | 'repeatedTuneFailure'
+    TunerHardwareResponder: {
+      name: null | string
+      kernelDriver: null | string
+      bus: components['schemas']['TunerBus']
+      devicePath: null | string
+      usbPort: null | string
+      present: null | boolean
+      /** Format: date-time */
+      lastSeenAt: null | string
+    }
     /** @enum {string} */
     TunerHealthLevel: 'unspecified' | 'healthy' | 'degraded' | 'faulted'
     TunerHealthResponder: {
@@ -4896,6 +4973,9 @@ export interface components {
       /** Format: date-time */
       sessionEndsAt: null | string
       sessionTuning: null | components['schemas']['ScanTargetResponder']
+      sessionTitle: null | string
+      machine: null | string
+      hardware: null | components['schemas']['TunerHardwareResponder']
     }
     /** @enum {string} */
     TunerState:
@@ -11151,6 +11231,69 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+    }
+  }
+  getDriverCardReader: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCardReaderResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCardReaderResponder']
+        }
+      }
+      /** @description Not Implemented */
+      501: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCardReaderResponder']
+        }
+      }
+      /** @description Bad Gateway */
+      502: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCardReaderResponder']
+        }
+      }
+      /** @description Service Unavailable */
+      503: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfCardReaderResponder']
         }
       }
     }

@@ -235,7 +235,10 @@ function SearchScreen({
   )
 
   return (
-    <ScreenMain className="px-3.5 pt-3.5 pb-16 min-[701px]:px-6 min-[1366px]:px-10 upright:pt-0.5 sideways:pt-0">
+    <ScreenMain
+      width="reading"
+      className="px-3.5 pt-3.5 pb-16 min-[701px]:px-6 min-[1366px]:px-10 upright:pt-0.5 sideways:pt-0"
+    >
       <PhoneBarLead>
         <label className="flex h-11 min-w-0 flex-1 items-center gap-2 rounded-full bg-surface pr-2 pl-3.5 text-ink-2 focus-within:shadow-ring sideways:max-w-[calc(240rem/16)] sideways:shrink-0">
           <SearchIcon className="size-4 shrink-0" />

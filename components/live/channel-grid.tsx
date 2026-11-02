@@ -53,7 +53,7 @@ export function ChannelGrid({
       ref={measure}
       data-slot="channel-grid"
       className={cn(
-        'mx-auto grid w-full max-w-[137rem] grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-x-4 gap-y-3.5',
+        'grid w-full grid-cols-[repeat(auto-fill,minmax(19rem,1fr))] gap-x-4 gap-y-3.5',
         className,
       )}
     >

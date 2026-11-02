@@ -256,7 +256,7 @@ export function SystemView({
       <PageHeading>システム</PageHeading>
 
       {trouble && (
-        <Banner tone="danger" className="mt-3.5 max-w-[calc(720rem/16)]">
+        <Banner tone="danger" className="mt-3.5">
           {api.state === 'failed' ? (
             <InFull says={`HTTP ${api.httpStatus}`} wraps="inline-block">
               <b>{trouble}</b>
@@ -307,7 +307,8 @@ export function SystemView({
           </DetailRow>
           <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
             <span>
-              Carina {status.carinaVersion ?? EMPTY_VALUE} / Vela {velaVersion}
+              Carina {status.carinaVersion ?? EMPTY_VALUE} / driver{' '}
+              {reading?.hello?.version ?? EMPTY_VALUE} / Vela {velaVersion}
             </span>
           </DetailRow>
           <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
