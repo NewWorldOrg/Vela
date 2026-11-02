@@ -224,6 +224,7 @@ export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
         />
       ) : (
         <EmptyState
+          usher="glad"
           title="録れなかった予約がありません"
           titleLevel={2}
           className="mt-10 max-w-[calc(560rem/16)]"

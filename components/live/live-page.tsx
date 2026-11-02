@@ -414,6 +414,7 @@ export function LiveView({
         )}
         {nothingIsOn && (
           <EmptyState
+            usher={null}
             titleLevel={2}
             title="まだ番組情報がありません"
             className="mt-3.5"
