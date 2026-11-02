@@ -266,6 +266,10 @@
     --on-toast: #f4f4f6;
     --scrim: rgba(0, 0, 0, 0.32);
     --logo-plate: #ffffff;
+    /* The brand mark keeps the colours it was drawn in, outside the v4 palette: the blue keel, the green sail and the gold star where they cross. */
+    --mark-keel: #356fa5;
+    --mark-sail: #3f6461;
+    --mark-star: #efb440;
 
     --g-neutral: #f7f7f8;
     --g-news-light: #f2f8ff;
@@ -339,6 +343,9 @@
       --on-toast: #17171a;
       --scrim: rgba(0, 0, 0, 0.5);
       --logo-plate: #f4f4f6;
+      --mark-keel: #8fc0ea;
+      --mark-sail: #96bbb4;
+      --mark-star: #efb440;
 
       --g-neutral: #141416;
       --g-news-light: #242f3c;

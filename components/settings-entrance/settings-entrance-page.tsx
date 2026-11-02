@@ -243,7 +243,7 @@ function SystemRow({
       )}
     >
       <span className="flex size-10 shrink-0 items-center justify-center rounded-md bg-bg">
-        <VelaMark />
+        <VelaMark small />
       </span>
       <span className="min-w-0 flex-1">
         <span

@@ -1,33 +1,56 @@
+import { useId } from 'react'
+
 import { cn } from '@/lib/utils'
 
-const SHORT_STROKE = 'M4.5 6.5 11 19.2'
-const LONG_STROKE = 'M19.5 3.5 11 19.2'
+const KEEL = 'M20 32 Q20 68 50 86'
+const SAIL = 'M82 10 Q82 64 50 86'
+const THICK = 16
+const THICK_WHEN_SMALL = 21
 
-/** The mark: a short stroke and a long one meeting at the foot, where they meet is the dot. */
-export function VelaMark({ className }: { className?: string }) {
+function maskIdOf(id: string, part: string): string {
+  return `vela-${part}-${id.replace(/[^A-Za-z0-9_-]/g, '')}`
+}
+
+/**
+ * The mark: the keel and the sail meeting at the foot, where they cross is the star.
+ * `small` is the thicker cut for 32px and under.
+ */
+export function VelaMark({
+  small = false,
+  className,
+}: {
+  small?: boolean
+  className?: string
+}) {
+  const mask = maskIdOf(useId(), 'mark')
+  const line = {
+    fill: 'none',
+    strokeWidth: small ? THICK_WHEN_SMALL : THICK,
+    strokeLinecap: 'round',
+  } as const
+
   return (
     <svg
-      viewBox="0 0 24 24"
+      viewBox="0 0 100 100"
       aria-hidden="true"
       focusable="false"
       data-slot="vela-mark"
+      data-cut={small ? 'small' : 'full'}
       className={cn('size-6 shrink-0', className)}
     >
+      <defs>
+        <mask id={mask}>
+          <path d={KEEL} stroke="white" {...line} />
+        </mask>
+      </defs>
+      <path d={KEEL} className="stroke-(--mark-keel)" {...line} />
+      <path d={SAIL} className="stroke-(--mark-sail)" {...line} />
       <path
-        d={SHORT_STROKE}
-        className="stroke-ink"
-        fill="none"
-        strokeWidth={3}
-        strokeLinecap="round"
+        d={SAIL}
+        className="stroke-(--mark-star)"
+        mask={`url(#${mask})`}
+        {...line}
       />
-      <path
-        d={LONG_STROKE}
-        className="stroke-ink"
-        fill="none"
-        strokeWidth={3}
-        strokeLinecap="round"
-      />
-      <circle cx={11} cy={19} r={2.6} className="fill-accent" />
     </svg>
   )
 }
