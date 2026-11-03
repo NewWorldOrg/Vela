@@ -22,10 +22,12 @@ const RESERVED = 'この番組を予約しました。'
 export function ReserveButton({
   programmeId,
   onReserve,
+  variant = 'default',
   children,
 }: {
   programmeId: string
   onReserve: (programmeId: string) => Promise<ReservationWrite>
+  variant?: 'default' | 'tone'
   children: ReactNode
 }) {
   const [pending, startTransition] = useTransition()
@@ -39,6 +41,7 @@ export function ReserveButton({
   return (
     <>
       <Button
+        variant={variant}
         disabled={pending}
         onClick={() =>
           startTransition(async () => {
@@ -82,7 +85,7 @@ export function ReserveButton({
         {children}
       </Button>
       {(notice || reserved) && (
-        <span aria-live="polite" className="basis-full">
+        <span aria-live="polite" className="order-last basis-full">
           {notice ? (
             <InlineAlert tone={notice.tone}>
               {notice.text}
