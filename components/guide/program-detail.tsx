@@ -168,23 +168,25 @@ export function ProgramDetailBody({
       </div>
 
       <div className="mt-[calc(22rem/16)] border-t border-dashed border-line pt-[calc(17rem/16)]">
-        {onAir && (
-          <div className="mb-[calc(13rem/16)] flex flex-wrap gap-[calc(9rem/16)]">
-            <Button variant="tone" asChild>
-              <Link
-                href={liveScreenHref(program.channelId, channel?.kind) as Route}
-              >
-                <LiveIcon />
-                ライブ視聴
-              </Link>
-            </Button>
-          </div>
-        )}
         <ReservationArea
           programmeId={program.id}
           booked={reservation}
           seriesHref={series ? newRuleHref(series) : undefined}
           onReserve={onReserve}
+          first={
+            onAir && (
+              <Button asChild>
+                <Link
+                  href={
+                    liveScreenHref(program.channelId, channel?.kind) as Route
+                  }
+                >
+                  <LiveIcon />
+                  ライブ視聴
+                </Link>
+              </Button>
+            )
+          }
         />
       </div>
     </div>
