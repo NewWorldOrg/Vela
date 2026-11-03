@@ -5,6 +5,7 @@ import type { Route } from 'next'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
 import type { SearchHit } from '@/repository/search'
 import type { ReservationWrite } from '@/repository/reservations'
@@ -46,12 +47,9 @@ export function PhoneSearchHits({
       <div className="flex items-center gap-2 px-4 pt-1 pb-2">
         <span className="text-ui text-ink-2 tabular-nums">{total} 件</span>
         {ruleHref && (
-          <Link
-            href={ruleHref}
-            className="ml-auto flex h-11 items-center rounded-full px-1 text-ui font-semibold text-acc-text no-underline outline-none focus-visible:shadow-ring"
-          >
-            この条件でルールを作成
-          </Link>
+          <Button variant="tone" size="sm" asChild className="ml-auto">
+            <Link href={ruleHref}>この条件でルールを作成</Link>
+          </Button>
         )}
       </div>
       {days.map(({ day, near, hits: onTheDay }) => (

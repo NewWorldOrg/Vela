@@ -20,6 +20,7 @@ import type {
 } from '@/repository/search-options'
 import { searchDaysInOrder, subgenreLabelOf } from '@/lib/search-condition'
 import type { GuideChannel } from '@/repository/programs'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import {
   Popover,
@@ -437,13 +438,14 @@ export function ConditionChips({
       </li>
       {clear && (
         <li className="flex shrink-0">
-          <button
-            type="button"
+          <Button
+            variant="tone"
+            size="sm"
             onClick={clear}
-            className="tap-target h-8 shrink-0 cursor-pointer rounded-full px-2.5 text-ui font-medium whitespace-nowrap text-ink-2 outline-none hover:text-ink focus-visible:shadow-ring phone:h-10"
+            className="h-8 phone:h-10"
           >
             条件を解除
-          </button>
+          </Button>
         </li>
       )}
     </ul>

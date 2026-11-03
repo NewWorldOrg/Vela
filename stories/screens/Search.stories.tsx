@@ -29,6 +29,7 @@ import {
 } from '@/repository/search.fixtures'
 import { SearchView } from '@/components/search/search-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import { inTheApp } from '@/stories/frames'
 import { FROM_600, PHONE } from '@/stories/rows-as-cards'
 
@@ -408,6 +409,15 @@ export const 予約は1回押すだけ: Story = {
         within(row).getByRole('button', { name: '予約済み' }),
       ).toHaveAttribute('aria-pressed', 'true'),
     )
+    await waitFor(() =>
+      Promise.all(
+        within(row)
+          .getByRole('button', { name: '予約済み' })
+          .getAnimations()
+          .map((one) => one.finished),
+      ),
+    )
+    await standsOnAGround(within(row).getByRole('button', { name: '予約済み' }))
     await expect(await screen.findByText(/予約しました/)).toHaveTextContent(
       second.title,
     )
@@ -1298,6 +1308,7 @@ export const 探す場所だけでは条件に数えない: Story = {
         canvas.getByRole('button', { name: '条件を解除' }),
       ).toBeVisible()
     })
+    await standsOnAGround(canvas.getByRole('button', { name: '条件を解除' }))
 
     await expect(
       canvas.getByRole('button', { name: 'この条件でルールを作成' }),

@@ -1,5 +1,4 @@
 import Link from 'next/link'
-
 import type { ComponentProps, ReactNode } from 'react'
 import type { Route } from 'next'
 
@@ -7,6 +6,7 @@ import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { FormatChoice } from '@/lib/playback-format'
 import type { LiveProfile } from '@/repository/live'
 import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { formatLength, formatPlayerTime } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
@@ -491,14 +491,17 @@ export function RecordingDetailView({
                     </span>{' '}
                     まで観ました
                   </span>
-                  <Link
-                    href={`/recordings/${d.id}?at=0` as Route}
-                    replace
-                    className="flex h-11 items-center gap-1 rounded-full px-2.5 font-bold text-brand no-underline outline-none focus-visible:shadow-ring [&_svg]:size-4"
+                  <Button
+                    variant="tone"
+                    size="sm"
+                    asChild
+                    className="bg-raised"
                   >
-                    <RebuildIcon />
-                    最初から
-                  </Link>
+                    <Link href={`/recordings/${d.id}?at=0` as Route} replace>
+                      <RebuildIcon />
+                      最初から
+                    </Link>
+                  </Button>
                 </div>
               </OnAnUprightPhone>
             )}
