@@ -299,7 +299,7 @@ export function LibraryView({
           />
           {hasFilter && (
             <Button
-              variant="ghost"
+              variant="tone"
               size="sm"
               className="ml-1"
               onClick={clearEveryCondition}

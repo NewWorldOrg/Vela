@@ -21,12 +21,8 @@ const buttonVariants = cva(
         record:
           'bg-rec-fill text-on-rec not-disabled:not-aria-disabled:hover:bg-rec-fill-hover shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         tone: 'bg-surface-2 text-ink not-disabled:not-aria-disabled:hover:bg-surface-3 shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        ghost:
-          'bg-transparent text-ink-2 not-disabled:not-aria-disabled:hover:bg-surface not-disabled:not-aria-disabled:hover:text-ink',
         danger:
-          'bg-transparent text-rec-text not-disabled:not-aria-disabled:hover:bg-rec-soft',
-        dangerFill:
-          'bg-rec-soft text-rec-text not-disabled:not-aria-disabled:hover:bg-rec/20 shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
+          'bg-bg bg-linear-to-b from-rec-soft to-rec-soft text-rec-text not-disabled:not-aria-disabled:hover:from-rec/20 not-disabled:not-aria-disabled:hover:to-rec/20 shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
       },
       size: {
         default: 'h-10 px-[calc(18*var(--px))] text-body',

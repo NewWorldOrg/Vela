@@ -143,7 +143,7 @@ function DialogFooter({
       {children}
       {showCloseButton && (
         <DialogPrimitive.Close asChild>
-          <Button variant="ghost" size="sm">
+          <Button variant="tone" size="sm">
             閉じる
           </Button>
         </DialogPrimitive.Close>

@@ -92,7 +92,7 @@ export const ConfirmDialog: Story = {
                 </Button>
               </DialogClose>
               <DialogClose asChild>
-                <Button variant="dangerFill" size="sm">
+                <Button variant="danger" size="sm">
                   すべて削除して再構築する
                 </Button>
               </DialogClose>
@@ -183,7 +183,7 @@ export const SidePanel: Story = {
             </SheetBody>
             <SheetFooter>
               <Button size="sm">録画予約</Button>
-              <Button variant="ghost" size="sm">
+              <Button variant="tone" size="sm">
                 番組表で表示
               </Button>
             </SheetFooter>

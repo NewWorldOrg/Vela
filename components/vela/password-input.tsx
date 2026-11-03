@@ -22,7 +22,7 @@ export function PasswordInput({
       />
       <Button
         type="button"
-        variant="ghost"
+        variant="tone"
         size="icon"
         disabled={disabled}
         aria-pressed={shown}

@@ -122,7 +122,7 @@ function DeleteCandidateDialog({
         <AlertDialogFooter>
           <AlertDialogCancel>キャンセル</AlertDialogCancel>
           <AlertDialogAction
-            variant="dangerFill"
+            variant="danger"
             disabled={pending}
             onClick={(event) => {
               event.preventDefault()

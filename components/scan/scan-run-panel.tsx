@@ -228,7 +228,7 @@ export function ScanRunPanel({
             </h2>
           </div>
           <Button
-            variant="ghost"
+            variant="tone"
             size="sm"
             disabled={pending}
             onClick={() =>

@@ -23,7 +23,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'tone', 'ghost', 'danger', 'dangerFill'],
+      options: ['default', 'record', 'tone', 'danger'],
     },
     size: {
       control: 'select',
@@ -54,16 +54,12 @@ export const Variants: Story = {
           <EditIcon />
           変更
         </Button>
-        <Button {...args} variant="ghost">
+        <Button {...args} variant="tone">
           閉じる
         </Button>
         <Button {...args} variant="danger">
           <TrashIcon />
           削除
-        </Button>
-        <Button {...args} variant="dangerFill">
-          <TrashIcon />
-          削除する
         </Button>
       </div>
     </Surface>

@@ -78,7 +78,7 @@ function DetectionCard({
 
 function CancelDetection() {
   return (
-    <Button variant="ghost" asChild>
+    <Button variant="tone" asChild>
       <Link href={TUNERS_HREF}>キャンセル</Link>
     </Button>
   )
@@ -314,7 +314,7 @@ export function TunersView({
       <PageHeading
         action={
           <div className="flex flex-wrap gap-2">
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href={SCAN_HISTORY_HREF}>スキャン履歴へ</Link>
             </Button>
             <Button size="sm" asChild>

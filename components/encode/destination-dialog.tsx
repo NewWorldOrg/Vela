@@ -223,7 +223,7 @@ export function DestinationDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button variant="tone" onClick={() => onOpenChange(false)}>
             キャンセル
           </Button>
           <Button disabled={pending} onClick={submit}>

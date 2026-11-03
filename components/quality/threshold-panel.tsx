@@ -190,7 +190,7 @@ export function ThresholdPanel({
               <>
                 <Button
                   type="button"
-                  variant="ghost"
+                  variant="tone"
                   disabled={pending}
                   onClick={leave}
                 >

@@ -20,7 +20,10 @@ const WHERE_THE_EVEN_WIDTH_IS_DECLARED = 'components/vela/action-row.tsx'
 
 const A_BUTTON = /<Button\b([^>]*)>([\s\S]*?)<\/Button>/g
 
-const SPEAKS_FOR_ITSELF = /variant="(tone|danger|dangerFill)"/
+const SPEAKS_FOR_ITSELF = /variant="(tone|danger)"/
+
+/** Leaving a dialog does nothing, so it says only its word. */
+const DOES_NOTHING = ['キャンセル', '閉じる']
 
 const AN_ICON = /<[A-Z][A-Za-z]*Icon\b|<Spinner\b/
 
@@ -48,7 +51,10 @@ test('an action is an icon and a word, never one without the other', async () =>
 
   for (const file of WHERE_THE_ACTIONS_ARE) {
     for (const button of await buttonsIn(file)) {
-      if (!SPEAKS_FOR_ITSELF.test(button.declared)) {
+      if (
+        !SPEAKS_FOR_ITSELF.test(button.declared) ||
+        DOES_NOTHING.some((word) => button.body.trim().endsWith(word))
+      ) {
         continue
       }
 
@@ -89,6 +95,30 @@ test('the library row deletes from its menu, as a destructive item', async () =>
   assert.ok(item, `${THE_LIBRARY_ROW} offers no deleting`)
   assert.match(item[2], DELETES)
   assert.match(item[1], /variant="destructive"/)
+})
+
+test('the column beside the programme draws every action on a ground', async () => {
+  const actions = await readFile(
+    path.join(ROOT, 'components/recordings/recording-actions.tsx'),
+    'utf8',
+  )
+
+  assert.doesNotMatch(
+    actions,
+    /\bquiet\b/,
+    'an action in the column is drawn as a word alone',
+  )
+  assert.doesNotMatch(actions, /data-variant=ghost/)
+
+  for (const file of [
+    'components/recordings/encode-button.tsx',
+    'components/recordings/thumbnail-button.tsx',
+  ]) {
+    const source = await readFile(path.join(ROOT, file), 'utf8')
+
+    assert.doesNotMatch(source, /\bquiet\b|ghost/, file)
+    assert.match(source, /variant="tone"/, file)
+  }
 })
 
 test('a group of actions is laid out by the one row', async () => {

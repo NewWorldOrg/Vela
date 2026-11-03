@@ -149,7 +149,7 @@ export function SkipThresholdPanel({
           <div className="mt-1 flex flex-wrap items-center justify-end gap-2.5 border-t border-hair pt-3 pb-1">
             <Button
               type="button"
-              variant="ghost"
+              variant="tone"
               disabled={pending}
               onClick={leave}
             >

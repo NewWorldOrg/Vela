@@ -61,7 +61,6 @@ export function CancelJobButton({
       <Button
         variant="tone"
         size="sm"
-        className="aria-disabled:hover:bg-transparent aria-disabled:hover:text-ink-2"
         aria-disabled={pending}
         onClick={asks ? () => setAsking(true) : callOff}
       >

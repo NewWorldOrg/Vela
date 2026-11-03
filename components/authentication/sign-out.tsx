@@ -17,7 +17,7 @@ export function SignOut({ method }: { method: AuthMethod }) {
   return (
     <>
       <Button
-        variant="ghost"
+        variant="tone"
         size="sm"
         disabled={pending}
         onClick={async () => {

@@ -136,7 +136,7 @@ export function LocalSignIn({
       <div className="flex justify-center">
         <Button
           type="button"
-          variant="ghost"
+          variant="tone"
           size="sm"
           aria-expanded={open}
           aria-controls={panelId}

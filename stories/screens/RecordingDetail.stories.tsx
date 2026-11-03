@@ -28,6 +28,7 @@ import { RecordingDetailView } from '@/components/recordings/recording-detail-pa
 import { skipNoted } from '@/stories/noted-skips'
 import { seekNoted } from '@/stories/noted-seeks'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import {
   AN_IPAD,
   A_MAC,
@@ -1272,6 +1273,17 @@ export const 操作の並び: Story = {
       'data-variant',
       'danger',
     )
+
+    for (const name of ['サムネイルを再生成', 'エンコード']) {
+      await expect(canvas.getByRole('button', { name })).toHaveAttribute(
+        'data-variant',
+        'tone',
+      )
+    }
+
+    for (const name of THE_ACTIONS) {
+      await standsOnAGround(canvas.getByRole('button', { name }))
+    }
   },
 }
 
@@ -1298,6 +1310,10 @@ export const iPad_の縦では操作を二列に並べて重ねない: Story = {
             other.bottom <= one.top,
         ).toBe(true)
       }
+    }
+
+    for (const name of THE_ACTIONS) {
+      await standsOnAGround(canvas.getByRole('button', { name }))
     }
   },
 }

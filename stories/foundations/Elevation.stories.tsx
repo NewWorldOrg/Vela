@@ -23,7 +23,7 @@ export const SurfacesAndShadows: Story = {
       <div className="flex flex-wrap items-center gap-3">
         <Button>予約を追加</Button>
         <Button variant="tone">外部プレイヤーで再生</Button>
-        <Button variant="ghost">チューナーへ</Button>
+        <Button variant="tone">チューナーへ</Button>
       </div>
       <div className="w-fit rounded-lg bg-raised p-4 shadow-lift">
         <p className="text-body">浮くものだけが影を持つ。</p>
