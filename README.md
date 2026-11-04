@@ -34,7 +34,7 @@ Vela は `/api/*` を中継しない。\
 | 変数 | 用途 |
 | --- | --- |
 | `CARINA_API_BASE_URL` | Carina の接続先。既定値は無く、未設定のまま API を呼ぶ要求は失敗する |
-| `DEV_ALLOWED_ORIGINS` | 開発サーバが受け付けるホスト名。カンマで区切り、ポートは含めない。既定は `localhost,127.0.0.1` |
+| `DEV_ALLOWED_ORIGINS` | 開発サーバが受け付けるホスト名。カンマで区切り、ポートは含めない。コードに既定値は無く、開発用の compose が `localhost,127.0.0.1` を渡す |
 
 `DEV_ALLOWED_ORIGINS` にブラウザが実際に使うホスト名が無いと、開発サーバはチャンクと HMR の接続を拒む。
 
