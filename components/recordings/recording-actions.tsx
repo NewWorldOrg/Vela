@@ -43,8 +43,8 @@ export function RecordingActions({
   plan,
   laid = 'page',
 }: {
-  /** In the page, in the column beside the programme on a wide window, or in the face a phone held on its side opens at the picture's right, where the buttons stand one under another. */
-  laid?: 'page' | 'column' | 'face'
+  /** In the page under the programme's title and values, or in the face a phone held on its side opens at the picture's right, where the buttons stand one under another. */
+  laid?: 'page' | 'face'
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onRemakeThumbnail: (id: string) => Promise<ThumbnailWrite>
@@ -91,70 +91,17 @@ export function RecordingActions({
     return result
   }
 
-  const asking = (
-    <DeleteRecordingDialog
-      recording={asked}
-      onOpenChange={(open) => !open && setAsked(null)}
-      onDelete={remove}
-    />
-  )
-
-  if (laid === 'column') {
-    return (
-      <>
-        <div
-          data-slot="recording-actions"
-          className="flex w-[calc(236rem/16)] flex-col items-stretch gap-2.5 max-[900px]:grid max-[900px]:w-full max-[900px]:grid-cols-2 max-[900px]:gap-[calc(9rem/16)] upright:gap-[calc(9rem/16)]"
-        >
-          {plan && (
-            <ExternalPlayerOpener
-              recording={recording}
-              plan={plan}
-              onTakeTicket={onTakeTicket}
-              wide
-            />
-          )}
-          {encodes(recording) && (
-            <EncodeButton
-              recording={recording}
-              choices={encodeChoices}
-              onQueue={onQueueEncode}
-              wide
-            />
-          )}
-          {redrawsThumbnail(recording) && (
-            <ThumbnailButton
-              recording={recording}
-              onRemake={onRemakeThumbnail}
-              wide
-            />
-          )}
-          <Button
-            variant="danger"
-            disabled={!deletable}
-            title={deletable ? undefined : '録画中のため、削除できません。'}
-            onClick={() =>
-              phone ? deleteWhenTheToastLeaves() : setAsked(recording)
-            }
-          >
-            <TrashIcon />
-            削除
-          </Button>
-          <UnfinishedDeletionChip recording={recording} />
-        </div>
-        {asking}
-      </>
-    )
-  }
-
   return (
     <>
-      <div className="flex flex-wrap items-center gap-[calc(9rem/16)]">
+      <div
+        data-slot="recording-actions"
+        className="flex flex-wrap items-center gap-[calc(9rem/16)]"
+      >
         <ActionRow
           className={
             laid === 'face'
               ? 'w-full grid-flow-row grid-cols-1 [&>div]:items-stretch'
-              : 'max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 upright:grid-cols-2 upright:[&>[data-slot=encode-action]]:order-2 upright:[&>[data-slot=thumbnail-action]]:order-3 [&>div]:items-stretch'
+              : 'max-[900px]:w-full max-[900px]:grid-flow-row max-[900px]:grid-cols-2 max-[600px]:grid-cols-1 upright:grid-cols-2 [&>div]:items-stretch'
           }
         >
           {plan && (
@@ -164,17 +111,17 @@ export function RecordingActions({
               onTakeTicket={onTakeTicket}
             />
           )}
-          {redrawsThumbnail(recording) && (
-            <ThumbnailButton
-              recording={recording}
-              onRemake={onRemakeThumbnail}
-            />
-          )}
           {encodes(recording) && (
             <EncodeButton
               recording={recording}
               choices={encodeChoices}
               onQueue={onQueueEncode}
+            />
+          )}
+          {redrawsThumbnail(recording) && (
+            <ThumbnailButton
+              recording={recording}
+              onRemake={onRemakeThumbnail}
             />
           )}
           <Button
@@ -184,7 +131,6 @@ export function RecordingActions({
             onClick={() =>
               phone ? deleteWhenTheToastLeaves() : setAsked(recording)
             }
-            className="upright:order-4"
           >
             <TrashIcon />
             削除
@@ -194,7 +140,11 @@ export function RecordingActions({
           <UnfinishedDeletionChip recording={recording} />
         </span>
       </div>
-      {asking}
+      <DeleteRecordingDialog
+        recording={asked}
+        onOpenChange={(open) => !open && setAsked(null)}
+        onDelete={remove}
+      />
     </>
   )
 }

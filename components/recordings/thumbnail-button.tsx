@@ -69,12 +69,9 @@ export function redrawsThumbnail(recording: Recording): boolean {
 export function ThumbnailButton({
   recording,
   onRemake,
-  wide,
 }: {
   recording: Recording
   onRemake: (id: string) => Promise<ThumbnailWrite>
-  /** As wide as the column it stands in, under the main ones. */
-  wide?: boolean
 }) {
   const [pending, startTransition] = useTransition()
   const [notice, setNotice] = useState<{ drew: boolean; text: string }>()
@@ -101,10 +98,7 @@ export function ThumbnailButton({
   return (
     <div
       data-slot="thumbnail-action"
-      className={cn(
-        'flex flex-col gap-1.5',
-        wide ? 'items-stretch' : 'items-start',
-      )}
+      className="flex flex-col items-start gap-1.5"
     >
       <Button
         variant="tone"

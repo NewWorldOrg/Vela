@@ -97,7 +97,7 @@ test('the library row deletes from its menu, as a destructive item', async () =>
   assert.match(item[1], /variant="destructive"/)
 })
 
-test('the column beside the programme draws every action on a ground', async () => {
+test("a recording's actions are each drawn on a ground", async () => {
   const actions = await readFile(
     path.join(ROOT, 'components/recordings/recording-actions.tsx'),
     'utf8',
@@ -106,7 +106,7 @@ test('the column beside the programme draws every action on a ground', async () 
   assert.doesNotMatch(
     actions,
     /\bquiet\b/,
-    'an action in the column is drawn as a word alone',
+    'an action of a recording is drawn as a word alone',
   )
   assert.doesNotMatch(actions, /data-variant=ghost/)
 
@@ -144,4 +144,41 @@ test('how wide the actions in a group are is declared in one file', async () => 
       /auto-cols-fr/,
     )
   }
+})
+
+test("a recording's actions stand in one row under its title, not in a column beside it", async () => {
+  const actions = await readFile(
+    path.join(ROOT, 'components/recordings/recording-actions.tsx'),
+    'utf8',
+  )
+  const page = await readFile(
+    path.join(ROOT, 'components/recordings/recording-detail-page.tsx'),
+    'utf8',
+  )
+
+  assert.doesNotMatch(actions, /'column'/)
+  assert.doesNotMatch(page, /laid="column"/)
+
+  const order = [
+    '<ExternalPlayerOpener',
+    '<EncodeButton',
+    '<ThumbnailButton',
+    '<TrashIcon',
+  ].map((part) => actions.indexOf(part))
+
+  assert.ok(order.every((at) => at >= 0))
+  assert.deepEqual(
+    order,
+    [...order].sort((a, b) => a - b),
+  )
+})
+
+test("recording a programme is drawn in the recording's red", async () => {
+  const area = await readFile(
+    path.join(ROOT, 'components/guide/reservation-area.tsx'),
+    'utf8',
+  )
+
+  assert.match(area, /<RecordIcon className=\{first \? 'text-rec'/)
+  assert.doesNotMatch(area, /text-warn/)
 })

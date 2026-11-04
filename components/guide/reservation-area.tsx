@@ -19,7 +19,7 @@ export function useTellDisplaced(): TellDisplaced {
   return useContext(DisplacedTold)
 }
 
-/** The programme's actions in one row; `first` (watching it live while it is on air) leads as the main button, and recording it steps back to a toned one whose circle keeps the reservation's colour. */
+/** The programme's actions in one row; `first` (watching it live while it is on air) leads as the main button, and recording it steps back to a toned one whose circle stays the recording's red. */
 export function ReservationArea({
   programmeId,
   booked,
@@ -60,7 +60,7 @@ export function ReservationArea({
             onReserve={reserve}
             variant={first ? 'tone' : 'default'}
           >
-            <RecordIcon className={first ? 'text-warn' : undefined} />
+            <RecordIcon className={first ? 'text-rec' : undefined} />
             録画予約
           </ReserveButton>
           {seriesHref ? (

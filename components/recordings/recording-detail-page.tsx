@@ -717,48 +717,41 @@ function RecordingInfo({
     <>
       <div
         data-slot="recording-info"
-        className="grid grid-cols-[minmax(0,1fr)_auto] items-start gap-x-6 max-[900px]:grid-cols-1 upright:contents"
+        className="flex min-w-0 flex-col upright:contents"
       >
-        <div className="flex min-w-0 flex-col upright:contents">
-          <h1 className="heading text-display-s [overflow-wrap:anywhere] upright:text-section upright:leading-[1.45]">
-            {d.title}
-          </h1>
-          <div
-            data-slot="watch-meta"
-            className="-order-1 mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-ui text-ink-2 upright:order-none upright:mt-1.5 upright:mb-0 upright:text-sub"
-          >
-            <span className="inline-flex items-center gap-2">
-              <ChannelMark logo={d.channelLogo} no={d.channelNo} />
-              <span>{d.channel}</span>
-            </span>
-            <span aria-hidden="true">·</span>
-            <span className="font-code">{d.recordedRange}</span>
-            {reservationLink && (
-              <>
-                <span aria-hidden="true">·</span>
-                {reservationLink}
-              </>
-            )}
-          </div>
-          {(length || d.genres) && (
-            <div className="mt-2.5 flex flex-wrap items-center gap-2 text-ui text-ink-2">
-              {length}
-              {length && d.genres && d.genres.length > 0 && <Sep />}
-              {d.genres?.map((g) => (
-                <Badge key={g} variant="ok">
-                  {g}
-                </Badge>
-              ))}
-            </div>
-          )}
-          <OnAnUprightPhone>{values}</OnAnUprightPhone>
-          {d.synopsis && (
-            <p className="mt-3.5 max-w-[calc(640rem/16)] text-body leading-[calc(22rem/16)] text-ink-2 upright:order-3 upright:leading-[1.8]">
-              {d.synopsis}
-            </p>
+        <h1 className="heading text-display-s [overflow-wrap:anywhere] upright:text-section upright:leading-[1.45]">
+          {d.title}
+        </h1>
+        <div
+          data-slot="watch-meta"
+          className="-order-1 mb-1.5 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-ui text-ink-2 upright:order-none upright:mt-1.5 upright:mb-0 upright:text-sub"
+        >
+          <span className="inline-flex items-center gap-2">
+            <ChannelMark logo={d.channelLogo} no={d.channelNo} />
+            <span>{d.channel}</span>
+          </span>
+          <span aria-hidden="true">·</span>
+          <span className="font-code">{d.recordedRange}</span>
+          {reservationLink && (
+            <>
+              <span aria-hidden="true">·</span>
+              {reservationLink}
+            </>
           )}
         </div>
-        <div className="pt-1 max-[900px]:mt-4 upright:order-2 upright:mt-3.5 upright:pt-0">
+        {(length || d.genres) && (
+          <div className="mt-2.5 flex flex-wrap items-center gap-2 text-ui text-ink-2">
+            {length}
+            {length && d.genres && d.genres.length > 0 && <Sep />}
+            {d.genres?.map((g) => (
+              <Badge key={g} variant="ok">
+                {g}
+              </Badge>
+            ))}
+          </div>
+        )}
+        <OnAnUprightPhone>{values}</OnAnUprightPhone>
+        <div className="mt-[calc(18rem/16)] upright:order-2 upright:mt-3.5">
           <RecordingActions
             recording={d}
             onDelete={onDelete}
@@ -767,9 +760,13 @@ function RecordingInfo({
             onQueueEncode={onQueueEncode}
             encodeChoices={encodeChoices}
             plan={plan}
-            laid="column"
           />
         </div>
+        {d.synopsis && (
+          <p className="mt-3.5 max-w-[calc(640rem/16)] text-body leading-[calc(22rem/16)] text-ink-2 upright:order-3 upright:leading-[1.8]">
+            {d.synopsis}
+          </p>
+        )}
       </div>
       {failure}
       {record}
