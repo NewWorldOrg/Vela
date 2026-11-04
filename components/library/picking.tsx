@@ -302,6 +302,7 @@ export function PickMark({
       data-taken={taken || undefined}
       className={cn(
         'pointer-events-none absolute z-[2] grid place-items-center text-on-accent',
+        MARK_PLACE[size],
         MARK_SIZE[size],
         taken
           ? 'bg-accent-fill shadow-[0_0_0_2px_#fff,0_1px_3px_rgba(0,0,0,.35)]'
@@ -314,10 +315,16 @@ export function PickMark({
   )
 }
 
+const MARK_PLACE = {
+  tile: 'top-[calc(9rem/16)] left-[calc(9rem/16)]',
+  row: 'top-1.5 left-1.5',
+  phone: 'top-1.5 left-1.5',
+} as const
+
 const MARK_SIZE = {
-  tile: 'top-[calc(9rem/16)] left-[calc(9rem/16)] size-[calc(22rem/16)] rounded-[calc(6rem/16)]',
-  row: 'top-1.5 left-1.5 size-[calc(18rem/16)] rounded-[calc(6rem/16)]',
-  phone: 'top-1.5 left-1.5 size-5 rounded-[calc(6rem/16)]',
+  tile: 'size-[calc(22rem/16)] rounded-[calc(6rem/16)]',
+  row: 'size-[calc(18rem/16)] rounded-[calc(6rem/16)]',
+  phone: 'size-5 rounded-[calc(6rem/16)]',
 } as const
 
 const TICK_SIZE = {
@@ -327,11 +334,53 @@ const TICK_SIZE = {
 } as const
 
 /** The shade at the head of a picture while choosing, so its mark reads on a bright picture. */
-export function PickShade() {
+export function PickShade({ className }: { className?: string }) {
   return (
     <span
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(0,0,0,.32),rgba(0,0,0,0)_42%)]"
+      className={cn(
+        'pointer-events-none absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(0,0,0,.32),rgba(0,0,0,0)_42%)]',
+        className,
+      )}
     />
+  )
+}
+
+/** On a mouse's screen, what the picture under the pointer shows while the library is not choosing; drawn with `group/pick` on what holds the picture and `data-resting` on it while the pointer rests there. */
+export const SHOWN_AT_REST =
+  'opacity-0 transition-opacity duration-[140ms] ease-toy group-data-resting/pick:opacity-100 group-has-[[data-slot=pick-start]:focus-visible]/pick:opacity-100'
+
+/** On a mouse's screen, the check that comes up over the head of a recording's picture while the pointer rests on it, or while the keyboard is on it, and starts the library choosing with that one taken. */
+export function PickStart({
+  title,
+  size,
+  onStart,
+}: {
+  title: string
+  size: 'tile' | 'row'
+  onStart: () => void
+}) {
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={false}
+      aria-label={`${title} を選ぶ`}
+      data-slot="pick-start"
+      onClick={(event) => {
+        event.preventDefault()
+        event.stopPropagation()
+        onStart()
+      }}
+      className={cn(
+        'tap-target absolute z-[3] grid cursor-pointer place-items-center outline-none focus-visible:shadow-ring',
+        MARK_PLACE[size],
+        MARK_SIZE[size],
+        SHOWN_AT_REST,
+        'focus-visible:opacity-100',
+      )}
+    >
+      <PickMark taken={false} size={size} className="static" />
+    </button>
   )
 }

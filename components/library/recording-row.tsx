@@ -19,7 +19,13 @@ import { InFull } from '@/components/vela/in-full'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 import { AttentionChips } from '@/components/library/attention-chips'
-import { PickMark, PickShade } from '@/components/library/picking'
+import {
+  PickMark,
+  PickShade,
+  PickStart,
+  SHOWN_AT_REST,
+} from '@/components/library/picking'
+import { usePointerResting } from '@/components/library/library-cards'
 
 /** A cell of the library's table: a hairline under it from the title on, gone under a row a pointer rests on, a picked row, and the row above either. A picked row lies on the accent's tint. */
 export const CELL =
@@ -90,6 +96,7 @@ export function RecordingRow({
   picking,
   selected,
   onSelect,
+  onPickStart,
   onOpen,
   onDelete,
 }: {
@@ -99,6 +106,8 @@ export function RecordingRow({
   selected: boolean
   /** The row pressed while choosing, `range` when Shift was held. */
   onSelect: (range: boolean) => void
+  /** On a mouse's screen, the press of the check on the row's picture, which starts the library choosing with this row taken. */
+  onPickStart?: () => void
   onOpen: () => void
   onDelete: () => void
 }) {
@@ -106,18 +115,22 @@ export function RecordingRow({
   const state = watchStateOf(r)
   const series = seriesNameOf(r.title)
   const under = series !== r.title.normalize('NFKC').trim() ? series : r.genre
+  const { resting, ...following } = usePointerResting()
+  const startable = !picking && onPickStart !== undefined
 
   return (
     <tr
       role="row"
+      {...(startable ? following : {})}
       data-pressable-row
       data-recording={r.id}
       data-state={selected ? 'selected' : undefined}
+      data-resting={(startable && resting) || undefined}
       onClick={picking ? (event) => onSelect(event.shiftKey) : onOpen}
       style={delayOf(rowDelayMs(nth))}
       className={cn(
         rowArrivesIn(nth),
-        'group cursor-pointer',
+        'group group/pick cursor-pointer',
         picking && 'select-none',
       )}
     >
@@ -129,21 +142,27 @@ export function RecordingRow({
           JOINED_FIRST,
         )}
       >
-        <span className="relative block w-fit overflow-hidden rounded-sm">
-          <RecordingThumb recording={r} />
-          {picking && (
-            <>
-              <PickShade />
-              <button
-                type="button"
-                role="checkbox"
-                aria-checked={selected}
-                aria-label={`${r.title} を選ぶ`}
-                className="absolute inset-0 z-[3] cursor-pointer rounded-sm outline-none focus-visible:shadow-ring"
-              >
-                <PickMark taken={selected} />
-              </button>
-            </>
+        <span className="relative block w-fit">
+          <span className="relative block overflow-hidden rounded-sm">
+            <RecordingThumb recording={r} />
+            {startable && <PickShade className={SHOWN_AT_REST} />}
+            {picking && (
+              <>
+                <PickShade />
+                <button
+                  type="button"
+                  role="checkbox"
+                  aria-checked={selected}
+                  aria-label={`${r.title} を選ぶ`}
+                  className="absolute inset-0 z-[3] cursor-pointer rounded-sm outline-none focus-visible:shadow-ring"
+                >
+                  <PickMark taken={selected} />
+                </button>
+              </>
+            )}
+          </span>
+          {startable && (
+            <PickStart title={r.title} size="row" onStart={onPickStart} />
           )}
         </span>
       </td>

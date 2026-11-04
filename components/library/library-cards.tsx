@@ -4,6 +4,7 @@ import {
   useLayoutEffect,
   useRef,
   useState,
+  type PointerEvent,
   type ReactNode,
   type RefObject,
 } from 'react'
@@ -26,12 +27,35 @@ import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
 import { PlayIcon } from '@/components/vela/icons'
 import { RecordingThumb } from '@/components/library/recording-thumb'
-import { PickMark, PickShade } from '@/components/library/picking'
+import {
+  PickMark,
+  PickShade,
+  PickStart,
+  SHOWN_AT_REST,
+} from '@/components/library/picking'
 
 /** A picked recording's set, and the press that changes it, while the library is choosing: `range` when Shift was held. */
 export interface Picking {
   picked: ReadonlySet<string>
   onPick: (id: string, range: boolean) => void
+}
+
+/** On a mouse's screen while the library is not choosing: starts it with the one recording whose check was pressed. */
+export type PickStarting = (id: string) => void
+
+/** Whether the pointer rests on a recording, and the handlers that follow it; only a mouse's pointer counts. */
+export function usePointerResting() {
+  const [resting, setResting] = useState(false)
+
+  return {
+    resting,
+    onPointerEnter: (event: PointerEvent<HTMLElement>) => {
+      if (event.pointerType === 'mouse') {
+        setResting(true)
+      }
+    },
+    onPointerLeave: () => setResting(false),
+  }
 }
 
 function recordingHref(id: string): Route {
@@ -136,7 +160,7 @@ function TilePress({
   children: ReactNode
 }) {
   const press = cn(
-    'group block min-w-0 rounded-md text-ink no-underline outline-none focus-visible:shadow-ring',
+    'block min-w-0 rounded-md text-ink no-underline outline-none focus-visible:shadow-ring',
     className,
   )
 
@@ -164,50 +188,70 @@ function TilePress({
   )
 }
 
-/** A recording in the grid: its picture, its title after the dot of one nobody has watched, and a line under it. */
+/** A recording in the grid: its picture, its title after the dot of one nobody has watched, and a line under it. On a mouse's screen the check comes up on its picture under the pointer. */
 export function RecordingTile({
   recording,
   title = recording.title,
   meta,
   picking,
+  onPickStart,
 }: {
   recording: Recording
   title?: string
   meta: string
   picking?: Picking
+  onPickStart?: PickStarting
 }) {
   const state = watchStateOf(recording)
   const taken = picking?.picked.has(recording.id) ?? false
+  const { resting, ...following } = usePointerResting()
+  const startable = !picking && onPickStart !== undefined
 
   return (
-    <TilePress recording={recording} picking={picking}>
-      <Picture
-        recording={recording}
-        className={cn(
-          'transition-shadow duration-[140ms] ease-toy',
-          taken &&
-            'shadow-[0_0_0_2px_var(--bg),0_0_0_4.5px_var(--accent-fill)]',
-        )}
-      >
-        {picking && (
-          <>
-            <PickShade />
-            <PickMark taken={taken} size="tile" />
-          </>
-        )}
-      </Picture>
-      <span
-        data-watch={state}
-        className={cn(
-          'mt-2 flex items-center gap-1.5 text-ui leading-[calc(18rem/16)] font-semibold tracking-[-0.008em]',
-          state === 'watched' ? 'text-ink-2' : 'text-ink',
-        )}
-      >
-        {state === 'unwatched' && <UnwatchedDot />}
-        <span className="min-w-0 truncate">{title}</span>
-      </span>
-      <span className="mt-0.5 block truncate text-note text-ink-2">{meta}</span>
-    </TilePress>
+    <div
+      {...(startable ? following : {})}
+      data-resting={(startable && resting) || undefined}
+      className="group group/pick relative min-w-0"
+    >
+      <TilePress recording={recording} picking={picking}>
+        <Picture
+          recording={recording}
+          className={cn(
+            'transition-shadow duration-[140ms] ease-toy',
+            taken &&
+              'shadow-[0_0_0_2px_var(--bg),0_0_0_4.5px_var(--accent-fill)]',
+          )}
+        >
+          {picking && (
+            <>
+              <PickShade />
+              <PickMark taken={taken} size="tile" />
+            </>
+          )}
+          {startable && <PickShade className={SHOWN_AT_REST} />}
+        </Picture>
+        <span
+          data-watch={state}
+          className={cn(
+            'mt-2 flex items-center gap-1.5 text-ui leading-[calc(18rem/16)] font-semibold tracking-[-0.008em]',
+            state === 'watched' ? 'text-ink-2' : 'text-ink',
+          )}
+        >
+          {state === 'unwatched' && <UnwatchedDot />}
+          <span className="min-w-0 truncate">{title}</span>
+        </span>
+        <span className="mt-0.5 block truncate text-note text-ink-2">
+          {meta}
+        </span>
+      </TilePress>
+      {startable && (
+        <PickStart
+          title={recording.title}
+          size="tile"
+          onStart={() => onPickStart(recording.id)}
+        />
+      )}
+    </div>
   )
 }
 
@@ -341,10 +385,12 @@ export function DateGrid({
   recordings,
   now,
   picking,
+  onPickStart,
 }: {
   recordings: Recording[]
   now: Date
   picking?: Picking
+  onPickStart?: PickStarting
 }) {
   return (
     <ul data-slot="date-grid" className={TILE_GRID}>
@@ -382,6 +428,7 @@ export function DateGrid({
               recording={recording}
               meta={`${recording.channel} · ${clockOf(recording)}`}
               picking={picking}
+              onPickStart={onPickStart}
             />
           </li>
         ))
@@ -421,10 +468,12 @@ export function SeriesGrid({
   series,
   now,
   picking,
+  onPickStart,
 }: {
   series: Series<Recording>[]
   now: Date
   picking?: Picking
+  onPickStart?: PickStarting
 }) {
   const grid = useRef<HTMLUListElement>(null)
   const columns = useColumnsOf(grid, 4)
@@ -463,7 +512,12 @@ export function SeriesGrid({
         return [
           card,
           <li key="open" className="col-span-full min-w-0 py-2">
-            <SeriesOpen series={open} now={now} picking={picking} />
+            <SeriesOpen
+              series={open}
+              now={now}
+              picking={picking}
+              onPickStart={onPickStart}
+            />
           </li>,
         ]
       })}
@@ -546,10 +600,12 @@ function SeriesOpen({
   series,
   now,
   picking,
+  onPickStart,
 }: {
   series: Series<Recording>
   now: Date
   picking?: Picking
+  onPickStart?: PickStarting
 }) {
   const unwatched = series.items.filter(
     (one) => watchStateOf(one) === 'unwatched',
@@ -586,6 +642,7 @@ function SeriesOpen({
               }
               meta={`${recording.channel} · ${clockOf(recording)}`}
               picking={picking}
+              onPickStart={onPickStart}
             />
           </li>
         ))}

@@ -51,6 +51,7 @@ import { iconButtonVariants } from '@/components/vela/icon-button'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { OnAPhone } from '@/components/vela/on-an-upright-phone'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'
+import { useMouse } from '@/hooks/useMouse'
 import { goesOnFrom } from '@/lib/library-days'
 import { seriesOf } from '@/lib/library-series'
 import {
@@ -74,6 +75,16 @@ const EVERY_CHANNEL = ''
 
 const GRID_VIEW: View = { by: 'date', as: 'grid' }
 
+/** The first of the elements under `root` that `selector` finds and the window draws. */
+function drawnIn(
+  root: HTMLElement | null,
+  selector: string,
+): HTMLElement | undefined {
+  return [...(root?.querySelectorAll<HTMLElement>(selector) ?? [])].find(
+    (one) => one.getClientRects().length > 0,
+  )
+}
+
 /** The room left at the end of the table, which scrolls inside itself, so the floating bar does not cover its last row. */
 const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
 
@@ -96,6 +107,9 @@ export function LibraryView({
   const closeRef = useRef<HTMLButtonElement>(null)
   const pickRef = useRef<HTMLButtonElement>(null)
   const pickedOnce = useRef(false)
+  const startedOn = useRef<string | undefined>(undefined)
+  const shelvesRef = useRef<HTMLDivElement>(null)
+  const mouse = useMouse()
   const held = useHeldDeletions()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const sideways = usePhoneOnItsSide()
@@ -168,6 +182,13 @@ export function LibraryView({
         },
       }
     : undefined
+  const startPickingWith = (id: string): void => {
+    startedOn.current = id
+    pressedBefore.current = id
+    setPicked(new Set([id]))
+    setPicking(true)
+  }
+  const onPickStart = mouse && !picking ? startPickingWith : undefined
   const pickingControls = {
     count: chosen.length,
     everyPicked,
@@ -176,11 +197,28 @@ export function LibraryView({
   }
 
   useEffect(() => {
+    const checkOf = (id: string | undefined) =>
+      id === undefined
+        ? undefined
+        : drawnIn(
+            shelvesRef.current,
+            `[data-recording="${CSS.escape(id)}"] [role="checkbox"]`,
+          )
+
     if (picking) {
+      const into = checkOf(startedOn.current) ?? closeRef.current
+
       pickedOnce.current = true
-      closeRef.current?.focus({ preventScroll: true })
+      into?.focus({ preventScroll: true })
     } else if (pickedOnce.current) {
-      pickRef.current?.focus({ preventScroll: true })
+      const toggle = pickRef.current
+      const back =
+        toggle && toggle.getClientRects().length > 0
+          ? toggle
+          : checkOf(startedOn.current)
+
+      back?.focus({ preventScroll: true })
+      startedOn.current = undefined
     }
   }, [picking])
 
@@ -213,7 +251,7 @@ export function LibraryView({
     return () => document.removeEventListener('keydown', leaveOnEscape)
   }, [picking])
 
-  const pickToggleWith = (ref?: Ref<HTMLButtonElement>) => (
+  const pickToggleWith = (ref?: Ref<HTMLButtonElement>, className?: string) => (
     <button
       ref={ref}
       type="button"
@@ -222,6 +260,7 @@ export function LibraryView({
         if (picking) {
           stopChoosing()
         } else {
+          startedOn.current = undefined
           setPicking(true)
         }
       }}
@@ -229,6 +268,7 @@ export function LibraryView({
         iconButtonVariants(),
         'h-10 w-auto px-4 text-ui font-semibold text-ink',
         picking && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
+        className,
       )}
     >
       選ぶ
@@ -329,7 +369,7 @@ export function LibraryView({
             onValueChange={(layout) => storeText(LIBRARY_LAYOUT_COOKIE, layout)}
           />
           <div className="ml-auto flex min-w-0 items-center gap-2.5">
-            {pickToggleWith(pickRef)}
+            {pickToggleWith(pickRef, 'mouse:hidden')}
             <form
               role="search"
               className="relative w-[calc(320rem/16)] min-w-0 max-[999px]:w-[calc(240rem/16)]"
@@ -515,6 +555,7 @@ export function LibraryView({
 
       {items.length > 0 ? (
         <div
+          ref={shelvesRef}
           data-slot="library-shelves"
           className="-mx-3.5 mt-[calc(22rem/16)] flex min-h-0 flex-1 flex-col gap-[calc(26rem/16)] overflow-y-auto px-3.5 pb-10 phone:hidden min-[701px]:-mx-6 min-[701px]:px-6 min-[1366px]:-mx-10 min-[1366px]:px-10"
         >
@@ -538,18 +579,29 @@ export function LibraryView({
                   waiting={waiting}
                   onDelete={onDelete}
                   picking={pickingCards}
+                  onPickStart={onPickStart}
                   className={cn(picking && ROOM_FOR_THE_BAR)}
                 />
               </>
             ) : view.by === 'series' ? (
-              <SeriesGrid series={series} now={now} picking={pickingCards} />
+              <SeriesGrid
+                series={series}
+                now={now}
+                picking={pickingCards}
+                onPickStart={onPickStart}
+              />
             ) : (
               <>
                 <ContinueRow
                   recordings={items.filter(goesOnFrom)}
                   dimmed={picking}
                 />
-                <DateGrid recordings={items} now={now} picking={pickingCards} />
+                <DateGrid
+                  recordings={items}
+                  now={now}
+                  picking={pickingCards}
+                  onPickStart={onPickStart}
+                />
               </>
             )}
             {picking && view.as !== 'table' && (
