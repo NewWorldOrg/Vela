@@ -1,6 +1,13 @@
 'use client'
 
-import { useState, useTransition, type ReactNode, type Ref } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  useTransition,
+  type ReactNode,
+  type Ref,
+} from 'react'
 
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
@@ -28,7 +35,7 @@ import { useToast } from '@/components/vela/toast'
 
 const SIGNED_OUT = signedOut('操作')
 
-/** What the choosing row and the phone's band press, and the question asked before the picked recordings go. */
+/** What the choosing bar and the phone's band press, and the question asked before the picked recordings go. */
 export interface PickedDeletion {
   pending: boolean
   /** Whether `削除` can be pressed: something is picked and none of it is still being recorded. */
@@ -146,8 +153,9 @@ interface PickingControls {
 
 const WHAT_IT_DOES = '選んだ録画の操作'
 
-/** The heading's row while the library is choosing, in the heading's place and at its height: close, how many, every one, and `削除` at the end. */
-export function PickingRow({
+/** The bar floating in the middle of the window's foot while the library is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and `削除`. It rises in and sinks away, and stays drawn while it sinks. */
+export function PickingBar({
+  shown,
   count,
   everyPicked,
   onEvery,
@@ -156,16 +164,48 @@ export function PickingRow({
   closeRef,
   className,
 }: PickingControls & {
+  shown: boolean
   onClose: () => void
   closeRef?: Ref<HTMLButtonElement>
   className?: string
 }) {
+  const [drawn, setDrawn] = useState(shown)
+  const barRef = useRef<HTMLDivElement>(null)
+
+  if (shown && !drawn) {
+    setDrawn(true)
+  }
+
+  useEffect(() => {
+    const bar = barRef.current
+
+    if (!shown && bar && getComputedStyle(bar).animationName === 'none') {
+      setDrawn(false)
+    }
+  }, [shown])
+
+  if (!drawn) {
+    return null
+  }
+
   return (
     <div
-      role="toolbar"
-      aria-label={WHAT_IT_DOES}
-      data-slot="picking-row"
-      className={cn('flex min-w-0 items-center', className)}
+      ref={barRef}
+      role={shown ? 'toolbar' : undefined}
+      aria-label={shown ? WHAT_IT_DOES : undefined}
+      aria-hidden={shown ? undefined : true}
+      inert={!shown}
+      data-slot="picking-bar"
+      data-state={shown ? 'open' : 'closed'}
+      onAnimationEnd={(event) => {
+        if (!shown && event.target === event.currentTarget) {
+          setDrawn(false)
+        }
+      }}
+      className={cn(
+        'fixed inset-x-0 bottom-[24px] z-50 mx-auto flex w-fit max-w-[calc(100vw-32rem/16)] items-center rounded-full bg-raised py-2 pr-2 pl-2 shadow-[0_0_0_1px_var(--hair),var(--lift)] [--from-y:calc(16rem/16)] data-[state=closed]:disappears data-[state=open]:appears',
+        className,
+      )}
     >
       <button
         ref={closeRef}
@@ -174,21 +214,25 @@ export function PickingRow({
         onClick={onClose}
         className={cn(
           iconButtonVariants({ variant: 'quiet' }),
-          'mr-3.5 size-10 bg-surface text-ink not-disabled:hover:bg-surface-2 not-disabled:hover:text-ink [&_svg]:size-[calc(18rem/16)]',
+          'mr-3.5 size-10 bg-surface text-ink not-disabled:hover:bg-surface-2 not-disabled:hover:text-ink dark:bg-surface-3 dark:not-disabled:hover:bg-surface-2 [&_svg]:size-[calc(18rem/16)]',
         )}
       >
         <CloseIcon />
       </button>
       <PickedCount
         count={count}
-        className="text-section font-bold whitespace-nowrap"
+        className="min-w-[calc(118rem/16)] text-section font-bold whitespace-nowrap"
       />
-      <Button variant="tone" className="ml-5" onClick={onEvery}>
+      <Button
+        variant="tone"
+        className="ml-5 dark:bg-surface-3"
+        onClick={onEvery}
+      >
         {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
       </Button>
       <Button
         variant="danger"
-        className="ml-auto"
+        className="ml-3"
         disabled={deletion.pending || !deletion.deletable}
         onClick={deletion.ask}
       >
