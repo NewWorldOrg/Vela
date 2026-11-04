@@ -40,6 +40,13 @@
   }
 }
 
+/* A screen whose pointer can rest over something before pressing it: a mouse or a trackpad. */
+@custom-variant mouse {
+  @media (hover: hover) and (pointer: fine) {
+    @slot;
+  }
+}
+
 /* Dark, and inside anything marked `data-ink-face`: the panels beside the picture, which stay on the player's ink whatever the theme. */
 @custom-variant dark {
   &:where(.dark, .dark *) {

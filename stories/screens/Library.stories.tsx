@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import { getRouter } from '@storybook/nextjs/navigation.mock'
 
 import type {
   Recording,
@@ -157,6 +158,41 @@ async function pressWithShift(target: HTMLElement) {
   await user.keyboard('{/Shift}')
 }
 
+const A_DESKTOP = { width: 1440, height: 900 }
+
+/** The picture of a recording, where a pointer comes to rest over it. */
+function pictureOf(canvasElement: HTMLElement, recording: Recording) {
+  return placeOf(canvasElement, recording).querySelector<HTMLElement>(
+    '[data-thumbnail]',
+  )!
+}
+
+/** Rests the pointer on a recording's picture. */
+async function hoverOn(canvasElement: HTMLElement, recording: Recording) {
+  await userEvent.hover(pictureOf(canvasElement, recording))
+}
+
+/** Whether a control is there to see: drawn, and not faded out. */
+function shownOf(control: HTMLElement): boolean {
+  return (
+    control.getBoundingClientRect().width > 0 &&
+    getComputedStyle(control).opacity === '1'
+  )
+}
+
+/** Starts choosing as a mouse does: rests on a recording and presses the check that comes up on its picture. */
+async function startWithTheCheck(
+  canvasElement: HTMLElement,
+  recording: Recording,
+) {
+  await hoverOn(canvasElement, recording)
+  await waitFor(() =>
+    expect(shownOf(pickOf(canvasElement, recording))).toBe(true),
+  )
+  await userEvent.click(pickOf(canvasElement, recording))
+  await expect(pickOf(canvasElement, recording)).toBeChecked()
+}
+
 function topOf(element: Element | null): number {
   if (!element) {
     throw new Error('not drawn')
@@ -167,6 +203,7 @@ function topOf(element: Element | null): number {
 
 export const 複数を選んで削除する: Story = {
   args: { result, filter: {} },
+  parameters: { coarse: true },
   play: async ({ canvasElement }) => {
     await startChoosing(canvasElement)
     const [first, second] = result.items.filter(
@@ -217,7 +254,7 @@ async function floatsAtTheFoot(bar: HTMLElement): Promise<void> {
 
 export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await afterTheArrival(canvasElement)
@@ -271,7 +308,7 @@ export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
 
 export const 選ぶをもう一度押すか閉じるで帯が消える: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
     await afterTheArrival(canvasElement)
@@ -343,7 +380,7 @@ export const 選ぶ帯はスクロールしても窓の下にとどまり最後�
       filter: {},
       view: GRID,
     },
-    parameters: { screen: { width: 1440, height: 900 } },
+    parameters: { screen: { width: 1440, height: 900 }, coarse: true },
     play: async ({ canvasElement }) => {
       await leavesTheLastOneClear(canvasElement)
     },
@@ -355,7 +392,7 @@ export const 表でも選ぶ帯は最後の行を隠さない: Story = {
     filter: {},
     view: TABLE,
   },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     await leavesTheLastOneClear(canvasElement)
   },
@@ -363,7 +400,7 @@ export const 表でも選ぶ帯は最後の行を隠さない: Story = {
 
 export const iPadでも選ぶ帯は窓の下に浮かぶ: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1180, height: 820 } },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
     await startChoosing(canvasElement)
     await floatsAtTheFoot(pickingRow(canvasElement))
@@ -378,7 +415,7 @@ export const iPadでも選ぶ帯は窓の下に浮かぶ: Story = {
 
 export const すべて選ぶとすべて外す: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     await startChoosing(canvasElement)
 
@@ -409,7 +446,7 @@ export const すべて選ぶは絞り込みに従う: Story = {
     filter: { genre: LIBRARY_SHELF[0].genre },
     view: GRID,
   },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     thrownAway.length = 0
     await expect(CARTOONS.length).toBeLessThan(LIBRARY_SHELF.length)
@@ -435,13 +472,11 @@ export const すべて選ぶは絞り込みに従う: Story = {
 
 export const Shiftを押しながら押すと範囲で選ぶ: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: A_DESKTOP },
   play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-
     const [, second, third, fourth, fifth] = LIBRARY_SHELF
 
-    await userEvent.click(pickOf(canvasElement, second))
+    await startWithTheCheck(canvasElement, second)
     await pressWithShift(pickOf(canvasElement, fifth))
 
     await expect(pickingRow(canvasElement)).toHaveTextContent('4 件を選択')
@@ -455,13 +490,11 @@ export const Shiftを押しながら押すと範囲で選ぶ: Story = {
 
 export const 表でもShiftで範囲を選ぶ: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: A_DESKTOP },
   play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-
     const [first, , third] = LIBRARY_SHELF
 
-    await userEvent.click(placeOf(canvasElement, third))
+    await startWithTheCheck(canvasElement, third)
     await pressWithShift(placeOf(canvasElement, first))
 
     await expect(pickingRow(canvasElement)).toHaveTextContent('3 件を選択')
@@ -470,25 +503,237 @@ export const 表でもShiftで範囲を選ぶ: Story = {
 
 export const Escで選ぶのをやめる: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: A_DESKTOP },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
 
-    await startChoosing(canvasElement)
-    await userEvent.click(pickOf(canvasElement, LIBRARY_SHELF[0]))
+    await startWithTheCheck(canvasElement, first)
     await userEvent.keyboard('{Escape}')
 
     await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual(
+      [],
+    )
+    await expect(pickOf(canvasElement, first)).toHaveFocus()
+
+    await startWithTheCheck(canvasElement, first)
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+  },
+}
+
+export const マウスの画面では上に選ぶが無く絵に乗せるとチェックが出る: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await expect(canvas.queryAllByRole('button', { name: '選ぶ' })).toEqual([])
+    await expect(shownOf(pickOf(canvasElement, first))).toBe(false)
+
+    await hoverOn(canvasElement, first)
+    await waitFor(() =>
+      expect(shownOf(pickOf(canvasElement, first))).toBe(true),
+    )
+    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
+    await expect(pickOf(canvasElement, first)).not.toBeChecked()
+
+    const mark = pickOf(canvasElement, first).getBoundingClientRect()
+    const picture = placeOf(canvasElement, first)
+      .querySelector('[data-thumbnail]')!
+      .getBoundingClientRect()
+
+    await expect(Math.round(mark.width)).toBe(22)
+    await expect(mark.left - picture.left).toBeGreaterThan(0)
+    await expect(mark.left - picture.left).toBeLessThan(16)
+    await expect(mark.top - picture.top).toBeGreaterThan(0)
+    await expect(mark.top - picture.top).toBeLessThan(16)
+
+    await userEvent.unhover(pictureOf(canvasElement, first))
+    await waitFor(() =>
+      expect(shownOf(pickOf(canvasElement, first))).toBe(false),
+    )
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+  },
+}
+
+export const マウスの画面ではチェックを押すと選び始めてその1件を選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await startWithTheCheck(canvasElement, first)
+
+    const bar = pickingRow(canvasElement)
+
+    await floatsAtTheFoot(bar)
+    await expect(bar).toHaveTextContent('1 件を選択')
+    await expect(pickOf(canvasElement, first)).toBeChecked()
+    await expect(pickOf(canvasElement, second)).not.toBeChecked()
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      LIBRARY_SHELF.length,
+    )
+    for (const one of LIBRARY_SHELF) {
+      await expect(shownOf(pickOf(canvasElement, one))).toBe(true)
+    }
+
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(bar).toHaveTextContent('2 件を選択')
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', { name: '閉じる' }),
+    )
+    await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
+    await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual(
+      [],
+    )
+    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
+  },
+}
+
+export const 表ではマウスを乗せた行の絵にチェックが出る: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await expect(canvas.queryAllByRole('button', { name: '選ぶ' })).toEqual([])
+    await expect(shownOf(pickOf(canvasElement, first))).toBe(false)
+
+    await hoverOn(canvasElement, first)
+    await waitFor(() =>
+      expect(shownOf(pickOf(canvasElement, first))).toBe(true),
+    )
+    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
+    await expect(
+      Math.round(pickOf(canvasElement, first).getBoundingClientRect().width),
+    ).toBe(18)
+
+    getRouter().push.mockClear()
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(placeOf(canvasElement, first)).toHaveAttribute(
+      'data-state',
+      'selected',
+    )
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      LIBRARY_SHELF.length,
+    )
+    await expect(getRouter().push).not.toHaveBeenCalled()
+  },
+}
+
+export const マウスの画面でチェック以外を押すと録画を開く: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+    const link = within(placeOf(canvasElement, first)).getByRole('link')
+
+    await afterTheArrival(canvasElement)
+    await hoverOn(canvasElement, first)
+    link.addEventListener('click', (event) => event.preventDefault(), {
+      once: true,
+    })
+
+    let opened = false
+
+    link.addEventListener('click', () => {
+      opened = true
+    })
+    await userEvent.click(pictureOf(canvasElement, first))
+
+    await expect(opened).toBe(true)
+    await expect(link).toHaveAttribute('href', `/recordings/${first.id}`)
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+  },
+}
+
+export const 表でマウスの画面でチェック以外を押すと録画を開く: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+    const row = placeOf(canvasElement, first)
+
+    await afterTheArrival(canvasElement)
+    await hoverOn(canvasElement, first)
+    getRouter().push.mockClear()
+    await userEvent.click(within(row).getByText(first.channel))
+
+    await expect(getRouter().push).toHaveBeenCalledWith(
+      `/recordings/${first.id}`,
+    )
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+  },
+}
+
+export const Tabでチェックに焦点が来ると見える: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const [first] = LIBRARY_SHELF
+    const link = within(placeOf(canvasElement, first)).getByRole('link')
+
+    await afterTheArrival(canvasElement)
+    link.focus()
+    await userEvent.tab()
+
+    const check = pickOf(canvasElement, first)
+
+    await expect(check).toHaveFocus()
+    await waitFor(() => expect(shownOf(check)).toBe(true))
+
+    await userEvent.keyboard('{Enter}')
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(pickOf(canvasElement, first)).toBeChecked()
+    await expect(pickOf(canvasElement, first)).toHaveFocus()
+  },
+}
+
+export const iPadでは上に選ぶがありチェックは出ない: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await expect(
+      drawnOf(canvas.getAllByRole('button', { name: '選ぶ' })),
+    ).toBeVisible()
+    await hoverOn(canvasElement, first)
     await expect(canvas.queryAllByRole('checkbox')).toEqual([])
 
     await startChoosing(canvasElement)
     await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      LIBRARY_SHELF.length,
+    )
   },
+}
+
+export const 表_iPadでは上に選ぶがありチェックは出ない: Story = {
+  ...iPadでは上に選ぶがありチェックは出ない,
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
 }
 
 export const 表では絵の上に印を置き列はずれない: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
 
@@ -527,7 +772,7 @@ export const 表では絵の上に印を置き列はずれない: Story = {
 
 export const 選ぶあいだ続きからは薄く押せない: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 } },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
   play: async ({ canvasElement }) => {
     await afterTheArrival(canvasElement)
 
@@ -551,6 +796,7 @@ export const 選ぶあいだ続きからは薄く押せない: Story = {
 
 export const 録画中を含むと削除できない: Story = {
   args: { result, filter: {} },
+  parameters: { coarse: true },
   play: async ({ canvasElement }) => {
     await startChoosing(canvasElement)
     const recording = result.items.find((one) => one.outcome === 'recording')
@@ -569,6 +815,7 @@ export const 録画中を含むと削除できない: Story = {
 
 export const 絞りを変えると選択を外す: Story = {
   args: { result, filter: {} },
+  parameters: { coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -1357,8 +1604,6 @@ export const 横向きの電話は検索の欄を上の帯に置く: Story = {
 }
 
 const shelf = resultOf(LIBRARY_SHELF)
-
-const A_DESKTOP = { width: 1440, height: 900 }
 
 export const 日付の格子: Story = {
   args: { result: shelf, filter: {}, view: GRID },

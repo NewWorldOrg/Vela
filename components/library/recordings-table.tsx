@@ -9,7 +9,7 @@ import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-
 import { RecordingRow } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
-import type { Picking } from '@/components/library/library-cards'
+import type { Picking, PickStarting } from '@/components/library/library-cards'
 import { ChevronDownIcon } from '@/components/vela/icons'
 import { waitsWhile } from '@/components/vela/waiting'
 
@@ -22,6 +22,7 @@ export function RecordingsTable({
   groups,
   onDelete,
   picking,
+  onPickStart,
   waiting = false,
   className,
 }: {
@@ -30,6 +31,7 @@ export function RecordingsTable({
   groups?: { key: string; name: string; items: Recording[] }[]
   onDelete: (id: string) => Promise<RecordingDiscarded>
   picking?: Picking
+  onPickStart?: PickStarting
   waiting?: boolean
   className?: string
 }) {
@@ -48,6 +50,7 @@ export function RecordingsTable({
       onDelete={() => setAsked(r)}
       selected={picking?.picked.has(r.id) ?? false}
       onSelect={(range) => picking?.onPick(r.id, range)}
+      onPickStart={onPickStart && (() => onPickStart(r.id))}
     />
   )
 
