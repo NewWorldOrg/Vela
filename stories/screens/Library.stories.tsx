@@ -283,6 +283,25 @@ export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
     )
     await expect(row.getByRole('button', { name: '削除' })).toBeEnabled()
     await floatsAtTheFoot(bar)
+  },
+}
+
+export const 選ぶをもう一度押すか閉じるで帯が消える: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await afterTheArrival(canvasElement)
+
+    const shelves = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="library-shelves"]',
+    )!
+    const shelvesAt = topOf(shelves)
+
+    await startChoosing(canvasElement)
+    await userEvent.click(pickOf(canvasElement, LIBRARY_SHELF[0]))
+
+    const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
 
     await userEvent.click(pick)
     await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
