@@ -8,7 +8,6 @@ import { formatLength } from '@/lib/format'
 import { watchedShareOf, watchStateOf } from '@/lib/library-days'
 import { seriesNameOf } from '@/lib/library-series'
 import type { Recording } from '@/repository/recordings'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,10 +19,18 @@ import { InFull } from '@/components/vela/in-full'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 import { AttentionChips } from '@/components/library/attention-chips'
+import { PickMark, PickShade } from '@/components/library/picking'
 
-/** A cell of the library's table: a hairline under it from the title on, gone under a row a pointer rests on and the row above it. */
+/** A cell of the library's table: a hairline under it from the title on, gone under a row a pointer rests on, a picked row, and the row above either. A picked row lies on the accent's tint. */
 export const CELL =
-  'h-[calc(70rem/16)] border-b border-hair px-[calc(13rem/16)] align-middle text-ui transition-[background-color,border-color] duration-[140ms] ease-toy group-last:border-b-0 group-hover:border-transparent group-hover:bg-surface [tr:has(+tr:hover)>&]:border-transparent'
+  'h-[calc(70rem/16)] border-b border-hair px-[calc(13rem/16)] align-middle text-ui transition-[background-color,border-color] duration-[140ms] ease-toy group-last:border-b-0 group-hover:border-transparent group-hover:bg-surface [tr:has(+tr:hover)>&]:border-transparent [tr:has(+tr[data-state=selected])>&]:border-transparent [tr[data-state=selected]>&]:border-transparent [tr[data-state=selected]>&]:bg-accent-tint'
+
+/** The first and last cells' corners, joined between picked rows that follow one another. */
+const JOINED_FIRST =
+  '[tr[data-state=selected]:has(+tr[data-state=selected])>&]:rounded-bl-none [tr[data-state=selected]+tr[data-state=selected]>&]:rounded-tl-none'
+
+const JOINED_LAST =
+  '[tr[data-state=selected]:has(+tr[data-state=selected])>&]:rounded-br-none [tr[data-state=selected]+tr[data-state=selected]>&]:rounded-tr-none'
 
 function Length({ recording: r }: { recording: Recording }) {
   if (r.outcome === 'recording') {
@@ -90,7 +97,8 @@ export function RecordingRow({
   nth: number
   picking: boolean
   selected: boolean
-  onSelect: (chosen: boolean) => void
+  /** The row pressed while choosing, `range` when Shift was held. */
+  onSelect: (range: boolean) => void
   onOpen: () => void
   onDelete: () => void
 }) {
@@ -105,39 +113,54 @@ export function RecordingRow({
       data-pressable-row
       data-recording={r.id}
       data-state={selected ? 'selected' : undefined}
-      onClick={picking ? () => onSelect(!selected) : onOpen}
+      onClick={picking ? (event) => onSelect(event.shiftKey) : onOpen}
       style={delayOf(rowDelayMs(nth))}
-      className={cn(rowArrivesIn(nth), 'group cursor-pointer')}
-    >
-      {picking && (
-        <td
-          role="cell"
-          className={cn(CELL, 'rounded-l-md border-transparent pr-0 pl-3')}
-          onClick={(event) => event.stopPropagation()}
-        >
-          <Checkbox
-            checked={selected}
-            onCheckedChange={(next) => onSelect(next === true)}
-            aria-label={`${r.title} を選ぶ`}
-          />
-        </td>
+      className={cn(
+        rowArrivesIn(nth),
+        'group cursor-pointer',
+        picking && 'select-none',
       )}
+    >
       <td
         role="cell"
         className={cn(
           CELL,
-          'border-transparent pr-1 pl-2.5',
-          !picking && 'rounded-l-md',
+          'rounded-l-md border-transparent pr-1 pl-2.5',
+          JOINED_FIRST,
         )}
       >
-        <RecordingThumb recording={r} />
+        <span className="relative block w-fit overflow-hidden rounded-sm">
+          <RecordingThumb recording={r} />
+          {picking && (
+            <>
+              <PickShade />
+              <button
+                type="button"
+                role="checkbox"
+                aria-checked={selected}
+                aria-label={`${r.title} を選ぶ`}
+                className="absolute inset-0 z-[3] cursor-pointer rounded-sm outline-none focus-visible:shadow-ring"
+              >
+                <PickMark taken={selected} />
+              </button>
+            </>
+          )}
+        </span>
       </td>
       <td role="cell" className={CELL}>
         <span className="flex min-w-0 items-center gap-2.5">
           <span className="min-w-0">
             <Link
               href={`/recordings/${r.id}`}
-              onClick={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                if (picking) {
+                  event.preventDefault()
+
+                  return
+                }
+
+                event.stopPropagation()
+              }}
               tabIndex={picking ? -1 : undefined}
               className={cn(
                 'tap-target flex min-w-0 items-center gap-1.5 text-[calc(14.5rem/16)] leading-5 font-semibold tracking-[-0.008em] no-underline outline-none focus-visible:shadow-ring',
@@ -188,7 +211,7 @@ export function RecordingRow({
       </td>
       <td
         role="cell"
-        className={cn(CELL, 'rounded-r-md pr-2 pl-0 text-right')}
+        className={cn(CELL, 'rounded-r-md pr-2 pl-0 text-right', JOINED_LAST)}
         onClick={(event) => event.stopPropagation()}
       >
         {!picking && (

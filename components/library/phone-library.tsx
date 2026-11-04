@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, type ReactNode } from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
@@ -16,11 +16,15 @@ import {
 } from '@/lib/library-days'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
-import { Checkbox } from '@/components/ui/checkbox'
 import { ChevronUpIcon, MoreIcon, TrashIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
-import { Picture } from '@/components/library/library-cards'
+import {
+  GoingOn,
+  Picture,
+  type Picking,
+} from '@/components/library/library-cards'
+import { PickMark, PickShade } from '@/components/library/picking'
 import { AttentionChips } from '@/components/library/attention-chips'
 import {
   holdDeletion,
@@ -32,13 +36,28 @@ function recordingHref(id: string): Route {
 }
 
 /** The recordings left part-way, across the phone in a row that is sent sideways: each opens where it was left. */
-export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
+export function PhoneContinue({
+  recordings,
+  dimmed = false,
+}: {
+  recordings: Recording[]
+  /** While the library is choosing: drawn faint, and nothing in it can be pressed. */
+  dimmed?: boolean
+}) {
   if (recordings.length === 0) {
     return null
   }
 
   return (
-    <section aria-labelledby="library-continue" data-slot="phone-continue">
+    <section
+      aria-labelledby="library-continue"
+      data-slot="phone-continue"
+      inert={dimmed}
+      className={cn(
+        'transition-opacity duration-[140ms] ease-toy',
+        dimmed && 'opacity-40',
+      )}
+    >
       <h2
         id="library-continue"
         className="px-0.5 pt-3 pb-2 text-heading font-bold tracking-[-0.015em] text-ink"
@@ -51,8 +70,9 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
 
           return (
             <li key={recording.id} className="w-[calc(232rem/16)] shrink-0">
-              <Link
-                href={playingOnHref(recording.id) as Route}
+              <GoingOn
+                recording={recording}
+                still={dimmed}
                 className="block text-ink no-underline outline-none focus-visible:shadow-ring"
               >
                 <Picture
@@ -71,7 +91,7 @@ export function PhoneContinue({ recordings }: { recordings: Recording[] }) {
                     </>
                   )}
                 </span>
-              </Link>
+              </GoingOn>
             </li>
           )
         })}
@@ -85,15 +105,11 @@ export function PhoneRecordingRows({
   recordings,
   now,
   picking,
-  picked,
-  onPick,
   onDelete,
 }: {
   recordings: Recording[]
   now: Date
-  picking: boolean
-  picked: ReadonlySet<string>
-  onPick: (picked: Set<string>) => void
+  picking?: Picking
   onDelete: (id: string) => Promise<RecordingDiscarded>
 }) {
   const [open, setOpen] = useState<string>()
@@ -119,18 +135,6 @@ export function PhoneRecordingRows({
         })
       },
     })
-  }
-
-  const pick = (id: string, taken: boolean): void => {
-    const next = new Set(picked)
-
-    if (taken) {
-      next.add(id)
-    } else {
-      next.delete(id)
-    }
-
-    onPick(next)
   }
 
   return (
@@ -159,61 +163,16 @@ export function PhoneRecordingRows({
                   data-recording={recording.id}
                   className="min-w-0"
                 >
-                  <div className="flex items-start">
-                    {picking && (
-                      <label className="flex h-[calc(92rem/16)] w-12 shrink-0 items-center justify-center pl-2">
-                        <Checkbox
-                          aria-label={`${recording.title} を選ぶ`}
-                          checked={picked.has(recording.id)}
-                          onCheckedChange={(on) =>
-                            pick(recording.id, on === true)
-                          }
-                        />
-                      </label>
-                    )}
-                    <Link
-                      href={recordingHref(recording.id)}
-                      className={cn(
-                        'flex min-w-0 flex-1 items-start gap-3 py-3 pr-1 text-ink no-underline outline-none focus-visible:shadow-ring',
-                        picking ? 'pl-1' : 'pl-4',
-                      )}
-                    >
-                      <span className="w-[calc(120rem/16)] shrink-0">
-                        <Picture recording={recording} corner="rounded-sm" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span
-                          className={cn(
-                            'line-clamp-2 text-ui leading-normal font-bold',
-                            watchStateOf(recording) === 'watched' &&
-                              'text-ink-2',
-                          )}
-                        >
-                          {watchStateOf(recording) === 'unwatched' && (
-                            <span
-                              data-slot="unwatched-dot"
-                              className="mr-1.5 mb-[0.12em] inline-block size-1.5 rounded-full bg-accent"
-                            >
-                              <span className="sr-only">未視聴</span>
-                            </span>
-                          )}
-                          {recording.title}
-                        </span>
-                        <span className="mt-0.5 block text-sub text-ink-2">
-                          {recording.channel} ·{' '}
-                          <span className="font-code">
-                            {formatClock(
-                              new Date(recording.startedAt).getTime(),
-                            )}
-                          </span>
-                        </span>
-                        <AttentionChips
-                          recording={recording}
-                          className="mt-1.5"
-                        />
-                      </span>
-                    </Link>
-                    {!picking && (
+                  {picking ? (
+                    <PickedRow recording={recording} picking={picking} />
+                  ) : (
+                    <div className="flex items-start">
+                      <Link
+                        href={recordingHref(recording.id)}
+                        className="flex min-w-0 flex-1 items-start gap-3 py-3 pr-1 pl-4 text-ink no-underline outline-none focus-visible:shadow-ring"
+                      >
+                        <RowFace recording={recording} />
+                      </Link>
                       <button
                         type="button"
                         aria-label="この録画の操作"
@@ -234,9 +193,9 @@ export function PhoneRecordingRows({
                           <MoreIcon />
                         )}
                       </button>
-                    )}
-                  </div>
-                  {open === recording.id && (
+                    </div>
+                  )}
+                  {!picking && open === recording.id && (
                     <div className="mx-4 mb-2 flex flex-wrap gap-2 rounded-md bg-surface px-3 py-3">
                       <Button
                         variant="danger"
@@ -261,5 +220,87 @@ export function PhoneRecordingRows({
         )
       })}
     </div>
+  )
+}
+
+/** What a row of the phone's list shows: the picture with its length and how far it was watched, the title, the channel and time, and the states that need attention. */
+function RowFace({
+  recording,
+  mark,
+}: {
+  recording: Recording
+  mark?: ReactNode
+}) {
+  const state = watchStateOf(recording)
+
+  return (
+    <>
+      <span className="w-[calc(120rem/16)] shrink-0">
+        <Picture recording={recording} corner="rounded-sm">
+          {mark}
+        </Picture>
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={cn(
+            'line-clamp-2 text-ui leading-normal font-bold',
+            state === 'watched' && 'text-ink-2',
+          )}
+        >
+          {state === 'unwatched' && (
+            <span
+              data-slot="unwatched-dot"
+              className="mr-1.5 mb-[0.12em] inline-block size-1.5 rounded-full bg-accent"
+            >
+              <span className="sr-only">未視聴</span>
+            </span>
+          )}
+          {recording.title}
+        </span>
+        <span className="mt-0.5 block text-sub text-ink-2">
+          {recording.channel} ·{' '}
+          <span className="font-code">
+            {formatClock(new Date(recording.startedAt).getTime())}
+          </span>
+        </span>
+        <AttentionChips recording={recording} className="mt-1.5" />
+      </span>
+    </>
+  )
+}
+
+/** A row while the library is choosing: the whole row takes the recording in or leaves it out, its mark on the picture, so nothing moves sideways. A taken row lies on the accent's tint. */
+function PickedRow({
+  recording,
+  picking,
+}: {
+  recording: Recording
+  picking: Picking
+}) {
+  const taken = picking.picked.has(recording.id)
+
+  return (
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={taken}
+      aria-label={`${recording.title} を選ぶ`}
+      onClick={(event) => picking.onPick(recording.id, event.shiftKey)}
+      className={cn(
+        'flex min-w-0 cursor-pointer items-start gap-3 rounded-xl py-3 pr-[calc(44rem/16)] text-left text-ink outline-none select-none focus-visible:shadow-ring',
+        'mx-2 w-[calc(100%-1rem)] pl-2 transition-[background-color] duration-[140ms] ease-toy',
+        taken && 'bg-accent-tint',
+      )}
+    >
+      <RowFace
+        recording={recording}
+        mark={
+          <>
+            <PickShade />
+            <PickMark taken={taken} size="phone" />
+          </>
+        }
+      />
+    </button>
   )
 }

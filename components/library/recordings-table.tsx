@@ -8,8 +8,8 @@ import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { RecordingRow } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
-import { SelectEvery, TableHead } from '@/components/ui/table'
-import { Checkbox } from '@/components/ui/checkbox'
+import { TableHead } from '@/components/ui/table'
+import type { Picking } from '@/components/library/library-cards'
 import { ChevronDownIcon } from '@/components/vela/icons'
 import { waitsWhile } from '@/components/vela/waiting'
 
@@ -22,8 +22,6 @@ export function RecordingsTable({
   groups,
   onDelete,
   picking,
-  picked,
-  onPick,
   waiting = false,
   className,
 }: {
@@ -31,38 +29,25 @@ export function RecordingsTable({
   /** The series to head the rows with, in their order; the rows go under no heads where there are none. */
   groups?: { key: string; name: string; items: Recording[] }[]
   onDelete: (id: string) => Promise<RecordingDiscarded>
-  picking: boolean
-  picked: ReadonlySet<string>
-  onPick: (next: ReadonlySet<string>) => void
+  picking?: Picking
   waiting?: boolean
   className?: string
 }) {
   const router = useRouter()
   const [asked, setAsked] = useState<Recording | null>(null)
-  const shown = items.filter((one) => picked.has(one.id)).length
   const wait = waitsWhile(waiting)
-  const columns = picking ? 9 : 8
+  const columns = 8
 
   const rowOf = (r: Recording, nth: number) => (
     <RecordingRow
       key={r.id}
       nth={nth}
       recording={r}
-      picking={picking}
+      picking={picking !== undefined}
       onOpen={() => router.push(`/recordings/${r.id}`)}
       onDelete={() => setAsked(r)}
-      selected={picked.has(r.id)}
-      onSelect={(taken) => {
-        const next = new Set(picked)
-
-        if (taken) {
-          next.add(r.id)
-        } else {
-          next.delete(r.id)
-        }
-
-        onPick(next)
-      }}
+      selected={picking?.picked.has(r.id) ?? false}
+      onSelect={(range) => picking?.onPick(r.id, range)}
     />
   )
 
@@ -78,7 +63,6 @@ export function RecordingsTable({
         style={{ minWidth: TABLE_MIN }}
       >
         <colgroup>
-          {picking && <col style={{ width: 'calc(36rem/16)' }} />}
           <col style={{ width: 'calc(118rem/16)' }} />
           <col />
           <col style={{ width: '9.5rem' }} />
@@ -93,29 +77,6 @@ export function RecordingsTable({
         </colgroup>
         <thead role="rowgroup">
           <tr role="row">
-            {picking && (
-              <TableHead className={cn(HEAD, 'pl-3')}>
-                <SelectEvery>
-                  <Checkbox
-                    checked={
-                      shown === 0
-                        ? false
-                        : shown === items.length
-                          ? true
-                          : 'indeterminate'
-                    }
-                    onCheckedChange={(next) =>
-                      onPick(
-                        next === true
-                          ? new Set(items.map((one) => one.id))
-                          : new Set(),
-                      )
-                    }
-                    aria-label="表示中の録画をすべて選ぶ"
-                  />
-                </SelectEvery>
-              </TableHead>
-            )}
             <TableHead className={HEAD}>
               <span className="sr-only">絵</span>
             </TableHead>
