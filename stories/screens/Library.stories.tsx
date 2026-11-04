@@ -269,8 +269,10 @@ export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
     const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
 
     await expect(pick).toHaveAttribute('aria-pressed', 'true')
-    await expect(getComputedStyle(pick).backgroundColor).toBe(
-      colourOf(pick, 'var(--accent-tint)'),
+    await waitFor(() =>
+      expect(getComputedStyle(pick).backgroundColor).toBe(
+        colourOf(pick, 'var(--accent-tint)'),
+      ),
     )
 
     const [first] = LIBRARY_SHELF
