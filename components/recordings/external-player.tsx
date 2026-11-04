@@ -220,7 +220,7 @@ function HandoverMenu({
   choices: HandoverChoice[]
   only: Handover
   tone?: 'page' | 'player'
-  /** The large button as wide as the column it stands in, beside the programme under the picture. */
+  /** The large button as wide as the column it stands in, beside the live programme under the picture. */
   wide?: boolean
   className?: string
 }) {
@@ -405,13 +405,11 @@ export function ExternalPlayerOpener({
   plan,
   onTakeTicket,
   tone,
-  wide,
 }: {
   recording: { id: string; title: string; sizeBytes?: number | null }
   plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   tone?: 'page' | 'player'
-  wide?: boolean
 }) {
   const choices = recordingHandoverChoices(
     recording.id,
@@ -431,7 +429,6 @@ export function ExternalPlayerOpener({
         recording.title,
       )}
       tone={tone}
-      wide={wide}
     />
   )
 }

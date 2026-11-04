@@ -1377,12 +1377,12 @@ export const 成果物がない録画はこれまでどおり登録する: Story
 
 const THE_ACTIONS = [
   '外部プレイヤーで再生',
-  'サムネイルを再生成',
   'エンコード',
+  'サムネイルを再生成',
   '削除',
 ]
 
-export const 操作の並び: Story = {
+export const 操作は題と値の下に横1行: Story = {
   args: { detail: withoutAnArtefact('1274') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1390,13 +1390,32 @@ export const 操作の並び: Story = {
       canvas.getByRole('button', { name }).getBoundingClientRect(),
     )
 
-    await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
-      1,
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
+
+    for (const [at, box] of drawn.entries()) {
+      if (at > 0) {
+        await expect(box.left).toBeGreaterThan(drawn[at - 1].right)
+      }
+    }
+
+    const title = canvas.getByRole('heading', { level: 1 })
+    const info = drawnAs(canvasElement, 'recording-info')
+    const meta = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="recording-info"] [data-slot="watch-meta"]',
+    )!
+
+    await expect(title.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      drawn[0].top,
     )
-    await expect(new Set(drawn.map((box) => Math.round(box.left))).size).toBe(1)
-    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(
-      THE_ACTIONS.length,
+    await expect(meta.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+      drawn[0].top,
     )
+    await expect(
+      Math.abs(
+        title.parentElement!.getBoundingClientRect().right -
+          info.getBoundingClientRect().right,
+      ),
+    ).toBeLessThan(1)
 
     for (const name of THE_ACTIONS) {
       await expect(
@@ -1409,7 +1428,11 @@ export const 操作の並び: Story = {
       'danger',
     )
 
-    for (const name of ['サムネイルを再生成', 'エンコード']) {
+    for (const name of [
+      '外部プレイヤーで再生',
+      'エンコード',
+      'サムネイルを再生成',
+    ]) {
       await expect(canvas.getByRole('button', { name })).toHaveAttribute(
         'data-variant',
         'tone',
@@ -1419,6 +1442,19 @@ export const 操作の並び: Story = {
     for (const name of THE_ACTIONS) {
       await standsOnAGround(canvas.getByRole('button', { name }))
     }
+  },
+}
+
+export const iPad_の横でも操作は横1行: Story = {
+  args: { detail: withoutAnArtefact('1274') },
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const drawn = THE_ACTIONS.map((name) =>
+      canvas.getByRole('button', { name }).getBoundingClientRect(),
+    )
+
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
   },
 }
 
