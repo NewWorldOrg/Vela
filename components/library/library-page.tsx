@@ -38,7 +38,7 @@ import { FilterChips } from '@/components/vela/filter-chips'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import {
   PickingBand,
-  PickingRow,
+  PickingBar,
   usePickedDeletion,
 } from '@/components/library/picking'
 import {
@@ -74,6 +74,9 @@ const EVERY_CHANNEL = ''
 
 const GRID_VIEW: View = { by: 'date', as: 'grid' }
 
+/** The room left at the end of the table, which scrolls inside itself, so the floating bar does not cover its last row. */
+const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
+
 export function LibraryView({
   result,
   filter,
@@ -93,8 +96,6 @@ export function LibraryView({
   const closeRef = useRef<HTMLButtonElement>(null)
   const pickRef = useRef<HTMLButtonElement>(null)
   const pickedOnce = useRef(false)
-  const headRef = useRef<HTMLDivElement>(null)
-  const [headHeight, setHeadHeight] = useState<number>()
   const held = useHeldDeletions()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const sideways = usePhoneOnItsSide()
@@ -221,7 +222,6 @@ export function LibraryView({
         if (picking) {
           stopChoosing()
         } else {
-          setHeadHeight(headRef.current?.offsetHeight || undefined)
           setPicking(true)
         }
       }}
@@ -280,94 +280,77 @@ export function LibraryView({
         )}
         {pickToggleWith()}
       </PhoneBarTools>
-      <div
-        className="phone:hidden"
-        style={picking && headHeight ? { height: headHeight } : undefined}
-      >
-        {picking ? (
-          <PickingRow
-            {...pickingControls}
-            onClose={stopChoosing}
-            closeRef={closeRef}
-            className="h-full min-h-11"
+      <div className="phone:hidden">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
+          <h1 className="text-display font-bold tracking-[-0.03em] text-ink">
+            ライブラリ
+          </h1>
+          <span className="mt-2.5 mr-2.5 text-sub whitespace-nowrap text-ink-2">
+            {hasFilter ? (
+              <>
+                <span className="font-code">{items.length}</span> /{' '}
+                <span className="font-code">{total}</span> 件
+              </>
+            ) : (
+              <>
+                <span className="font-code">{total}</span> 件
+              </>
+            )}
+          </span>
+          <SegmentedControl
+            aria-label="まとめ方"
+            options={[
+              { value: 'date', label: '日付', href: hrefWith({ by: null }) },
+              {
+                value: 'series',
+                label: 'シリーズ',
+                href: hrefWith({ by: 'series' }),
+              },
+            ]}
+            value={view.by}
           />
-        ) : (
-          <div
-            ref={headRef}
-            className="flex flex-wrap items-center gap-x-4 gap-y-3"
-          >
-            <h1 className="text-display font-bold tracking-[-0.03em] text-ink">
-              ライブラリ
-            </h1>
-            <span className="mt-2.5 mr-2.5 text-sub whitespace-nowrap text-ink-2">
-              {hasFilter ? (
-                <>
-                  <span className="font-code">{items.length}</span> /{' '}
-                  <span className="font-code">{total}</span> 件
-                </>
-              ) : (
-                <>
-                  <span className="font-code">{total}</span> 件
-                </>
-              )}
-            </span>
-            <SegmentedControl
-              aria-label="まとめ方"
-              options={[
-                { value: 'date', label: '日付', href: hrefWith({ by: null }) },
-                {
-                  value: 'series',
-                  label: 'シリーズ',
-                  href: hrefWith({ by: 'series' }),
-                },
-              ]}
-              value={view.by}
-            />
-            <SegmentedControl
-              aria-label="並べ方"
-              options={[
-                {
-                  value: 'grid',
-                  label: '格子',
-                  icon: <GridIcon />,
-                  href: hrefWith({ as: 'grid' }),
-                },
-                {
-                  value: 'table',
-                  label: '表',
-                  icon: <RowsIcon />,
-                  href: hrefWith({ as: 'table' }),
-                },
-              ]}
-              value={view.as}
-              onValueChange={(layout) =>
-                storeText(LIBRARY_LAYOUT_COOKIE, layout)
-              }
-            />
-            <div className="ml-auto flex min-w-0 items-center gap-2.5">
-              {pickToggleWith(pickRef)}
-              <form
-                role="search"
-                className="relative w-[calc(320rem/16)] min-w-0 max-[999px]:w-[calc(240rem/16)]"
-                onSubmit={(e) => {
-                  e.preventDefault()
-                  const q = new FormData(e.currentTarget).get('q')
-                  onFiltersChange({ q: typeof q === 'string' ? q : null })
-                }}
-              >
-                <SearchIcon className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-ink-3" />
-                <Input
-                  key={filter.q ?? ''}
-                  name="q"
-                  aria-label="録画を検索"
-                  defaultValue={filter.q ?? ''}
-                  placeholder="番組名・概要・出演者で検索"
-                  className="h-10 rounded-full border-0 pl-10 text-body text-ellipsis"
-                />
-              </form>
-            </div>
+          <SegmentedControl
+            aria-label="並べ方"
+            options={[
+              {
+                value: 'grid',
+                label: '格子',
+                icon: <GridIcon />,
+                href: hrefWith({ as: 'grid' }),
+              },
+              {
+                value: 'table',
+                label: '表',
+                icon: <RowsIcon />,
+                href: hrefWith({ as: 'table' }),
+              },
+            ]}
+            value={view.as}
+            onValueChange={(layout) => storeText(LIBRARY_LAYOUT_COOKIE, layout)}
+          />
+          <div className="ml-auto flex min-w-0 items-center gap-2.5">
+            {pickToggleWith(pickRef)}
+            <form
+              role="search"
+              className="relative w-[calc(320rem/16)] min-w-0 max-[999px]:w-[calc(240rem/16)]"
+              onSubmit={(e) => {
+                e.preventDefault()
+                const q = new FormData(e.currentTarget).get('q')
+                onFiltersChange({ q: typeof q === 'string' ? q : null })
+              }}
+            >
+              <SearchIcon className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-ink-3" />
+              <Input
+                key={filter.q ?? ''}
+                name="q"
+                aria-label="録画を検索"
+                defaultValue={filter.q ?? ''}
+                placeholder="番組名・概要・出演者で検索"
+                className="h-10 rounded-full border-0 pl-10 text-body text-ellipsis"
+              />
+            </form>
           </div>
-        )}
+        </div>
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3 phone:hidden">
@@ -501,6 +484,13 @@ export function LibraryView({
       {picking && (
         <PickingBand {...pickingControls} className="hidden phone:flex" />
       )}
+      <PickingBar
+        {...pickingControls}
+        shown={picking}
+        onClose={stopChoosing}
+        closeRef={closeRef}
+        className="phone:hidden"
+      />
       {deletion.dialog}
 
       {items.length > 0 && (
@@ -548,6 +538,7 @@ export function LibraryView({
                   waiting={waiting}
                   onDelete={onDelete}
                   picking={pickingCards}
+                  className={cn(picking && ROOM_FOR_THE_BAR)}
                 />
               </>
             ) : view.by === 'series' ? (
@@ -560,6 +551,13 @@ export function LibraryView({
                 />
                 <DateGrid recordings={items} now={now} picking={pickingCards} />
               </>
+            )}
+            {picking && view.as !== 'table' && (
+              <div
+                aria-hidden="true"
+                data-slot="room-for-the-bar"
+                className="h-[calc(80rem/16)] shrink-0"
+              />
             )}
           </div>
         </div>
