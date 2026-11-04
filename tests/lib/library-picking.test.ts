@@ -3,6 +3,7 @@ import { test } from 'node:test'
 
 import {
   everyShownPicked,
+  keepsChoosing,
   pickedSaying,
   pressedPick,
   withEveryShown,
@@ -61,4 +62,10 @@ test('every shown recording is picked only when there is one and none is left ou
 test('the choosing row says how many are taken, or that recordings are to be chosen', () => {
   assert.equal(pickedSaying(0), '録画を選ぶ')
   assert.equal(pickedSaying(3), '3 件を選択')
+})
+
+test('choosing stops once the picked recordings are gone, but waits at none right after 選ぶ', () => {
+  assert.equal(keepsChoosing(2, true), true)
+  assert.equal(keepsChoosing(0, true), false)
+  assert.equal(keepsChoosing(0, false), true)
 })

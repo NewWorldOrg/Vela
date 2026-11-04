@@ -228,10 +228,19 @@ export const 複数を選んで削除する: Story = {
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
 
     await waitFor(() => expect(thrownAway).toEqual([[first.id, second.id]]))
-    await waitFor(() =>
-      expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ'),
-    )
+    await stopsChoosing(canvasElement)
   },
+}
+
+/** Sees the library leave choosing: the bar or band gone, no checks drawn, and `選ぶ` no longer pressed where it is drawn. */
+async function stopsChoosing(canvasElement: HTMLElement): Promise<void> {
+  const canvas = within(canvasElement)
+
+  await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
+  await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual([])
+  for (const toggle of canvas.queryAllByRole('button', { name: '選ぶ' })) {
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  }
 }
 
 const BAR_ABOVE_THE_FOOT = 24
@@ -430,9 +439,7 @@ export const すべて選ぶとすべて外す: Story = {
     }
 
     await userEvent.click(row.getByRole('button', { name: 'すべて外す' }))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
-    await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
-    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+    await stopsChoosing(canvasElement)
   },
 }
 
@@ -522,6 +529,95 @@ export const Escで選ぶのをやめる: Story = {
   },
 }
 
+/** Takes the one recording in from its check and leaves it out again, and sees the library stop choosing with it. */
+async function leavesTheOnlyOneOut(
+  canvasElement: HTMLElement,
+  recording: Recording,
+) {
+  await startWithTheCheck(canvasElement, recording)
+  await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+
+  await userEvent.click(pickOf(canvasElement, recording))
+  await stopsChoosing(canvasElement)
+  await expect(
+    canvasElement.querySelector('[data-slot="pick-mark"][data-taken]'),
+  ).toBeNull()
+}
+
+export const 選んだ1件を外すと選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    await leavesTheOnlyOneOut(canvasElement, LIBRARY_SHELF[0])
+  },
+}
+
+export const 表でも選んだ1件を外すと選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    await leavesTheOnlyOneOut(canvasElement, LIBRARY_SHELF[1])
+  },
+}
+
+export const 削除して0件になると選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const [first] = LIBRARY_SHELF
+
+    thrownAway.length = 0
+    await startWithTheCheck(canvasElement, first)
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', { name: '削除' }),
+    )
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+
+    await waitFor(() => expect(thrownAway).toEqual([[first.id]]))
+    await stopsChoosing(canvasElement)
+  },
+}
+
+/** On a finger's screen, presses `選ぶ`, sees the bar wait at none picked, and sees it go once the one taken in is left out. */
+async function waitsAtNoneThenLeaves(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+  const [first] = LIBRARY_SHELF
+
+  await startChoosing(canvasElement)
+
+  const row = within(pickingRow(canvasElement))
+
+  await expect(row.getByText('録画を選ぶ')).toBeVisible()
+  await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
+
+  await userEvent.click(pickOf(canvasElement, first))
+  await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+  await expect(canvas.getByRole('toolbar')).toBeVisible()
+
+  await userEvent.click(pickOf(canvasElement, first))
+  await stopsChoosing(canvasElement)
+}
+
+export const iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await waitsAtNoneThenLeaves(canvasElement)
+  },
+}
+
+export const 表_iPadでも選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await waitsAtNoneThenLeaves(canvasElement)
+  },
+}
+
 export const マウスの画面では上に選ぶが無く絵に乗せるとチェックが出る: Story = {
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
   parameters: { screen: A_DESKTOP },
@@ -586,17 +682,11 @@ export const マウスの画面ではチェックを押すと選び始めてそ�
     await expect(bar).toHaveTextContent('2 件を選択')
 
     await userEvent.click(pickOf(canvasElement, first))
-    await userEvent.click(pickOf(canvasElement, second))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+    await expect(bar).toHaveTextContent('1 件を選択')
 
-    await userEvent.click(
-      within(pickingRow(canvasElement)).getByRole('button', { name: '閉じる' }),
-    )
-    await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
-    await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual(
-      [],
-    )
-    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
+    await userEvent.click(pickOf(canvasElement, second))
+    await stopsChoosing(canvasElement)
+    await expect(pickOf(canvasElement, first)).toHaveFocus()
   },
 }
 
@@ -829,8 +919,7 @@ export const 絞りを変えると選択を外す: Story = {
       drawnOf(canvas.getAllByRole('button', { name: result.genres[0] })),
     )
 
-    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
-    await expect(pickOf(canvasElement, first)).not.toBeChecked()
+    await stopsChoosing(canvasElement)
   },
 }
 
@@ -1465,6 +1554,8 @@ export const 電話の幅で選んで削除する: Story = {
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await waitFor(() => expect(thrownAway).toEqual([done.map((one) => one.id)]))
+    await stopsChoosing(canvasElement)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
   },
 }
 
@@ -1501,7 +1592,16 @@ export const 電話の帯ですべて選ぶ: Story = {
     )
 
     await userEvent.click(band.getByRole('button', { name: 'すべて外す' }))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const 電話でも選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await waitFor(() => phoneRows(canvasElement))
+    await waitsAtNoneThenLeaves(canvasElement)
   },
 }
 

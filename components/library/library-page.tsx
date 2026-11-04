@@ -43,6 +43,7 @@ import {
 } from '@/components/library/picking'
 import {
   everyShownPicked,
+  keepsChoosing,
   pressedPick,
   withEveryShown,
 } from '@/lib/library-picking'
@@ -107,6 +108,7 @@ export function LibraryView({
   const closeRef = useRef<HTMLButtonElement>(null)
   const pickRef = useRef<HTMLButtonElement>(null)
   const pickedOnce = useRef(false)
+  const tookOne = useRef(false)
   const startedOn = useRef<string | undefined>(undefined)
   const shelvesRef = useRef<HTMLDivElement>(null)
   const mouse = useMouse()
@@ -157,11 +159,12 @@ export function LibraryView({
       ? series.flatMap((one) => one.items.map((r) => r.id))
       : shownIds
   const everyPicked = everyShownPicked(picked, shownIds)
-  const stopChoosing = (): void => {
+  const stopChoosing = useCallback((): void => {
     setPicking(false)
     setPicked(new Set())
     pressedBefore.current = undefined
-  }
+    tookOne.current = false
+  }, [])
   const deletion = usePickedDeletion(chosen, onDeleteAll, () => {
     setPicked(new Set())
     pressedBefore.current = undefined
@@ -195,6 +198,18 @@ export function LibraryView({
     onEvery: () => setPicked(withEveryShown(picked, shownIds)),
     deletion,
   }
+
+  useEffect(() => {
+    if (!picking) {
+      return
+    }
+
+    tookOne.current ||= chosen.length > 0
+
+    if (!keepsChoosing(chosen.length, tookOne.current)) {
+      stopChoosing()
+    }
+  }, [picking, chosen.length, stopChoosing])
 
   useEffect(() => {
     const checkOf = (id: string | undefined) =>
@@ -241,15 +256,13 @@ export function LibraryView({
         return
       }
 
-      setPicking(false)
-      setPicked(new Set())
-      pressedBefore.current = undefined
+      stopChoosing()
     }
 
     document.addEventListener('keydown', leaveOnEscape)
 
     return () => document.removeEventListener('keydown', leaveOnEscape)
-  }, [picking])
+  }, [picking, stopChoosing])
 
   const pickToggleWith = (ref?: Ref<HTMLButtonElement>, className?: string) => (
     <button
