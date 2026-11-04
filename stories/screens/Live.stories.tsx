@@ -84,6 +84,10 @@ import type { TakeCapture } from '@/components/recordings/take-capture'
 import { inTheApp } from '@/stories/frames'
 import { withoutAMediaSource } from '@/stories/fixtures/without-a-media-source'
 import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
+import {
+  noNameStaysAfterTheFaceCloses,
+  tabNamesTheGear,
+} from '@/stories/names-after-a-face'
 
 class ScriptedSocket implements LiveSocket {
   binaryType: BinaryType = 'blob'
@@ -3423,6 +3427,20 @@ async function liveRestOn(canvasElement: HTMLElement, name: string | RegExp) {
   })
 
   return liveNamed(canvasElement) as HTMLElement
+}
+
+export const 設定の面を外を押して閉じても名札は残らない: Story = {
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('チャンネルを準備しています')
+    await noNameStaysAfterTheFaceCloses(canvasElement)
+  },
+}
+
+export const Tabで焦点を当てた操作子には名札が出る: Story = {
+  play: async ({ canvasElement }) => {
+    await within(canvasElement).findByText('チャンネルを準備しています')
+    await tabNamesTheGear(canvasElement)
+  },
 }
 
 export const 操作子の名前が出る: Story = {
