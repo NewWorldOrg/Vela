@@ -43,6 +43,7 @@ import {
 } from '@/components/library/picking'
 import {
   everyShownPicked,
+  keepsChoosing,
   pressedPick,
   withEveryShown,
 } from '@/lib/library-picking'
@@ -107,6 +108,7 @@ export function LibraryView({
   const closeRef = useRef<HTMLButtonElement>(null)
   const pickRef = useRef<HTMLButtonElement>(null)
   const pickedOnce = useRef(false)
+  const [tookOne, setTookOne] = useState(false)
   const startedOn = useRef<string | undefined>(undefined)
   const shelvesRef = useRef<HTMLDivElement>(null)
   const mouse = useMouse()
@@ -118,9 +120,28 @@ export function LibraryView({
   const [waiting, startWaiting] = useTransition()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const stopChoosing = useCallback((): void => {
+    setPicking(false)
+    setPicked(new Set())
+    setTookOne(false)
+    pressedBefore.current = undefined
+  }, [])
+  const settle = useCallback(
+    (next: ReadonlySet<string>): void => {
+      const took = tookOne || next.size > 0
+
+      if (keepsChoosing(next.size, took)) {
+        setPicked(next)
+        setTookOne(took)
+      } else {
+        stopChoosing()
+      }
+    },
+    [tookOne, stopChoosing],
+  )
   const onFiltersChange = useCallback(
     (patch: Record<string, string | null>) => {
-      setPicked(new Set())
+      settle(new Set())
       startWaiting(() =>
         router.replace(
           addressWith(pathname, searchParams.toString(), patch) as Route,
@@ -128,7 +149,7 @@ export function LibraryView({
         ),
       )
     },
-    [router, pathname, searchParams],
+    [settle, router, pathname, searchParams],
   )
   const { total, channels, years, genres } = result
   const items = result.items.filter((one) => !held.has(one.id))
@@ -157,20 +178,14 @@ export function LibraryView({
       ? series.flatMap((one) => one.items.map((r) => r.id))
       : shownIds
   const everyPicked = everyShownPicked(picked, shownIds)
-  const stopChoosing = (): void => {
-    setPicking(false)
-    setPicked(new Set())
-    pressedBefore.current = undefined
-  }
   const deletion = usePickedDeletion(chosen, onDeleteAll, () => {
-    setPicked(new Set())
-    pressedBefore.current = undefined
+    settle(new Set())
   })
   const pickingCards: Picking | undefined = picking
     ? {
         picked,
         onPick: (id, range) => {
-          setPicked(
+          settle(
             pressedPick(
               picked,
               inOrder,
@@ -186,13 +201,14 @@ export function LibraryView({
     startedOn.current = id
     pressedBefore.current = id
     setPicked(new Set([id]))
+    setTookOne(true)
     setPicking(true)
   }
   const onPickStart = mouse && !picking ? startPickingWith : undefined
   const pickingControls = {
     count: chosen.length,
     everyPicked,
-    onEvery: () => setPicked(withEveryShown(picked, shownIds)),
+    onEvery: () => settle(withEveryShown(picked, shownIds)),
     deletion,
   }
 
@@ -241,15 +257,13 @@ export function LibraryView({
         return
       }
 
-      setPicking(false)
-      setPicked(new Set())
-      pressedBefore.current = undefined
+      stopChoosing()
     }
 
     document.addEventListener('keydown', leaveOnEscape)
 
     return () => document.removeEventListener('keydown', leaveOnEscape)
-  }, [picking])
+  }, [picking, stopChoosing])
 
   const pickToggleWith = (ref?: Ref<HTMLButtonElement>, className?: string) => (
     <button

@@ -45,3 +45,8 @@ export function withEveryShown(
 export function pickedSaying(count: number): string {
   return count === 0 ? '録画を選ぶ' : `${count} 件を選択`
 }
+
+/** Whether the library goes on choosing with `count` picked: it stops once none is left, unless nothing has been picked yet since `選ぶ` was pressed, so `すべて選ぶ` can still be reached. */
+export function keepsChoosing(count: number, pickedSome: boolean): boolean {
+  return count > 0 || !pickedSome
+}

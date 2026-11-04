@@ -153,7 +153,7 @@ interface PickingControls {
 
 const WHAT_IT_DOES = '選んだ録画の操作'
 
-/** The bar floating in the middle of the window's foot while the library is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and `削除`. It rises in and sinks away, and stays drawn while it sinks. */
+/** The bar floating in the middle of the window's foot while the library is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and `削除`. It rises in and sinks away, and while it sinks it stays drawn saying what it last said. */
 export function PickingBar({
   shown,
   count,
@@ -170,16 +170,36 @@ export function PickingBar({
   className?: string
 }) {
   const [drawn, setDrawn] = useState(shown)
+  const [said, setSaid] = useState({
+    count,
+    everyPicked,
+    deletable: deletion.deletable,
+  })
   const barRef = useRef<HTMLDivElement>(null)
 
   if (shown && !drawn) {
     setDrawn(true)
   }
 
+  if (
+    shown &&
+    (said.count !== count ||
+      said.everyPicked !== everyPicked ||
+      said.deletable !== deletion.deletable)
+  ) {
+    setSaid({ count, everyPicked, deletable: deletion.deletable })
+  }
+
   useEffect(() => {
     const bar = barRef.current
 
-    if (!shown && bar && getComputedStyle(bar).animationName === 'none') {
+    if (!bar || shown) {
+      return
+    }
+
+    const { animationName, display } = getComputedStyle(bar)
+
+    if (animationName === 'none' || display === 'none') {
       setDrawn(false)
     }
   }, [shown])
@@ -220,7 +240,7 @@ export function PickingBar({
         <CloseIcon />
       </button>
       <PickedCount
-        count={count}
+        count={said.count}
         className="min-w-[calc(118rem/16)] text-section font-bold whitespace-nowrap"
       />
       <Button
@@ -228,12 +248,12 @@ export function PickingBar({
         className="ml-5 dark:bg-surface-3"
         onClick={onEvery}
       >
-        {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
+        {said.everyPicked ? 'すべて外す' : 'すべて選ぶ'}
       </Button>
       <Button
         variant="danger"
         className="ml-3"
-        disabled={deletion.pending || !deletion.deletable}
+        disabled={deletion.pending || !said.deletable}
         onClick={deletion.ask}
       >
         <TrashIcon />
