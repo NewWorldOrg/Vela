@@ -24,6 +24,8 @@ export const LIVE_CHANNELS_FOLDED = 'vela-live-channels-folded'
 
 export const LIVE_SUB_CHANNELS_FOLDED = 'vela-live-sub-channels-folded'
 
+export const RECORDING_SERIES_FOLDED = 'vela-recording-series-folded'
+
 export const DATA_BROADCAST_AUTO_OPEN = 'vela-data-broadcast-auto-open'
 
 export const DATA_BROADCAST_LINE = 'vela-data-broadcast-network'
