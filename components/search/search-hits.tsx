@@ -48,10 +48,9 @@ function ReservePill({
         'transition-[background-color,color] duration-[140ms] ease-toy',
         pressable,
         held
-          ? cn(
-              'hover:bg-surface-2',
-              mark === 'recording' ? 'text-rec-text' : 'text-warn-text',
-            )
+          ? mark === 'recording'
+            ? 'bg-rec-soft text-rec-text hover:bg-rec/20'
+            : 'bg-warn-soft text-warn-text hover:bg-warn/20'
           : 'bg-surface-2 text-ink group-hover/hit:bg-accent-fill group-hover/hit:text-on-accent hover:bg-accent-fill-hover! hover:text-on-accent',
       )}
     >

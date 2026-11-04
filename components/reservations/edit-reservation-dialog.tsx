@@ -290,7 +290,7 @@ export function EditReservationDialog({
   )
   const choices = (
     <>
-      <Button variant="ghost" onClick={() => close(false)}>
+      <Button variant="tone" onClick={() => close(false)}>
         キャンセル
       </Button>
       <Button disabled={pending} onClick={submit}>

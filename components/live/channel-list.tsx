@@ -34,7 +34,7 @@ export function FoldButton({
   return (
     <Button
       type="button"
-      variant="ghost"
+      variant="tone"
       size="icon"
       aria-label={label}
       aria-expanded={!folded}

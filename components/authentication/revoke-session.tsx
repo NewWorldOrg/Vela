@@ -100,7 +100,7 @@ export function RevokeSession({
 
           <AlertDialogFooter>
             <Button
-              variant="ghost"
+              variant="tone"
               disabled={pending}
               onClick={() => setOpen(false)}
             >

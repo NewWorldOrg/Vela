@@ -64,7 +64,7 @@ export function ReservationArea({
             録画予約
           </ReserveButton>
           {seriesHref ? (
-            <Button variant="ghost" asChild>
+            <Button variant="tone" asChild>
               <Link href={seriesHref as Route}>
                 <ListIcon />
                 シリーズで予約
@@ -72,7 +72,7 @@ export function ReservationArea({
             </Button>
           ) : (
             <Button
-              variant="ghost"
+              variant="tone"
               disabled
               title="番組名が読み取れないため、シリーズのルールにできません。"
             >

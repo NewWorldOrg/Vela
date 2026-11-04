@@ -113,7 +113,7 @@ export function RebuildEpgDialog({
 
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
-          <Button variant="dangerFill" disabled={pending} onClick={run}>
+          <Button variant="danger" disabled={pending} onClick={run}>
             <RebuildIcon />
             すべて削除して再構築する
           </Button>

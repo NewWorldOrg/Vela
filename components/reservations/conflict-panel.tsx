@@ -160,17 +160,16 @@ export function ConflictPanel({
     })
 
   const tuners = phone ? (
-    <div className="flex justify-end border-t border-hair px-0.5 py-1">
-      <Link
-        href="/settings/tuners"
-        className="flex h-11 items-center gap-1 px-1 text-ui font-semibold text-ink-2 no-underline outline-none hover:text-ink focus-visible:shadow-ring [&_svg]:size-4"
-      >
-        チューナーへ
-        <ChevronRightIcon />
-      </Link>
+    <div className="flex justify-end border-t border-hair px-0.5 pt-2.5 pb-1">
+      <Button variant="tone" size="sm" asChild>
+        <Link href="/settings/tuners">
+          チューナーへ
+          <ChevronRightIcon />
+        </Link>
+      </Button>
     </div>
   ) : (
-    <Button variant="ghost" size="sm" asChild className="-mt-1 -mr-2 ml-auto">
+    <Button variant="tone" size="sm" asChild className="ml-auto">
       <Link href="/settings/tuners">チューナーへ</Link>
     </Button>
   )

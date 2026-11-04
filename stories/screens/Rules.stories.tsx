@@ -22,6 +22,7 @@ import type {
 import { RULE_CHANNEL_FIXTURES, RULE_FIXTURES } from '@/stories/fixtures/rules'
 import type { RuleActions } from '@/components/reservations/rules-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import { RulesView } from '@/components/reservations/rules-page'
 import { inTheApp } from '@/stories/frames'
 
@@ -1032,6 +1033,7 @@ export const ジャンルを足すは下に開く: Story = {
     const canvas = within(canvasElement)
     const add = canvas.getByRole('combobox', { name: 'ジャンルを追加' })
 
+    await standsOnAGround(add)
     await userEvent.click(add)
 
     const opened = await waitFor(() => {

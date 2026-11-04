@@ -189,7 +189,7 @@ export function ChannelsView({
       </Crumb>
       <PageHeading
         action={
-          <Button variant="ghost" size="sm" asChild>
+          <Button variant="tone" size="sm" asChild>
             <Link href={'/settings/channels#scan-history' as Route}>
               スキャン履歴へ
             </Link>

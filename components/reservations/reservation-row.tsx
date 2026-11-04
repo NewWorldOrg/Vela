@@ -251,7 +251,7 @@ export function ReservationRow({
             <ReservationAttention reservation={reservation} loses={loses} />
           </span>
           {reservation.recordingId && (
-            <Button variant="ghost" size="sm" asChild>
+            <Button variant="tone" size="sm" asChild>
               <Link href={`/recordings/${reservation.recordingId}`}>
                 この予約の録画へ
               </Link>
@@ -259,7 +259,7 @@ export function ReservationRow({
           )}
           {reservation.restorable && (
             <Button
-              variant="ghost"
+              variant="tone"
               size="sm"
               disabled={pending}
               onClick={() => run(() => actions.onRestore(reservation.id))}
@@ -358,7 +358,7 @@ export function ReservationRow({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="dangerFill"
+              variant="danger"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

@@ -104,7 +104,7 @@ export function RecordingActions({
       <>
         <div
           data-slot="recording-actions"
-          className="flex w-[calc(236rem/16)] flex-col items-stretch gap-2.5 max-[900px]:grid max-[900px]:w-full max-[900px]:grid-cols-2 max-[900px]:gap-[calc(9rem/16)] upright:gap-[calc(9rem/16)] max-[900px]:[&_[data-variant=ghost]]:bg-surface-2 max-[900px]:[&_[data-variant=ghost]]:text-ink"
+          className="flex w-[calc(236rem/16)] flex-col items-stretch gap-2.5 max-[900px]:grid max-[900px]:w-full max-[900px]:grid-cols-2 max-[900px]:gap-[calc(9rem/16)] upright:gap-[calc(9rem/16)]"
         >
           {plan && (
             <ExternalPlayerOpener
@@ -119,14 +119,14 @@ export function RecordingActions({
               recording={recording}
               choices={encodeChoices}
               onQueue={onQueueEncode}
-              quiet
+              wide
             />
           )}
           {redrawsThumbnail(recording) && (
             <ThumbnailButton
               recording={recording}
               onRemake={onRemakeThumbnail}
-              quiet
+              wide
             />
           )}
           <Button

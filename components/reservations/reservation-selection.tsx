@@ -99,7 +99,7 @@ export function ReservationSelection({
         <TrashIcon />
         削除
       </Button>
-      <Button variant="ghost" size="sm" disabled={pending} onClick={onClear}>
+      <Button variant="tone" size="sm" disabled={pending} onClick={onClear}>
         選択を解除
       </Button>
       {outcome && (
@@ -137,7 +137,7 @@ export function ReservationSelection({
           <AlertDialogFooter>
             <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
             <AlertDialogAction
-              variant="dangerFill"
+              variant="danger"
               disabled={pending}
               onClick={(event) => {
                 event.preventDefault()

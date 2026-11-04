@@ -121,7 +121,7 @@ export function ChangePassword({
           </span>
 
           <AlertDialogFooter>
-            <Button variant="ghost" disabled={pending} onClick={close}>
+            <Button variant="tone" disabled={pending} onClick={close}>
               キャンセル
             </Button>
             <Button variant="danger" disabled={pending || !ready} onClick={run}>

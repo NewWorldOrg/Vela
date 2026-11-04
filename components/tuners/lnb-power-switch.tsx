@@ -129,7 +129,7 @@ export function LnbPowerSwitch({
 
           <AlertDialogFooter>
             <Button
-              variant="ghost"
+              variant="tone"
               disabled={pending}
               onClick={() => setAsking(false)}
             >

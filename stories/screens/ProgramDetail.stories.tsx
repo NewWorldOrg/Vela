@@ -13,6 +13,7 @@ import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import { inTheApp } from '@/stories/frames'
 import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
+import { standsOnAGround } from '@/stories/stands-on-a-ground'
 
 const meta = {
   title: 'Screens/番組詳細',
@@ -352,7 +353,8 @@ async function liveLeads(canvasElement: HTMLElement): Promise<void> {
   await expect(series).not.toBeNull()
   await expect(live).toHaveAttribute('data-variant', 'default')
   await expect(reserve).toHaveAttribute('data-variant', 'tone')
-  await expect(series).toHaveAttribute('data-variant', 'ghost')
+  await expect(series).toHaveAttribute('data-variant', 'tone')
+  await standsOnAGround(series!)
   await expect(getComputedStyle(figureOf(live!)).color).toBe(
     getComputedStyle(live!).color,
   )

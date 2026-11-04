@@ -234,7 +234,7 @@ function RulesScreen({
         action={
           <>
             <Button
-              variant="ghost"
+              variant="tone"
               disabled={applying || !anEnabledRule}
               title={anEnabledRule ? undefined : NOTHING_TO_APPLY}
               onClick={() => anEnabledRule && apply(anEnabledRule.id)}
@@ -1122,7 +1122,7 @@ function RuleEditor({
             )}
           </h3>
           <Button
-            variant="ghost"
+            variant="tone"
             size="sm"
             disabled={previewing}
             onClick={rehearse}
@@ -1130,12 +1130,9 @@ function RuleEditor({
             <SearchIcon />
             一致を表示
           </Button>
-          <Link
-            href={searched}
-            className="tap-target ml-auto text-ui font-medium text-ink-2 no-underline hover:text-ink"
-          >
-            番組検索へ
-          </Link>
+          <Button variant="tone" size="sm" asChild className="ml-auto">
+            <Link href={searched}>番組検索へ</Link>
+          </Button>
         </div>
 
         {preview && (
@@ -1206,7 +1203,7 @@ function RuleEditor({
           </Button>
         )}
         <Button
-          variant="ghost"
+          variant="tone"
           disabled={pending}
           onClick={onClose}
           className="ml-auto"
@@ -1246,7 +1243,7 @@ function RuleEditor({
             <AlertDialogFooter>
               <AlertDialogCancel>キャンセル</AlertDialogCancel>
               <AlertDialogAction
-                variant="dangerFill"
+                variant="danger"
                 disabled={pending || !leaving}
                 onClick={(event) => {
                   event.preventDefault()
@@ -1290,7 +1287,7 @@ function RuleEditor({
           )}
 
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setConfirming(false)}>
+            <Button variant="tone" onClick={() => setConfirming(false)}>
               キャンセル
             </Button>
             <Button disabled={pending || !impact} onClick={save}>
@@ -1381,7 +1378,7 @@ function AddPick({
       <SelectTrigger
         size="sm"
         aria-label={label}
-        className="h-7 w-fit gap-1 rounded-sm bg-transparent px-2 text-ui font-medium text-ink-2 enabled:hover:bg-surface-2 [&>svg:last-child]:hidden"
+        className="h-7 w-fit gap-1 rounded-full bg-surface-2 px-2.5 text-ui font-medium text-ink enabled:hover:bg-surface-3 [&>svg:last-child]:hidden"
       >
         <PlusIcon className="size-3.5" />
         {label}

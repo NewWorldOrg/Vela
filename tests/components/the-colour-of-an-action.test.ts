@@ -21,23 +21,14 @@ const NOT_SOURCE = new Set([
 
 const THE_BUTTON = 'components/ui/button.tsx'
 
-const THE_VARIANTS = [
-  'default',
-  'record',
-  'tone',
-  'ghost',
-  'danger',
-  'dangerFill',
-]
+const THE_VARIANTS = ['default', 'record', 'tone', 'danger']
 
 /** The ground and the word each kind of press is drawn in, as the canon's table of buttons pairs them. */
 const BY_KIND: Record<string, [string, string]> = {
   default: ['bg-accent-fill', 'text-on-accent'],
   record: ['bg-rec-fill', 'text-on-rec'],
   tone: ['bg-surface-2', 'text-ink'],
-  ghost: ['bg-transparent', 'text-ink-2'],
-  danger: ['bg-transparent', 'text-rec-text'],
-  dangerFill: ['bg-rec-soft', 'text-rec-text'],
+  danger: ['from-rec-soft', 'text-rec-text'],
 }
 
 const THE_GROUPS = ['ActionRow', 'AlertDialogFooter', 'DialogFooter']
@@ -146,8 +137,13 @@ test('each kind of press is drawn on its ground in its word', async () => {
   for (const [name, [ground, word]] of Object.entries(BY_KIND)) {
     const drawn = declared.get(name) ?? ''
 
-    assert.ok(drawn.includes(ground), `${name} is not drawn on ${ground}`)
-    assert.ok(drawn.includes(word), `${name} does not say its word in ${word}`)
+    const plainly = drawn.split(/\s+/u)
+
+    assert.ok(plainly.includes(ground), `${name} is not drawn on ${ground}`)
+    assert.ok(
+      plainly.includes(word),
+      `${name} does not say its word in ${word}`,
+    )
   }
 })
 
@@ -191,8 +187,31 @@ test('a group of actions holds one primary press at most', async () => {
     crowded,
     [],
     'a group of actions offers more than one primary press. One press in a ' +
-      'group is the main one; the rest are tone, ghost or danger',
+      'group is the main one; the rest are tone or danger',
   )
+})
+
+test('every press stands on a ground of its own', async () => {
+  for (const [name, drawn] of variantsIn(await theButton())) {
+    assert.doesNotMatch(
+      drawn,
+      /(^|\s)bg-transparent(\s|$)/u,
+      `${name} draws a press as a word alone, with no ground under it`,
+    )
+    assert.match(drawn, /(^|\s)bg-/u, `${name} has no ground`)
+  }
+})
+
+test('no screen draws an action as a word alone', async () => {
+  for (const { file, source } of await everySource()) {
+    assert.doesNotMatch(
+      source,
+      /variant=(\{[^}]*)?["'](ghost|dangerFill)["']/u,
+      `${file} draws an action as a word alone, or in a colour the canon no ` +
+        'longer names. An action is a tone press, and a destructive one ' +
+        'is danger, on its pale red ground',
+    )
+  }
 })
 
 test('the orphan variants are gone from the button', async () => {
