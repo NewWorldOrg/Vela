@@ -84,6 +84,8 @@ type Story = StoryObj<typeof meta>
 
 const GRID = { by: 'date', as: 'grid' } as const
 
+const TABLE = { by: 'date', as: 'table' } as const
+
 function drawnOf<T extends HTMLElement>(found: T[]): T {
   const drawn = found.find((one) => one.getBoundingClientRect().width > 0)
 
@@ -118,11 +120,54 @@ function rowNamed(canvasElement: HTMLElement, name: RegExp): HTMLElement {
   return within(canvasElement).getByRole('row', { name })
 }
 
+/** The row the heading turns into while choosing, wherever the width draws it. */
+function pickingRow(canvasElement: HTMLElement): HTMLElement {
+  return within(canvasElement).getByRole('toolbar', {
+    name: '選んだ録画の操作',
+  })
+}
+
+/** The mark that takes a recording in, on whichever list the width draws. */
+function pickOf(canvasElement: HTMLElement, recording: Recording) {
+  const holder = drawnOf([
+    ...canvasElement.querySelectorAll<HTMLElement>(
+      `[data-recording="${recording.id}"]`,
+    ),
+  ])
+
+  return within(holder).getByRole('checkbox', {
+    name: `${recording.title} を選ぶ`,
+  })
+}
+
+function placeOf(canvasElement: HTMLElement, recording: Recording) {
+  return drawnOf([
+    ...canvasElement.querySelectorAll<HTMLElement>(
+      `[data-recording="${recording.id}"]`,
+    ),
+  ])
+}
+
+/** Presses with Shift held, as a pointer on a desk does to take in a range. */
+async function pressWithShift(target: HTMLElement) {
+  const user = userEvent.setup()
+
+  await user.keyboard('{Shift>}')
+  await user.click(target)
+  await user.keyboard('{/Shift}')
+}
+
+function topOf(element: Element | null): number {
+  if (!element) {
+    throw new Error('not drawn')
+  }
+
+  return Math.round(element.getBoundingClientRect().top)
+}
+
 export const 複数を選んで削除する: Story = {
   args: { result, filter: {} },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
     await startChoosing(canvasElement)
     const [first, second] = result.items.filter(
       (one) => one.outcome !== 'recording',
@@ -130,21 +175,13 @@ export const 複数を選んで削除する: Story = {
 
     thrownAway.length = 0
 
-    await userEvent.click(
-      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
-    )
-    await userEvent.click(
-      canvas.getByRole('checkbox', { name: `${second.title} を選ぶ` }),
-    )
-    await expect(
-      canvas.getByRole('group', { name: '選択した録画の操作' }),
-    ).toHaveTextContent('2 件を選択')
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
     await expect(window.location.pathname).not.toMatch(/\/recordings\//)
 
     await userEvent.click(
-      within(
-        canvas.getByRole('group', { name: '選択した録画の操作' }),
-      ).getByRole('button', { name: '削除' }),
+      within(pickingRow(canvasElement)).getByRole('button', { name: '削除' }),
     )
 
     const dialog = within(await screen.findByRole('alertdialog'))
@@ -155,10 +192,249 @@ export const 複数を選んで削除する: Story = {
 
     await waitFor(() => expect(thrownAway).toEqual([[first.id, second.id]]))
     await waitFor(() =>
-      expect(
-        canvas.queryByRole('group', { name: '選択した録画の操作' }),
-      ).toBeNull(),
+      expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ'),
     )
+  },
+}
+
+export const 選ぶを押すとその場で選ぶ行になる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await afterTheArrival(canvasElement)
+
+    const genres = canvas.getByRole('group', { name: 'ジャンル' })
+    const shelves = canvasElement.querySelector('[data-slot="library-shelves"]')
+    const filtersAt = topOf(genres)
+    const shelvesAt = topOf(shelves)
+
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await startChoosing(canvasElement)
+
+    const row = within(pickingRow(canvasElement))
+
+    await expect(row.getByText('録画を選ぶ')).toBeVisible()
+    await expect(row.getByRole('button', { name: '閉じる' })).toBeVisible()
+    await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+    await expect(
+      canvas.queryByRole('heading', { level: 1, name: 'ライブラリ' }),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '選択を解除' }),
+    ).toBeNull()
+    await expect(topOf(genres)).toBe(filtersAt)
+    await expect(topOf(shelves)).toBe(shelvesAt)
+
+    const [first] = LIBRARY_SHELF
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(row.getByText('件を選択', { exact: false })).toHaveTextContent(
+      '1 件を選択',
+    )
+    await expect(row.getByRole('button', { name: '削除' })).toBeEnabled()
+    await expect(topOf(genres)).toBe(filtersAt)
+    await expect(topOf(shelves)).toBe(shelvesAt)
+
+    await userEvent.click(row.getByRole('button', { name: '閉じる' }))
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await expect(
+      canvas.getByRole('heading', { level: 1, name: 'ライブラリ' }),
+    ).toBeVisible()
+    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
+    await expect(topOf(shelves)).toBe(shelvesAt)
+  },
+}
+
+export const すべて選ぶとすべて外す: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+
+    const row = within(pickingRow(canvasElement))
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${LIBRARY_SHELF.length} 件を選択`,
+    )
+    for (const one of LIBRARY_SHELF) {
+      await expect(pickOf(canvasElement, one)).toBeChecked()
+    }
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて外す' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+    await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+  },
+}
+
+const CARTOONS = LIBRARY_SHELF.filter(
+  (one) => one.genre === LIBRARY_SHELF[0].genre,
+)
+
+export const すべて選ぶは絞り込みに従う: Story = {
+  args: {
+    result: { ...resultOf(CARTOONS), total: LIBRARY_SHELF.length },
+    filter: { genre: LIBRARY_SHELF[0].genre },
+    view: GRID,
+  },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    thrownAway.length = 0
+    await expect(CARTOONS.length).toBeLessThan(LIBRARY_SHELF.length)
+    await startChoosing(canvasElement)
+
+    const row = within(pickingRow(canvasElement))
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${CARTOONS.length} 件を選択`,
+    )
+    await userEvent.click(row.getByRole('button', { name: '削除' }))
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+    await waitFor(() =>
+      expect(thrownAway).toEqual([CARTOONS.map((one) => one.id)]),
+    )
+  },
+}
+
+export const Shiftを押しながら押すと範囲で選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+
+    const [, second, third, fourth, fifth] = LIBRARY_SHELF
+
+    await userEvent.click(pickOf(canvasElement, second))
+    await pressWithShift(pickOf(canvasElement, fifth))
+
+    await expect(pickingRow(canvasElement)).toHaveTextContent('4 件を選択')
+    for (const one of [second, third, fourth, fifth]) {
+      await expect(pickOf(canvasElement, one)).toBeChecked()
+    }
+    await expect(pickOf(canvasElement, LIBRARY_SHELF[0])).not.toBeChecked()
+    await expect(document.getSelection()?.toString() ?? '').toBe('')
+  },
+}
+
+export const 表でもShiftで範囲を選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+
+    const [first, , third] = LIBRARY_SHELF
+
+    await userEvent.click(placeOf(canvasElement, third))
+    await pressWithShift(placeOf(canvasElement, first))
+
+    await expect(pickingRow(canvasElement)).toHaveTextContent('3 件を選択')
+  },
+}
+
+export const Escで選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await startChoosing(canvasElement)
+    await userEvent.click(pickOf(canvasElement, LIBRARY_SHELF[0]))
+    await userEvent.keyboard('{Escape}')
+
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
+
+    await startChoosing(canvasElement)
+    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+  },
+}
+
+export const 表では絵の上に印を置き列はずれない: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const table = await waitFor(() => within(canvasElement).getByRole('table'))
+    const head = within(table).getByRole('columnheader', { name: '番組' })
+    const thumb = table.querySelector('[data-thumbnail]')!
+    const headAt = head.getBoundingClientRect().left
+    const thumbAt = thumb.getBoundingClientRect().left
+    const tableAt = topOf(table)
+
+    await startChoosing(canvasElement)
+
+    const [first] = LIBRARY_SHELF
+    const mark = placeOf(canvasElement, first).querySelector(
+      '[data-slot="pick-mark"]',
+    )!
+    const picture = placeOf(canvasElement, first)
+      .querySelector('[data-thumbnail]')!
+      .getBoundingClientRect()
+
+    await expect(head.getBoundingClientRect().left).toBe(headAt)
+    await expect(thumb.getBoundingClientRect().left).toBe(thumbAt)
+    await expect(topOf(table)).toBe(tableAt)
+    await expect(mark.getBoundingClientRect().left).toBeGreaterThan(
+      picture.left,
+    )
+    await expect(mark.getBoundingClientRect().right).toBeLessThan(picture.right)
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(placeOf(canvasElement, first)).toHaveAttribute(
+      'data-state',
+      'selected',
+    )
+  },
+}
+
+export const 選ぶあいだ続きからは薄く押せない: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const going = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="continue-row"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(getComputedStyle(going).opacity).toBe('1')
+    await startChoosing(canvasElement)
+    await waitFor(() => expect(getComputedStyle(going).opacity).toBe('0.4'))
+    await expect(within(going).queryAllByRole('link')).toEqual([])
+    await expect(going).toHaveTextContent(LIBRARY_SHELF[3].title)
+  },
+}
+
+export const 録画中を含むと削除できない: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const recording = result.items.find((one) => one.outcome === 'recording')
+
+    await expect(recording).toBeDefined()
+
+    const row = within(pickingRow(canvasElement))
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${result.items.length} 件を選択`,
+    )
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
   },
 }
 
@@ -170,45 +446,15 @@ export const 絞りを変えると選択を外す: Story = {
     await startChoosing(canvasElement)
     const [first] = result.items
 
-    await userEvent.click(
-      canvas.getByRole('checkbox', { name: `${first.title} を選ぶ` }),
-    )
-    await expect(
-      canvas.getByRole('group', { name: '選択した録画の操作' }),
-    ).toBeVisible()
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
 
     await userEvent.click(
       drawnOf(canvas.getAllByRole('button', { name: result.genres[0] })),
     )
 
-    await expect(
-      canvas.queryByRole('group', { name: '選択した録画の操作' }),
-    ).toBeNull()
-    await expect(
-      canvas.getByRole('checkbox', { name: '表示中の録画をすべて選ぶ' }),
-    ).not.toBeChecked()
-  },
-}
-
-export const 録画中を含むと削除できない: Story = {
-  args: { result, filter: {} },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await startChoosing(canvasElement)
-    const recording = result.items.find((one) => one.outcome === 'recording')
-
-    await expect(recording).toBeDefined()
-    await userEvent.click(
-      canvas.getByRole('checkbox', { name: '表示中の録画をすべて選ぶ' }),
-    )
-
-    const bar = within(
-      canvas.getByRole('group', { name: '選択した録画の操作' }),
-    )
-
-    await expect(bar.getByText(String(result.items.length))).toBeVisible()
-    await expect(bar.getByRole('button', { name: '削除' })).toBeDisabled()
+    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+    await expect(pickOf(canvasElement, first)).not.toBeChecked()
   },
 }
 
@@ -816,30 +1062,70 @@ export const 電話の幅で選んで削除する: Story = {
 
     thrownAway.length = 0
 
-    await userEvent.click(canvas.getByRole('button', { name: '選ぶ' }))
+    const toggle = canvas.getByRole('button', { name: '選ぶ' })
+
+    await userEvent.click(toggle)
+    await expect(toggle).toHaveAttribute('aria-pressed', 'true')
+
+    const band = within(pickingRow(canvasElement))
+
+    await expect(band.getByText('録画を選ぶ')).toBeVisible()
+    await expect(band.getByRole('button', { name: '削除' })).toBeDisabled()
 
     const done = LONG_AND_SHORT.filter((one) => one.outcome !== 'recording')
 
     for (const one of done) {
-      await userEvent.click(
-        canvas.getByRole('checkbox', { name: `${one.title} を選ぶ` }),
-      )
+      await userEvent.click(pickOf(canvasElement, one))
     }
 
-    const bar = within(
-      canvas.getByRole('group', { name: '選択した録画の操作' }),
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${done.length} 件を選択`,
     )
+    await expect(window.location.pathname).not.toMatch(/\/recordings\//)
 
-    await expect(bar.getByText(`${done.length}`)).toBeVisible()
-
-    const remove = bar.getByRole('button', { name: '削除' })
-
-    await userEvent.click(remove)
+    await userEvent.click(band.getByRole('button', { name: '削除' }))
 
     const dialog = within(await screen.findByRole('alertdialog'))
 
     await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
     await waitFor(() => expect(thrownAway).toEqual([done.map((one) => one.id)]))
+  },
+}
+
+export const 電話の帯ですべて選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const rows = await waitFor(() => phoneRows(canvasElement))
+    const [first] = LIBRARY_SHELF
+    const row = rows.querySelector<HTMLElement>(
+      `[data-recording="${first.id}"]`,
+    )!
+    const picture = () =>
+      row.querySelector('[data-thumbnail]')!.getBoundingClientRect().left
+    const before = picture()
+
+    await userEvent.click(canvas.getByRole('button', { name: '選ぶ' }))
+
+    const band = within(pickingRow(canvasElement))
+
+    await expect(picture()).toBe(before)
+    await userEvent.click(band.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${LIBRARY_SHELF.length} 件を選択`,
+    )
+    await expect(picture()).toBe(before)
+    await expect(
+      pickingRow(canvasElement).getBoundingClientRect().bottom,
+    ).toBeLessThanOrEqual(
+      canvasElement
+        .querySelector('[data-slot="tab-bar"]')
+        ?.getBoundingClientRect().top ?? window.innerHeight,
+    )
+
+    await userEvent.click(band.getByRole('button', { name: 'すべて外す' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
   },
 }
 

@@ -24,13 +24,14 @@ import { episodeOf, type Series } from '@/lib/library-series'
 import { playingOnHref } from '@/lib/playback-source'
 import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
-import { CheckIcon, PlayIcon } from '@/components/vela/icons'
+import { PlayIcon } from '@/components/vela/icons'
 import { RecordingThumb } from '@/components/library/recording-thumb'
+import { PickMark, PickShade } from '@/components/library/picking'
 
-/** A picked recording's set, and the press that changes it, while the library is choosing. */
+/** A picked recording's set, and the press that changes it, while the library is choosing: `range` when Shift was held. */
 export interface Picking {
   picked: ReadonlySet<string>
-  onPick: (id: string, taken: boolean) => void
+  onPick: (id: string, range: boolean) => void
 }
 
 function recordingHref(id: string): Route {
@@ -66,12 +67,14 @@ export function Picture({
   corner = 'rounded-md',
   lengthShown = true,
   watchedShown = true,
+  className,
   children,
 }: {
   recording: Recording
   corner?: string
   lengthShown?: boolean
   watchedShown?: boolean
+  className?: string
   children?: ReactNode
 }) {
   const state = watchStateOf(recording)
@@ -81,6 +84,7 @@ export function Picture({
       className={cn(
         'relative block aspect-video overflow-hidden bg-surface-2',
         corner,
+        className,
       )}
     >
       <RecordingThumb
@@ -142,10 +146,11 @@ function TilePress({
     return (
       <button
         type="button"
-        aria-pressed={taken}
+        role="checkbox"
+        aria-checked={taken}
         aria-label={`${recording.title} を選ぶ`}
-        onClick={() => picking.onPick(recording.id, !taken)}
-        className={cn(press, 'w-full cursor-pointer text-left')}
+        onClick={(event) => picking.onPick(recording.id, event.shiftKey)}
+        className={cn(press, 'w-full cursor-pointer text-left select-none')}
       >
         {children}
       </button>
@@ -156,22 +161,6 @@ function TilePress({
     <Link href={recordingHref(recording.id)} className={press}>
       {children}
     </Link>
-  )
-}
-
-/** The round mark over a picture while the library is choosing: empty, or filled with a tick once taken. */
-function PickMark({ taken }: { taken: boolean }) {
-  return (
-    <span
-      aria-hidden="true"
-      data-slot="pick-mark"
-      className={cn(
-        'absolute top-2 right-2 z-[2] grid size-6 place-items-center rounded-full shadow-[0_0_0_1.5px_#fff]',
-        taken ? 'bg-accent-fill text-on-accent' : 'bg-black/25',
-      )}
-    >
-      {taken && <CheckIcon className="size-3.5" strokeWidth={2.4} />}
-    </span>
   )
 }
 
@@ -188,11 +177,24 @@ export function RecordingTile({
   picking?: Picking
 }) {
   const state = watchStateOf(recording)
+  const taken = picking?.picked.has(recording.id) ?? false
 
   return (
     <TilePress recording={recording} picking={picking}>
-      <Picture recording={recording}>
-        {picking && <PickMark taken={picking.picked.has(recording.id)} />}
+      <Picture
+        recording={recording}
+        className={cn(
+          'transition-shadow duration-[140ms] ease-toy',
+          taken &&
+            'shadow-[0_0_0_2px_var(--bg),0_0_0_4.5px_var(--accent-fill)]',
+        )}
+      >
+        {picking && (
+          <>
+            <PickShade />
+            <PickMark taken={taken} size="tile" />
+          </>
+        )}
       </Picture>
       <span
         data-watch={state}
@@ -220,16 +222,27 @@ const SHELF_HEADING =
 export function ContinueRow({
   recordings,
   compact = false,
+  dimmed = false,
 }: {
   recordings: Recording[]
   compact?: boolean
+  /** While the library is choosing: drawn faint, and nothing in it can be pressed. */
+  dimmed?: boolean
 }) {
   if (recordings.length === 0) {
     return null
   }
 
   return (
-    <section aria-labelledby="library-continue" data-slot="continue-row">
+    <section
+      aria-labelledby="library-continue"
+      data-slot="continue-row"
+      inert={dimmed}
+      className={cn(
+        'transition-opacity duration-[140ms] ease-toy',
+        dimmed && 'opacity-40',
+      )}
+    >
       <h2 id="library-continue" className={SHELF_HEADING}>
         続きから
       </h2>
@@ -239,8 +252,9 @@ export function ContinueRow({
 
           return (
             <li key={recording.id} className="min-w-0">
-              <Link
-                href={playingOnHref(recording.id) as Route}
+              <GoingOn
+                recording={recording}
+                still={dimmed}
                 className={cn(
                   'group -m-1.5 grid items-center gap-3 rounded-lg p-1.5 text-ink no-underline outline-none transition-[background-color] duration-[140ms] ease-toy hover:bg-surface focus-visible:shadow-ring',
                   compact
@@ -287,12 +301,35 @@ export function ContinueRow({
                     )}
                   </span>
                 </span>
-              </Link>
+              </GoingOn>
             </li>
           )
         })}
       </ul>
     </section>
+  )
+}
+
+/** A recording left part-way, opened where it was left; while the library is choosing it is drawn without being something to press. */
+export function GoingOn({
+  recording,
+  still,
+  className,
+  children,
+}: {
+  recording: Recording
+  still: boolean
+  className?: string
+  children: ReactNode
+}) {
+  if (still) {
+    return <span className={className}>{children}</span>
+  }
+
+  return (
+    <Link href={playingOnHref(recording.id) as Route} className={className}>
+      {children}
+    </Link>
   )
 }
 

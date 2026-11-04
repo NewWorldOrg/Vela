@@ -1,6 +1,15 @@
 'use client'
 
-import { useCallback, useId, useMemo, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+  useTransition,
+  type Ref,
+} from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import type { Route } from 'next'
@@ -27,7 +36,16 @@ import {
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FilterChips } from '@/components/vela/filter-chips'
 import { RecordingsTable } from '@/components/library/recordings-table'
-import { RecordingSelection } from '@/components/library/recording-selection'
+import {
+  PickingBand,
+  PickingRow,
+  usePickedDeletion,
+} from '@/components/library/picking'
+import {
+  everyShownPicked,
+  pressedPick,
+  withEveryShown,
+} from '@/lib/library-picking'
 import { ScreenMain } from '@/components/vela/app-shell'
 import { iconButtonVariants } from '@/components/vela/icon-button'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
@@ -71,6 +89,12 @@ export function LibraryView({
 }) {
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const [picking, setPicking] = useState(false)
+  const pressedBefore = useRef<string | undefined>(undefined)
+  const closeRef = useRef<HTMLButtonElement>(null)
+  const pickRef = useRef<HTMLButtonElement>(null)
+  const pickedOnce = useRef(false)
+  const headRef = useRef<HTMLDivElement>(null)
+  const [headHeight, setHeadHeight] = useState<number>()
   const held = useHeldDeletions()
   const [filtersOpen, setFiltersOpen] = useState(false)
   const sideways = usePhoneOnItsSide()
@@ -112,29 +136,94 @@ export function LibraryView({
     addressWith(pathname, searchParams.toString(), patch) as Route
   const series = useMemo(() => seriesOf(items), [items])
   const now = new Date()
+  const shownIds = items.map((one) => one.id)
+  const inOrder =
+    view.by === 'series'
+      ? series.flatMap((one) => one.items.map((r) => r.id))
+      : shownIds
+  const everyPicked = everyShownPicked(picked, shownIds)
+  const stopChoosing = (): void => {
+    setPicking(false)
+    setPicked(new Set())
+    pressedBefore.current = undefined
+  }
+  const deletion = usePickedDeletion(chosen, onDeleteAll, () => {
+    setPicked(new Set())
+    pressedBefore.current = undefined
+  })
   const pickingCards: Picking | undefined = picking
     ? {
         picked,
-        onPick: (id, taken) => {
-          const next = new Set(picked)
-
-          if (taken) {
-            next.add(id)
-          } else {
-            next.delete(id)
-          }
-
-          setPicked(next)
+        onPick: (id, range) => {
+          setPicked(
+            pressedPick(
+              picked,
+              inOrder,
+              id,
+              range ? pressedBefore.current : undefined,
+            ),
+          )
+          pressedBefore.current = id
         },
       }
     : undefined
-  const pickToggle = (
+  const pickingControls = {
+    count: chosen.length,
+    everyPicked,
+    onEvery: () => setPicked(withEveryShown(picked, shownIds)),
+    deletion,
+  }
+
+  useEffect(() => {
+    if (picking) {
+      pickedOnce.current = true
+      closeRef.current?.focus({ preventScroll: true })
+    } else if (pickedOnce.current) {
+      pickRef.current?.focus({ preventScroll: true })
+    }
+  }, [picking])
+
+  useEffect(() => {
+    if (!picking) {
+      return
+    }
+
+    const leaveOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.defaultPrevented) {
+        return
+      }
+
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          '[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]',
+        )
+      ) {
+        return
+      }
+
+      setPicking(false)
+      setPicked(new Set())
+      pressedBefore.current = undefined
+    }
+
+    document.addEventListener('keydown', leaveOnEscape)
+
+    return () => document.removeEventListener('keydown', leaveOnEscape)
+  }, [picking])
+
+  const pickToggleWith = (ref?: Ref<HTMLButtonElement>) => (
     <button
+      ref={ref}
       type="button"
       aria-pressed={picking}
       onClick={() => {
-        setPicking(!picking)
-        setPicked(new Set())
+        if (picking) {
+          stopChoosing()
+        } else {
+          setHeadHeight(headRef.current?.offsetHeight || undefined)
+          setPicking(true)
+        }
       }}
       className={cn(
         iconButtonVariants(),
@@ -189,77 +278,96 @@ export function LibraryView({
             {searchAndFilter}
           </div>
         )}
-        {pickToggle}
+        {pickToggleWith()}
       </PhoneBarTools>
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-3 phone:hidden">
-        <h1 className="text-display font-bold tracking-[-0.03em] text-ink">
-          ライブラリ
-        </h1>
-        <span className="mt-2.5 mr-2.5 text-sub whitespace-nowrap text-ink-2">
-          {hasFilter ? (
-            <>
-              <span className="font-code">{items.length}</span> /{' '}
-              <span className="font-code">{total}</span> 件
-            </>
-          ) : (
-            <>
-              <span className="font-code">{total}</span> 件
-            </>
-          )}
-        </span>
-        <SegmentedControl
-          aria-label="まとめ方"
-          options={[
-            { value: 'date', label: '日付', href: hrefWith({ by: null }) },
-            {
-              value: 'series',
-              label: 'シリーズ',
-              href: hrefWith({ by: 'series' }),
-            },
-          ]}
-          value={view.by}
-        />
-        <SegmentedControl
-          aria-label="並べ方"
-          options={[
-            {
-              value: 'grid',
-              label: '格子',
-              icon: <GridIcon />,
-              href: hrefWith({ as: 'grid' }),
-            },
-            {
-              value: 'table',
-              label: '表',
-              icon: <RowsIcon />,
-              href: hrefWith({ as: 'table' }),
-            },
-          ]}
-          value={view.as}
-          onValueChange={(layout) => storeText(LIBRARY_LAYOUT_COOKIE, layout)}
-        />
-        <div className="ml-auto flex min-w-0 items-center gap-2.5">
-          {pickToggle}
-          <form
-            role="search"
-            className="relative w-[calc(320rem/16)] min-w-0 max-[999px]:w-[calc(240rem/16)]"
-            onSubmit={(e) => {
-              e.preventDefault()
-              const q = new FormData(e.currentTarget).get('q')
-              onFiltersChange({ q: typeof q === 'string' ? q : null })
-            }}
+      <div
+        className="phone:hidden"
+        style={picking && headHeight ? { height: headHeight } : undefined}
+      >
+        {picking ? (
+          <PickingRow
+            {...pickingControls}
+            onClose={stopChoosing}
+            closeRef={closeRef}
+            className="h-full min-h-11"
+          />
+        ) : (
+          <div
+            ref={headRef}
+            className="flex flex-wrap items-center gap-x-4 gap-y-3"
           >
-            <SearchIcon className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-ink-3" />
-            <Input
-              key={filter.q ?? ''}
-              name="q"
-              aria-label="録画を検索"
-              defaultValue={filter.q ?? ''}
-              placeholder="番組名・概要・出演者で検索"
-              className="h-10 rounded-full border-0 pl-10 text-body text-ellipsis"
+            <h1 className="text-display font-bold tracking-[-0.03em] text-ink">
+              ライブラリ
+            </h1>
+            <span className="mt-2.5 mr-2.5 text-sub whitespace-nowrap text-ink-2">
+              {hasFilter ? (
+                <>
+                  <span className="font-code">{items.length}</span> /{' '}
+                  <span className="font-code">{total}</span> 件
+                </>
+              ) : (
+                <>
+                  <span className="font-code">{total}</span> 件
+                </>
+              )}
+            </span>
+            <SegmentedControl
+              aria-label="まとめ方"
+              options={[
+                { value: 'date', label: '日付', href: hrefWith({ by: null }) },
+                {
+                  value: 'series',
+                  label: 'シリーズ',
+                  href: hrefWith({ by: 'series' }),
+                },
+              ]}
+              value={view.by}
             />
-          </form>
-        </div>
+            <SegmentedControl
+              aria-label="並べ方"
+              options={[
+                {
+                  value: 'grid',
+                  label: '格子',
+                  icon: <GridIcon />,
+                  href: hrefWith({ as: 'grid' }),
+                },
+                {
+                  value: 'table',
+                  label: '表',
+                  icon: <RowsIcon />,
+                  href: hrefWith({ as: 'table' }),
+                },
+              ]}
+              value={view.as}
+              onValueChange={(layout) =>
+                storeText(LIBRARY_LAYOUT_COOKIE, layout)
+              }
+            />
+            <div className="ml-auto flex min-w-0 items-center gap-2.5">
+              {pickToggleWith(pickRef)}
+              <form
+                role="search"
+                className="relative w-[calc(320rem/16)] min-w-0 max-[999px]:w-[calc(240rem/16)]"
+                onSubmit={(e) => {
+                  e.preventDefault()
+                  const q = new FormData(e.currentTarget).get('q')
+                  onFiltersChange({ q: typeof q === 'string' ? q : null })
+                }}
+              >
+                <SearchIcon className="pointer-events-none absolute top-1/2 left-4 z-10 size-4 -translate-y-1/2 text-ink-3" />
+                <Input
+                  key={filter.q ?? ''}
+                  name="q"
+                  aria-label="録画を検索"
+                  defaultValue={filter.q ?? ''}
+                  placeholder="番組名・概要・出演者で検索"
+                  className="h-10 rounded-full border-0 pl-10 text-body text-ellipsis"
+                />
+              </form>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="mt-4 flex flex-wrap items-center gap-x-2 gap-y-3 phone:hidden">
@@ -390,14 +498,10 @@ export function LibraryView({
         </div>
       </div>
 
-      {chosen.length > 0 && (
-        <RecordingSelection
-          chosen={chosen}
-          onClear={() => setPicked(new Set())}
-          onDeleteAll={onDeleteAll}
-          className="phone:fixed phone:inset-x-3 phone:bottom-[calc(var(--tab-bar-cover)+10rem/16)] phone:z-50 phone:mb-0 phone:shadow-pop-lg sideways:left-[calc(80rem/16+env(safe-area-inset-left))]"
-        />
+      {picking && (
+        <PickingBand {...pickingControls} className="hidden phone:flex" />
       )}
+      {deletion.dialog}
 
       {items.length > 0 && (
         <OnAPhone>
@@ -405,13 +509,14 @@ export function LibraryView({
             data-slot="phone-library"
             className="-mx-3.5 min-h-0 flex-1 overflow-y-auto px-3.5 pb-24"
           >
-            <PhoneContinue recordings={items.filter(goesOnFrom)} />
+            <PhoneContinue
+              recordings={items.filter(goesOnFrom)}
+              dimmed={picking}
+            />
             <PhoneRecordingRows
               recordings={items}
               now={new Date()}
-              picking={picking}
-              picked={picked}
-              onPick={setPicked}
+              picking={pickingCards}
               onDelete={onDelete}
             />
           </div>
@@ -431,23 +536,28 @@ export function LibraryView({
             {view.as === 'table' ? (
               <>
                 {view.by !== 'series' && (
-                  <ContinueRow recordings={items.filter(goesOnFrom)} compact />
+                  <ContinueRow
+                    recordings={items.filter(goesOnFrom)}
+                    compact
+                    dimmed={picking}
+                  />
                 )}
                 <RecordingsTable
                   items={items}
                   groups={view.by === 'series' ? series : undefined}
                   waiting={waiting}
                   onDelete={onDelete}
-                  picking={picking}
-                  picked={picked}
-                  onPick={setPicked}
+                  picking={pickingCards}
                 />
               </>
             ) : view.by === 'series' ? (
               <SeriesGrid series={series} now={now} picking={pickingCards} />
             ) : (
               <>
-                <ContinueRow recordings={items.filter(goesOnFrom)} />
+                <ContinueRow
+                  recordings={items.filter(goesOnFrom)}
+                  dimmed={picking}
+                />
                 <DateGrid recordings={items} now={now} picking={pickingCards} />
               </>
             )}

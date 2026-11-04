@@ -120,6 +120,7 @@ const THE_SUITE = [
   'tests/lib/live-captions.test.ts',
   'tests/lib/live-choice.test.ts',
   'tests/lib/library-days.test.ts',
+  'tests/lib/library-picking.test.ts',
   'tests/lib/library-series.test.ts',
   'tests/lib/library-view.test.ts',
   'tests/lib/live-clock.test.ts',
