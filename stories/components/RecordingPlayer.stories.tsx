@@ -85,6 +85,10 @@ import {
   readingModulesOf,
   throughout,
 } from '@/stories/fixtures/recording-data-broadcast'
+import {
+  noNameStaysAfterTheFaceCloses,
+  tabNamesTheGear,
+} from '@/stories/names-after-a-face'
 
 function detail(id: string) {
   const found = RECORDING_DETAIL_FIXTURES.find((r) => r.id === id)
@@ -3060,6 +3064,18 @@ async function restOn(canvasElement: HTMLElement, name: string | RegExp) {
   })
 
   return named(canvasElement) as HTMLElement
+}
+
+export const 設定の面を外を押して閉じても名札は残らない: Story = {
+  play: async ({ canvasElement }) => {
+    await noNameStaysAfterTheFaceCloses(canvasElement)
+  },
+}
+
+export const Tabで焦点を当てた操作子には名札が出る: Story = {
+  play: async ({ canvasElement }) => {
+    await tabNamesTheGear(canvasElement)
+  },
 }
 
 export const 操作子の名前は待ってから出る: Story = {
