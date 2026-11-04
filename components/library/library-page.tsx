@@ -74,6 +74,9 @@ const EVERY_CHANNEL = ''
 
 const GRID_VIEW: View = { by: 'date', as: 'grid' }
 
+/** The room left at the end of the table, which scrolls inside itself, so the floating bar does not cover its last row. */
+const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
+
 export function LibraryView({
   result,
   filter,
@@ -535,6 +538,7 @@ export function LibraryView({
                   waiting={waiting}
                   onDelete={onDelete}
                   picking={pickingCards}
+                  className={cn(picking && ROOM_FOR_THE_BAR)}
                 />
               </>
             ) : view.by === 'series' ? (
@@ -548,7 +552,7 @@ export function LibraryView({
                 <DateGrid recordings={items} now={now} picking={pickingCards} />
               </>
             )}
-            {picking && (
+            {picking && view.as !== 'table' && (
               <div
                 aria-hidden="true"
                 data-slot="room-for-the-bar"
