@@ -145,3 +145,13 @@ test('how wide the actions in a group are is declared in one file', async () => 
     )
   }
 })
+
+test("recording a programme is drawn in the recording's red", async () => {
+  const area = await readFile(
+    path.join(ROOT, 'components/guide/reservation-area.tsx'),
+    'utf8',
+  )
+
+  assert.match(area, /<RecordIcon className=\{first \? 'text-rec'/)
+  assert.doesNotMatch(area, /text-warn/)
+})

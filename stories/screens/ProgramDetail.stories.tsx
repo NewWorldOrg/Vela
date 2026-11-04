@@ -359,7 +359,7 @@ async function liveLeads(canvasElement: HTMLElement): Promise<void> {
     getComputedStyle(live!).color,
   )
   await expect(getComputedStyle(figureOf(reserve!)).color).toBe(
-    colourOf(reserve!, 'var(--warn)'),
+    colourOf(reserve!, 'var(--rec)'),
   )
   await expect(getComputedStyle(figureOf(reserve!)).color).not.toBe(
     getComputedStyle(reserve!).color,
