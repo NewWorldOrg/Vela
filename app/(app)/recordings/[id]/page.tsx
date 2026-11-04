@@ -21,6 +21,8 @@ import { FORMAT_COOKIE, formatChoiceOf } from '@/lib/playback-format'
 import {
   AUTO_OPEN_SPELLING,
   DATA_BROADCAST_AUTO_OPEN,
+  FOLD_SPELLING,
+  RECORDING_SERIES_FOLDED,
   flagOf,
 } from '@/lib/stored-flag'
 import { isRecordingId } from '@/lib/recordings'
@@ -166,6 +168,10 @@ export default async function Page({
         onNoteSkip={noteTheSkip}
         onNoteSeek={noteTheSeek}
         episodes={episodes}
+        seriesFolded={flagOf(
+          jar.get(RECORDING_SERIES_FOLDED)?.value,
+          FOLD_SPELLING,
+        )}
       />
     </>
   )

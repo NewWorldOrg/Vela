@@ -236,11 +236,13 @@ export function RecordingDetailView({
   onNoteSeek,
   onSeekWhileLeaving,
   episodes = [],
+  seriesFolded = false,
   ...standIns
 }: PlayerStandIns & {
   detail: RecordingDetail
   /** The other recordings of the series this one belongs to, newest first. */
   episodes?: readonly Recording[]
+  seriesFolded?: boolean
   playback: PlaybackRead
   unaskedProfile?: PlaybackProfile
   profiles?: readonly LiveProfile[]
@@ -533,6 +535,7 @@ export function RecordingDetailView({
             name={seriesNameOf(d.title)}
             current={d}
             episodes={episodes}
+            folded={seriesFolded}
             className="phone:hidden"
           />
         )}
