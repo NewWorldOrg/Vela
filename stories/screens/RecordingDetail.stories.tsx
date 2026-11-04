@@ -28,6 +28,12 @@ import { RecordingDetailView } from '@/components/recordings/recording-detail-pa
 import { skipNoted } from '@/stories/noted-skips'
 import { seekNoted } from '@/stories/noted-seeks'
 import { afterTheArrival } from '@/stories/after-the-arrival'
+import {
+  RECORDING_SERIES_FOLDED,
+  cookieIn,
+  forgettingCookie,
+  storingCookie,
+} from '@/lib/stored-flag'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import {
   AN_IPAD,
@@ -328,6 +334,135 @@ export const 同じシリーズのほかの回を右に並べる: Story = {
         '[data-slot="series-episodes"] [data-slot="unwatched-dot"]',
       ),
     ).toHaveLength(3)
+  },
+}
+
+/** The series' column on the page, found by its slot. */
+function seriesColumn(canvasElement: HTMLElement): HTMLElement {
+  const found = canvasElement.querySelector('[data-slot="series-episodes"]')
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error('the series column is not on the screen')
+  }
+
+  return found
+}
+
+function widthOf(element: Element | null): number {
+  return element?.getBoundingClientRect().width ?? 0
+}
+
+function playerWidth(canvasElement: HTMLElement): number {
+  return widthOf(canvasElement.querySelector('[data-slot="player"]'))
+}
+
+const SERIES_FOLD = '同じシリーズの回'
+
+export const 同じシリーズの回を畳む: Story = {
+  args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
+  parameters: { screen: { width: 1440, height: 900 } },
+  beforeEach: () => {
+    document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: SERIES_FOLD })
+    const column = seriesColumn(canvasElement)
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'true')
+    await expect(within(column).getAllByRole('link')).toHaveLength(7)
+
+    const wide = widthOf(column)
+    const player = playerWidth(canvasElement)
+
+    await userEvent.click(fold)
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'false')
+    await expect(cookieIn(document.cookie, RECORDING_SERIES_FOLDED)).toBe(
+      'folded',
+    )
+
+    await waitFor(async () => {
+      await expect(within(column).queryAllByRole('link')).toHaveLength(0)
+      await expect(widthOf(column)).toBe(44)
+      await expect(playerWidth(canvasElement)).toBeGreaterThan(player)
+    })
+
+    await userEvent.click(fold)
+
+    await expect(fold).toHaveAttribute('aria-expanded', 'true')
+    await expect(cookieIn(document.cookie, RECORDING_SERIES_FOLDED)).toBe(
+      'open',
+    )
+    await expect(
+      within(column).getByRole('heading', { name: /週末キッチンの手帖/ }),
+    ).toBeVisible()
+
+    await waitFor(async () => {
+      await expect(within(column).getAllByRole('link')).toHaveLength(7)
+      await expect(widthOf(column)).toBe(wide)
+      await expect(playerWidth(canvasElement)).toBe(player)
+    })
+  },
+}
+
+export const 同じシリーズの回を畳んだまま開く: Story = {
+  args: {
+    detail: detail('1274'),
+    episodes: KITCHEN_EPISODES,
+    seriesFolded: true,
+  },
+  parameters: { screen: { width: 1440, height: 900 } },
+  beforeEach: () => {
+    document.cookie = storingCookie(RECORDING_SERIES_FOLDED, 'folded')
+
+    return () => {
+      document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const column = seriesColumn(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: SERIES_FOLD }),
+    ).toHaveAttribute('aria-expanded', 'false')
+    await expect(within(column).queryAllByRole('link')).toHaveLength(0)
+    await expect(within(column).queryByRole('heading')).toBeNull()
+    await expect(widthOf(column)).toBe(44)
+    await expect(column.getAnimations({ subtree: true })).toHaveLength(0)
+  },
+}
+
+export const iPadでも同じシリーズの回を畳める: Story = {
+  args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
+  parameters: { screen: { width: 1180, height: 820 } },
+  beforeEach: () => {
+    document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
+
+    return () => {
+      document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: SERIES_FOLD })
+    const column = seriesColumn(canvasElement)
+
+    await expect(within(column).getAllByRole('link')).toHaveLength(7)
+
+    await userEvent.click(fold)
+
+    await waitFor(async () => {
+      await expect(within(column).queryAllByRole('link')).toHaveLength(0)
+    })
+    await expect(fold).toBeVisible()
+
+    await userEvent.click(fold)
+
+    await waitFor(async () => {
+      await expect(within(column).getAllByRole('link')).toHaveLength(7)
+    })
   },
 }
 
