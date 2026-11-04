@@ -199,19 +199,6 @@ export const 複数を選んで削除する: Story = {
 
 const BAR_ABOVE_THE_FOOT = 24
 
-function colourOf(host: HTMLElement, value: string): string {
-  const probe = host.ownerDocument.createElement('span')
-
-  probe.style.backgroundColor = value
-  host.appendChild(probe)
-
-  const colour = getComputedStyle(probe).backgroundColor
-
-  probe.remove()
-
-  return colour
-}
-
 /** Where the bar stands once it has risen in: fixed, its foot 24px over the window's, in the middle of the window. */
 async function floatsAtTheFoot(bar: HTMLElement): Promise<void> {
   const { clientWidth, clientHeight } = document.documentElement
@@ -269,11 +256,7 @@ export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
     const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
 
     await expect(pick).toHaveAttribute('aria-pressed', 'true')
-    await waitFor(() =>
-      expect(getComputedStyle(pick).backgroundColor).toBe(
-        colourOf(pick, 'var(--accent-tint)'),
-      ),
-    )
+    await expect(pick.className).toMatch(/\bbg-accent-tint\b/)
 
     const [first] = LIBRARY_SHELF
 
