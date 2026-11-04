@@ -12,6 +12,7 @@ import {
 import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import { inTheApp } from '@/stories/frames'
+import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 
 const meta = {
   title: 'Screens/番組詳細',
@@ -303,6 +304,131 @@ export const 放送前: Story = {
   },
 }
 
+function actionsIn(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+
+  return {
+    live: canvas.queryByRole('link', { name: 'ライブ視聴' }),
+    reserve: canvas.queryByRole('button', { name: '録画予約' }),
+    series: canvas.queryByRole('link', { name: 'シリーズで予約' }),
+  }
+}
+
+async function sideBySide(...pressed: HTMLElement[]): Promise<void> {
+  const boxes = pressed.map((one) => one.getBoundingClientRect())
+
+  for (const [at, box] of boxes.entries()) {
+    if (at === 0) {
+      continue
+    }
+
+    await expect(Math.round(box.top)).toBe(Math.round(boxes[0].top))
+    await expect(box.left).toBeGreaterThan(boxes[at - 1].right)
+  }
+}
+
+function colourOf(host: HTMLElement, value: string): string {
+  const probe = host.ownerDocument.createElement('span')
+
+  probe.style.color = value
+  host.appendChild(probe)
+
+  const colour = getComputedStyle(probe).color
+
+  probe.remove()
+
+  return colour
+}
+
+function figureOf(button: HTMLElement): SVGElement {
+  return button.querySelector('svg')!
+}
+
+async function liveLeads(canvasElement: HTMLElement): Promise<void> {
+  const { live, reserve, series } = actionsIn(canvasElement)
+
+  await expect(live).not.toBeNull()
+  await expect(reserve).not.toBeNull()
+  await expect(series).not.toBeNull()
+  await expect(live).toHaveAttribute('data-variant', 'default')
+  await expect(reserve).toHaveAttribute('data-variant', 'tone')
+  await expect(series).toHaveAttribute('data-variant', 'ghost')
+  await expect(getComputedStyle(figureOf(live!)).color).toBe(
+    getComputedStyle(live!).color,
+  )
+  await expect(getComputedStyle(figureOf(reserve!)).color).toBe(
+    colourOf(reserve!, 'var(--warn)'),
+  )
+  await expect(getComputedStyle(figureOf(reserve!)).color).not.toBe(
+    getComputedStyle(reserve!).color,
+  )
+}
+
+export const 放送中はライブ視聴が先頭で1行に並ぶ: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN } },
+  play: async ({ canvasElement }) => {
+    await liveLeads(canvasElement)
+
+    const { live, reserve, series } = actionsIn(canvasElement)
+
+    await sideBySide(live!, reserve!, series!)
+  },
+}
+
+export const 放送前は録画予約が主のボタン: Story = {
+  args: { detail: { ...standard, nowMin: standard.program.startMin - 1 } },
+  play: async ({ canvasElement }) => {
+    const { live, reserve, series } = actionsIn(canvasElement)
+
+    await expect(live).toBeNull()
+    await expect(reserve).toHaveAttribute('data-variant', 'default')
+    await expect(getComputedStyle(figureOf(reserve!)).color).toBe(
+      getComputedStyle(reserve!).color,
+    )
+    await sideBySide(reserve!, series!)
+  },
+}
+
+async function liveLeadsOnAPhone(
+  canvasElement: HTMLElement,
+  width: number,
+): Promise<void> {
+  await liveLeads(canvasElement)
+
+  const { live, reserve, series } = actionsIn(canvasElement)
+  const first = live!.getBoundingClientRect()
+
+  for (const other of [reserve!, series!]) {
+    const box = other.getBoundingClientRect()
+
+    await expect(Math.round(box.top)).toBeGreaterThanOrEqual(
+      Math.round(first.top),
+    )
+    await expect(box.right).toBeLessThanOrEqual(width)
+  }
+
+  await sideBySide(live!, reserve!)
+  await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+    width,
+  )
+}
+
+export const 電話でも放送中はライブ視聴が先頭: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN } },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await liveLeadsOnAPhone(canvasElement, PHONE.width)
+  },
+}
+
+export const 狭い電話でも放送中はライブ視聴が先頭: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN } },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    await liveLeadsOnAPhone(canvasElement, NARROW_PHONE.width)
+  },
+}
+
 const BOOKING = PROGRAM_FIXTURES.find((program) => program.booking)!.booking!
 
 const booked: ProgramDetail = {
@@ -338,6 +464,26 @@ export const 予約済み: Story = {
 
     await waitFor(() => expect(args.onCancel).toHaveBeenCalledTimes(1))
     await expect(args.onCancel).toHaveBeenCalledWith(BOOKING.id)
+  },
+}
+
+export const 放送中に予約済みならライブ視聴の下に予約の面: Story = {
+  args: { detail: { ...booked, nowMin: NOW_MIN } },
+  play: async ({ canvasElement }) => {
+    const { live, reserve } = actionsIn(canvasElement)
+    const card = canvasElement.querySelector<HTMLElement>(
+      '[data-booking="scheduled"]',
+    )
+
+    await expect(reserve).toBeNull()
+    await expect(live).toHaveAttribute('data-variant', 'default')
+    await expect(card).not.toBeNull()
+    await expect(card!.getBoundingClientRect().top).toBeGreaterThan(
+      live!.getBoundingClientRect().bottom,
+    )
+    await expect(card!.getBoundingClientRect().left).toBe(
+      live!.getBoundingClientRect().left,
+    )
   },
 }
 
