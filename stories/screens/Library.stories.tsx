@@ -438,8 +438,10 @@ export const すべて選ぶとすべて外す: Story = {
       await expect(pickOf(canvasElement, one)).toBeChecked()
     }
 
-    await userEvent.click(row.getByRole('button', { name: 'すべて外す' }))
-    await stopsChoosing(canvasElement)
+    await pressAndSinks(
+      canvasElement,
+      row.getByRole('button', { name: 'すべて外す' }),
+    )
   },
 }
 
@@ -537,11 +539,46 @@ async function leavesTheOnlyOneOut(
   await startWithTheCheck(canvasElement, recording)
   await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
 
-  await userEvent.click(pickOf(canvasElement, recording))
-  await stopsChoosing(canvasElement)
+  await pressAndSinks(canvasElement, pickOf(canvasElement, recording))
   await expect(
     canvasElement.querySelector('[data-slot="pick-mark"][data-taken]'),
   ).toBeNull()
+}
+
+const SINKS_WITHIN = 500
+
+/** Presses what leaves the last picked recording out, and sees the bar start sinking at once and be gone within half a second, saying what it said before all the while. */
+async function pressAndSinks(
+  canvasElement: HTMLElement,
+  target: HTMLElement,
+): Promise<void> {
+  const barOf = () =>
+    canvasElement.querySelector<HTMLElement>(
+      '[data-slot="picking-bar"], [data-slot="picking-band"]',
+    )
+  const before = barOf()?.textContent ?? ''
+  const said = new Set<string>()
+  const from = performance.now()
+  let gone: number | undefined
+
+  await expect(before).toContain('件を選択')
+  await userEvent.click(target)
+
+  while (performance.now() - from < SINKS_WITHIN * 3) {
+    const bar = barOf()
+
+    if (!bar) {
+      gone = performance.now() - from
+      break
+    }
+
+    said.add(bar.textContent ?? '')
+    await new Promise((tick) => setTimeout(tick, 10))
+  }
+
+  await expect(gone).toBeLessThan(SINKS_WITHIN)
+  await expect([...said].filter((one) => one !== before)).toEqual([])
+  await stopsChoosing(canvasElement)
 }
 
 export const 選んだ1件を外すと選ぶのをやめる: Story = {
@@ -598,8 +635,7 @@ async function waitsAtNoneThenLeaves(canvasElement: HTMLElement) {
   await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
   await expect(canvas.getByRole('toolbar')).toBeVisible()
 
-  await userEvent.click(pickOf(canvasElement, first))
-  await stopsChoosing(canvasElement)
+  await pressAndSinks(canvasElement, pickOf(canvasElement, first))
 }
 
 export const iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
@@ -684,8 +720,7 @@ export const マウスの画面ではチェックを押すと選び始めてそ�
     await userEvent.click(pickOf(canvasElement, first))
     await expect(bar).toHaveTextContent('1 件を選択')
 
-    await userEvent.click(pickOf(canvasElement, second))
-    await stopsChoosing(canvasElement)
+    await pressAndSinks(canvasElement, pickOf(canvasElement, second))
     await expect(pickOf(canvasElement, first)).toHaveFocus()
   },
 }
@@ -1591,8 +1626,10 @@ export const 電話の帯ですべて選ぶ: Story = {
         ?.getBoundingClientRect().top ?? window.innerHeight,
     )
 
-    await userEvent.click(band.getByRole('button', { name: 'すべて外す' }))
-    await stopsChoosing(canvasElement)
+    await pressAndSinks(
+      canvasElement,
+      band.getByRole('button', { name: 'すべて外す' }),
+    )
   },
 }
 
