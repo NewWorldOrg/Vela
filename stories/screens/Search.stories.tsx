@@ -688,7 +688,9 @@ export const 面の条件は閉じるまで走らず閉じるとまとめて走�
 
     const unchanged = await openPanel(canvas, '曜日')
 
-    await expect(within(unchanged).getAllByRole('button')).toHaveLength(7)
+    await expect(
+      within(unchanged).getAllByRole('button', { pressed: false }),
+    ).toHaveLength(7)
     await closePanel()
 
     await expect(
@@ -958,6 +960,44 @@ export const サブジャンルと曜日を選ぶ: Story = {
         'ジャンルアニメ/特撮・海外ドラマ(ドラマ)',
       )
     })
+  },
+}
+
+export const 曜日を全選択して解除する: Story = {
+  args: {
+    result: {
+      condition: { ...emptyCondition, days: ['saturday', 'sunday'] },
+      channels,
+      outcome: { state: 'idle' },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const days = await openPanel(canvas, '曜日')
+    const pressed = () =>
+      within(days)
+        .queryAllByRole('button', { pressed: true })
+        .map((one) => one.textContent)
+
+    await expect(pressed()).toEqual(['土曜', '日曜'])
+
+    await press(days, '曜日を全選択')
+
+    await expect(pressed()).toHaveLength(7)
+    await expect(
+      within(days).getByRole('button', { name: '曜日を全選択' }),
+    ).toBeDisabled()
+    await expect(chipOf(canvas, '曜日')).toHaveTextContent('曜日すべて')
+
+    await press(days, '曜日の選択を解除')
+
+    await expect(pressed()).toEqual([])
+    await expect(
+      within(days).getByRole('button', { name: '曜日の選択を解除' }),
+    ).toBeDisabled()
+    await expect(
+      within(days).getByRole('button', { name: '曜日を全選択' }),
+    ).toBeEnabled()
   },
 }
 

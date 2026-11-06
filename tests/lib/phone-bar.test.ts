@@ -31,9 +31,9 @@ test('a screen pressed into from a tab goes back to the head of that tab', () =>
     href: '/guide',
     label: '番組表',
   })
-  assert.deepEqual(phoneBarOf('/library/integrity').back, {
-    href: '/library',
-    label: 'ライブラリ',
+  assert.deepEqual(phoneBarOf('/settings/integrity').back, {
+    href: '/settings',
+    label: '設定',
   })
   assert.deepEqual(phoneBarOf('/recordings/12').back, {
     href: '/library',

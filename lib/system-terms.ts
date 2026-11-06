@@ -3,7 +3,9 @@ import { WHEN_LABELS } from '@/lib/when-terms'
 export const SYSTEM_DETAIL_LABELS = {
   observedAt: WHEN_LABELS.taken,
   health: 'ヘルスの応答',
-  version: 'バージョン',
+  apiVersion: 'API',
+  driverVersion: 'driver',
+  screenVersion: '画面',
   protocolVersion: 'プロトコルバージョン',
 } as const
 
