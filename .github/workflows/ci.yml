@@ -60,7 +60,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: ./.github/actions/setup
-      - run: yarn playwright install --with-deps --only-shell chromium
+      - run: npx --no-install playwright install --with-deps --only-shell chromium
       - run: yarn build-storybook
       - name: Every story renders in a real browser and carries no accessibility violation
         env:
