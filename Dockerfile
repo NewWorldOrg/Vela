@@ -1,4 +1,6 @@
-FROM node:24.22.1-slim AS base
+FROM node:26.13.0-slim AS base
+
+RUN npm install -g corepack@0.36.0 && corepack enable
 
 FROM python:3.15.2-slim-bookworm AS marks
 
@@ -15,8 +17,8 @@ FROM base AS builder
 
 WORKDIR /app
 
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
+COPY package.json yarn.lock .yarnrc.yml ./
+RUN yarn install --immutable
 
 COPY . .
 COPY --from=marks /out/denpa-marks.woff2 public/fonts/denpa-marks.woff2
