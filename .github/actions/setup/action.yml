@@ -5,13 +5,15 @@ runs:
   steps:
     - uses: actions/setup-node@v4
       with:
-        node-version: '24'
+        node-version: '26'
+    - shell: bash
+      run: npm install -g corepack@0.36.0 && corepack enable
     - id: modules
       uses: actions/cache@v6
       with:
         path: node_modules
-        key: node-modules-${{ runner.os }}-node24-${{ hashFiles('yarn.lock') }}
-        restore-keys: node-modules-${{ runner.os }}-node24-
+        key: node-modules-${{ runner.os }}-node26-${{ hashFiles('yarn.lock') }}
+        restore-keys: node-modules-${{ runner.os }}-node26-
     - if: steps.modules.outputs.cache-hit != 'true'
       shell: bash
-      run: yarn install --frozen-lockfile
+      run: yarn install --immutable
