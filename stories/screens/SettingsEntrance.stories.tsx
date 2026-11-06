@@ -126,7 +126,8 @@ export const WithoutAMigration: Story = {
       within(entranceOf(canvasElement)).getByRole('region', { name: '管理' }),
     )
 
-    await expect(keeping.getAllByRole('link')).toHaveLength(1)
+    await expect(keeping.getAllByRole('link')).toHaveLength(2)
+    await expect(keeping.queryByText('移行記録')).not.toBeInTheDocument()
   },
 }
 
