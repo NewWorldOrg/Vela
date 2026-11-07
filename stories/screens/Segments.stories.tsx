@@ -632,6 +632,20 @@ async function editTheThreshold(canvasElement: HTMLElement) {
   return { panel, field }
 }
 
+export const 閾値の説明: Story = {
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const panel = within(thresholdPanel(canvasElement))
+
+    await userEvent.hover(panel.getByRole('img', { name: '閾値の説明' }))
+
+    await expect(await screen.findByRole('tooltip')).toHaveTextContent(
+      'CM・OP・ED と判定した区間の確からしさ(0〜1)。この値以上の区間に飛ばすボタンを出す。既定 0.70、範囲 0.50〜0.99',
+    )
+  },
+}
+
 export const 閾値を変える: Story = {
   play: async ({ canvasElement }) => {
     settleThreshold.mockClear()
@@ -657,10 +671,10 @@ export const 閾値の範囲の外: Story = {
     const { panel, field } = await editTheThreshold(canvasElement)
 
     await userEvent.clear(field)
-    await userEvent.type(field, '0.97')
+    await userEvent.type(field, '1.00')
     await userEvent.click(panel.getByRole('button', { name: '保存する' }))
 
-    await expect(panel.getByText('閾値は 0.50 〜 0.95 です。')).toBeVisible()
+    await expect(panel.getByText('閾値は 0.50 〜 0.99 です。')).toBeVisible()
     await expect(field).toHaveAttribute('aria-invalid', 'true')
 
     await userEvent.clear(field)
@@ -691,7 +705,7 @@ export const 閾値を断られる: Story = {
     await userEvent.click(panel.getByRole('button', { name: '保存する' }))
 
     await expect(
-      await panel.findByText('閾値は 0.50 〜 0.95 です。'),
+      await panel.findByText('閾値は 0.50 〜 0.99 です。'),
     ).toBeVisible()
     await expect(field).toHaveValue('0.55')
   },

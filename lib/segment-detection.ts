@@ -16,7 +16,9 @@ export const NOT_APPLICABLE = '対象なし'
 
 export const SKIP_THRESHOLD_LOWEST = 0.5
 
-export const SKIP_THRESHOLD_HIGHEST = 0.95
+export const SKIP_THRESHOLD_HIGHEST = 0.99
+
+export const SKIP_THRESHOLD_DEFAULT = 0.7
 
 export function versionLabel(number: number): string {
   return `第 ${number} 版`
@@ -109,6 +111,8 @@ export function repeatedSoundsOf(catalog: {
 }
 
 export const SKIP_THRESHOLD_RANGE = `閾値は ${thresholdOf(SKIP_THRESHOLD_LOWEST)} 〜 ${thresholdOf(SKIP_THRESHOLD_HIGHEST)} です。`
+
+export const SKIP_THRESHOLD_EXPLAINED = `CM・OP・ED と判定した区間の確からしさ(0〜1)。この値以上の区間に飛ばすボタンを出す。既定 ${thresholdOf(SKIP_THRESHOLD_DEFAULT)}、範囲 ${thresholdOf(SKIP_THRESHOLD_LOWEST)}〜${thresholdOf(SKIP_THRESHOLD_HIGHEST)}`
 
 export function skipThresholdProblem(typed: string): string | undefined {
   const amount = Number(typed.trim())

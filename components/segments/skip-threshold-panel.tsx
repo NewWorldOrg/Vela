@@ -2,17 +2,27 @@
 
 import { useId, useState, useTransition, type FormEvent } from 'react'
 
+import { REACHED_BY_A_KEYBOARD } from '@/lib/in-full'
 import {
+  SKIP_THRESHOLD_EXPLAINED,
   skipThresholdProblem,
   skipThresholdRefusalOf,
   skipThresholdToSend,
   thresholdOf,
 } from '@/lib/segment-detection'
+import { cn } from '@/lib/utils'
 import type { SkipThreshold } from '@/repository/segment-status'
 import type { SkipThresholdWrite } from '@/repository/segments'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip'
 import { FieldError } from '@/components/vela/field'
+import { InfoIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/progress'
 import { Surface } from '@/components/vela/surface'
 import {
@@ -23,6 +33,31 @@ import {
 import { SKIP_THRESHOLD_SLOT } from '@/components/segments/wording'
 
 const THRESHOLD = '閾値'
+
+const THRESHOLD_EXPLAINED = `${THRESHOLD}の説明`
+
+function ThresholdTip() {
+  return (
+    <TooltipProvider delayDuration={200}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            role="img"
+            aria-label={THRESHOLD_EXPLAINED}
+            tabIndex={0}
+            className={cn(
+              'inline-flex rounded-full text-ink-2',
+              REACHED_BY_A_KEYBOARD,
+            )}
+          >
+            <InfoIcon />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{SKIP_THRESHOLD_EXPLAINED}</TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  )
+}
 
 export type SettleSkipThreshold = (
   threshold: number,
@@ -101,7 +136,14 @@ export function SkipThresholdPanel({
           <ValueRows className="flex-1">
             <ValueRow
               name={
-                editing ? <label htmlFor={id}>{THRESHOLD}</label> : THRESHOLD
+                <span className="inline-flex items-center gap-1.5">
+                  {editing ? (
+                    <label htmlFor={id}>{THRESHOLD}</label>
+                  ) : (
+                    THRESHOLD
+                  )}
+                  <ThresholdTip />
+                </span>
               }
             >
               {editing ? (
