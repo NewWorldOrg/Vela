@@ -110,7 +110,7 @@ export function ProgramDetailBody({
           {program.genreLabel}
         </Badge>
         {program.subtitled && (
-          <Badge variant="ok" className="font-bold">
+          <Badge variant="mute" className="font-bold">
             字幕あり
           </Badge>
         )}

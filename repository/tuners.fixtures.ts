@@ -9,7 +9,7 @@ export const CARD_READERS: CardReaderRow[] = [
     id: 'reader-0',
     title: 'Example Card Reader',
     sub: '使用中',
-    status: { word: '挿入', tone: 'plain', line: '20:58 に応答' },
+    status: { word: '挿入', tone: 'ok', line: '20:58 に応答' },
   },
 ]
 

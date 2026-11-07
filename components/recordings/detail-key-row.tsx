@@ -20,7 +20,7 @@ export function DetailKeyRow({
       <span className="w-[var(--row-label,132px)] shrink-0 text-note text-ink-2 max-[900px]:w-[calc(110rem/16)] max-[700px]:w-full">
         {label}
       </span>
-      <span className="min-w-0 flex-1">
+      <span className="min-w-0 flex-1 [&:has([data-slot=badge])>small]:mt-1">
         <span className={cn(!plain && 'font-code text-[calc(13rem/16)]')}>
           {main}
         </span>

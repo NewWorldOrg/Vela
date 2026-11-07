@@ -62,7 +62,7 @@ export interface TunerSession {
 }
 
 /** How a state is drawn: plain words, or a chip in red for recording or trouble, or in amber for a warning. */
-export type StatusTone = 'plain' | 'rec' | 'warn' | 'err'
+export type StatusTone = 'plain' | 'ok' | 'rec' | 'warn' | 'err'
 
 /** A state in one word or phrase, and the line under it that says since when, or what it is busy with and `until` when. */
 export interface StatusLine {
@@ -1025,7 +1025,7 @@ function quietWordOf(
 
 const CARD_WORD: Record<CardState, Pick<StatusLine, 'word' | 'tone'>> = {
   unspecified: { word: '不明', tone: 'warn' },
-  inserted: { word: '挿入', tone: 'plain' },
+  inserted: { word: '挿入', tone: 'ok' },
   empty: { word: '未挿入', tone: 'warn' },
   unresponsive: { word: '応答なし', tone: 'err' },
   borrowed: { word: '借用中', tone: 'plain' },

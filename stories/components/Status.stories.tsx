@@ -28,9 +28,9 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const BASE: [string, string, string, string][] = [
-  ['ok', '正常', '受信・録画が期待どおりに動作している', 'mint'],
-  ['warn', '警告', '動作は継続しているが品質・条件が低下している', 'lemon'],
-  ['err', '異常', '受信不能・録画失敗など、対応が必要', 'coral'],
+  ['ok', '正常', '受信・録画が期待どおりに動作している', 'accent'],
+  ['warn', '警告', '動作は継続しているが品質・条件が低下している', 'warn'],
+  ['err', '異常', '受信不能・録画失敗など、対応が必要', 'rec'],
   ['off', '停止', '無効化済みの状態。エラーではない', 'ink-3'],
 ]
 
@@ -81,7 +81,7 @@ export const Chips: Story = {
         <Badge variant="mute">未計測</Badge>
       </div>
       <p className="mt-[9px] text-note text-ink-2">
-        ドットを伴うのは録画中のみ。同系色のチップは文言で区別し、色数を増やさない。
+        うまくいっている状態は緑、失敗は赤、注意は琥珀、良し悪しを言わない状態は無彩。
       </p>
 
       <SectionHeading className="mt-7">

@@ -21,9 +21,9 @@ import {
 
 type Tone = 'ok' | 'warn' | 'err'
 
-/** A state that is well needs no colour; one that wants a hand takes the accent's dot. */
+/** A state that is well takes the success colour; one that wants a hand takes amber or red. */
 const TONE_DOT: Record<Tone, string> = {
-  ok: 'bg-ink-3',
+  ok: 'bg-accent',
   warn: 'bg-warn',
   err: 'bg-rec',
 }

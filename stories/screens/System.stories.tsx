@@ -88,7 +88,7 @@ async function tonesAre(
       inkOf(canvasElement, HEAD[tone]),
     )
     await expect(said.querySelectorAll('[data-slot="status-dot"]').length).toBe(
-      tone === 'warn' || tone === 'err' ? 1 : 0,
+      tone === 'off' ? 0 : 1,
     )
 
     if (head !== '') {
