@@ -1,6 +1,6 @@
 import type { SystemStatus } from '@/repository/system'
 
-export const VELA_VERSION = '1.1.0'
+export const VELA_VERSION = '1.2.0'
 
 export const SYSTEM_CENSUS = {
   carinaVersion: '0.1.0',
