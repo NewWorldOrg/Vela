@@ -10,7 +10,7 @@ import {
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remakeThumbnail } from '@/repository/recordings'
 
-const INTEGRITY = '/library/integrity'
+const INTEGRITY = '/settings/integrity'
 
 export async function sweepForIntegrity(): Promise<SweepWrite> {
   const result = await runIntegrityCheck()

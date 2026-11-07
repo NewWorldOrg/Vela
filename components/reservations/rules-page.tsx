@@ -1,7 +1,14 @@
 'use client'
 
 import type { ComponentProps, ReactNode } from 'react'
-import { useCallback, useEffect, useRef, useState, useTransition } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useEffectEvent,
+  useRef,
+  useState,
+  useTransition,
+} from 'react'
 import type { Route } from 'next'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
@@ -146,6 +153,18 @@ const SIGNED_OUT = signedOut('操作')
 
 const NOTHING_TO_APPLY = '有効なルールがないため、適用できません。'
 
+const NOTHING_NARROWS =
+  'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間・印・除外する印のうち、1 つ以上を指定してください。'
+
+const PERIOD_OUT_OF_RANGE = `期間は開始日から終了日へ向かう最長 ${RULE_PERIOD_LONGEST_DAYS} 日の範囲で指定できます。`
+
+const MATCHES_SETTLE_MS = 500
+
+const EVERY_DAY = SEARCH_DAY_OPTIONS.map((day) => day.value)
+
+const LIST_PINNED =
+  'min-[1000px]:sticky min-[1000px]:top-[calc(var(--top-bar)+16rem/16)] min-[1000px]:max-h-[calc(100svh-var(--top-bar)-56rem/16-env(safe-area-inset-bottom))] min-[1000px]:-mx-1.5 min-[1000px]:overflow-x-hidden min-[1000px]:overflow-y-auto min-[1000px]:px-1.5'
+
 interface Named {
   field: 'name' | 'terms' | 'period' | 'priority' | 'before' | 'after'
   text: string
@@ -263,7 +282,10 @@ function RulesScreen({
       </div>
 
       <div className="mt-5 grid items-start gap-8 min-[1000px]:grid-cols-[calc(360rem/16)_minmax(0,1fr)] min-[1366px]:grid-cols-[calc(420rem/16)_minmax(0,1fr)]">
-        <section aria-labelledby="rules-list" className="min-w-0">
+        <section
+          aria-labelledby="rules-list"
+          className={cn('min-w-0', LIST_PINNED)}
+        >
           <h2 id="rules-list" className="sr-only">
             ルール
           </h2>
@@ -461,6 +483,28 @@ function draftOf(rule: Rule): RuleDraft {
   }
 }
 
+function termsProblemOf(terms: RuleTerms): Named | undefined {
+  if (!ruleNarrowsAnything(terms)) {
+    return { field: 'terms', text: NOTHING_NARROWS }
+  }
+
+  if (!withinRulePeriod(terms.from, terms.to)) {
+    return { field: 'period', text: PERIOD_OUT_OF_RANGE }
+  }
+
+  return undefined
+}
+
+function numberWithin(
+  value: string,
+  within: (number: number) => boolean,
+  orElse: number,
+): number {
+  const number = wholeNumber(value)
+
+  return number !== undefined && within(number) ? number : orElse
+}
+
 function RuleEditor({
   rule,
   terms,
@@ -480,23 +524,24 @@ function RuleEditor({
   const [problem, setProblem] = useState<Named>()
   const [refusal, setRefusal] = useState<string>()
   const [preview, setPreview] = useState<RulePreview>()
-  const [stale, setStale] = useState<boolean>(false)
+  const [shownFor, setShownFor] = useState<string>()
   const [impact, setImpact] = useState<RuleImpact>()
   const [leaving, setLeaving] = useState<RuleImpact>()
   const [confirming, setConfirming] = useState(false)
   const [retiring, setRetiring] = useState(false)
   const [pending, startTransition] = useTransition()
-  const [previewing, startPreviewing] = useTransition()
+  const [, startPreviewing] = useTransition()
 
-  const edits = useRef(0)
+  const asks = useRef(0)
 
   const amend = (part: Partial<Entry>): void => {
     setEntry((previous) => ({ ...previous, ...part }))
-    setStale(true)
-    edits.current += 1
   }
 
   const asked: RuleTerms = termsOfEntry(entry)
+  const conditions = JSON.stringify(asked)
+  const stale = preview !== undefined && shownFor !== conditions
+  const everyDay = entry.days.length === EVERY_DAY.length
   const unusedGenres = SEARCH_GENRE_OPTIONS.filter(
     (option) => !entry.genres.includes(option.value),
   )
@@ -530,20 +575,10 @@ function RuleEditor({
       return undefined
     }
 
-    if (!ruleNarrowsAnything(asked)) {
-      setProblem({
-        field: 'terms',
-        text: 'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間・印・除外する印のうち、1 つ以上を指定してください。',
-      })
+    const narrowed = termsProblemOf(asked)
 
-      return undefined
-    }
-
-    if (!withinRulePeriod(asked.from, asked.to)) {
-      setProblem({
-        field: 'period',
-        text: `期間は開始日から終了日へ向かう最長 ${RULE_PERIOD_LONGEST_DAYS} 日の範囲で指定できます。`,
-      })
+    if (narrowed) {
+      setProblem(narrowed)
 
       return undefined
     }
@@ -607,33 +642,77 @@ function RuleEditor({
     setRefusal(result.state === 'unauthenticated' ? SIGNED_OUT : result.message)
   }
 
-  const rehearse = (): void => {
-    const draft = drafted()
-
-    if (!draft) {
+  const rehearse = useEffectEvent((opening: boolean): void => {
+    if (opening && !ruleNarrowsAnything(asked)) {
       return
     }
 
-    const askedAt = edits.current
+    const narrowed = termsProblemOf(asked)
+
+    if (narrowed) {
+      setProblem(narrowed)
+
+      return
+    }
+
+    setProblem((named) =>
+      named?.field === 'terms' || named?.field === 'period' ? undefined : named,
+    )
+
+    const draft: RuleDraft = {
+      name: entry.name.trim(),
+      terms: asked,
+      priority: numberWithin(
+        entry.priority,
+        withinPriority,
+        RULE_DEFAULT_PRIORITY,
+      ),
+      enabled: entry.enabled,
+      marginBeforeSeconds: numberWithin(entry.before, withinMargin, 0),
+      marginAfterSeconds: numberWithin(entry.after, withinMargin, 0),
+      encodeWhenRecorded: entry.encodeWhenRecorded,
+    }
+    const askedFor = conditions
+
+    asks.current += 1
+
+    const ask = asks.current
 
     startPreviewing(async () => {
-      answered(await actions.onPreview(draft, rule?.id), (seen) => {
+      const result = await actions.onPreview(draft, rule?.id)
+
+      if (ask !== asks.current) {
+        return
+      }
+
+      answered(result, (seen) => {
         setPreview(seen)
-        setStale(edits.current !== askedAt)
+        setShownFor(askedFor)
       })
     })
-  }
+  })
 
-  const looked = useRef(false)
+  const lookedFor = useRef<string>(undefined)
 
   useEffect(() => {
-    if (looked.current || !rule) {
+    if (lookedFor.current === undefined) {
+      lookedFor.current = conditions
+      rehearse(true)
+
       return
     }
 
-    looked.current = true
-    rehearse()
-  })
+    if (lookedFor.current === conditions) {
+      return
+    }
+
+    const timer = setTimeout(() => {
+      lookedFor.current = conditions
+      rehearse(false)
+    }, MATCHES_SETTLE_MS)
+
+    return () => clearTimeout(timer)
+  }, [conditions])
 
   const weigh = (): void => {
     const draft = drafted()
@@ -966,7 +1045,7 @@ function RuleEditor({
             <div
               role="group"
               aria-labelledby="rule-days-label"
-              className="flex flex-wrap gap-2"
+              className="flex flex-wrap items-center gap-2"
             >
               {SEARCH_DAY_OPTIONS.map((day) => {
                 const on = entry.days.includes(day.value)
@@ -996,6 +1075,26 @@ function RuleEditor({
                   </button>
                 )
               })}
+              <span className="ml-1 flex items-center gap-1.5">
+                <Button
+                  variant="tone"
+                  size="sm"
+                  aria-label="曜日を全選択"
+                  disabled={everyDay}
+                  onClick={() => amend({ days: EVERY_DAY })}
+                >
+                  全選択
+                </Button>
+                <Button
+                  variant="tone"
+                  size="sm"
+                  aria-label="曜日の選択を解除"
+                  disabled={entry.days.length === 0}
+                  onClick={() => amend({ days: [] })}
+                >
+                  解除
+                </Button>
+              </span>
             </div>
           </Field>
         </div>
@@ -1121,15 +1220,6 @@ function RuleEditor({
               'この条件に一致する今後の番組'
             )}
           </h3>
-          <Button
-            variant="tone"
-            size="sm"
-            disabled={previewing}
-            onClick={rehearse}
-          >
-            <SearchIcon />
-            一致を表示
-          </Button>
           <Button variant="tone" size="sm" asChild className="ml-auto">
             <Link href={searched}>番組検索へ</Link>
           </Button>

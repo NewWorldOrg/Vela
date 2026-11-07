@@ -147,6 +147,12 @@ function groupsOf(
       icon: LockIcon,
       tile: TILE.keeping,
     },
+    {
+      href: '/settings/integrity',
+      label: '整合性チェック',
+      icon: QualityIcon,
+      tile: TILE.keeping,
+    },
   ]
 
   if (hasMigration) {

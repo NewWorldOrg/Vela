@@ -58,7 +58,7 @@ const meta = {
   parameters: {
     nextjs: {
       appDirectory: true,
-      navigation: { pathname: '/library/integrity' },
+      navigation: { pathname: '/settings/integrity' },
     },
     layout: 'fullscreen',
   },

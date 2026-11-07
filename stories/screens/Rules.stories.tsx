@@ -343,8 +343,6 @@ export const ルールを編集: Story = {
       '/search?q=%E6%96%B0%E7%95%AA%E7%B5%84&exclude=%E5%86%8D%E6%94%BE%E9%80%81&genre=anime',
     )
 
-    await userEvent.click(canvas.getByRole('button', { name: '一致を表示' }))
-
     await expect(
       await canvas.findByText('星のさまよいびと 第1話'),
     ).toBeVisible()
@@ -876,7 +874,15 @@ export const 条件のないルール: Story = {
   },
 }
 
-const heldPreview: { release: () => void } = { release: () => undefined }
+const heldPreviews: (() => void)[] = []
+
+function countedLine(canvas: ReturnType<typeof within>): Promise<HTMLElement> {
+  return canvas.findByText(
+    (_: string, element: Element | null) =>
+      element?.tagName === 'SPAN' &&
+      /^一致 \d+ 件 \/ 新しく作られる/.test(element.textContent ?? ''),
+  )
+}
 
 export const 一致を見ているあいだに条件を変えると結果は古いまま: Story = {
   args: {
@@ -885,7 +891,7 @@ export const 一致を見ているあいだに条件を変えると結果は古�
       ...recording([], []),
       onPreview: async (): Promise<RuleWrite<RulePreview>> => {
         await new Promise<void>((resolve) => {
-          heldPreview.release = resolve
+          heldPreviews.push(resolve)
         })
 
         return { state: 'ok', data: PREVIEW }
@@ -895,18 +901,153 @@ export const 一致を見ているあいだに条件を変えると結果は古�
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: '一致を表示' }))
+    await waitFor(() => expect(heldPreviews).toHaveLength(1))
     await userEvent.type(canvas.getByLabelText('キーワード'), '2')
 
-    heldPreview.release()
+    heldPreviews[0]()
 
-    const counted = await canvas.findByText(
-      (_, element) =>
-        element?.tagName === 'SPAN' &&
-        /^一致 \d+ 件 \/ 新しく作られる/.test(element.textContent ?? ''),
+    const counted = await countedLine(canvas)
+
+    await expect(counted.parentElement).toHaveClass('grayscale')
+
+    await waitFor(() => expect(heldPreviews).toHaveLength(2), {
+      timeout: 3000,
+    })
+
+    heldPreviews[1]()
+
+    await waitFor(() =>
+      expect(counted.parentElement).not.toHaveClass('grayscale'),
+    )
+  },
+}
+
+const reread: RuleDraft[] = []
+
+const emptied: RuleDraft[] = []
+
+export const 条件を書き換えると一致を読み直す: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[0] },
+    actions: {
+      ...recording([], []),
+      onPreview: async (draft): Promise<RuleWrite<RulePreview>> => {
+        reread.push(draft)
+
+        return { state: 'ok', data: PREVIEW }
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(reread).toHaveLength(1))
+    await expect(
+      canvas.queryByRole('button', { name: '一致を表示' }),
+    ).toBeNull()
+
+    await userEvent.type(canvas.getByLabelText('キーワード'), '2')
+
+    await waitFor(() => expect(reread).toHaveLength(2), { timeout: 3000 })
+    await expect(reread[1].terms.q).toBe('新番組2')
+
+    await userEvent.type(canvas.getByLabelText(/ルール名/), '!')
+    await new Promise((passed) => setTimeout(passed, 800))
+
+    await expect(reread).toHaveLength(2)
+  },
+}
+
+export const 条件を全部外すと読まずに断る: Story = {
+  args: {
+    editing: {
+      state: 'new',
+      terms: {
+        q: '特別警報',
+        exclude: undefined,
+        fields: 'title,description',
+        genres: [],
+        subgenres: [],
+        channels: [],
+        days: [],
+        marks: [],
+        excludedMarks: [],
+        beyond: [],
+      },
+    },
+    actions: {
+      ...recording([], []),
+      onPreview: async (draft): Promise<RuleWrite<RulePreview>> => {
+        emptied.push(draft)
+
+        return { state: 'ok', data: PREVIEW }
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await waitFor(() => expect(emptied).toHaveLength(1))
+    await userEvent.clear(canvas.getByLabelText('キーワード'))
+
+    await expect(
+      await canvas.findByText(
+        'キーワード・除外キーワード・ジャンル・サブジャンル・種別・チャンネル・曜日・期間・印・除外する印のうち、1 つ以上を指定してください。',
+        undefined,
+        { timeout: 3000 },
+      ),
+    ).toBeVisible()
+    await expect(emptied).toHaveLength(1)
+  },
+}
+
+export const 曜日を全選択して解除する: Story = {
+  args: {
+    editing: { state: 'rule', rule: RULE_FIXTURES[3] },
+    actions: recording([], []),
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const days = within(canvas.getByRole('group', { name: '曜日' }))
+    const pressed = () =>
+      days
+        .queryAllByRole('button', { pressed: true })
+        .map((one) => one.getAttribute('aria-label'))
+
+    await expect(pressed()).toEqual(['土曜', '日曜'])
+    await expect(
+      days.getByRole('button', { name: '曜日を全選択' }),
+    ).toBeEnabled()
+    await expect(
+      days.getByRole('button', { name: '曜日の選択を解除' }),
+    ).toBeEnabled()
+
+    await userEvent.click(days.getByRole('button', { name: '曜日を全選択' }))
+
+    await expect(pressed()).toEqual([
+      '月曜',
+      '火曜',
+      '水曜',
+      '木曜',
+      '金曜',
+      '土曜',
+      '日曜',
+    ])
+    await expect(
+      days.getByRole('button', { name: '曜日を全選択' }),
+    ).toBeDisabled()
+
+    await userEvent.click(
+      days.getByRole('button', { name: '曜日の選択を解除' }),
     )
 
-    await expect(counted).toHaveClass('text-ink-2')
+    await expect(pressed()).toEqual([])
+    await expect(
+      days.getByRole('button', { name: '曜日の選択を解除' }),
+    ).toBeDisabled()
+    await expect(
+      days.getByRole('button', { name: '曜日を全選択' }),
+    ).toBeEnabled()
   },
 }
 

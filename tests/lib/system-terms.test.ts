@@ -17,7 +17,9 @@ const SCREEN = 'components/system/system-page.tsx'
 const COINED = /版|観測/
 
 test('the detail rows are named in words a reader already has', () => {
-  assert.equal(SYSTEM_DETAIL_LABELS.version, 'バージョン')
+  assert.equal(SYSTEM_DETAIL_LABELS.apiVersion, 'API')
+  assert.equal(SYSTEM_DETAIL_LABELS.driverVersion, 'driver')
+  assert.equal(SYSTEM_DETAIL_LABELS.screenVersion, '画面')
   assert.equal(SYSTEM_DETAIL_LABELS.protocolVersion, 'プロトコルバージョン')
   assert.equal(SYSTEM_DETAIL_LABELS.observedAt, '取得日時')
 

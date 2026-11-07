@@ -4,6 +4,9 @@ import { cn } from '@/lib/utils'
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 
+import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { PageHeading } from '@/components/vela/section-heading'
+
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 
 import type {
@@ -31,12 +34,7 @@ import {
 import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
-import {
-  ChevronLeftIcon,
-  QualityIcon,
-  RebuildIcon,
-  TrashIcon,
-} from '@/components/vela/icons'
+import { RebuildIcon, TrashIcon } from '@/components/vela/icons'
 import { ActionRow } from '@/components/vela/action-row'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
@@ -141,21 +139,12 @@ export function IntegrityView({
       scroll="within"
       className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-2 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
     >
-      <div className="mb-3">
-        <Link
-          href="/library"
-          className="tap-target inline-flex items-center gap-[calc(7rem/16)] rounded-full border border-edge py-[calc(5rem/16)] pr-[calc(13rem/16)] pl-2.5 text-ui font-medium text-ink-2 no-underline transition-[translate,background-color,color] duration-150 ease-toy hover:bg-surface hover:text-ink"
-        >
-          <ChevronLeftIcon className="size-[calc(15rem/16)]" />
-          ライブラリへ
-        </Link>
-      </div>
+      <Crumb>
+        設定 / <CrumbCurrent>整合性チェック</CrumbCurrent>
+      </Crumb>
 
       <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
-        <h1 className="heading phone:sr-only flex items-center gap-2 text-[calc(20rem/16)]">
-          <QualityIcon className="size-[calc(18rem/16)] text-brand" />
-          整合性チェック
-        </h1>
+        <PageHeading>整合性チェック</PageHeading>
         <span className="ml-auto">
           <RunCheckButton asOf={`${ranAt}/${findings.length}`} onRun={onRun} />
         </span>

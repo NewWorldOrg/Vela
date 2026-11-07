@@ -202,7 +202,7 @@ export function DriverLine({
 }) {
   return (
     <HardwareLine
-      title={`driver ${facts.version ?? EMPTY_VALUE}`}
+      title={`Puppis ${facts.version ?? EMPTY_VALUE}`}
       sub={facts.startedAt && `${facts.startedAt} から動作`}
       status={{
         ...DRIVER_LINK[connection],

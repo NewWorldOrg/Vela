@@ -578,7 +578,7 @@ export const 機械ごとに組を分けカードリーダーをその下に置�
       'study1 台',
     ])
     await expect(canvas.getByText('つながらない')).toBeVisible()
-    await expect(canvas.getByText('driver 0.3.7')).toBeVisible()
+    await expect(canvas.getByText('Puppis 0.3.7')).toBeVisible()
     await expect(canvas.queryByText(/借り/)).not.toBeInTheDocument()
   },
 }
@@ -622,7 +622,7 @@ export const 古いdriverでは名前の代わりに装置のidを出しカー�
     play: async ({ canvasElement }) => {
       const canvas = within(canvasElement)
 
-      await expect(canvas.getByText(`driver ${EMPTY_VALUE}`)).toBeVisible()
+      await expect(canvas.getByText(`Puppis ${EMPTY_VALUE}`)).toBeVisible()
       await expect(canvas.getAllByText('adapter1')[0]).toBeVisible()
       await expect(
         canvas.queryByRole('heading', { name: 'カードリーダー' }),

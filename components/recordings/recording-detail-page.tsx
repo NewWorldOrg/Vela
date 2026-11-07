@@ -113,7 +113,7 @@ const REFUSED: Record<PlaybackRefusal, ReactNode> = {
       mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
       title="録画ファイルに到達できません"
     >
-      <Link href="/library/integrity" className={PLAYER_BUTTON}>
+      <Link href="/settings/integrity" className={PLAYER_BUTTON}>
         整合性チェックの結果へ
       </Link>
     </PlaybackNotice>
@@ -137,7 +137,7 @@ function whyNothingPlays(
         mark={<ThumbMissingIcon className="size-[calc(22rem/16)]" />}
         title="ファイルが見つかりません"
       >
-        <Link href="/library/integrity" className={PLAYER_BUTTON}>
+        <Link href="/settings/integrity" className={PLAYER_BUTTON}>
           整合性チェックの結果へ
         </Link>
       </PlaybackNotice>
