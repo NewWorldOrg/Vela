@@ -116,9 +116,9 @@ export function NowNext({
                 </>
               )}
               {(subtitled || programme.genreLabel) && <Dot />}
-              {subtitled && <Badge variant="ok">字幕あり</Badge>}
+              {subtitled && <Badge variant="mute">字幕あり</Badge>}
               {programme.genreLabel && (
-                <Badge variant="ok">{programme.genreLabel}</Badge>
+                <Badge variant="mute">{programme.genreLabel}</Badge>
               )}
             </div>
           )}

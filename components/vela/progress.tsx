@@ -7,14 +7,14 @@ export type MeterTone = 'brand' | 'ok' | 'warn' | 'err'
 
 const FILL_TONE: Record<MeterTone, string> = {
   brand: 'bg-accent',
-  ok: 'bg-mint',
+  ok: 'bg-accent',
   warn: 'bg-lemon',
   err: 'bg-coral',
 }
 
 const TEXT_TONE: Record<MeterTone, string> = {
   brand: 'text-brand',
-  ok: 'text-mint',
+  ok: 'text-acc-text',
   warn: 'text-lemon',
   err: 'text-coral',
 }

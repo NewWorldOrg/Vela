@@ -84,7 +84,7 @@ export const FAILURE_LABEL: Record<EncodeFailure, string> = {
   ffmpegExitedNonZero: 'ffmpeg 非0終了',
   notEnoughRoom: '容量不足',
   sourceMissing: '元ファイル不在',
-  capabilityUnavailable: 'capability 不足',
+  capabilityUnavailable: '機能不足',
   timedOut: 'タイムアウト',
   destinationCollision: '出力先の衝突',
   headTooFar: '頭出しが遠すぎる',

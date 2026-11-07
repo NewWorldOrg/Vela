@@ -121,7 +121,7 @@ function Part({
           HEAD_TONE[tone],
         )}
       >
-        {(tone === 'warn' || tone === 'err') && (
+        {tone !== 'off' && (
           <StatusDot tone={tone} className="size-2 self-center" />
         )}
         <span className="text-heading font-bold">{head}</span>
