@@ -314,7 +314,11 @@ export function ConditionChips({
           on={someDays}
           onClose={() => settle()}
         >
-          <div role="group" aria-label="曜日" className="flex flex-wrap gap-2">
+          <div
+            role="group"
+            aria-label="曜日"
+            className="flex flex-wrap items-center gap-2"
+          >
             {SEARCH_DAY_OPTIONS.map((option) => (
               <TogglePill
                 key={option.value}
@@ -328,6 +332,30 @@ export function ConditionChips({
                 {option.label}
               </TogglePill>
             ))}
+            <span className="ml-1 flex items-center gap-1.5">
+              <Button
+                variant="tone"
+                size="sm"
+                aria-label="曜日を全選択"
+                disabled={draft.days.length === SEARCH_DAY_OPTIONS.length}
+                onClick={() =>
+                  amend({
+                    days: SEARCH_DAY_OPTIONS.map((option) => option.value),
+                  })
+                }
+              >
+                全選択
+              </Button>
+              <Button
+                variant="tone"
+                size="sm"
+                aria-label="曜日の選択を解除"
+                disabled={draft.days.length === 0}
+                onClick={() => amend({ days: [] })}
+              >
+                解除
+              </Button>
+            </span>
           </div>
         </PanelChip>
       </li>

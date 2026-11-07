@@ -19,6 +19,7 @@ export const SETTINGS_SCREENS: readonly { href: Route; label: string }[] = [
   { href: '/settings/segments', label: 'CM・OP・ED の検出' },
   { href: '/settings/quality', label: '品質' },
   { href: '/settings/authentication', label: '認証' },
+  { href: '/settings/integrity', label: '整合性チェック' },
   { href: '/settings/display', label: '表示' },
   { href: '/settings/viewing', label: '視聴' },
   { href: '/settings/migration', label: '移行記録' },
@@ -39,10 +40,6 @@ const PRESSED_INTO: readonly { root: string; bar: PhoneBar }[] = [
     bar: { title: '番組検索', back: TO_THE_GUIDE, withoutTheme: true },
   },
   { root: '/guide/programs', bar: { title: '番組詳細', back: TO_THE_GUIDE } },
-  {
-    root: '/library/integrity',
-    bar: { title: '整合性チェック', back: TO_THE_LIBRARY },
-  },
   { root: '/recordings', bar: { title: '録画詳細', back: TO_THE_LIBRARY } },
 ]
 

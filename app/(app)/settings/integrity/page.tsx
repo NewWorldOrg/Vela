@@ -6,7 +6,7 @@ import {
   redrawMissingThumbnail,
   sweepForIntegrity,
   throwStrayAway,
-} from '@/app/(app)/library/integrity/actions'
+} from '@/app/(app)/settings/integrity/actions'
 
 export const metadata: Metadata = { title: '整合性チェック' }
 

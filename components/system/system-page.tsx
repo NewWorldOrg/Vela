@@ -305,15 +305,18 @@ export function SystemView({
           <DetailRow label={SYSTEM_DETAIL_LABELS.health}>
             {api.state === 'ok' ? <span>{api.status}</span> : NOTHING}
           </DetailRow>
-          <DetailRow label={SYSTEM_DETAIL_LABELS.version}>
-            <span>
-              Carina {status.carinaVersion ?? EMPTY_VALUE} / driver{' '}
-              {reading?.hello?.version ?? EMPTY_VALUE} / Vela {velaVersion}
-            </span>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.apiVersion}>
+            <span>Carina {status.carinaVersion ?? EMPTY_VALUE}</span>
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.driverVersion}>
+            <span>Puppis {reading?.hello?.version ?? EMPTY_VALUE}</span>
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.screenVersion}>
+            <span>Vela {velaVersion}</span>
           </DetailRow>
           <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
             <span>
-              driver {reading?.hello?.protocolVersion ?? EMPTY_VALUE} / アプリ{' '}
+              driver {reading?.hello?.protocolVersion ?? EMPTY_VALUE} / API{' '}
               {reading?.appProtocolVersion ?? EMPTY_VALUE}
             </span>
           </DetailRow>
@@ -439,7 +442,7 @@ function StoragePart({ reading }: { reading: Reading<StorageCensus> }) {
       name="保存先"
       mark={MarkPanel}
       tone={tone}
-      href="/library/integrity"
+      href="/settings/integrity"
       head={<Figure>{formatBytes(census.freeBytes)}</Figure>}
       unit={`空き / ${formatBytes(census.totalBytes)}`}
     >
