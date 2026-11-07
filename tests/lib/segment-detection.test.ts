@@ -126,12 +126,12 @@ test('the repeated sounds name CM and the programme fixed parts', () => {
   )
 })
 
-test('a threshold is a number from 0.50 to 0.95', () => {
+test('a threshold is a number from 0.50 to 0.99', () => {
   assert.equal(skipThresholdProblem('0.70'), undefined)
   assert.equal(skipThresholdProblem(' 0.5 '), undefined)
-  assert.equal(skipThresholdProblem('0.95'), undefined)
-  assert.equal(skipThresholdProblem('0.49'), '閾値は 0.50 〜 0.95 です。')
-  assert.equal(skipThresholdProblem('0.96'), '閾値は 0.50 〜 0.95 です。')
+  assert.equal(skipThresholdProblem('0.99'), undefined)
+  assert.equal(skipThresholdProblem('0.49'), '閾値は 0.50 〜 0.99 です。')
+  assert.equal(skipThresholdProblem('1.00'), '閾値は 0.50 〜 0.99 です。')
   assert.equal(skipThresholdProblem(''), '数値を入力してください。')
   assert.equal(skipThresholdProblem('あ'), '数値を入力してください。')
 })
@@ -161,7 +161,7 @@ test('each refusal says why it could not be done', () => {
   )
   assert.equal(
     skipThresholdRefusalOf('outOfRange'),
-    '閾値は 0.50 〜 0.95 です。',
+    '閾値は 0.50 〜 0.99 です。',
   )
   assert.equal(
     skipThresholdRefusalOf('unauthenticated'),
