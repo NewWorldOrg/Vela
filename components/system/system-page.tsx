@@ -117,7 +117,7 @@ function Part({
       <span
         data-slot="state-head"
         className={cn(
-          'flex shrink-0 items-baseline gap-1.5 self-start pt-0.5 tabular-nums',
+          'flex shrink-0 items-baseline gap-1.5 self-center tabular-nums',
           HEAD_TONE[tone],
         )}
       >
@@ -128,7 +128,7 @@ function Part({
         {unit && <small className="text-sub text-ink-2">{unit}</small>}
       </span>
       {href ? (
-        <ChevronRightIcon className="mt-1.5 size-4 shrink-0 self-start text-ink-3" />
+        <ChevronRightIcon className="size-4 shrink-0 self-center text-ink-3" />
       ) : (
         <span className="w-4 shrink-0" />
       )}
