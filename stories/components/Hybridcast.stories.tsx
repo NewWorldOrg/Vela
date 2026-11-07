@@ -229,7 +229,7 @@ export const 受信機の関数: Story = {
     await expect(app).toHaveAttribute('data-agent-maker', '1')
     await expect(app).toHaveAttribute('data-name', '')
     await expect(app).toHaveAttribute('data-vk', '13,38,403,496,48')
-    await expect(app).toHaveAttribute('data-system', '|Vela|Vela|1.1.0')
+    await expect(app).toHaveAttribute('data-system', '|Vela|Vela|1.0.0')
     await expect(app).toHaveAttribute('data-event', '1027|4660|見本の番組|true')
     await expect(app).toHaveAttribute('data-onair', 'true')
     await expect(app).toHaveAttribute('data-greg44', 'back')
@@ -449,7 +449,7 @@ export const 識別子を拒む組のあるバウンダリ: Story = {
     const app = group(canvasElement, '識別子を拒む組のあるバウンダリ')
 
     await reported(app, 'device', 'null')
-    await expect(app).toHaveAttribute('data-system', '|Vela|Vela|1.1.0')
+    await expect(app).toHaveAttribute('data-system', '|Vela|Vela|1.0.0')
   },
 }
 
