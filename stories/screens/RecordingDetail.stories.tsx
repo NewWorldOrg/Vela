@@ -1429,7 +1429,7 @@ export const 操作は題と値の下に横1行: Story = {
     )
 
     for (const [name, variant] of [
-      ['外部プレイヤーで再生', 'tone'],
+      ['外部プレイヤーで再生', 'play'],
       ['エンコード', 'process'],
       ['サムネイルを再生成', 'redo'],
     ]) {
