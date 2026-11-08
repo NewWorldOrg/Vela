@@ -27,7 +27,9 @@ import {
 import { cardPlace, READABLE_LINE } from '@/components/ui/table-cards'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
+import { InlineAlert } from '@/components/vela/banner'
 import { InFull } from '@/components/vela/in-full'
+import { PickMark, ROOM_FOR_THE_BAR } from '@/components/library/picking'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import {
   JOB_STATUS_COLUMN,
@@ -114,21 +116,36 @@ function Destination({ job }: { job: EncodeJob }) {
   )
 }
 
+/** The rows picked while the failed jobs are being chosen, and the press that takes one in or leaves it out. */
+export interface JobPicking {
+  picked: ReadonlySet<string>
+  onPick: (id: string) => void
+}
+
 export function JobTable({
   jobs,
   onCallOff,
   waiting = false,
+  picking,
+  reasons,
 }: {
   jobs: EncodeJob[]
   onCallOff: (id: string) => Promise<EncodeWrite>
   waiting?: boolean
+  picking?: JobPicking
+  /** Why a job was not run again, by its id, said on its row after `まとめて再実行`. */
+  reasons?: ReadonlyMap<string, string>
 }) {
   return (
     <Table
       cards
       waiting={waiting}
       className={cn('table-fixed', TABLE_MIN)}
-      containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
+      containerClassName={cn(
+        ADMIN_LIST_HEIGHT_CAP,
+        'overflow-y-auto pb-1',
+        picking && ROOM_FOR_THE_BAR,
+      )}
     >
       <TableColumns widths={COLUMNS.map((column) => column.width)} />
       <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
@@ -149,9 +166,25 @@ export function JobTable({
       </TableHeader>
       <TableBody>
         {jobs.map((job) => (
-          <TableRow key={job.id}>
-            <TableCell {...cardPlace('lead')} className="whitespace-normal">
-              <JobTitle job={job} />
+          <TableRow
+            key={job.id}
+            data-job={job.id}
+            data-state={picking?.picked.has(job.id) ? 'selected' : undefined}
+            onClick={picking ? () => picking.onPick(job.id) : undefined}
+            className={cn(
+              picking &&
+                'cursor-pointer select-none data-[state=selected]:bg-accent-tint',
+            )}
+          >
+            <TableCell
+              {...cardPlace('lead')}
+              className="whitespace-normal [&:has([role=checkbox])]:pr-[calc(13rem/16)]"
+            >
+              <JobTitle
+                job={job}
+                picking={picking}
+                reason={reasons?.get(job.id)}
+              />
             </TableCell>
             <TableCell {...cardPlace('field', '状態')}>
               <StatusCell>
@@ -202,28 +235,65 @@ function JobMade({ job }: { job: EncodeJob }) {
   )
 }
 
-function JobTitle({ job }: { job: EncodeJob }) {
-  if (job.title === undefined) {
-    return (
-      <div className={READABLE_LINE}>
-        <span className="block text-ink-2">{RECORDING_REMOVED_LABEL}</span>
-        <JobMade job={job} />
-      </div>
-    )
-  }
+/** The check at the head of a row while the failed jobs are being chosen, the same mark the library puts on a picture. */
+function JobPick({ job, picking }: { job: EncodeJob; picking: JobPicking }) {
+  const taken = picking.picked.has(job.id)
 
   return (
-    <div className={READABLE_LINE}>
+    <button
+      type="button"
+      role="checkbox"
+      aria-checked={taken}
+      aria-label={`${job.title ?? RECORDING_REMOVED_LABEL} を選ぶ`}
+      onClick={(event) => {
+        event.stopPropagation()
+        picking.onPick(job.id)
+      }}
+      className="tap-target -mt-2.5 -ml-[calc(13rem/16)] grid size-11 shrink-0 cursor-pointer place-items-center outline-none focus-visible:shadow-ring"
+    >
+      <PickMark taken={taken} className="static" />
+    </button>
+  )
+}
+
+function JobTitle({
+  job,
+  picking,
+  reason,
+}: {
+  job: EncodeJob
+  picking?: JobPicking
+  reason?: string
+}) {
+  const said =
+    job.title === undefined ? (
+      <span className="block text-ink-2">{RECORDING_REMOVED_LABEL}</span>
+    ) : (
       <Link
         href={`/recordings/${job.recordingId}` as Route}
+        tabIndex={picking ? -1 : undefined}
+        onClick={picking ? (event) => event.preventDefault() : undefined}
         className="tap-target block text-ui leading-[calc(22rem/16)] font-semibold text-ink no-underline underline-offset-[3px] hover:text-acc-text hover:underline [font-feature-settings:'palt']"
       >
         <span className="block">{job.title}</span>
       </Link>
-      {job.recordedAt && (
-        <span className={BESIDE}>{job.recordedAt} の録画</span>
-      )}
-      <JobMade job={job} />
+    )
+
+  return (
+    <div className={cn(READABLE_LINE, picking && 'flex items-start gap-2.5')}>
+      {picking && <JobPick job={job} picking={picking} />}
+      <div className="min-w-0">
+        {said}
+        {job.title !== undefined && job.recordedAt && (
+          <span className={BESIDE}>{job.recordedAt} の録画</span>
+        )}
+        <JobMade job={job} />
+        {reason && (
+          <InlineAlert tone="warn" className="mt-1.5">
+            {reason}
+          </InlineAlert>
+        )}
+      </div>
     </div>
   )
 }

@@ -69,3 +69,8 @@ test('choosing stops once the picked recordings are gone, but waits at none righ
   assert.equal(keepsChoosing(0, true), false)
   assert.equal(keepsChoosing(0, false), true)
 })
+
+test('the choosing row names what it chooses among while none is picked', () => {
+  assert.equal(pickedSaying(0, 'ジョブ'), 'ジョブを選ぶ')
+  assert.equal(pickedSaying(2, 'ジョブ'), '2 件を選択')
+})

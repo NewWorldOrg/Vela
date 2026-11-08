@@ -37,8 +37,12 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FilterChips } from '@/components/vela/filter-chips'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import {
+  deletionAction,
   PickingBand,
   PickingBar,
+  PickToggle,
+  ROOM_FOR_THE_BAR,
+  useLeaveOnEscape,
   usePickedDeletion,
 } from '@/components/library/picking'
 import {
@@ -48,7 +52,6 @@ import {
   withEveryShown,
 } from '@/lib/library-picking'
 import { ScreenMain } from '@/components/vela/app-shell'
-import { iconButtonVariants } from '@/components/vela/icon-button'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { OnAPhone } from '@/components/vela/on-an-upright-phone'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'
@@ -85,9 +88,6 @@ function drawnIn(
     (one) => one.getClientRects().length > 0,
   )
 }
-
-/** The room left at the end of the table, which scrolls inside itself, so the floating bar does not cover its last row. */
-const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
 
 export function LibraryView({
   result,
@@ -209,8 +209,9 @@ export function LibraryView({
     count: chosen.length,
     everyPicked,
     onEvery: () => settle(withEveryShown(picked, shownIds)),
-    deletion,
-  }
+    action: deletionAction(deletion),
+    subject: '録画',
+  } as const
 
   useEffect(() => {
     const checkOf = (id: string | undefined) =>
@@ -238,39 +239,13 @@ export function LibraryView({
     }
   }, [picking])
 
-  useEffect(() => {
-    if (!picking) {
-      return
-    }
-
-    const leaveOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape' || event.defaultPrevented) {
-        return
-      }
-
-      if (
-        event.target instanceof Element &&
-        event.target.closest(
-          '[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]',
-        )
-      ) {
-        return
-      }
-
-      stopChoosing()
-    }
-
-    document.addEventListener('keydown', leaveOnEscape)
-
-    return () => document.removeEventListener('keydown', leaveOnEscape)
-  }, [picking, stopChoosing])
+  useLeaveOnEscape(picking, stopChoosing)
 
   const pickToggleWith = (ref?: Ref<HTMLButtonElement>, className?: string) => (
-    <button
+    <PickToggle
       ref={ref}
-      type="button"
-      aria-pressed={picking}
-      onClick={() => {
+      pressed={picking}
+      onPress={() => {
         if (picking) {
           stopChoosing()
         } else {
@@ -278,15 +253,8 @@ export function LibraryView({
           setPicking(true)
         }
       }}
-      className={cn(
-        iconButtonVariants(),
-        'h-10 w-auto px-4 text-ui font-semibold text-ink',
-        picking && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
-        className,
-      )}
-    >
-      選ぶ
-    </button>
+      className={className}
+    />
   )
 
   const searchAndFilter = (

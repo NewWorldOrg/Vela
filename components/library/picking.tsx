@@ -11,7 +11,12 @@ import {
 
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
-import { pickedSaying } from '@/lib/library-picking'
+import {
+  PICKED_TAIL,
+  PICKED_UNIT,
+  pickedSaying,
+  type PickedSubject,
+} from '@/lib/library-picking'
 import type { Recording, RecordingBatch } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import {
@@ -31,6 +36,7 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { iconButtonVariants } from '@/components/vela/icon-button'
+import { Spinner } from '@/components/vela/progress'
 import { useToast } from '@/components/vela/toast'
 
 const SIGNED_OUT = signedOut('操作')
@@ -122,24 +128,122 @@ export function usePickedDeletion(
   return { pending, deletable, ask: () => setAsking(true), dialog }
 }
 
-/** How many are picked, or while none is, that recordings are to be chosen. */
-function PickedCount({
-  count,
+/** The one press at the end of the choosing bar and band: what it is called, its icon and colour, and whether it can be pressed now. */
+export interface PickedAction {
+  label: string
+  icon: ReactNode
+  variant: 'danger' | 'redo'
+  pending: boolean
+  enabled: boolean
+  onPress: () => void
+}
+
+/** The library's `削除` as the press at the end of the bar. */
+export function deletionAction(deletion: PickedDeletion): PickedAction {
+  return {
+    label: '削除',
+    icon: <TrashIcon />,
+    variant: 'danger',
+    pending: deletion.pending,
+    enabled: deletion.deletable,
+    onPress: deletion.ask,
+  }
+}
+
+/** The room left at the end of a list that scrolls inside itself, so the floating bar does not cover its last row. */
+export const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
+
+/** Leaves choosing on Esc, unless a dialog, a menu or a list is open to take the key first. */
+export function useLeaveOnEscape(choosing: boolean, leave: () => void): void {
+  useEffect(() => {
+    if (!choosing) {
+      return
+    }
+
+    const leaveOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.defaultPrevented) {
+        return
+      }
+
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          '[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]',
+        )
+      ) {
+        return
+      }
+
+      leave()
+    }
+
+    document.addEventListener('keydown', leaveOnEscape)
+
+    return () => document.removeEventListener('keydown', leaveOnEscape)
+  }, [choosing, leave])
+}
+
+/** The `選ぶ` at the head of a list, drawn pressed while the list is choosing. */
+export function PickToggle({
+  pressed,
+  onPress,
+  ref,
   className,
 }: {
-  count: number
-  className: string
+  pressed: boolean
+  onPress: () => void
+  ref?: Ref<HTMLButtonElement>
+  className?: string
 }) {
-  const said = pickedSaying(count)
+  return (
+    <button
+      ref={ref}
+      type="button"
+      aria-pressed={pressed}
+      onClick={onPress}
+      className={cn(
+        iconButtonVariants(),
+        'h-10 w-auto px-4 text-ui font-semibold text-ink',
+        pressed && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
+        className,
+      )}
+    >
+      選ぶ
+    </button>
+  )
+}
 
+/** How many are picked, or while none is, that recordings are to be chosen. On a phone's band the word after the count goes when the width is too narrow for the three presses beside it. */
+function PickedCount({
+  count,
+  subject,
+  className,
+  onABand = false,
+}: {
+  count: number
+  subject: PickedSubject
+  className: string
+  onABand?: boolean
+}) {
   if (count === 0) {
-    return <span className={cn(className, 'text-ink-2')}>{said}</span>
+    return (
+      <span className={cn(className, 'text-ink-2')}>
+        {pickedSaying(count, subject)}
+      </span>
+    )
   }
 
   return (
     <span className={cn(className, 'text-ink')}>
       <span className="font-code">{count}</span>
-      {said.slice(String(count).length)}
+      {onABand ? (
+        <>
+          {PICKED_UNIT}
+          <span className="max-[359px]:hidden">{PICKED_TAIL}</span>
+        </>
+      ) : (
+        `${PICKED_UNIT}${PICKED_TAIL}`
+      )}
     </span>
   )
 }
@@ -148,19 +252,23 @@ interface PickingControls {
   count: number
   everyPicked: boolean
   onEvery: () => void
-  deletion: PickedDeletion
+  action: PickedAction
+  subject: PickedSubject
 }
 
-const WHAT_IT_DOES = '選んだ録画の操作'
+function whatItDoes(subject: PickedSubject): string {
+  return `選んだ${subject}の操作`
+}
 
-/** The bar floating in the middle of the window's foot while the library is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and `削除`. It rises in and sinks away, and while it sinks it stays drawn saying what it last said. */
+/** The bar floating in the middle of the window's foot while a list is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and the one action. It rises in and sinks away, and while it sinks it stays drawn saying what it last said. */
 export function PickingBar({
   shown,
   count,
   everyPicked,
   onEvery,
   onClose,
-  deletion,
+  action,
+  subject,
   closeRef,
   className,
 }: PickingControls & {
@@ -173,7 +281,7 @@ export function PickingBar({
   const [said, setSaid] = useState({
     count,
     everyPicked,
-    deletable: deletion.deletable,
+    enabled: action.enabled,
   })
   const barRef = useRef<HTMLDivElement>(null)
 
@@ -185,9 +293,9 @@ export function PickingBar({
     shown &&
     (said.count !== count ||
       said.everyPicked !== everyPicked ||
-      said.deletable !== deletion.deletable)
+      said.enabled !== action.enabled)
   ) {
-    setSaid({ count, everyPicked, deletable: deletion.deletable })
+    setSaid({ count, everyPicked, enabled: action.enabled })
   }
 
   useEffect(() => {
@@ -212,7 +320,7 @@ export function PickingBar({
     <div
       ref={barRef}
       role={shown ? 'toolbar' : undefined}
-      aria-label={shown ? WHAT_IT_DOES : undefined}
+      aria-label={shown ? whatItDoes(subject) : undefined}
       aria-hidden={shown ? undefined : true}
       inert={!shown}
       data-slot="picking-bar"
@@ -241,6 +349,7 @@ export function PickingBar({
       </button>
       <PickedCount
         count={said.count}
+        subject={subject}
         className="min-w-[calc(118rem/16)] text-section font-bold whitespace-nowrap"
       />
       <Button
@@ -251,30 +360,31 @@ export function PickingBar({
         {said.everyPicked ? 'すべて外す' : 'すべて選ぶ'}
       </Button>
       <Button
-        variant="danger"
+        variant={action.variant}
         className="ml-3"
-        disabled={deletion.pending || !said.deletable}
-        onClick={deletion.ask}
+        disabled={action.pending || !said.enabled}
+        onClick={action.onPress}
       >
-        <TrashIcon />
-        削除
+        {action.pending ? <Spinner size="control" /> : action.icon}
+        {action.label}
       </Button>
     </div>
   )
 }
 
-/** The band over a phone's tabs while the library is choosing: how many, every one, and `削除`. */
+/** The band over a phone's tabs while a list is choosing: how many, every one, and the one action. */
 export function PickingBand({
   count,
   everyPicked,
   onEvery,
-  deletion,
+  action,
+  subject,
   className,
 }: PickingControls & { className?: string }) {
   return (
     <div
       role="toolbar"
-      aria-label={WHAT_IT_DOES}
+      aria-label={whatItDoes(subject)}
       data-slot="picking-band"
       className={cn(
         'fixed inset-x-0 bottom-[var(--tab-bar-cover)] z-50 flex h-[calc(60rem/16)] items-center gap-2 bg-bg pr-3 pl-[calc(18rem/16)] shadow-[0_-1px_0_var(--hair)] sideways:left-[calc(80rem/16+env(safe-area-inset-left))] sideways:pb-[env(safe-area-inset-bottom)]',
@@ -283,23 +393,25 @@ export function PickingBand({
     >
       <PickedCount
         count={count}
+        subject={subject}
         className="text-title font-semibold whitespace-nowrap"
+        onABand
       />
       <Button
         variant="tone"
-        className="ml-auto h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui"
+        className="ml-auto h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui max-[359px]:px-3"
         onClick={onEvery}
       >
         {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
       </Button>
       <Button
-        variant="danger"
-        className="h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui"
-        disabled={deletion.pending || !deletion.deletable}
-        onClick={deletion.ask}
+        variant={action.variant}
+        className="h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui max-[359px]:px-3"
+        disabled={action.pending || !action.enabled}
+        onClick={action.onPress}
       >
-        <TrashIcon />
-        削除
+        {action.pending ? <Spinner size="control" /> : action.icon}
+        {action.label}
       </Button>
     </div>
   )
