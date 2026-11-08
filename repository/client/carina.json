@@ -13524,7 +13524,8 @@
       "EncodeEncoder": {
         "enum": [
           "software",
-          "vaapi"
+          "vaapi",
+          "nvenc"
         ],
         "type": "string"
       },

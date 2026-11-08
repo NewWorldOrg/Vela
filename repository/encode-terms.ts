@@ -67,6 +67,7 @@ export const DEINTERLACE_LABEL: Record<Deinterlace, string> = {
 export const ENCODER_LABEL: Record<EncodeEncoder, string> = {
   software: 'ソフトウェア',
   vaapi: 'VAAPI',
+  nvenc: 'NVENC',
 }
 
 export const SWERVE_LABEL: Record<EncodeSwerve, string> = {

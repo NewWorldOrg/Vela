@@ -2643,7 +2643,7 @@ export interface components {
       to: null | string
     }
     /** @enum {string} */
-    EncodeEncoder: 'software' | 'vaapi'
+    EncodeEncoder: 'software' | 'vaapi' | 'nvenc'
     /** @enum {string} */
     EncodeFailure:
       | 'ffmpegExitedNonZero'
