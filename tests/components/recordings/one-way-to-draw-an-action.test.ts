@@ -20,7 +20,7 @@ const WHERE_THE_EVEN_WIDTH_IS_DECLARED = 'components/vela/action-row.tsx'
 
 const A_BUTTON = /<Button\b([^>]*)>([\s\S]*?)<\/Button>/g
 
-const SPEAKS_FOR_ITSELF = /variant="(tone|danger)"/
+const SPEAKS_FOR_ITSELF = /variant="(tone|play|process|redo|danger)"/
 
 /** Leaving a dialog does nothing, so it says only its word. */
 const DOES_NOTHING = ['キャンセル', '閉じる']
@@ -110,14 +110,14 @@ test("a recording's actions are each drawn on a ground", async () => {
   )
   assert.doesNotMatch(actions, /data-variant=ghost/)
 
-  for (const file of [
-    'components/recordings/encode-button.tsx',
-    'components/recordings/thumbnail-button.tsx',
+  for (const [file, variant] of [
+    ['components/recordings/encode-button.tsx', 'process'],
+    ['components/recordings/thumbnail-button.tsx', 'redo'],
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
     assert.doesNotMatch(source, /\bquiet\b|ghost/, file)
-    assert.match(source, /variant="tone"/, file)
+    assert.match(source, new RegExp(`variant="${variant}"`), file)
   }
 })
 
