@@ -64,7 +64,7 @@ const HEALTH_COLUMNS: { label: string; width: string | undefined }[] = [
 ]
 
 const BAR_TONE: Record<QualityLevel, string> = {
-  good: 'bg-ink-2',
+  good: 'bg-accent',
   warn: 'bg-warn',
   bad: 'bg-rec',
   unmeasured: 'bg-transparent',

@@ -50,7 +50,7 @@ export function HitDetail({
           {hit.genreLabel}
         </Badge>
         {hit.booked && (
-          <Badge variant="ok" className="font-bold">
+          <Badge variant="warn" className="font-bold">
             予約済み
           </Badge>
         )}

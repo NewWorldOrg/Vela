@@ -46,7 +46,7 @@ export function MigrationReport({ result }: { result: MigrationResult }) {
             <b className="text-[calc(14.5rem/16)] font-semibold">
               {run.heading}
             </b>
-            <Badge variant="selected">{run.kind}</Badge>
+            <Badge variant="mute">{run.kind}</Badge>
             <Badge variant="mute">{run.rehearsals}</Badge>
           </div>
           <dl className="mt-3 space-y-2.5">

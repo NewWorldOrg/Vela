@@ -684,7 +684,7 @@ function RecordingInfo({
         {d.genres && (
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {d.genres.map((g) => (
-              <Badge key={g} variant="ok">
+              <Badge key={g} variant="mute">
                 {g}
               </Badge>
             ))}
@@ -744,7 +744,7 @@ function RecordingInfo({
             {length}
             {length && d.genres && d.genres.length > 0 && <Sep />}
             {d.genres?.map((g) => (
-              <Badge key={g} variant="ok">
+              <Badge key={g} variant="mute">
                 {g}
               </Badge>
             ))}

@@ -1488,7 +1488,7 @@ test('the reader the card answered in says it is in use and when the card last a
       sub: '使用中',
       status: {
         word: '挿入',
-        tone: 'plain',
+        tone: 'ok',
         line: `${formatRecentMoment(SEEN_AT)} に応答`,
       },
     },

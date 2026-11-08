@@ -17,8 +17,9 @@ import { tipBoxOf } from '@/components/recordings/status-cell'
 
 const CHIP_VARIANT: Record<
   Exclude<StatusTone, 'plain'>,
-  'recording' | 'err' | 'warn'
+  'recording' | 'ok' | 'err' | 'warn'
 > = {
+  ok: 'ok',
   rec: 'recording',
   err: 'err',
   warn: 'warn',
@@ -105,13 +106,13 @@ export function StatusSaid({
       <span className="text-ui text-ink">{status.word}</span>
     ) : (
       <Badge variant={CHIP_VARIANT[status.tone]} className="font-bold">
-        {status.tone === 'rec' && <ChipDot />}
+        {(status.tone === 'rec' || status.tone === 'ok') && <ChipDot />}
         {status.word}
       </Badge>
     )
 
   return (
-    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 @[36rem]/line:block">
+    <div className="flex min-w-0 flex-wrap items-center gap-x-2 gap-y-0.5 @[36rem]/line:block @[36rem]/line:[&:has([data-slot=badge])>p]:mt-1">
       {why ? (
         <InFull says={why} wraps={tipBoxOf(status.tone === 'plain')}>
           {word}
@@ -186,7 +187,7 @@ export function CardReaderLine({ row }: { row: CardReaderRow }) {
 }
 
 const DRIVER_LINK: Record<DriverLink, Pick<StatusLine, 'word' | 'tone'>> = {
-  connected: { word: '接続中', tone: 'plain' },
+  connected: { word: '接続中', tone: 'ok' },
   draining: { word: '終了処理中', tone: 'warn' },
   disconnected: { word: '未接続', tone: 'err' },
   unknown: { word: '接続状態不明', tone: 'warn' },
