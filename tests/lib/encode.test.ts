@@ -10,6 +10,7 @@ import {
   labelProblem,
   pageIn,
   rateControlProblem,
+  rerunSaying,
   secondsBetween,
 } from '@/lib/encode'
 import type { EncodeJob } from '@/repository/encode'
@@ -240,4 +241,13 @@ test('a rate control value is a whole number from 0 to 51', () => {
   assert.equal(rateControlProblem('52'), '品質は 0 〜 51 です。')
   assert.equal(rateControlProblem('2.5'), '半角数字で入力してください。')
   assert.equal(rateControlProblem(''), '半角数字で入力してください。')
+})
+
+test('the toast after running failed jobs again counts what was queued and what was not', () => {
+  assert.equal(rerunSaying(3, 0), '3 件を再実行しました。')
+  assert.equal(rerunSaying(0, 2), '2 件を再実行できませんでした。')
+  assert.equal(
+    rerunSaying(1, 2),
+    '1 件を再実行、2 件は再実行できませんでした。',
+  )
 })

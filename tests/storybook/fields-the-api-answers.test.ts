@@ -44,6 +44,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'BaseResponderOfEncodeDestinationResponder.data',
       'BaseResponderOfEncodeJobResponder.data',
       'BaseResponderOfEncodeProfileResponder.data',
+      'EncodeRerunResponder.job',
       'BaseResponderOfQualityThresholdResponder.data',
       'BaseResponderOfScanApplicationResponder.data',
       'BaseResponderOfScanRefusedResponder.data',

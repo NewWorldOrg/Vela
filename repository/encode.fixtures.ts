@@ -9,6 +9,7 @@ import type {
   EncodeJob,
   EncodeJobsPage,
   EncodeProfile,
+  EncodeRerunRow,
   EncodeScreen,
   EncodeSpells,
 } from '@/repository/encode'
@@ -207,6 +208,67 @@ export const FAILED_JOB: EncodeJob = {
   },
 }
 
+export const FAILED_FOR_ROOM_JOB: EncodeJob = {
+  ...FAILED_JOB,
+  id: 'job-f2',
+  recordingId: '1182',
+  title: '夜更けのラジオ劇場',
+  recordedAt: '08/08(金) 01:00',
+  attempt: 1,
+  queuedAt: '2026/08/08 02:31',
+  startedAt: '2026/08/08 02:40',
+  endedAt: '2026/08/08 02:55',
+  headway: { percent: 61, leftSeconds: 900, at: '02:55:10' },
+  failure: {
+    failure: 'notEnoughRoom',
+    noticedAt: '2026/08/08 02:55',
+  },
+}
+
+export const FAILED_WITHOUT_A_SOURCE_JOB: EncodeJob = {
+  ...FAILED_JOB,
+  id: 'job-f3',
+  recordingId: '1184',
+  title: '朝の料理手帖',
+  recordedAt: '08/08(金) 08:00',
+  attempt: 1,
+  queuedAt: '2026/08/08 09:01',
+  startedAt: '2026/08/08 09:02',
+  endedAt: '2026/08/08 09:02',
+  headway: undefined,
+  failure: {
+    failure: 'sourceMissing',
+    noticedAt: '2026/08/08 09:02',
+  },
+}
+
+/** The failed jobs the list shows when filtered to `失敗`, as `まとめて再実行` picks among them. */
+export const FAILED_JOBS: EncodeJob[] = [
+  FAILED_JOB,
+  FAILED_FOR_ROOM_JOB,
+  FAILED_WITHOUT_A_SOURCE_JOB,
+]
+
+/** What `まとめて再実行` says row by row when one of the three was queued again and the other two were not. */
+export const RERUN_ONE_OF_THREE: EncodeRerunRow[] = [
+  { id: FAILED_JOB.id, outcome: 'queued' },
+  {
+    id: FAILED_FOR_ROOM_JOB.id,
+    outcome: 'noSuchJob',
+    reason: 'このジョブは残っていないため、再実行できませんでした。',
+  },
+  {
+    id: FAILED_WITHOUT_A_SOURCE_JOB.id,
+    outcome: 'refused',
+    reason: 'この録画は残っていないため、再実行できませんでした。',
+  },
+]
+
+/** The failed list as the API answers it when every job asked was queued again. */
+export function rerunAll(jobs: EncodeJob[]): EncodeRerunRow[] {
+  return jobs.map((job) => ({ id: job.id, outcome: 'queued' }))
+}
+
 export const CANCELLED_JOB: EncodeJob = {
   ...ROW,
   id: 'job-x',
@@ -355,6 +417,15 @@ export const RETIRED_DEFINITIONS: EncodeScreen = {
   ...ENCODE_SCREEN,
   profiles: [VIEWING_PROFILE, ARCHIVE_PROFILE],
   destinations: [SHELF_DESTINATION, OLD_SHELF_DESTINATION],
+}
+
+/** The screen filtered to `失敗`, with three failed jobs to pick among. */
+export const FAILED_JOBS_SCREEN: EncodeScreen = {
+  ...ENCODE_SCREEN,
+  running: null,
+  waiting: 0,
+  failed: FAILED_JOBS.length,
+  jobs: jobsPage(FAILED_JOBS, { status: 'failed' }),
 }
 
 export const MORE_JOBS_THAN_FIT: EncodeScreen = {

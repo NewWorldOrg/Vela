@@ -12,15 +12,21 @@ import {
   COMPLETED_JOB,
   EMPTY_ENCODE_SCREEN,
   ENCODE_SCREEN,
+  FAILED_FOR_ROOM_JOB,
   FAILED_JOB,
+  FAILED_JOBS,
+  FAILED_JOBS_SCREEN,
+  FAILED_WITHOUT_A_SOURCE_JOB,
   MORE_JOBS_THAN_FIT,
   PROFILE_DEFAULTS_WHERE_H265_IS_WRITTEN,
   QUEUED_JOB,
   REMADE_JOB,
   REMAKING_JOB,
   REPLACED_JOB,
+  RERUN_ONE_OF_THREE,
   RETIRED_DEFINITIONS,
   RUNNING_JOB,
+  rerunAll,
   AUTO_RUN_ON_A_LATER_BUILD,
   AUTO_RUN_WITH_NOTHING_NAMED,
   SPELLS_NONE,
@@ -32,6 +38,7 @@ import {
   screenWith,
 } from '@/repository/encode.fixtures'
 import { PROFILE_DRAFT_DEFAULTS } from '@/repository/encode-terms'
+import type { EncodeJob } from '@/repository/encode'
 import type { EncodeActions } from '@/components/encode/encode-page'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { EncodeView } from '@/components/encode/encode-page'
@@ -52,6 +59,29 @@ import {
 } from '@/stories/rows-as-cards'
 
 const callOff = fn(async () => ({ state: 'ok' }) as const)
+
+const rerun = fn<EncodeActions['onRerun']>(async () => ({
+  state: 'ok',
+  items: [],
+}))
+
+const rerunOneOfThree = fn<EncodeActions['onRerun']>(async () => ({
+  state: 'ok',
+  items: RERUN_ONE_OF_THREE,
+}))
+
+const rerunEveryOne = fn<EncodeActions['onRerun']>(async (ids) => ({
+  state: 'ok',
+  items: rerunAll(FAILED_JOBS.filter((job) => ids.includes(job.id))),
+}))
+
+const RERUN_REFUSED =
+  '選んだジョブを再実行できませんでした。時間をおいてからもう一度お試しください。'
+
+const rerunRefused = fn<EncodeActions['onRerun']>(async () => ({
+  state: 'rejected',
+  message: RERUN_REFUSED,
+}))
 
 const settleAutoRun = fn<EncodeActions['onSettleAutoRun']>(async () => ({
   state: 'ok',
@@ -91,6 +121,7 @@ const ACTIONS: EncodeActions = {
   onReviseDestination: reviseDestination,
   onRemoveDestination: removeDestination,
   onCallOff: callOff,
+  onRerun: rerun,
   onSettleAutoRun: settleAutoRun,
 }
 
@@ -1437,5 +1468,279 @@ export const 幅600pxからは表のまま: Story = {
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
     await laysRowsAsATable(canvasElement)
+  },
+}
+
+const WHAT_THE_PICKED_JOBS_DO = '選んだジョブの操作'
+
+/** The bar that floats at the window's foot while the failed jobs are being chosen, or the band over a phone's tabs. */
+function pickingRow(canvasElement: HTMLElement): HTMLElement {
+  return within(canvasElement).getByRole('toolbar', {
+    name: WHAT_THE_PICKED_JOBS_DO,
+  })
+}
+
+function rowOf(canvasElement: HTMLElement, job: EncodeJob): HTMLElement {
+  const row = canvasElement.querySelector<HTMLElement>(`[data-job="${job.id}"]`)
+
+  if (!row) {
+    throw new Error(`the row of ${job.title} is not on the screen`)
+  }
+
+  return row
+}
+
+/** The check that takes a failed job in, at the head of its row. */
+function pickOf(canvasElement: HTMLElement, job: EncodeJob): HTMLElement {
+  return within(rowOf(canvasElement, job)).getByRole('checkbox', {
+    name: `${job.title} を選ぶ`,
+  })
+}
+
+async function startChoosing(canvasElement: HTMLElement) {
+  await afterTheArrival(canvasElement)
+  await userEvent.click(
+    within(canvasElement).getByRole('button', { name: '選ぶ' }),
+  )
+}
+
+/** Sees the list leave choosing: the bar gone and `選ぶ` no longer pressed. */
+async function stopsChoosing(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+
+  await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
+  await expect(canvas.queryAllByRole('checkbox')).toEqual([])
+  for (const toggle of canvas.queryAllByRole('button', { name: '選ぶ' })) {
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  }
+}
+
+export const 失敗の一覧に選ぶがある: Story = {
+  args: { screen: FAILED_JOBS_SCREEN },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('button', { name: '選ぶ' })).toBeVisible()
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
+  },
+}
+
+export const すべてのジョブの一覧には選ぶが無い: Story = {
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const canvas = within(canvasElement)
+
+    await expect(canvas.queryByRole('button', { name: '選ぶ' })).toBeNull()
+  },
+}
+
+export const 選ぶを押すと窓の下に帯が浮かぶ: Story = {
+  args: { screen: FAILED_JOBS_SCREEN },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const canvas = within(canvasElement)
+    const bar = pickingRow(canvasElement)
+    const row = within(bar)
+
+    await expect(getComputedStyle(bar).position).toBe('fixed')
+    await expect(row.getByText('ジョブを選ぶ')).toBeVisible()
+    await expect(row.getByRole('button', { name: '閉じる' })).toBeVisible()
+    await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
+    await expect(
+      row.getByRole('button', { name: 'まとめて再実行' }),
+    ).toBeDisabled()
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      FAILED_JOBS.length,
+    )
+    await expect(canvas.getByRole('button', { name: '選ぶ' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    await userEvent.click(row.getByRole('button', { name: '閉じる' }))
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const 失敗したジョブを選ぶ: Story = {
+  args: { screen: FAILED_JOBS_SCREEN },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const bar = within(pickingRow(canvasElement))
+
+    await userEvent.click(pickOf(canvasElement, FAILED_JOB))
+    await userEvent.click(pickOf(canvasElement, FAILED_FOR_ROOM_JOB))
+
+    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
+    await expect(rowOf(canvasElement, FAILED_JOB)).toHaveAttribute(
+      'data-state',
+      'selected',
+    )
+    await expect(
+      rowOf(canvasElement, FAILED_WITHOUT_A_SOURCE_JOB),
+    ).not.toHaveAttribute('data-state')
+    await expect(pickOf(canvasElement, FAILED_JOB)).toBeChecked()
+    await expect(
+      bar.getByRole('button', { name: 'まとめて再実行' }),
+    ).toBeEnabled()
+    await expect(window.location.pathname).not.toMatch(/\/recordings\//)
+
+    await userEvent.click(bar.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('3 件を選択')
+    await expect(bar.getByRole('button', { name: 'すべて外す' })).toBeVisible()
+
+    await userEvent.click(bar.getByRole('button', { name: 'すべて外す' }))
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const 行を押しても選ぶ: Story = {
+  args: { screen: FAILED_JOBS_SCREEN },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+
+    await userEvent.click(
+      within(rowOf(canvasElement, FAILED_FOR_ROOM_JOB)).getByText(
+        FAILED_FOR_ROOM_JOB.title!,
+      ),
+    )
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(window.location.pathname).not.toMatch(/\/recordings\//)
+
+    await userEvent.click(pickOf(canvasElement, FAILED_FOR_ROOM_JOB))
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const Escで選ぶのをやめる: Story = {
+  args: { screen: FAILED_JOBS_SCREEN },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    await userEvent.click(pickOf(canvasElement, FAILED_JOB))
+    await userEvent.keyboard('{Escape}')
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const 選んだ失敗をまとめて再実行する: Story = {
+  args: {
+    screen: FAILED_JOBS_SCREEN,
+    actions: { ...ACTIONS, onRerun: rerunOneOfThree },
+  },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    rerunOneOfThree.mockClear()
+    await startChoosing(canvasElement)
+    const bar = within(pickingRow(canvasElement))
+
+    await userEvent.click(bar.getByRole('button', { name: 'すべて選ぶ' }))
+    await userEvent.click(bar.getByRole('button', { name: 'まとめて再実行' }))
+
+    await waitFor(() =>
+      expect(rerunOneOfThree).toHaveBeenCalledWith(
+        FAILED_JOBS.map((job) => job.id),
+      ),
+    )
+    await expect(
+      await screen.findByText('1 件を再実行、2 件は再実行できませんでした。'),
+    ).toBeVisible()
+    await stopsChoosing(canvasElement)
+
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector(`[data-job="${FAILED_JOB.id}"]`),
+      ).toBeNull(),
+    )
+    await expect(
+      within(rowOf(canvasElement, FAILED_FOR_ROOM_JOB)).getByText(
+        'このジョブは残っていないため、再実行できませんでした。',
+      ),
+    ).toBeVisible()
+    await expect(
+      within(rowOf(canvasElement, FAILED_WITHOUT_A_SOURCE_JOB)).getByText(
+        'この録画は残っていないため、再実行できませんでした。',
+      ),
+    ).toBeVisible()
+  },
+}
+
+export const 選んだ失敗がすべて再実行できた: Story = {
+  args: {
+    screen: FAILED_JOBS_SCREEN,
+    actions: { ...ACTIONS, onRerun: rerunEveryOne },
+  },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    rerunEveryOne.mockClear()
+    await startChoosing(canvasElement)
+    const canvas = within(canvasElement)
+    const bar = within(pickingRow(canvasElement))
+
+    await userEvent.click(pickOf(canvasElement, FAILED_JOB))
+    await userEvent.click(pickOf(canvasElement, FAILED_WITHOUT_A_SOURCE_JOB))
+    await userEvent.click(bar.getByRole('button', { name: 'まとめて再実行' }))
+
+    await waitFor(() =>
+      expect(rerunEveryOne).toHaveBeenCalledWith([
+        FAILED_JOB.id,
+        FAILED_WITHOUT_A_SOURCE_JOB.id,
+      ]),
+    )
+    await expect(
+      await screen.findByText('2 件を再実行しました。'),
+    ).toBeVisible()
+    await stopsChoosing(canvasElement)
+    await waitFor(() =>
+      expect(rowsOfTheTableHeaded(canvasElement, '番組')).toHaveLength(1),
+    )
+    await expect(
+      within(rowOf(canvasElement, FAILED_FOR_ROOM_JOB)).queryByRole('status'),
+    ).toBeNull()
+    await expect(canvas.getByRole('button', { name: '選ぶ' })).toBeVisible()
+  },
+}
+
+export const まとめて再実行を断られる: Story = {
+  args: {
+    screen: FAILED_JOBS_SCREEN,
+    actions: { ...ACTIONS, onRerun: rerunRefused },
+  },
+  parameters: { screen: { width: 1440, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const bar = within(pickingRow(canvasElement))
+
+    await userEvent.click(pickOf(canvasElement, FAILED_JOB))
+    await userEvent.click(bar.getByRole('button', { name: 'まとめて再実行' }))
+
+    await expect(await screen.findByText(RERUN_REFUSED)).toBeVisible()
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(rowsOfTheTableHeaded(canvasElement, '番組')).toHaveLength(
+      FAILED_JOBS.length,
+    )
+  },
+}
+
+export const 電話の幅では下のタブの上の帯で選ぶ: Story = {
+  args: { screen: FAILED_JOBS_SCREEN },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const band = pickingRow(canvasElement)
+
+    await expect(band).toHaveAttribute('data-slot', 'picking-band')
+    await expect(within(band).getByText('ジョブを選ぶ')).toBeVisible()
+
+    await userEvent.click(pickOf(canvasElement, FAILED_JOB))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(
+      within(band).getByRole('button', { name: 'まとめて再実行' }),
+    ).toBeEnabled()
   },
 }
