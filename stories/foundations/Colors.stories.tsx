@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { Badge } from '@/components/ui/badge'
+import { GenrePill } from '@/components/vela/genre-pill'
 
 const meta = {
   title: 'Foundations/Colors',
@@ -64,16 +65,56 @@ const GENRES = [
   ['music', '音楽'],
 ] as const
 
-const GENRE_CLASS: Record<string, [string, string, string]> = {
-  news: ['bg-g-news-light', 'bg-g-news-deep', 'bg-g-news-dot'],
-  info: ['bg-g-info-light', 'bg-g-info-deep', 'bg-g-info-dot'],
-  doc: ['bg-g-doc-light', 'bg-g-doc-deep', 'bg-g-doc-dot'],
-  sports: ['bg-g-sports-light', 'bg-g-sports-deep', 'bg-g-sports-dot'],
-  variety: ['bg-g-variety-light', 'bg-g-variety-deep', 'bg-g-variety-dot'],
-  movie: ['bg-g-movie-light', 'bg-g-movie-deep', 'bg-g-movie-dot'],
-  drama: ['bg-g-drama-light', 'bg-g-drama-deep', 'bg-g-drama-dot'],
-  anime: ['bg-g-anime-light', 'bg-g-anime-deep', 'bg-g-anime-dot'],
-  music: ['bg-g-music-light', 'bg-g-music-deep', 'bg-g-music-dot'],
+const GENRE_CLASS: Record<string, [string, string, string, string]> = {
+  news: [
+    'bg-g-news-light',
+    'bg-g-news-deep',
+    'bg-g-news-dot',
+    'text-g-news-text',
+  ],
+  info: [
+    'bg-g-info-light',
+    'bg-g-info-deep',
+    'bg-g-info-dot',
+    'text-g-info-text',
+  ],
+  doc: ['bg-g-doc-light', 'bg-g-doc-deep', 'bg-g-doc-dot', 'text-g-doc-text'],
+  sports: [
+    'bg-g-sports-light',
+    'bg-g-sports-deep',
+    'bg-g-sports-dot',
+    'text-g-sports-text',
+  ],
+  variety: [
+    'bg-g-variety-light',
+    'bg-g-variety-deep',
+    'bg-g-variety-dot',
+    'text-g-variety-text',
+  ],
+  movie: [
+    'bg-g-movie-light',
+    'bg-g-movie-deep',
+    'bg-g-movie-dot',
+    'text-g-movie-text',
+  ],
+  drama: [
+    'bg-g-drama-light',
+    'bg-g-drama-deep',
+    'bg-g-drama-dot',
+    'text-g-drama-text',
+  ],
+  anime: [
+    'bg-g-anime-light',
+    'bg-g-anime-deep',
+    'bg-g-anime-dot',
+    'text-g-anime-text',
+  ],
+  music: [
+    'bg-g-music-light',
+    'bg-g-music-deep',
+    'bg-g-music-dot',
+    'text-g-music-text',
+  ],
 }
 
 export const Palette: Story = {
@@ -118,13 +159,14 @@ export const Palette: Story = {
       </Row>
       <section className="mb-8">
         <h2 className="heading mb-3 text-heading">ジャンル</h2>
-        <div className="grid grid-cols-[8rem_repeat(3,1fr)] items-center gap-x-3 gap-y-2 text-note">
+        <div className="grid grid-cols-[8rem_repeat(4,1fr)] items-center gap-x-3 gap-y-2 text-note">
           <span />
           <span className="font-semibold text-ink-2">放送済み</span>
           <span className="font-semibold text-ink-2">これから</span>
           <span className="font-semibold text-ink-2">点</span>
+          <span className="font-semibold text-ink-2">札</span>
           {GENRES.map(([key, label]) => {
-            const [light, deep, dot] = GENRE_CLASS[key]
+            const [light, deep, dot, text] = GENRE_CLASS[key]
 
             return [
               <span key={`${key}-n`} className="font-semibold">
@@ -136,6 +178,11 @@ export const Palette: Story = {
                 key={`${key}-o`}
                 className={`size-[7px] rounded-full ${dot}`}
               />,
+              <span key={`${key}-t`}>
+                <Badge variant="mute" className={`${light} ${text}`}>
+                  {label}
+                </Badge>
+              </span>,
             ]
           })}
         </div>
@@ -146,8 +193,9 @@ export const Palette: Story = {
           <Badge variant="recording">録画中</Badge>
           <Badge variant="warn">頭 30 分が欠ける</Badge>
           <Badge variant="mute">エンコード中</Badge>
-          <Badge variant="ok">字幕あり</Badge>
-          <Badge variant="selected">アニメ</Badge>
+          <Badge variant="mute">字幕あり</Badge>
+          <GenrePill genre="anime">アニメ/特撮</GenrePill>
+          <GenrePill>福祉</GenrePill>
         </div>
       </section>
     </div>

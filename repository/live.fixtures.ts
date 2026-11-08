@@ -32,6 +32,7 @@ function programme(
     hasSubtitles: false,
     sounds: 1,
     audio: 'stereo',
+    genre: 'other',
     genreLabel: 'その他',
     ...over,
   }
@@ -49,6 +50,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     viewers: 1,
     now: programme('p001', 'ニュースの視点9', '21:00', '22:00', {
       hasSubtitles: true,
+      genre: 'news',
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p002', 'クローズアップ列島', '22:00', '22:30'),
@@ -67,6 +69,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     viewers: 0,
     now: programme('p001', 'ニュースの視点9', '21:00', '22:00', {
       hasSubtitles: true,
+      genre: 'news',
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p002', 'クローズアップ列島', '22:00', '22:30'),
@@ -82,6 +85,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     kind: 'terrestrial',
     viewers: 0,
     now: programme('p003', 'きょうの献立 夏のさっぱり', '20:55', '21:25', {
+      genre: 'other',
       genreLabel: '趣味/教育',
     }),
     next: programme('p004', 'きょうの健康', '21:25', '21:40'),
@@ -97,6 +101,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     kind: 'terrestrial',
     viewers: 2,
     now: programme('p005', 'news zero', '20:54', '22:00', {
+      genre: 'news',
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p006', 'スポーツニュース', '22:00', '22:54'),
@@ -113,6 +118,7 @@ export const LIVE_CHANNEL_FIXTURES: LiveChannel[] = [
     viewers: 0,
     now: programme('p007', '報道ステーション', '21:00', '22:10', {
       hasSubtitles: true,
+      genre: 'news',
       genreLabel: 'ニュース/報道',
     }),
     next: programme('p008', '木曜ドラマ「灯台のある町」', '22:10', undefined),
@@ -259,6 +265,7 @@ const LONG_WORDS_CHANNEL: LiveChannel = {
     description: LONG_DESCRIPTION,
     items: [LONG_EXTENDED],
     hasSubtitles: true,
+    genre: 'doc',
     genreLabel: 'ドキュメンタリー/教養',
   }),
   next: programme(

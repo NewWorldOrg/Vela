@@ -24,6 +24,7 @@ import {
 import { mainTitleOf } from '@/lib/program-title'
 import { newRuleHref, seriesTermsOf } from '@/lib/rules'
 import { Badge } from '@/components/ui/badge'
+import { GenrePill } from '@/components/vela/genre-pill'
 import { Button } from '@/components/ui/button'
 import { LiveIcon, RelayIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
@@ -106,9 +107,9 @@ export function ProgramDetailBody({
         )}
       </p>
       <div className="mt-[calc(13rem/16)] flex flex-wrap gap-[calc(7rem/16)]">
-        <Badge variant="info" className="font-bold">
+        <GenrePill genre={program.genre} className="font-bold">
           {program.genreLabel}
-        </Badge>
+        </GenrePill>
         {program.subtitled && (
           <Badge variant="mute" className="font-bold">
             字幕あり

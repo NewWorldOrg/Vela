@@ -5,9 +5,11 @@ import type { Route } from 'next'
 import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { FormatChoice } from '@/lib/playback-format'
 import type { LiveProfile } from '@/repository/live'
+import { genreOfLabel } from '@/repository/programs'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { GenrePill } from '@/components/vela/genre-pill'
 import { formatLength, formatPlayerTime } from '@/lib/format'
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
 import { reservationHref } from '@/lib/reservations'
@@ -684,9 +686,9 @@ function RecordingInfo({
         {d.genres && (
           <div className="mt-2.5 flex flex-wrap gap-1.5">
             {d.genres.map((g) => (
-              <Badge key={g} variant="mute">
+              <GenrePill key={g} genre={genreOfLabel(g)}>
                 {g}
-              </Badge>
+              </GenrePill>
             ))}
           </div>
         )}
@@ -744,9 +746,9 @@ function RecordingInfo({
             {length}
             {length && d.genres && d.genres.length > 0 && <Sep />}
             {d.genres?.map((g) => (
-              <Badge key={g} variant="mute">
+              <GenrePill key={g} genre={genreOfLabel(g)}>
                 {g}
-              </Badge>
+              </GenrePill>
             ))}
           </div>
         )}
