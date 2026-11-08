@@ -4,9 +4,12 @@ import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/vela/surface'
 import { Spinner } from '@/components/vela/progress'
 import {
+  DevicePlayerIcon,
   EditIcon,
+  EncodeIcon,
   PlayIcon,
   PlusIcon,
+  RebuildIcon,
   TrashIcon,
 } from '@/components/vela/icons'
 
@@ -23,7 +26,15 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'record', 'tone', 'danger'],
+      options: [
+        'default',
+        'record',
+        'tone',
+        'play',
+        'process',
+        'redo',
+        'danger',
+      ],
     },
     size: {
       control: 'select',
@@ -48,7 +59,7 @@ export const Variants: Story = {
         </Button>
         <Button {...args} variant="tone">
           <PlayIcon />
-          外部プレイヤーで再生
+          ライブ視聴
         </Button>
         <Button {...args} variant="tone">
           <EditIcon />
@@ -62,6 +73,35 @@ export const Variants: Story = {
           削除
         </Button>
       </div>
+    </Surface>
+  ),
+}
+
+export const RecordingActions: Story = {
+  name: '録画の操作',
+  render: (args) => (
+    <Surface className="max-w-[720px]">
+      <div className="flex flex-wrap items-center gap-2.5">
+        <Button {...args} variant="play">
+          <DevicePlayerIcon />
+          外部プレイヤーで再生
+        </Button>
+        <Button {...args} variant="process">
+          <EncodeIcon />
+          エンコード
+        </Button>
+        <Button {...args} variant="redo">
+          <RebuildIcon />
+          サムネイルを再生成
+        </Button>
+        <Button {...args} variant="danger">
+          <TrashIcon />
+          削除
+        </Button>
+      </div>
+      <p className="mt-[9px] text-note text-ink-2">
+        再生は緑、変換と処理は青、やり直しは琥珀、削除は赤。青はエンコードにだけ使う。
+      </p>
     </Surface>
   ),
 }

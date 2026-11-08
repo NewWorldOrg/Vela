@@ -304,7 +304,7 @@ export function IntegrityView({
                     finding.recordingId !== undefined && (
                       <ActionRow>
                         <Button
-                          variant="tone"
+                          variant="redo"
                           size="sm"
                           aria-disabled={redrawing}
                           onClick={() => redraw(finding)}

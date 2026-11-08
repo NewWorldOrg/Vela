@@ -109,6 +109,7 @@ export function RecordingActions({
               recording={recording}
               plan={plan}
               onTakeTicket={onTakeTicket}
+              look="play"
             />
           )}
           {encodes(recording) && (

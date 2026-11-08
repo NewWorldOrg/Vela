@@ -6,6 +6,7 @@ import type { LiveWatching } from '@/repository/live'
 import type { ReservationWrite } from '@/repository/reservations'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
+import { GenrePill } from '@/components/vela/genre-pill'
 import { saysSubtitled } from '@/lib/program-title'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ProgressBar } from '@/components/vela/progress'
@@ -118,7 +119,9 @@ export function NowNext({
               {(subtitled || programme.genreLabel) && <Dot />}
               {subtitled && <Badge variant="mute">字幕あり</Badge>}
               {programme.genreLabel && (
-                <Badge variant="mute">{programme.genreLabel}</Badge>
+                <GenrePill genre={programme.genre}>
+                  {programme.genreLabel}
+                </GenrePill>
               )}
             </div>
           )}

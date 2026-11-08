@@ -1428,14 +1428,14 @@ export const 操作は題と値の下に横1行: Story = {
       'danger',
     )
 
-    for (const name of [
-      '外部プレイヤーで再生',
-      'エンコード',
-      'サムネイルを再生成',
+    for (const [name, variant] of [
+      ['外部プレイヤーで再生', 'play'],
+      ['エンコード', 'process'],
+      ['サムネイルを再生成', 'redo'],
     ]) {
       await expect(canvas.getByRole('button', { name })).toHaveAttribute(
         'data-variant',
-        'tone',
+        variant,
       )
     }
 

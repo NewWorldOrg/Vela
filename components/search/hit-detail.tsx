@@ -8,6 +8,7 @@ import { newRuleHref, seriesTermsOf } from '@/lib/rules'
 import type { SearchHit } from '@/repository/search'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Badge } from '@/components/ui/badge'
+import { GenrePill } from '@/components/vela/genre-pill'
 import { Button } from '@/components/ui/button'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronRightIcon } from '@/components/vela/icons'
@@ -46,9 +47,9 @@ export function HitDetail({
         </span>
       </p>
       <div className="mt-2.5 flex flex-wrap gap-1.5">
-        <Badge variant="info" className="font-bold">
+        <GenrePill genre={hit.genre} className="font-bold">
           {hit.genreLabel}
-        </Badge>
+        </GenrePill>
         {hit.booked && (
           <Badge variant="warn" className="font-bold">
             予約済み

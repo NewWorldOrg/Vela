@@ -30,6 +30,7 @@ function channel(id: string, from: string, to: string): LiveChannel {
       hasSubtitles: false,
       sounds: 1,
       audio: 'stereo',
+      genre: 'other',
       genreLabel: '',
     },
   }

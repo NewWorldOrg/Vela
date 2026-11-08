@@ -16,6 +16,7 @@ import {
   fetchServiceChannels,
   genreDisplayOf,
   kindOfNetwork,
+  type Genre,
 } from '@/repository/programs'
 import { whatItSaid } from '@/repository/said'
 import { whyNoTicket, type TicketWrite } from '@/repository/tickets'
@@ -58,6 +59,7 @@ export interface LiveProgramme {
   hasSubtitles: boolean
   sounds: number
   audio: AudioMode
+  genre: Genre
   genreLabel: string
 }
 
@@ -332,6 +334,7 @@ function toLiveProgramme(programme: Programme): LiveProgramme {
     hasSubtitles: programme.hasSubtitles,
     sounds: programme.sounds,
     audio: programme.audio,
+    genre: genreDisplayOf(programme).slug,
     genreLabel: genreDisplayOf(programme).label,
   }
 }

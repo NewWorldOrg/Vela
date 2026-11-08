@@ -255,7 +255,7 @@ function assertUsedMoreThanOnce(
   if (
     key === 'default' ||
     (part === 'IconButton' && key === 'pop') ||
-    (part === 'Button' && key === 'record')
+    (part === 'Button' && ['record', 'play', 'process'].includes(key))
   ) {
     return
   }

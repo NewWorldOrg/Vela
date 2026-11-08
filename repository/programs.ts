@@ -670,6 +670,13 @@ function guideDays(): GuideDay[] {
   return days
 }
 
+/** The genre a label names, by the table above; nothing for a label the table does not know, and for the labels that share the 'other' row. */
+export function genreOfLabel(label: string): Genre | undefined {
+  const slug = Object.values(GENRES).find((one) => one.label === label)?.slug
+
+  return slug === 'other' ? undefined : slug
+}
+
 export function genreDisplayOf(programme: {
   genres: readonly { kind: number | string }[]
 }): {

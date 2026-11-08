@@ -55,7 +55,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   {
     ...base('1270'),
     channelNo: '141',
-    genres: ['アニメ'],
+    genres: ['アニメ/特撮'],
     outcomeBody: '書けた尺 30:00 / 予定 30:00 · 3.3 GB',
     reconcile: { size: '3.3 GB', written: '30:00', planned: '30:00' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
@@ -136,7 +136,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   {
     ...base('0412'),
     channelNo: '171',
-    genres: ['ドキュメンタリー'],
+    genres: ['ドキュメンタリー/教養'],
     outcomeBody: '書けた尺 30:00 / 予定 30:00 · 3.5 GB',
     reconcile: { size: '3.5 GB', written: '30:00', planned: '30:00' },
     interruptions: { main: '中断 0 回 / 再開 0 回' },
@@ -189,7 +189,7 @@ export const RECORDING_DETAIL_FIXTURES: RecordingDetail[] = [
   {
     ...base('0731'),
     channelNo: '131',
-    genres: ['ドキュメンタリー'],
+    genres: ['ドキュメンタリー/教養'],
     outcomeBody: '書けた尺 30:04 / 予定 30:00 · 実ファイルなし',
     interruptions: { main: '中断 0 回 / 再開 0 回' },
     stopReason: '移行で取り込み(記録なし)',

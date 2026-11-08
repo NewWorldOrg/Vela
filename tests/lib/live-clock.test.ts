@@ -27,6 +27,7 @@ function programme(
     hasSubtitles: false,
     sounds: 1,
     audio: 'stereo',
+    genre: 'other',
     genreLabel: 'その他',
     ...over,
   }
