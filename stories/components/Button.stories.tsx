@@ -26,15 +26,7 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: [
-        'default',
-        'record',
-        'tone',
-        'play',
-        'process',
-        'redo',
-        'danger',
-      ],
+      options: ['default', 'record', 'tone', 'process', 'redo', 'danger'],
     },
     size: {
       control: 'select',
@@ -82,7 +74,7 @@ export const RecordingActions: Story = {
   render: (args) => (
     <Surface className="max-w-[720px]">
       <div className="flex flex-wrap items-center gap-2.5">
-        <Button {...args} variant="play">
+        <Button {...args} variant="tone">
           <DevicePlayerIcon />
           外部プレイヤーで再生
         </Button>
@@ -100,7 +92,7 @@ export const RecordingActions: Story = {
         </Button>
       </div>
       <p className="mt-[9px] text-note text-ink-2">
-        再生は緑、変換と処理は青、やり直しは琥珀、削除は赤。青はエンコードにだけ使う。
+        変換と処理は青、やり直しは琥珀、削除は赤。それ以外は灰色のまま。青はエンコードにだけ使う。
       </p>
     </Surface>
   ),

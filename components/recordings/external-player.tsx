@@ -160,17 +160,13 @@ function WhatHappened({
   )
 }
 
-type OpenLook = 'tone' | 'play'
-
 function OpenButton({
   tone,
-  look,
   taking,
   wide,
   ...pressed
 }: ComponentProps<'button'> & {
   tone: 'page' | 'player'
-  look: OpenLook
   taking: boolean
   wide?: boolean
 }) {
@@ -192,7 +188,7 @@ function OpenButton({
   if (wide) {
     return (
       <Button
-        variant={look}
+        variant="tone"
         size="lg"
         aria-disabled={taking}
         className="w-full"
@@ -206,7 +202,7 @@ function OpenButton({
   }
 
   return (
-    <Button variant={look} aria-disabled={taking} {...pressed}>
+    <Button variant="tone" aria-disabled={taking} {...pressed}>
       {taking ? <Spinner size="control" /> : <DevicePlayerIcon />}
       {OPEN_EXTERNALLY}
       <ChevronDownIcon className="size-3.5" />
@@ -218,15 +214,12 @@ function HandoverMenu({
   choices,
   only,
   tone = 'page',
-  look = 'tone',
   wide,
   className,
 }: {
   choices: HandoverChoice[]
   only: Handover
   tone?: 'page' | 'player'
-  /** Grey among other grey buttons, or the green of playing, as the recording's row of actions draws it. */
-  look?: OpenLook
   /** The large button as wide as the column it stands in, beside the live programme under the picture. */
   wide?: boolean
   className?: string
@@ -248,7 +241,7 @@ function HandoverMenu({
     >
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <OpenButton tone={tone} look={look} taking={taking} wide={wide} />
+          <OpenButton tone={tone} taking={taking} wide={wide} />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="start"
@@ -412,13 +405,11 @@ export function ExternalPlayerOpener({
   plan,
   onTakeTicket,
   tone,
-  look,
 }: {
   recording: { id: string; title: string; sizeBytes?: number | null }
   plan: Pick<PlaybackPlan, 'source' | 'alternative' | 'externalPlayerSources'>
   onTakeTicket: (id: string) => Promise<TicketWrite>
   tone?: 'page' | 'player'
-  look?: OpenLook
 }) {
   const choices = recordingHandoverChoices(
     recording.id,
@@ -438,7 +429,6 @@ export function ExternalPlayerOpener({
         recording.title,
       )}
       tone={tone}
-      look={look}
     />
   )
 }
