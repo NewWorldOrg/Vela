@@ -1,8 +1,12 @@
+'use client'
+
+import { useState } from 'react'
 import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import type {
   EncodeRemoval,
+  EncodeRerun,
   EncodeScreen,
   EncodeWrite,
 } from '@/repository/encode'
@@ -49,6 +53,7 @@ export interface EncodeActions {
   ) => Promise<EncodeWrite>
   onRemoveDestination: (id: string) => Promise<EncodeRemoval>
   onCallOff: (id: string) => Promise<EncodeWrite>
+  onRerun: (ids: string[]) => Promise<EncodeRerun>
   onSettleAutoRun: (
     automatically: boolean,
     mostCores: number,
@@ -65,6 +70,7 @@ export function EncodeView({
   const { jobs, running, profiles, destinations, roots } = screen
   const offered = profiles.filter((profile) => !profile.retired)
   const inUse = destinations.filter((destination) => !destination.retired)
+  const [choosing, setChoosing] = useState(false)
 
   return (
     <>
@@ -91,7 +97,12 @@ export function EncodeView({
         <RecentSpells spells={screen.spells} className="mt-2.5" />
 
         <div className="mt-3.5">
-          <JobsList jobs={jobs} onCallOff={actions.onCallOff} />
+          <JobsList
+            jobs={jobs}
+            onCallOff={actions.onCallOff}
+            onRerun={actions.onRerun}
+            onChoosing={setChoosing}
+          />
         </div>
       </section>
 
@@ -157,6 +168,14 @@ export function EncodeView({
           </>
         )}
       </section>
+
+      {choosing && (
+        <div
+          aria-hidden="true"
+          data-slot="room-for-the-band"
+          className="hidden h-[calc(60rem/16)] phone:block"
+        />
+      )}
     </>
   )
 }

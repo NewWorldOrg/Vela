@@ -12,6 +12,7 @@ import {
   changeProfile,
   dropDestination,
   dropProfile,
+  rerunJobs,
   settleTheAutoRun,
 } from './actions'
 
@@ -38,6 +39,7 @@ export default async function Page({
           onReviseDestination: changeDestination,
           onRemoveDestination: dropDestination,
           onCallOff: callOffJob,
+          onRerun: rerunJobs,
           onSettleAutoRun: settleTheAutoRun,
         }}
       />
