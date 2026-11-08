@@ -21,7 +21,6 @@ const buttonVariants = cva(
         record:
           'bg-rec-fill text-on-rec not-disabled:not-aria-disabled:hover:bg-rec-fill-hover shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         tone: 'bg-surface-2 text-ink not-disabled:not-aria-disabled:hover:bg-surface-3 shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        play: 'bg-accent-tint text-acc-text not-disabled:not-aria-disabled:hover:bg-accent-tint-hover shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         process:
           'bg-sky-tint text-sky-text not-disabled:not-aria-disabled:hover:bg-sky-tint-hover shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
         redo: 'bg-bg bg-linear-to-b from-warn-soft to-warn-soft text-warn-text not-disabled:not-aria-disabled:hover:from-warn/20 not-disabled:not-aria-disabled:hover:to-warn/20 shadow-pop not-disabled:not-aria-disabled:hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',

@@ -20,7 +20,7 @@ const WHERE_THE_EVEN_WIDTH_IS_DECLARED = 'components/vela/action-row.tsx'
 
 const A_BUTTON = /<Button\b([^>]*)>([\s\S]*?)<\/Button>/g
 
-const SPEAKS_FOR_ITSELF = /variant="(tone|play|process|redo|danger)"/
+const SPEAKS_FOR_ITSELF = /variant="(tone|process|redo|danger)"/
 
 /** Leaving a dialog does nothing, so it says only its word. */
 const DOES_NOTHING = ['キャンセル', '閉じる']

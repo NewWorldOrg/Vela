@@ -21,22 +21,13 @@ const NOT_SOURCE = new Set([
 
 const THE_BUTTON = 'components/ui/button.tsx'
 
-const THE_VARIANTS = [
-  'default',
-  'record',
-  'tone',
-  'play',
-  'process',
-  'redo',
-  'danger',
-]
+const THE_VARIANTS = ['default', 'record', 'tone', 'process', 'redo', 'danger']
 
 /** The ground and the word each kind of press is drawn in, as the canon's table of buttons pairs them. */
 const BY_KIND: Record<string, [string, string]> = {
   default: ['bg-accent-fill', 'text-on-accent'],
   record: ['bg-rec-fill', 'text-on-rec'],
   tone: ['bg-surface-2', 'text-ink'],
-  play: ['bg-accent-tint', 'text-acc-text'],
   process: ['bg-sky-tint', 'text-sky-text'],
   redo: ['from-warn-soft', 'text-warn-text'],
   danger: ['from-rec-soft', 'text-rec-text'],
