@@ -4,6 +4,7 @@ import { getRouter } from '@storybook/nextjs/navigation.mock'
 
 import type {
   Recording,
+  ThumbnailRemakes,
   RecordingBatch,
   RecordingDiscarded,
 } from '@/repository/recordings'
@@ -65,6 +66,36 @@ async function throwingAway(ids: string[]): Promise<RecordingBatch> {
   return { state: 'ok', done: ids.length }
 }
 
+const remade: string[][] = []
+
+async function remaking(ids: string[]): Promise<ThumbnailRemakes> {
+  remade.push(ids)
+
+  return {
+    state: 'ok',
+    items: ids.map((id) => ({ id, outcome: 'queued' })),
+  }
+}
+
+const NOT_READY =
+  '録画が終わっていないか録画ファイルが整っていないため、サムネイルを再生成できませんでした。'
+
+/** Queues every picked recording but the second, which is said to be not ready. */
+async function remakingAllButTheSecond(
+  ids: string[],
+): Promise<ThumbnailRemakes> {
+  remade.push(ids)
+
+  return {
+    state: 'ok',
+    items: ids.map((id, at) =>
+      at === 1
+        ? { id, outcome: 'notReady', reason: NOT_READY }
+        : { id, outcome: 'queued' },
+    ),
+  }
+}
+
 const meta = {
   title: 'Screens/ライブラリ',
   component: LibraryView,
@@ -75,6 +106,7 @@ const meta = {
   args: {
     onDelete: throwing,
     onDeleteAll: throwingAway,
+    onRemakeThumbnails: remaking,
     view: { by: 'date', as: 'table' },
   },
   decorators: [inTheApp],
@@ -553,9 +585,11 @@ async function pressAndSinks(
   target: HTMLElement,
 ): Promise<void> {
   const barOf = () =>
-    canvasElement.querySelector<HTMLElement>(
-      '[data-slot="picking-bar"], [data-slot="picking-band"]',
-    )
+    [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="picking-bar"], [data-slot="picking-band"]',
+      ),
+    ].find((one) => one.getClientRects().length > 0)
   const before = barOf()?.textContent ?? ''
   const said = new Set<string>()
   const from = performance.now()
@@ -1969,5 +2003,106 @@ export const 並べ方を選ぶとこの端末に残る: Story = {
     ).toHaveAttribute('href', expect.stringContaining('as=grid'))
 
     document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
+  },
+}
+
+export const 複数を選んでサムネイルを再生成する: Story = {
+  args: { result, filter: {}, onRemakeThumbnails: remakingAllButTheSecond },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const [first, second] = result.items.filter(
+      (one) => one.outcome !== 'recording',
+    )
+
+    remade.length = 0
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
+
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', {
+        name: 'サムネイルを再生成',
+      }),
+    )
+
+    await waitFor(() => expect(remade).toEqual([[first.id, second.id]]))
+    await expect(
+      await screen.findByText(
+        '1 件のサムネイルを再生成、1 件はできませんでした。',
+      ),
+    ).toBeVisible()
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(pickOf(canvasElement, first)).not.toBeChecked()
+    await expect(pickOf(canvasElement, second)).toBeChecked()
+    await expect(
+      within(placeOf(canvasElement, second)).getByText(NOT_READY),
+    ).toBeVisible()
+    await expect(
+      within(placeOf(canvasElement, first)).queryByRole('status'),
+    ).toBeNull()
+  },
+}
+
+export const サムネイルがすべて再生成に回ると選ぶのをやめる: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const [first] = result.items.filter((one) => one.outcome !== 'recording')
+
+    remade.length = 0
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', {
+        name: 'サムネイルを再生成',
+      }),
+    )
+
+    await waitFor(() => expect(remade).toEqual([[first.id]]))
+    await expect(
+      await screen.findByText('1 件のサムネイルを再生成しました。'),
+    ).toBeVisible()
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const 録画中を選ぶとサムネイルの再生成も削除も押せない: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const recording = result.items.find((one) => one.outcome === 'recording')!
+
+    await userEvent.click(pickOf(canvasElement, recording))
+
+    const row = within(pickingRow(canvasElement))
+
+    await expect(
+      row.getByRole('button', { name: 'サムネイルを再生成' }),
+    ).toBeDisabled()
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+  },
+}
+
+export const 電話の帯にはサムネイルの再生成と削除が並ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {} },
+  parameters: { screen: PHONE, coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    await userEvent.click(pickOf(canvasElement, LIBRARY_SHELF[0]))
+
+    const band = pickingRow(canvasElement)
+    const row = within(band)
+
+    await expect(band).toHaveAttribute('data-slot', 'picking-band')
+    await expect(band).toHaveTextContent('1 件')
+    await expect(row.getByRole('button', { name: '再生成' })).toBeEnabled()
+    await expect(row.getByRole('button', { name: '削除' })).toBeEnabled()
+    await expect(band.getBoundingClientRect().right).toBeLessThanOrEqual(
+      document.documentElement.clientWidth + 0.5,
+    )
   },
 }
