@@ -144,6 +144,22 @@ export function webhookKindOf(address: string): WebhookKind | undefined {
     : undefined
 }
 
+export interface AddressReading {
+  kind?: WebhookKind
+  refused: boolean
+}
+
+/** What an address typed so far says: the service it will be kept as, or that Carina would refuse it. An empty field says neither. */
+export function readAddress(address: string): AddressReading {
+  if (address.trim() === '') {
+    return { refused: false }
+  }
+
+  const kind = webhookKindOf(address)
+
+  return { kind, refused: kind === undefined }
+}
+
 export function registeringAs(kind: WebhookKind): string {
   return `${KIND_LABEL[kind]} として登録します`
 }
@@ -322,8 +338,8 @@ export function withWhy(said: Said): string {
   return said.why === undefined ? said.words : `${said.words} · ${said.why}`
 }
 
-export function deliveryMoment(at: string): string {
-  return formatMoment(at)
+export function deliveryMoment(at: string, now: number = Date.now()): string {
+  return formatMoment(at, now)
 }
 
 export function deliveryClock(at: string): string {

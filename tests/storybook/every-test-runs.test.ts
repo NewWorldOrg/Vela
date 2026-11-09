@@ -133,6 +133,7 @@ const THE_SUITE = [
   'tests/lib/live-wire.test.ts',
   'tests/lib/motion.test.ts',
   'tests/lib/not-yet-in-this-build.test.ts',
+  'tests/lib/notifications.test.ts',
   'tests/lib/packed-rows.test.ts',
   'tests/lib/path.test.ts',
   'tests/lib/phone-bar.test.ts',

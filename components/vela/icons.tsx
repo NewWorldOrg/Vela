@@ -691,6 +691,25 @@ export function LinkIcon(props: IconProps) {
   )
 }
 
+export function BellIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15Z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+    </Icon>
+  )
+}
+
+export function BellOffIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15Z" />
+      <path d="M10 20.5a2 2 0 0 0 4 0" />
+      <path d="m4 4 16 16" />
+    </Icon>
+  )
+}
+
 export function CopyIcon(props: IconProps) {
   return (
     <Icon {...props}>

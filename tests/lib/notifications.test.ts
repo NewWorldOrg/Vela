@@ -12,6 +12,7 @@ import {
   leadLabel,
   leadToastWords,
   nameFits,
+  readAddress,
   registeringAs,
   ruleSetsFull,
   testSaid,
@@ -55,6 +56,18 @@ test('an address Carina refuses has no kind', () => {
   ]) {
     assert.equal(webhookKindOf(refused), undefined, refused)
   }
+})
+
+test('an empty address says nothing, a refused one says so, and a good one names its kind', () => {
+  assert.deepEqual(readAddress('  '), { refused: false })
+  assert.deepEqual(readAddress('https://hook.example.jp/carina'), {
+    kind: undefined,
+    refused: true,
+  })
+  assert.deepEqual(readAddress('https://hooks.slack.com/services/T0'), {
+    kind: 'slack',
+    refused: false,
+  })
 })
 
 test('the line under the address names the service it will be kept as', () => {
