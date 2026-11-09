@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { describeDevice } from '@/lib/device'
+import { browserHere, describeDevice } from '@/lib/device'
 
 const WINDOWS = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
 
@@ -116,4 +116,39 @@ test('a browser on a system this build does not read is named without one', () =
     describeDevice('Mozilla/5.0 (SomeOS 1.0) Gecko/20100101 Firefox/140.0'),
     { name: 'Firefox', kind: undefined },
   )
+})
+
+test('the browser a page is open in is named by the machine, then the browser', () => {
+  assert.equal(
+    browserHere(`${WINDOWS} ${WEBKIT} Chrome/150.0.0.0 Safari/537.36`),
+    'Windows の Chrome',
+  )
+  assert.equal(
+    browserHere(
+      'Mozilla/5.0 (iPhone; CPU iPhone OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Mobile/15E148 Safari/604.1',
+    ),
+    'iPhone の Safari',
+  )
+  assert.equal(
+    browserHere(
+      'Mozilla/5.0 (iPad; CPU OS 19_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/19.0 Mobile/15E148 Safari/604.1',
+    ),
+    'iPad の Safari',
+  )
+  assert.equal(
+    browserHere(`${MAC} Gecko/20100101 Firefox/140.0`),
+    'Mac の Firefox',
+  )
+  assert.equal(
+    browserHere(
+      `Mozilla/5.0 (Linux; Android 16; Pixel 10) ${WEBKIT} Chrome/150.0.0.0 Mobile Safari/537.36`,
+    ),
+    'Android の Chrome',
+  )
+})
+
+test('a browser on a machine it cannot name is the browser alone, and anything else is this browser', () => {
+  assert.equal(browserHere(`Mozilla/5.0 ${WEBKIT} Chrome/150.0.0.0`), 'Chrome')
+  assert.equal(browserHere('VLC/3.0.21 LibVLC/3.0.21'), 'このブラウザ')
+  assert.equal(browserHere(''), 'このブラウザ')
 })
