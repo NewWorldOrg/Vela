@@ -171,7 +171,10 @@ export function NotifyOnlyRow({
             <NoticeGroupLabel id={`${panel}-to`} className="text-note">
               送り先
             </NoticeGroupLabel>
-            <PickChips aria-labelledby={`${panel}-to`} className="gap-1.5">
+            <PickChips
+              aria-labelledby={`${panel}-to`}
+              className="gap-x-1.5 gap-y-2.5"
+            >
               {destinations.map((destination) => (
                 <PickChip
                   key={destination.id}
@@ -179,7 +182,7 @@ export function NotifyOnlyRow({
                   disabled={sendTo.length === 1 && sendTo[0] === destination.id}
                   onPress={() => void changeSendTo(destination.id)}
                   className={cn(
-                    'h-[calc(30rem/16)] pr-3 pl-2.5 text-[calc(13rem/16)]',
+                    'pr-3 pl-2.5 text-[calc(13rem/16)]',
                     !sendTo.includes(destination.id) &&
                       'bg-bg enabled:hover:bg-surface-2 dark:bg-bg dark:enabled:hover:bg-surface-2',
                   )}

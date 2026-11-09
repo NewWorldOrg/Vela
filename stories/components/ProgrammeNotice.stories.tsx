@@ -322,7 +322,7 @@ export const 予約一覧の行: Story = {
     changeDestinations.mockClear()
 
     await userEvent.click(
-      canvas.getByRole('button', { name: /ドキュメント 灯りの仕事/ }),
+      canvas.getByRole('button', { name: WATCHED_DOCUMENTARY.title }),
     )
 
     const leads = within(canvas.getByRole('group', { name: '何分前' }))
@@ -354,7 +354,9 @@ export const 予約一覧の行_最後の送り先は外せない: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(canvas.getByRole('button', { name: /サッカー中継/ }))
+    await userEvent.click(
+      canvas.getByRole('button', { name: WATCHED_FOOTBALL.title }),
+    )
 
     const to = within(canvas.getByRole('group', { name: '送り先' }))
 

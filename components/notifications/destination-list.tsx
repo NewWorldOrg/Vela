@@ -127,7 +127,7 @@ function ResultLine({ said, tail }: { said?: Said; tail?: string }) {
         </>
       )}
       {tail && (
-        <span className="hidden shrink-0 text-ink-3 upright:inline">
+        <span className="hidden shrink-0 text-ink-2 upright:inline">
           {said && '· '}
           {tailOf(tail)}
         </span>

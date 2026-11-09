@@ -213,10 +213,12 @@ export const テスト送信: Story = {
       canvas.getByRole('button', { name: 'Discord の通知部屋 にテスト送信' }),
     )
 
+    const destinations = within(canvas.getByRole('list', { name: '送り先' }))
+
     await waitFor(() => expect(testDestination).toHaveBeenCalledTimes(2))
-    await expect(await canvas.findByText('届いた')).toBeVisible()
+    await expect(await destinations.findByText('届いた')).toBeVisible()
     await expect(
-      await canvas.findByText('届かなかった · 時間切れ'),
+      await destinations.findByText('届かなかった · 時間切れ'),
     ).toBeVisible()
   },
 }
@@ -694,7 +696,11 @@ export const 電話_送り先を追加: Story = {
     await expect(
       within(dialog).getByText('iPhone の Safari に通知を出します'),
     ).toBeVisible()
-    await expect(Math.round(sheet.bottom)).toBe(window.innerHeight)
+    await waitFor(() =>
+      expect(Math.round(dialog.getBoundingClientRect().bottom)).toBe(
+        window.innerHeight,
+      ),
+    )
     await expect(Math.round(sheet.width)).toBe(window.innerWidth)
   },
 }
@@ -725,8 +731,10 @@ export const 電話_ルールセットを変更: Story = {
     await expect(within(dialog).getByLabelText('名前')).toHaveValue(
       '録画の記録',
     )
-    await expect(Math.round(dialog.getBoundingClientRect().bottom)).toBe(
-      window.innerHeight,
+    await waitFor(() =>
+      expect(Math.round(dialog.getBoundingClientRect().bottom)).toBe(
+        window.innerHeight,
+      ),
     )
   },
 }
