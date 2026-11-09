@@ -113,7 +113,7 @@ function KindPicker({
         title={ADD_DESTINATION}
         description="送り先の種類を選びます。"
       />
-      <ul className="mt-0.5 overflow-hidden rounded-lg bg-surface dark:bg-surface-2">
+      <ul className="mt-0.5 rounded-lg bg-surface dark:bg-surface-2">
         <KindOption
           icon={<LinkIcon />}
           name="Slack・Discord"
@@ -143,14 +143,14 @@ function KindOption({
   onPick: () => void
 }) {
   return (
-    <li className="relative before:absolute before:top-0 before:right-0 before:left-[calc(62rem/16)] before:h-px before:bg-hair first:before:hidden">
+    <li className="relative before:absolute before:top-0 before:right-0 before:left-[calc(62rem/16)] before:h-px before:bg-hair first:before:hidden first:[&>button]:rounded-t-lg last:[&>button]:rounded-b-lg">
       <button
         type="button"
         data-pressable-row
         onClick={onPick}
         className={cn(
           'flex min-h-16 w-full items-center gap-3.5 py-3.5 pr-3.5 pl-4 text-left outline-none',
-          'transition-[background-color] duration-[140ms] ease-toy hover:bg-surface-2 focus-visible:inset-ring-2 focus-visible:inset-ring-accent dark:hover:bg-surface-3',
+          'transition-[background-color] duration-[140ms] ease-toy hover:bg-surface-2 focus-visible:shadow-ring dark:hover:bg-surface-3',
           pressable,
         )}
       >

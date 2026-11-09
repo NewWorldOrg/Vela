@@ -10,7 +10,7 @@ import {
 } from '@/components/notifications/notifications-page'
 import { DENIED_HERE } from '@/components/notifications/add-destination-dialog'
 import { REFUSED_ADDRESS } from '@/components/notifications/webhook-field'
-import { inTheSettings } from '@/stories/frames'
+import { inTheSettingsWithNotifications } from '@/stories/frames'
 import { PHONE } from '@/stories/rows-as-cards'
 import {
   DESTINATIONS,
@@ -97,7 +97,7 @@ const meta = {
     permission: 'default',
     now: NOTIFICATIONS_NOW,
   },
-  decorators: [inTheSettings],
+  decorators: [inTheSettingsWithNotifications],
 } satisfies Meta<typeof NotificationsView>
 
 export default meta

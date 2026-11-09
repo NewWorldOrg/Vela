@@ -17,6 +17,24 @@ export const inTheApp: Decorator = (Story) => (
   </AppFrame>
 )
 
+/** The settings frame with notifications in its list, for their stories until their screen is in the app. */
+export const inTheSettingsWithNotifications: Decorator = (Story) => (
+  <AppFrame>
+    <AppTopBar />
+    <Toasts>
+      <SettingsFrame
+        status={SYSTEM_STATUS}
+        values={{ display: 'テーマ システム' }}
+        hasMigration
+        hasNotifications
+      >
+        <Story />
+      </SettingsFrame>
+    </Toasts>
+    <AppTabBar />
+  </AppFrame>
+)
+
 export const inTheSettings: Decorator = (Story) => (
   <AppFrame>
     <AppTopBar />

@@ -197,20 +197,16 @@ function RuleSetForm({
           {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
         </span>
       </div>
-      <NoticeDialogFooter
-        start={
-          ruleSet &&
-          onRemove && (
-            <RemoveButton
-              what="ルールセット"
-              name={ruleSet.name}
-              size="default"
-              onRemove={onRemove}
-              onRemoved={onClose}
-            />
-          )
-        }
-      >
+      <NoticeDialogFooter>
+        {ruleSet && onRemove && (
+          <RemoveButton
+            what="ルールセット"
+            name={ruleSet.name}
+            size="default"
+            onRemove={onRemove}
+            onRemoved={onClose}
+          />
+        )}
         <Button variant="tone" onClick={onClose}>
           キャンセル
         </Button>

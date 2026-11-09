@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import type { SystemStatus } from '@/repository/system'
 import { VelaMark } from '@/components/vela/marks'
 import {
+  BellIcon,
   ChannelIcon,
   ChevronRightIcon,
   EncodeIcon,
@@ -139,6 +140,7 @@ function groupsOf(
   status: SystemStatus,
   values: SettingsEntranceValues,
   hasMigration: boolean,
+  hasNotifications: boolean,
 ): Group[] {
   const keeping: Item[] = [
     {
@@ -154,6 +156,15 @@ function groupsOf(
       tile: TILE.keeping,
     },
   ]
+
+  if (hasNotifications) {
+    keeping.push({
+      href: '/settings/notifications' as Route,
+      label: '通知',
+      icon: BellIcon,
+      tile: TILE.keeping,
+    })
+  }
 
   if (hasMigration) {
     keeping.push({
@@ -341,12 +352,15 @@ export function SettingsEntranceView({
   status,
   values,
   hasMigration,
+  hasNotifications = false,
   current,
   withValues = true,
 }: {
   status: SystemStatus
   values: SettingsEntranceValues
   hasMigration: boolean
+  /** Whether notifications stand in the list, after the integrity check. Off until their screen exists. */
+  hasNotifications?: boolean
   current?: string
   /** Each setting's value after its name; the wide screen leaves them to the setting open beside. */
   withValues?: boolean
@@ -357,7 +371,7 @@ export function SettingsEntranceView({
     <div data-slot="settings-entrance" className="pt-4 pb-6 upright:pt-1">
       {current === undefined && <h1 className="sr-only">設定</h1>}
       <SystemRow status={status} current={current} />
-      {groupsOf(status, values, hasMigration).map((group) => (
+      {groupsOf(status, values, hasMigration, hasNotifications).map((group) => (
         <section key={group.name} aria-labelledby={`settings-${group.name}`}>
           <GroupTitle
             id={`settings-${group.name}`}

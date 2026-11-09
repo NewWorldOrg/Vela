@@ -62,21 +62,12 @@ export function NoticeDialogHeader({
   )
 }
 
-/** The buttons at a dialog's foot, to the right, with `削除` alone at the left where there is one; stacked the width of the sheet on a phone, the main one on top. */
-export function NoticeDialogFooter({
-  start,
-  children,
-}: {
-  start?: ReactNode
-  children: ReactNode
-}) {
+/** The buttons at a dialog's foot, in the middle as every dialog has them; stacked the width of the sheet on a phone, the main one on top. */
+export function NoticeDialogFooter({ children }: { children: ReactNode }) {
   return (
-    <div className="mt-1.5 flex items-center gap-2.5 upright:flex-col-reverse upright:items-stretch upright:gap-2 upright:[&_[data-slot=button]]:h-11">
-      {start}
-      <DialogFooter className="ml-auto flex-row gap-2.5 upright:ml-0 upright:flex-col-reverse upright:gap-2">
-        {children}
-      </DialogFooter>
-    </div>
+    <DialogFooter className="mt-1.5 upright:[&_[data-slot=button]]:h-11">
+      {children}
+    </DialogFooter>
   )
 }
 

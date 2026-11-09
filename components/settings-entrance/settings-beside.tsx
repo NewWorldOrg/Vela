@@ -14,10 +14,12 @@ export function SettingsBeside({
   status,
   values,
   hasMigration,
+  hasNotifications = false,
 }: {
   status: SystemStatus
   values: SettingsEntranceValues
   hasMigration: boolean
+  hasNotifications?: boolean
 }) {
   const sideways = usePhoneOnItsSide()
   const pathname = usePathname()
@@ -36,6 +38,7 @@ export function SettingsBeside({
         status={status}
         values={values}
         hasMigration={hasMigration}
+        hasNotifications={hasNotifications}
         current={pathname}
       />
     </nav>
