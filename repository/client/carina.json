@@ -22640,7 +22640,7 @@
         "enum": [
           "queued",
           "noSuchRecording",
-          "notReady",
+          "stillRecording",
           "refused"
         ],
         "type": "string"

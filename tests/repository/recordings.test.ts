@@ -1754,7 +1754,7 @@ test('making thumbnails again sends the ids together and says, row by row, what 
     },
     {
       id: 'c3',
-      outcome: 'notReady',
+      outcome: 'stillRecording',
       message: 'Recording c3 is still being written.',
     },
     {
@@ -1776,9 +1776,8 @@ test('making thumbnails again sends the ids together and says, row by row, what 
       },
       {
         id: 'c3',
-        outcome: 'notReady',
-        reason:
-          '録画が終わっていないか録画ファイルが整っていないため、サムネイルを再生成できませんでした。',
+        outcome: 'stillRecording',
+        reason: '録画中のため、サムネイルを再生成できませんでした。',
       },
       {
         id: 'd4',

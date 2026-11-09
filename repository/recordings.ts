@@ -360,7 +360,7 @@ const REMAKE_REASONS: Record<
   string
 > = {
   noSuchRecording: `この録画は残っていないため、${CANNOT_REMAKE}。`,
-  notReady: `録画が終わっていないか録画ファイルが整っていないため、${CANNOT_REMAKE}。`,
+  stillRecording: `録画中のため、${CANNOT_REMAKE}。`,
   refused: couldNot(CANNOT_REMAKE),
 }
 

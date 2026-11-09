@@ -77,10 +77,10 @@ async function remaking(ids: string[]): Promise<ThumbnailRemakes> {
   }
 }
 
-const NOT_READY =
-  '録画が終わっていないか録画ファイルが整っていないため、サムネイルを再生成できませんでした。'
+const STILL_RECORDING_SAID =
+  '録画中のため、サムネイルを再生成できませんでした。'
 
-/** Queues every picked recording but the second, which is said to be not ready. */
+/** Queues every picked recording but the second, which is said to be still recording. */
 async function remakingAllButTheSecond(
   ids: string[],
 ): Promise<ThumbnailRemakes> {
@@ -90,7 +90,7 @@ async function remakingAllButTheSecond(
     state: 'ok',
     items: ids.map((id, at) =>
       at === 1
-        ? { id, outcome: 'notReady', reason: NOT_READY }
+        ? { id, outcome: 'stillRecording', reason: STILL_RECORDING_SAID }
         : { id, outcome: 'queued' },
     ),
   }
@@ -2030,14 +2030,14 @@ export const 複数を選んでサムネイルを再生成する: Story = {
     await waitFor(() => expect(remade).toEqual([[first.id, second.id]]))
     await expect(
       await screen.findByText(
-        '1 件のサムネイルを再生成、1 件はできませんでした。',
+        '1 件のサムネイルを作り直します、1 件はできませんでした。',
       ),
     ).toBeVisible()
     await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
     await expect(pickOf(canvasElement, first)).not.toBeChecked()
     await expect(pickOf(canvasElement, second)).toBeChecked()
     await expect(
-      within(placeOf(canvasElement, second)).getByText(NOT_READY),
+      within(placeOf(canvasElement, second)).getByText(STILL_RECORDING_SAID),
     ).toBeVisible()
     await expect(
       within(placeOf(canvasElement, first)).queryByRole('status'),
@@ -2063,7 +2063,7 @@ export const サムネイルがすべて再生成に回ると選ぶのをやめ�
 
     await waitFor(() => expect(remade).toEqual([[first.id]]))
     await expect(
-      await screen.findByText('1 件のサムネイルを再生成しました。'),
+      await screen.findByText('1 件のサムネイルを作り直します。'),
     ).toBeVisible()
     await stopsChoosing(canvasElement)
   },

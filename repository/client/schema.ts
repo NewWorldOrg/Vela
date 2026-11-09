@@ -4944,7 +4944,7 @@ export interface components {
     }
     /** @enum {string} */
     ThumbnailRemakeOutcome:
-      'queued' | 'noSuchRecording' | 'notReady' | 'refused'
+      'queued' | 'noSuchRecording' | 'stillRecording' | 'refused'
     ThumbnailRemakeResponder: {
       remake: components['schemas']['ThumbnailRemake']
       thumbnail: components['schemas']['RecordingThumbnailResponder']

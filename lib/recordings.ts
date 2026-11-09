@@ -116,15 +116,15 @@ export function scrambledPercent(detail: RecordingDetail) {
   return ((detail.scrambledShare ?? 0) * 100).toFixed(1)
 }
 
-/** The one line the toast says after `サムネイルを再生成` on the picked recordings: how many were queued, and how many were not. */
+/** The one line the toast says after `サムネイルを再生成` on the picked recordings: how many are to be drawn again by the next pass, and how many were not taken. */
 export function thumbnailRemakeSaying(queued: number, left: number): string {
   if (left === 0) {
-    return `${queued} 件のサムネイルを再生成しました。`
+    return `${queued} 件のサムネイルを作り直します。`
   }
 
   if (queued === 0) {
     return `${left} 件のサムネイルを再生成できませんでした。`
   }
 
-  return `${queued} 件のサムネイルを再生成、${left} 件はできませんでした。`
+  return `${queued} 件のサムネイルを作り直します、${left} 件はできませんでした。`
 }

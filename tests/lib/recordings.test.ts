@@ -248,16 +248,13 @@ test('a recording is named by 32 hexadecimal digits and nothing else', () => {
 })
 
 test('the toast after making thumbnails again counts what was queued and what was not', () => {
-  assert.equal(
-    thumbnailRemakeSaying(2, 0),
-    '2 件のサムネイルを再生成しました。',
-  )
+  assert.equal(thumbnailRemakeSaying(2, 0), '2 件のサムネイルを作り直します。')
   assert.equal(
     thumbnailRemakeSaying(0, 1),
     '1 件のサムネイルを再生成できませんでした。',
   )
   assert.equal(
     thumbnailRemakeSaying(1, 2),
-    '1 件のサムネイルを再生成、2 件はできませんでした。',
+    '1 件のサムネイルを作り直します、2 件はできませんでした。',
   )
 })
