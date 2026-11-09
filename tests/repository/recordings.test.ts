@@ -18,6 +18,7 @@ const store: {
   listingStatus: number
   listingMessage: string
   remake: unknown
+  remakes: unknown[]
   remakeStatus: number
   discarded: unknown
   discardStatus: number
@@ -30,6 +31,7 @@ const store: {
   listingStatus: 200,
   listingMessage: '',
   remake: { remake: 'drawn', thumbnail: { state: 'ready' } },
+  remakes: [],
   remakeStatus: 200,
   discarded: { recordingId: '7e7a14cf', filesRemoved: 2 },
   discardStatus: 200,
@@ -221,9 +223,30 @@ mock.module('@/repository/client/carina', {
       },
       POST: async (
         path: string,
-        init?: { params?: { path?: { id: string } } },
+        init?: {
+          params?: { path?: { id: string } }
+          body?: { ids?: string[] }
+        },
       ) => {
-        asked.push({ path, query: { id: init?.params?.path?.id ?? '' } })
+        asked.push({
+          path,
+          query: {
+            id: init?.params?.path?.id ?? init?.body?.ids?.join(',') ?? '',
+          },
+        })
+
+        if (path === '/api/recordings/thumbnails/remake') {
+          return {
+            data:
+              store.remakeStatus === 200
+                ? { status: true, message: '', data: { items: store.remakes } }
+                : undefined,
+            response: {
+              status: store.remakeStatus,
+              ok: store.remakeStatus < 400,
+            },
+          }
+        }
 
         return {
           data:
@@ -264,7 +287,9 @@ const {
   listRecordings,
   listRecordingsByReservation,
   remakeThumbnail,
+  remakeThumbnails,
   spanLabel,
+  whyItWasNotRemade,
   spotsOf,
 } = await import('@/repository/recordings')
 
@@ -1715,4 +1740,73 @@ test('a recording says how far the viewer watched it, and nothing where they hav
     'watchedSec' in (await only([recording({ watchedPositionSec: null })])),
     false,
   )
+})
+
+test('making thumbnails again sends the ids together and says, row by row, what became of each', async () => {
+  asked.length = 0
+  store.remakeStatus = 200
+  store.remakes = [
+    { id: 'a1', outcome: 'queued', message: '' },
+    {
+      id: 'b2',
+      outcome: 'noSuchRecording',
+      message: 'The ledger holds no recording b2.',
+    },
+    {
+      id: 'c3',
+      outcome: 'stillRecording',
+      message: 'Recording c3 is still being written.',
+    },
+    {
+      id: 'd4',
+      outcome: 'refused',
+      message: 'The pictures have nowhere to go.',
+    },
+  ]
+
+  assert.deepEqual(await remakeThumbnails(['a1', 'b2', 'c3', 'd4']), {
+    state: 'ok',
+    items: [
+      { id: 'a1', outcome: 'queued', reason: undefined },
+      {
+        id: 'b2',
+        outcome: 'noSuchRecording',
+        reason:
+          'この録画は残っていないため、サムネイルを再生成できませんでした。',
+      },
+      {
+        id: 'c3',
+        outcome: 'stillRecording',
+        reason: '録画中のため、サムネイルを再生成できませんでした。',
+      },
+      {
+        id: 'd4',
+        outcome: 'refused',
+        reason:
+          'サムネイルを再生成できませんでした。時間をおいてからもう一度お試しください。',
+      },
+    ],
+  })
+  assert.deepEqual(asked.at(-1), {
+    path: '/api/recordings/thumbnails/remake',
+    query: { id: 'a1,b2,c3,d4' },
+  })
+})
+
+test('an outcome this build does not know is still one sentence, and the call refused as a whole is too', async () => {
+  assert.equal(
+    whyItWasNotRemade('aLaterOutcome' as never),
+    'サムネイルを再生成できませんでした。時間をおいてからもう一度お試しください。',
+  )
+  assert.equal(whyItWasNotRemade('queued'), undefined)
+
+  store.remakeStatus = 400
+  assert.deepEqual(await remakeThumbnails([]), {
+    state: 'rejected',
+    message:
+      'サムネイルを再生成できませんでした。時間をおいてからもう一度お試しください。',
+  })
+
+  store.remakeStatus = 401
+  assert.deepEqual(await remakeThumbnails(['a1']), { state: 'unauthenticated' })
 })

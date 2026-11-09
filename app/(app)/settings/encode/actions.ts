@@ -2,13 +2,18 @@
 
 import { revalidatePath } from 'next/cache'
 
-import type { EncodeRemoval, EncodeWrite } from '@/repository/encode'
+import type {
+  EncodeRemoval,
+  EncodeRerun,
+  EncodeWrite,
+} from '@/repository/encode'
 import {
   callOffEncode,
   defineDestination,
   defineProfile,
   removeDestination,
   removeProfile,
+  rerunEncodes,
   reviseDestination,
   reviseProfile,
   settleAutoRun,
@@ -80,6 +85,14 @@ export async function dropDestination(id: string): Promise<EncodeRemoval> {
 
 export async function callOffJob(id: string): Promise<EncodeWrite> {
   const result = await callOffEncode(id)
+
+  revalidatePath(ENCODE)
+
+  return result
+}
+
+export async function rerunJobs(ids: string[]): Promise<EncodeRerun> {
+  const result = await rerunEncodes(ids)
 
   revalidatePath(ENCODE)
 

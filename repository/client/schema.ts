@@ -845,6 +845,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/recordings/thumbnails/remake': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remakeThumbnails']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/recordings/integrity/run': {
     parameters: {
       query?: never
@@ -1485,6 +1501,22 @@ export interface paths {
     patch: operations['reviseEncodeProfile']
     trace?: never
   }
+  '/api/encoding/jobs/retry': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['rerunEncodeJobs']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/driver/card-reader': {
     parameters: {
       query?: never
@@ -1857,6 +1889,11 @@ export interface components {
       message: string
       data: null | components['schemas']['EncodeRemovalResponder']
     }
+    BaseResponderOfEncodeRerunListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['EncodeRerunListResponder']
+    }
     BaseResponderOfEpgRebuiltResponder: {
       status: boolean
       message: string
@@ -2216,6 +2253,11 @@ export interface components {
       status: boolean
       message: string
       data: null | string
+    }
+    BaseResponderOfThumbnailRemakeListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ThumbnailRemakeListResponder']
     }
     BaseResponderOfThumbnailRemakeResponder: {
       status: boolean
@@ -2622,7 +2664,7 @@ export interface components {
       to: null | string
     }
     /** @enum {string} */
-    EncodeEncoder: 'software' | 'vaapi'
+    EncodeEncoder: 'software' | 'vaapi' | 'nvenc'
     /** @enum {string} */
     EncodeFailure:
       | 'ffmpegExitedNonZero'
@@ -2733,6 +2775,24 @@ export interface components {
       removal: components['schemas']['EncodeRemoval']
       /** Format: date-time */
       retiredAt: null | string
+    }
+    EncodeRerunListResponder: {
+      items: components['schemas']['EncodeRerunResponder'][]
+    }
+    /** @enum {string} */
+    EncodeRerunOutcome:
+      | 'queued'
+      | 'noSuchJob'
+      | 'notFailed'
+      | 'alreadyInTheQueue'
+      | 'alreadyEncoded'
+      | 'refused'
+    EncodeRerunResponder: {
+      /** Format: uuid */
+      id: string
+      outcome: components['schemas']['EncodeRerunOutcome']
+      message: string
+      job: null | components['schemas']['EncodeJobResponder']
     }
     /** @enum {string} */
     EncodeResolution: 'asSource' | 'fullHd' | 'hd'
@@ -4003,6 +4063,12 @@ export interface components {
     }
     /** @enum {string} */
     RelationKind: 'shared' | 'relayed' | 'moved'
+    RemakeThumbnailsRequest: {
+      ids?: null | string[]
+    }
+    RerunEncodeJobsRequest: {
+      ids?: null | string[]
+    }
     RescanNoticeResponder: {
       /** Format: int32 */
       networkId: number | string
@@ -4873,9 +4939,20 @@ export interface components {
       | 'drawn'
       | 'skipped'
       | 'failed'
+    ThumbnailRemakeListResponder: {
+      items: components['schemas']['ThumbnailRemakeRowResponder'][]
+    }
+    /** @enum {string} */
+    ThumbnailRemakeOutcome:
+      'queued' | 'noSuchRecording' | 'stillRecording' | 'refused'
     ThumbnailRemakeResponder: {
       remake: components['schemas']['ThumbnailRemake']
       thumbnail: components['schemas']['RecordingThumbnailResponder']
+    }
+    ThumbnailRemakeRowResponder: {
+      id: string
+      outcome: components['schemas']['ThumbnailRemakeOutcome']
+      message: string
     }
     /** @enum {string} */
     ThumbnailState: 'pending' | 'ready' | 'failed' | 'skipped'
@@ -8654,6 +8731,59 @@ export interface operations {
       }
     }
   }
+  remakeThumbnails: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['RemakeThumbnailsRequest']
+        'text/json': null | components['schemas']['RemakeThumbnailsRequest']
+        'application/*+json':
+          null | components['schemas']['RemakeThumbnailsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfThumbnailRemakeListResponder']
+        }
+      }
+    }
+  }
   runRecordingIntegrityCheck: {
     parameters: {
       query?: never
@@ -11231,6 +11361,59 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfEncodeProfileResponder']
+        }
+      }
+    }
+  }
+  rerunEncodeJobs: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['RerunEncodeJobsRequest']
+        'text/json': null | components['schemas']['RerunEncodeJobsRequest']
+        'application/*+json':
+          null | components['schemas']['RerunEncodeJobsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRerunListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRerunListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfEncodeRerunListResponder']
         }
       }
     }

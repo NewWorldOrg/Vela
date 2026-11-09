@@ -11,6 +11,7 @@ export type EncodeSwerve = NonNullable<components['schemas']['EncodeSwerve']>
 export type EncodeRemake = NonNullable<components['schemas']['EncodeRemake']>
 export type EncodeFailure = components['schemas']['EncodeFailure']
 export type EncodeRemoved = components['schemas']['EncodeRemoval']
+export type EncodeRerunOutcome = components['schemas']['EncodeRerunOutcome']
 export type EncodeSubject = NonNullable<
   components['schemas']['RecordingOutcome']
 >
@@ -66,6 +67,7 @@ export const DEINTERLACE_LABEL: Record<Deinterlace, string> = {
 export const ENCODER_LABEL: Record<EncodeEncoder, string> = {
   software: 'ソフトウェア',
   vaapi: 'VAAPI',
+  nvenc: 'NVENC',
 }
 
 export const SWERVE_LABEL: Record<EncodeSwerve, string> = {

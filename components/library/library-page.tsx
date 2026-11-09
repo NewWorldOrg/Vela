@@ -20,6 +20,7 @@ import type {
   RecordingDiscarded,
   RecordingsFilter,
   RecordingsResult,
+  ThumbnailRemakes,
 } from '@/repository/recordings'
 import { cn } from '@/lib/utils'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
@@ -37,9 +38,15 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FilterChips } from '@/components/vela/filter-chips'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import {
+  deletionAction,
   PickingBand,
   PickingBar,
+  PickToggle,
+  remakeAction,
+  ROOM_FOR_THE_BAR,
+  useLeaveOnEscape,
   usePickedDeletion,
+  usePickedRemake,
 } from '@/components/library/picking'
 import {
   everyShownPicked,
@@ -48,7 +55,6 @@ import {
   withEveryShown,
 } from '@/lib/library-picking'
 import { ScreenMain } from '@/components/vela/app-shell'
-import { iconButtonVariants } from '@/components/vela/icon-button'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { OnAPhone } from '@/components/vela/on-an-upright-phone'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'
@@ -86,21 +92,20 @@ function drawnIn(
   )
 }
 
-/** The room left at the end of the table, which scrolls inside itself, so the floating bar does not cover its last row. */
-const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
-
 export function LibraryView({
   result,
   filter,
   view = GRID_VIEW,
   onDelete,
   onDeleteAll,
+  onRemakeThumbnails,
 }: {
   result: RecordingsResult
   filter: RecordingsFilter
   view?: View
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onDeleteAll: (ids: string[]) => Promise<RecordingBatch>
+  onRemakeThumbnails: (ids: string[]) => Promise<ThumbnailRemakes>
 }) {
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const [picking, setPicking] = useState(false)
@@ -181,9 +186,22 @@ export function LibraryView({
   const deletion = usePickedDeletion(chosen, onDeleteAll, () => {
     settle(new Set())
   })
+  const remake = usePickedRemake(
+    chosen,
+    picking,
+    onRemakeThumbnails,
+    (queued, every) => {
+      settle(
+        every
+          ? new Set()
+          : new Set([...picked].filter((id) => !queued.includes(id))),
+      )
+    },
+  )
   const pickingCards: Picking | undefined = picking
     ? {
         picked,
+        said: remake.said,
         onPick: (id, range) => {
           settle(
             pressedPick(
@@ -209,8 +227,9 @@ export function LibraryView({
     count: chosen.length,
     everyPicked,
     onEvery: () => settle(withEveryShown(picked, shownIds)),
-    deletion,
-  }
+    actions: [remakeAction(remake), deletionAction(deletion)],
+    subject: '録画',
+  } as const
 
   useEffect(() => {
     const checkOf = (id: string | undefined) =>
@@ -238,39 +257,13 @@ export function LibraryView({
     }
   }, [picking])
 
-  useEffect(() => {
-    if (!picking) {
-      return
-    }
-
-    const leaveOnEscape = (event: KeyboardEvent): void => {
-      if (event.key !== 'Escape' || event.defaultPrevented) {
-        return
-      }
-
-      if (
-        event.target instanceof Element &&
-        event.target.closest(
-          '[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]',
-        )
-      ) {
-        return
-      }
-
-      stopChoosing()
-    }
-
-    document.addEventListener('keydown', leaveOnEscape)
-
-    return () => document.removeEventListener('keydown', leaveOnEscape)
-  }, [picking, stopChoosing])
+  useLeaveOnEscape(picking, stopChoosing)
 
   const pickToggleWith = (ref?: Ref<HTMLButtonElement>, className?: string) => (
-    <button
+    <PickToggle
       ref={ref}
-      type="button"
-      aria-pressed={picking}
-      onClick={() => {
+      pressed={picking}
+      onPress={() => {
         if (picking) {
           stopChoosing()
         } else {
@@ -278,15 +271,8 @@ export function LibraryView({
           setPicking(true)
         }
       }}
-      className={cn(
-        iconButtonVariants(),
-        'h-10 w-auto px-4 text-ui font-semibold text-ink',
-        picking && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
-        className,
-      )}
-    >
-      選ぶ
-    </button>
+      className={className}
+    />
   )
 
   const searchAndFilter = (

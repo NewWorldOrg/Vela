@@ -41,9 +41,22 @@ export function withEveryShown(
   return everyShownPicked(picked, shown) ? new Set() : new Set(shown)
 }
 
+/** What a list chooses among: the library's recordings, or the encode screen's jobs. */
+export type PickedSubject = '録画' | 'ジョブ'
+
+/** The unit after the number of picked ones, and the word after it, which a narrow phone's band leaves off. */
+export const PICKED_UNIT = ' 件'
+
+export const PICKED_TAIL = 'を選択'
+
 /** What the choosing row says of how many are picked. */
-export function pickedSaying(count: number): string {
-  return count === 0 ? '録画を選ぶ' : `${count} 件を選択`
+export function pickedSaying(
+  count: number,
+  subject: PickedSubject = '録画',
+): string {
+  return count === 0
+    ? `${subject}を選ぶ`
+    : `${count}${PICKED_UNIT}${PICKED_TAIL}`
 }
 
 /** Whether the library goes on choosing with `count` picked: it stops once none is left, unless nothing has been picked yet since `選ぶ` was pressed, so `すべて選ぶ` can still be reached. */

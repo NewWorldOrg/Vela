@@ -26,6 +26,7 @@ import { playingOnHref } from '@/lib/playback-source'
 import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
 import { PlayIcon } from '@/components/vela/icons'
+import { InlineAlert } from '@/components/vela/banner'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 import {
   PickMark,
@@ -38,6 +39,8 @@ import {
 export interface Picking {
   picked: ReadonlySet<string>
   onPick: (id: string, range: boolean) => void
+  /** Why a recording's thumbnail was not made again by `サムネイルを再生成`, by its id, said under its title. */
+  said?: ReadonlyMap<string, string>
 }
 
 /** On a mouse's screen while the library is not choosing: starts it with the one recording whose check was pressed. */
@@ -243,6 +246,11 @@ export function RecordingTile({
         <span className="mt-0.5 block truncate text-note text-ink-2">
           {meta}
         </span>
+        {picking?.said?.has(recording.id) && (
+          <InlineAlert tone="warn" className="mt-1.5">
+            {picking.said.get(recording.id)}
+          </InlineAlert>
+        )}
       </TilePress>
       {startable && (
         <PickStart

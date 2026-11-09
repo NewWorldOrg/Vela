@@ -11,8 +11,19 @@ import {
 
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
-import { pickedSaying } from '@/lib/library-picking'
-import type { Recording, RecordingBatch } from '@/repository/recordings'
+import {
+  PICKED_TAIL,
+  PICKED_UNIT,
+  pickedSaying,
+  type PickedSubject,
+} from '@/lib/library-picking'
+import { thumbnailRemakeSaying } from '@/lib/recordings'
+import type {
+  Recording,
+  RecordingBatch,
+  ThumbnailRemakeRow,
+  ThumbnailRemakes,
+} from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -27,10 +38,12 @@ import {
 import {
   CheckIcon,
   CloseIcon,
+  RebuildIcon,
   TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
 import { iconButtonVariants } from '@/components/vela/icon-button'
+import { Spinner } from '@/components/vela/progress'
 import { useToast } from '@/components/vela/toast'
 
 const SIGNED_OUT = signedOut('操作')
@@ -122,24 +135,199 @@ export function usePickedDeletion(
   return { pending, deletable, ask: () => setAsking(true), dialog }
 }
 
-/** How many are picked, or while none is, that recordings are to be chosen. */
-function PickedCount({
-  count,
+/** One press at the end of the choosing bar and band: what it is called, its icon and colour, and whether it can be pressed now. `short` is the word a phone's band uses when the whole label would not fit beside the others. */
+export interface PickedAction {
+  label: string
+  short?: string
+  icon: ReactNode
+  variant: 'danger' | 'redo'
+  pending: boolean
+  enabled: boolean
+  onPress: () => void
+}
+
+/** The library's `削除` as the press at the end of the bar. */
+export function deletionAction(deletion: PickedDeletion): PickedAction {
+  return {
+    label: '削除',
+    icon: <TrashIcon />,
+    variant: 'danger',
+    pending: deletion.pending,
+    enabled: deletion.deletable,
+    onPress: deletion.ask,
+  }
+}
+
+/** What the press of `サムネイルを再生成` did to the picked recordings: the press itself, and why each one that was not queued was left out. */
+export interface PickedRemake {
+  pending: boolean
+  /** Whether `サムネイルを再生成` can be pressed: something is picked and none of it is still being recorded. */
+  remakable: boolean
+  remake: () => void
+  said: ReadonlyMap<string, string>
+}
+
+const NO_REASONS: ReadonlyMap<string, string> = new Map()
+
+/** Asks the backend to make the picked recordings' thumbnails again, says in one toast how many it took, and keeps the reason each one it did not take was left out, until choosing ends. */
+export function usePickedRemake(
+  chosen: Recording[],
+  choosing: boolean,
+  onRemakeAll: (ids: string[]) => Promise<ThumbnailRemakes>,
+  onQueued: (ids: string[], every: boolean) => void,
+): PickedRemake {
+  const [pending, startTransition] = useTransition()
+  const [said, setSaid] = useState<ReadonlyMap<string, string>>(NO_REASONS)
+  const say = useToast()
+  const remakable =
+    chosen.length > 0 && chosen.every((one) => one.outcome !== 'recording')
+
+  if (!choosing && said !== NO_REASONS) {
+    setSaid(NO_REASONS)
+  }
+
+  const remake = (): void => {
+    if (pending || !remakable) {
+      return
+    }
+
+    startTransition(async () => {
+      const result = await onRemakeAll(chosen.map((one) => one.id))
+
+      if (result.state !== 'ok') {
+        say({
+          text:
+            result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
+        })
+
+        return
+      }
+
+      const left = result.items.filter(
+        (one): one is ThumbnailRemakeRow & { reason: string } =>
+          one.reason !== undefined,
+      )
+      const queued = result.items
+        .filter((one) => one.reason === undefined)
+        .map((one) => one.id)
+
+      setSaid(new Map(left.map((one) => [one.id, one.reason])))
+      say({ text: thumbnailRemakeSaying(queued.length, left.length) })
+      onQueued(queued, left.length === 0)
+    })
+  }
+
+  return { pending, remakable, remake, said }
+}
+
+/** The library's `サムネイルを再生成` as a press on the bar, in the amber of doing something again. */
+export function remakeAction(remake: PickedRemake): PickedAction {
+  return {
+    label: 'サムネイルを再生成',
+    short: '再生成',
+    icon: <RebuildIcon />,
+    variant: 'redo',
+    pending: remake.pending,
+    enabled: remake.remakable,
+    onPress: remake.remake,
+  }
+}
+
+/** The room left at the end of a list that scrolls inside itself, so the floating bar does not cover its last row. */
+export const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
+
+/** Leaves choosing on Esc, unless a dialog, a menu or a list is open to take the key first. */
+export function useLeaveOnEscape(choosing: boolean, leave: () => void): void {
+  useEffect(() => {
+    if (!choosing) {
+      return
+    }
+
+    const leaveOnEscape = (event: KeyboardEvent): void => {
+      if (event.key !== 'Escape' || event.defaultPrevented) {
+        return
+      }
+
+      if (
+        event.target instanceof Element &&
+        event.target.closest(
+          '[role="dialog"], [role="alertdialog"], [role="listbox"], [role="menu"]',
+        )
+      ) {
+        return
+      }
+
+      leave()
+    }
+
+    document.addEventListener('keydown', leaveOnEscape)
+
+    return () => document.removeEventListener('keydown', leaveOnEscape)
+  }, [choosing, leave])
+}
+
+/** The `選ぶ` at the head of a list, drawn pressed while the list is choosing. */
+export function PickToggle({
+  pressed,
+  onPress,
+  ref,
   className,
 }: {
-  count: number
-  className: string
+  pressed: boolean
+  onPress: () => void
+  ref?: Ref<HTMLButtonElement>
+  className?: string
 }) {
-  const said = pickedSaying(count)
+  return (
+    <button
+      ref={ref}
+      type="button"
+      aria-pressed={pressed}
+      onClick={onPress}
+      className={cn(
+        iconButtonVariants(),
+        'h-10 w-auto px-4 text-ui font-semibold text-ink',
+        pressed &&
+          'bg-accent-tint text-acc-text not-disabled:hover:bg-accent-tint not-disabled:hover:text-acc-text',
+        className,
+      )}
+    >
+      選ぶ
+    </button>
+  )
+}
 
+/** How many are picked, or while none is, that recordings are to be chosen. On a phone's band the word after the count goes when the width is too narrow for the three presses beside it. */
+function PickedCount({
+  count,
+  subject,
+  className,
+  onABand = false,
+}: {
+  count: number
+  subject: PickedSubject
+  className: string
+  onABand?: boolean
+}) {
   if (count === 0) {
-    return <span className={cn(className, 'text-ink-2')}>{said}</span>
+    return (
+      <span className={cn(className, 'text-ink-2')}>
+        {pickedSaying(count, subject)}
+      </span>
+    )
   }
 
   return (
     <span className={cn(className, 'text-ink')}>
       <span className="font-code">{count}</span>
-      {said.slice(String(count).length)}
+      {onABand ? (
+        <>
+          {PICKED_UNIT}
+          <span className="max-[479px]:hidden">{PICKED_TAIL}</span>
+        </>
+      ) : (
+        `${PICKED_UNIT}${PICKED_TAIL}`
+      )}
     </span>
   )
 }
@@ -148,19 +336,27 @@ interface PickingControls {
   count: number
   everyPicked: boolean
   onEvery: () => void
-  deletion: PickedDeletion
+  actions: readonly PickedAction[]
+  subject: PickedSubject
 }
 
-const WHAT_IT_DOES = '選んだ録画の操作'
+function enabledOf(actions: readonly PickedAction[]): string {
+  return actions.map((one) => (one.enabled ? '1' : '0')).join('')
+}
 
-/** The bar floating in the middle of the window's foot while the library is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and `削除`. It rises in and sinks away, and while it sinks it stays drawn saying what it last said. */
+function whatItDoes(subject: PickedSubject): string {
+  return `選んだ${subject}の操作`
+}
+
+/** The bar floating in the middle of the window's foot while a list is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and the one action. It rises in and sinks away, and while it sinks it stays drawn saying what it last said. */
 export function PickingBar({
   shown,
   count,
   everyPicked,
   onEvery,
   onClose,
-  deletion,
+  actions,
+  subject,
   closeRef,
   className,
 }: PickingControls & {
@@ -173,7 +369,7 @@ export function PickingBar({
   const [said, setSaid] = useState({
     count,
     everyPicked,
-    deletable: deletion.deletable,
+    enabled: enabledOf(actions),
   })
   const barRef = useRef<HTMLDivElement>(null)
 
@@ -185,9 +381,9 @@ export function PickingBar({
     shown &&
     (said.count !== count ||
       said.everyPicked !== everyPicked ||
-      said.deletable !== deletion.deletable)
+      said.enabled !== enabledOf(actions))
   ) {
-    setSaid({ count, everyPicked, deletable: deletion.deletable })
+    setSaid({ count, everyPicked, enabled: enabledOf(actions) })
   }
 
   useEffect(() => {
@@ -212,7 +408,7 @@ export function PickingBar({
     <div
       ref={barRef}
       role={shown ? 'toolbar' : undefined}
-      aria-label={shown ? WHAT_IT_DOES : undefined}
+      aria-label={shown ? whatItDoes(subject) : undefined}
       aria-hidden={shown ? undefined : true}
       inert={!shown}
       data-slot="picking-bar"
@@ -241,6 +437,7 @@ export function PickingBar({
       </button>
       <PickedCount
         count={said.count}
+        subject={subject}
         className="min-w-[calc(118rem/16)] text-section font-bold whitespace-nowrap"
       />
       <Button
@@ -250,57 +447,66 @@ export function PickingBar({
       >
         {said.everyPicked ? 'すべて外す' : 'すべて選ぶ'}
       </Button>
-      <Button
-        variant="danger"
-        className="ml-3"
-        disabled={deletion.pending || !said.deletable}
-        onClick={deletion.ask}
-      >
-        <TrashIcon />
-        削除
-      </Button>
+      {actions.map((action, at) => (
+        <Button
+          key={action.label}
+          variant={action.variant}
+          className="ml-3"
+          disabled={action.pending || said.enabled[at] !== '1'}
+          onClick={action.onPress}
+        >
+          {action.pending ? <Spinner size="control" /> : action.icon}
+          {action.label}
+        </Button>
+      ))}
     </div>
   )
 }
 
-/** The band over a phone's tabs while the library is choosing: how many, every one, and `削除`. */
+const BAND_PRESS = 'h-[calc(38rem/16)] px-3 text-ui'
+
+/** The band over a phone's tabs while a list is choosing: how many, every one, and the actions. The presses wrap under the count when the width has no room for them beside it. */
 export function PickingBand({
   count,
   everyPicked,
   onEvery,
-  deletion,
+  actions,
+  subject,
   className,
 }: PickingControls & { className?: string }) {
   return (
     <div
       role="toolbar"
-      aria-label={WHAT_IT_DOES}
+      aria-label={whatItDoes(subject)}
       data-slot="picking-band"
       className={cn(
-        'fixed inset-x-0 bottom-[var(--tab-bar-cover)] z-50 flex h-[calc(60rem/16)] items-center gap-2 bg-bg pr-3 pl-[calc(18rem/16)] shadow-[0_-1px_0_var(--hair)] sideways:left-[calc(80rem/16+env(safe-area-inset-left))] sideways:pb-[env(safe-area-inset-bottom)]',
+        'fixed inset-x-0 bottom-[var(--tab-bar-cover)] z-50 flex min-h-[calc(60rem/16)] flex-wrap items-center gap-2 bg-bg py-2 pr-3 pl-[calc(18rem/16)] shadow-[0_-1px_0_var(--hair)] sideways:left-[calc(80rem/16+env(safe-area-inset-left))] sideways:pb-[env(safe-area-inset-bottom)]',
         className,
       )}
     >
       <PickedCount
         count={count}
+        subject={subject}
         className="text-title font-semibold whitespace-nowrap"
+        onABand
       />
-      <Button
-        variant="tone"
-        className="ml-auto h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui"
-        onClick={onEvery}
-      >
-        {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
-      </Button>
-      <Button
-        variant="danger"
-        className="h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui"
-        disabled={deletion.pending || !deletion.deletable}
-        onClick={deletion.ask}
-      >
-        <TrashIcon />
-        削除
-      </Button>
+      <span className="ml-auto flex flex-wrap justify-end gap-2">
+        <Button variant="tone" className={BAND_PRESS} onClick={onEvery}>
+          {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
+        </Button>
+        {actions.map((action) => (
+          <Button
+            key={action.label}
+            variant={action.variant}
+            className={BAND_PRESS}
+            disabled={action.pending || !action.enabled}
+            onClick={action.onPress}
+          >
+            {action.pending ? <Spinner size="control" /> : action.icon}
+            {action.short ?? action.label}
+          </Button>
+        ))}
+      </span>
     </div>
   )
 }

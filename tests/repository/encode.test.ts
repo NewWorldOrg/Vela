@@ -41,6 +41,7 @@ const store: {
   writeStatus: number
   writeMessage: string
   removal: string
+  rerun: unknown[]
 } = {
   profiles: [],
   destinations: [],
@@ -56,6 +57,7 @@ const store: {
   writeStatus: 201,
   writeMessage: '',
   removal: 'deleted',
+  rerun: [],
 }
 
 const answered = (status: number) => ({ status, ok: status < 400 })
@@ -260,7 +262,9 @@ const client = () => ({
   ) => {
     sent.push({ method: 'POST', path, body: options?.body })
 
-    return written()
+    return path === '/api/encoding/jobs/retry'
+      ? written({ items: store.rerun })
+      : written()
   },
   PUT: async (path: string, options?: { body?: Record<string, unknown> }) => {
     sent.push({ method: 'PUT', path, body: options?.body })
@@ -315,6 +319,7 @@ const {
   WHEN_QUEUEING,
   WHEN_REMOVING_A_DESTINATION,
   WHEN_REMOVING_A_PROFILE,
+  WHEN_RERUNNING,
   WHEN_SAVING_A_DESTINATION,
   WHEN_SAVING_A_PROFILE,
   WHEN_SETTLING_THE_AUTO_RUN,
@@ -328,10 +333,12 @@ const {
   queueEncode,
   removeDestination,
   removeProfile,
+  rerunEncodes,
   reviseDestination,
   reviseProfile,
   settleAutoRun,
   whyItRefused,
+  whyItWasNotRerun,
 } = await import('@/repository/encode')
 
 const NOW = new Date('2026-09-05T11:53:34Z')
@@ -352,6 +359,7 @@ beforeEach(() => {
   store.writeStatus = 201
   store.writeMessage = ''
   store.removal = 'deleted'
+  store.rerun = []
 })
 
 test('a recording asks the ledger for its one latest job and nothing more', async () => {
@@ -1359,3 +1367,106 @@ test('the auto-run refused for a field names that field in Japanese', () => {
     '自動実行の設定を保存できませんでした。時間をおいてからもう一度お試しください。',
   )
 })
+
+test('running failed jobs again sends their ids together and says, row by row, what became of each', async () => {
+  const asked = [
+    COMPLETED.id,
+    RUNNING.id,
+    '7c6b5a49-3827-4615-a403-f2e1d0c9b8a7',
+  ]
+
+  store.writeStatus = 200
+  store.rerun = [
+    { id: asked[0], outcome: 'queued', message: '', job: COMPLETED },
+    {
+      id: asked[1],
+      outcome: 'notFailed',
+      message: 'The job stands at Running, and only a failed job is run again.',
+      job: null,
+    },
+    {
+      id: asked[2],
+      outcome: 'refused',
+      message: `The ledger holds no recording ${RECORDING.id}.`,
+      job: null,
+    },
+  ]
+
+  assert.deepEqual(await rerunEncodes(asked), {
+    state: 'ok',
+    items: [
+      { id: asked[0], outcome: 'queued', reason: undefined },
+      {
+        id: asked[1],
+        outcome: 'notFailed',
+        reason: 'このジョブは失敗していないため、再実行できませんでした。',
+      },
+      {
+        id: asked[2],
+        outcome: 'refused',
+        reason: 'この録画は残っていないため、再実行できませんでした。',
+      },
+    ],
+  })
+  assert.deepEqual(sent[0], {
+    method: 'POST',
+    path: '/api/encoding/jobs/retry',
+    body: { ids: asked },
+  })
+})
+
+test('every reason a job is not run again is one Japanese sentence', () => {
+  assert.equal(whyItWasNotRerun('queued', ''), undefined)
+  assert.equal(
+    whyItWasNotRerun('noSuchJob', 'The ledger holds no such job.'),
+    'このジョブは残っていないため、再実行できませんでした。',
+  )
+  assert.equal(
+    whyItWasNotRerun(
+      'alreadyInTheQueue',
+      `Recording ${RECORDING.id} already has job x queued.`,
+    ),
+    'この録画のエンコードはすでに待機中か実行中のため、再実行できませんでした。',
+  )
+  assert.equal(
+    whyItWasNotRerun(
+      'alreadyEncoded',
+      `Recording ${RECORDING.id} is already encoded with profile x.`,
+    ),
+    'この録画はこのプロファイルですでにエンコード済みのため、再実行できませんでした。',
+  )
+  assert.equal(
+    whyItWasNotRerun(
+      'refused',
+      'The recording failed, so there is nothing to encode.',
+    ),
+    'この録画は失敗しているため、エンコードできませんでした。',
+  )
+  assert.equal(
+    whyItWasNotRerun('refused', 'Something this build has never heard of.'),
+    couldNotSaying(WHEN_RERUNNING.fell),
+  )
+  assert.equal(
+    whyItWasNotRerun('aLaterOutcome' as never, ''),
+    couldNotSaying(WHEN_RERUNNING.fell),
+  )
+})
+
+test('running failed jobs again is refused as a whole with one sentence, and says when the sign-in is gone', async () => {
+  store.writeStatus = 400
+  store.writeMessage = 'ids: between one and 100 job ids.'
+  assert.deepEqual(await rerunEncodes([]), {
+    state: 'rejected',
+    message:
+      '選んだジョブを再実行できませんでした。時間をおいてからもう一度お試しください。',
+  })
+
+  store.writeStatus = 401
+  assert.deepEqual(await rerunEncodes([COMPLETED.id]), {
+    state: 'unauthenticated',
+  })
+})
+
+function couldNotSaying(fell: string): string {
+  return `${fell}。時間をおいてからもう一度お試しください。`
+}

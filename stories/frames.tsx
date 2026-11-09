@@ -20,13 +20,15 @@ export const inTheApp: Decorator = (Story) => (
 export const inTheSettings: Decorator = (Story) => (
   <AppFrame>
     <AppTopBar />
-    <SettingsFrame
-      status={SYSTEM_STATUS}
-      values={{ display: 'テーマ システム' }}
-      hasMigration
-    >
-      <Story />
-    </SettingsFrame>
+    <Toasts>
+      <SettingsFrame
+        status={SYSTEM_STATUS}
+        values={{ display: 'テーマ システム' }}
+        hasMigration
+      >
+        <Story />
+      </SettingsFrame>
+    </Toasts>
     <AppTabBar />
   </AppFrame>
 )

@@ -2,6 +2,7 @@ import { unstable_rethrow } from 'next/navigation'
 
 import { couldNot } from '@/lib/try-again'
 import { formatMoment } from '@/lib/format'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
 import {
   callsOff,
   headwayPercent,
@@ -22,6 +23,7 @@ import type {
   EncodeProfileDraft,
   EncodeRemake,
   EncodeRemoved,
+  EncodeRerunOutcome,
   EncodeResolution,
   EncodeSubject,
   EncodeSwerve,
@@ -167,6 +169,18 @@ export type EncodeWrite =
 
 export type EncodeRemoval =
   | { state: 'ok'; removal: EncodeRemoved }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
+/** What became of one job handed to `まとめて再実行`: queued again when `reason` is absent, otherwise the sentence that says why not. */
+export interface EncodeRerunRow {
+  id: string
+  outcome: EncodeRerunOutcome
+  reason?: string
+}
+
+export type EncodeRerun =
+  | { state: 'ok'; items: EncodeRerunRow[] }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
@@ -318,6 +332,16 @@ export const WHEN_CALLING_OFF: EncodeAsking = {
   fell: 'このジョブを中止できませんでした',
 }
 
+export const WHEN_RERUNNING: EncodeAsking = {
+  did: '再実行',
+  fell: 'このジョブを再実行できませんでした',
+}
+
+export const WHEN_RERUNNING_TOGETHER: EncodeAsking = {
+  did: '再実行',
+  fell: '選んだジョブを再実行できませんでした',
+}
+
 export const WHEN_SAVING_A_PROFILE: EncodeAsking = {
   did: '保存',
   fell: 'プロファイルを保存できませんでした',
@@ -465,6 +489,36 @@ export function whyItRefused(
   return couldNot(asking.fell)
 }
 
+const RERUN_REASONS: Record<
+  Exclude<EncodeRerunOutcome, 'queued' | 'refused'>,
+  string
+> = {
+  noSuchJob: 'このジョブは残っていないため、',
+  notFailed: 'このジョブは失敗していないため、',
+  alreadyInTheQueue: 'この録画のエンコードはすでに待機中か実行中のため、',
+  alreadyEncoded: 'この録画はこのプロファイルですでにエンコード済みのため、',
+}
+
+/** The sentence a row says when it was not run again, in the words of the encode screen's refusals; nothing when it was queued. */
+export function whyItWasNotRerun(
+  outcome: EncodeRerunOutcome,
+  said: string,
+): string | undefined {
+  if (outcome === 'queued') {
+    return undefined
+  }
+
+  if (outcome === 'refused') {
+    return whyItRefused(WHEN_RERUNNING, 200, said)
+  }
+
+  const reason = shapeFor(RERUN_REASONS, outcome, undefined)
+
+  return reason === undefined
+    ? couldNot(WHEN_RERUNNING.fell)
+    : `${reason}${WHEN_RERUNNING.did}できませんでした。`
+}
+
 export async function defineProfile(
   draft: EncodeProfileDraft,
 ): Promise<EncodeWrite> {
@@ -555,6 +609,39 @@ export async function queueEncode(
   })
 
   return toWrite(response, whatItSaid(error), WHEN_QUEUEING)
+}
+
+export async function rerunEncodes(ids: string[]): Promise<EncodeRerun> {
+  const { data, error, response } = await carinaClient().POST(
+    '/api/encoding/jobs/retry',
+    { body: { ids } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const items = data?.data?.items
+
+  if (!response.ok || items === undefined) {
+    return {
+      state: 'rejected',
+      message: whyItRefused(
+        WHEN_RERUNNING_TOGETHER,
+        response.status,
+        whatItSaid(error, data),
+      ),
+    }
+  }
+
+  return {
+    state: 'ok',
+    items: items.map((one) => ({
+      id: one.id,
+      outcome: one.outcome,
+      reason: whyItWasNotRerun(one.outcome, one.message),
+    })),
+  }
 }
 
 export async function callOffEncode(id: string): Promise<EncodeWrite> {

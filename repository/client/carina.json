@@ -3,7 +3,7 @@
   "info": {
     "title": "Carina",
     "description": "The HTTP surface of the app process. Nine contract surfaces do not fit a request/response schema and are absent from this document: the transport stream (`/sessions/{id}/stream` on the driver socket), the event hub (`GET /api/events`), the bulk programme guide (`GET /api/programs/bulk`), the recording file served by the byte range (`GET /api/videos/{id}`), which is there for an external player and is not the path a browser plays a recording through; it hands over the artefact encoded of the recording where there is one, and the recording itself where there is not or where it is asked for by `source=recording`, the live wire (`GET /api/live/ws`), a WebSocket carrying framed picture and sound one way and numbered control messages both ways, and the live channel handed over as it is (`GET /api/live/{networkId}-{serviceId}/stream`), one endless `video/mp2t` body carrying the multiplex the tuner receives, nothing transcoded and nothing seekable, which is the surface an external player or an AirPlay receiver opens with a ticket from `POST /api/live/ticket` and is not the path a browser watches through, and which, opened with the ticket in the path and a name ending in `.m3u8`, answers instead a playlist naming one playlist of a key made for that player, the picture in H.264 at the profile this machine opens at with the main sound, the playlist of a key, its initialisation and its segments (`GET /api/hls/{key}/index.m3u8`, `init.mp4` and `{number}.m4s`), opened by the key alone, which is let go of thirty seconds after nothing is asked with it, and the two a Hybridcast application's frame opens with the ticket `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/ticket` issued: its documents and resources relayed from the broadcaster's server, and what it posts there (`GET` and `POST /api/live/{networkId}-{serviceId}/data-broadcast/app/{ticket}`, the address in `uri`, answered with whatever the server answered, a document rewritten to be read through the relay), and its WebSockets carried both ways (`GET /api/live/{networkId}-{serviceId}/data-broadcast/ws/{ticket}`, the ws or wss address in `uri`); the frame has no origin of its own, so these two answer any origin without credentials. The wire is asked for by `network`, `service` and `profile` in the query, the profile being one of those `GET /api/live/profiles` lists, and by `format` (`h264`, `h265` or `av1`, `h264` when none is named), one of the formats the same list names, a format this machine does not transcode in being refused before the wire opens; a viewer that is refused is told why on the control channel before the wire is closed.",
-    "version": "0.3.7"
+    "version": "2.0.0"
   },
   "servers": [
     {
@@ -4803,6 +4803,89 @@
         }
       }
     },
+    "/api/recordings/thumbnails/remake": {
+      "post": {
+        "tags": [
+          "recordings"
+        ],
+        "operationId": "remakeThumbnails",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RemakeThumbnailsRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RemakeThumbnailsRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RemakeThumbnailsRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfThumbnailRemakeListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/recordings/integrity/run": {
       "post": {
         "tags": [
@@ -8266,6 +8349,89 @@
         }
       }
     },
+    "/api/encoding/jobs/retry": {
+      "post": {
+        "tags": [
+          "encoding"
+        ],
+        "operationId": "rerunEncodeJobs",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RerunEncodeJobsRequest"
+                  }
+                ]
+              }
+            },
+            "text/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RerunEncodeJobsRequest"
+                  }
+                ]
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/RerunEncodeJobsRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeRerunListResponder"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeRerunListResponder"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthenticated. The default-deny middleware answers with an empty body."
+          },
+          "500": {
+            "description": "The request failed before it could answer for itself. The body carries the usual envelope with no data.",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BaseResponderOfEncodeRerunListResponder"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/driver/card-reader": {
       "get": {
         "tags": [
@@ -9805,6 +9971,32 @@
               },
               {
                 "$ref": "#/components/schemas/EncodeRemovalResponder"
+              }
+            ]
+          }
+        }
+      },
+      "BaseResponderOfEncodeRerunListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeRerunListResponder"
               }
             ]
           }
@@ -11673,6 +11865,32 @@
           }
         }
       },
+      "BaseResponderOfThumbnailRemakeListResponder": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/ThumbnailRemakeListResponder"
+              }
+            ]
+          }
+        }
+      },
       "BaseResponderOfThumbnailRemakeResponder": {
         "required": [
           "status",
@@ -13415,7 +13633,8 @@
       "EncodeEncoder": {
         "enum": [
           "software",
-          "vaapi"
+          "vaapi",
+          "nvenc"
         ],
         "type": "string"
       },
@@ -13846,6 +14065,62 @@
               "string"
             ],
             "format": "date-time"
+          }
+        }
+      },
+      "EncodeRerunListResponder": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/EncodeRerunResponder"
+            }
+          }
+        }
+      },
+      "EncodeRerunOutcome": {
+        "enum": [
+          "queued",
+          "noSuchJob",
+          "notFailed",
+          "alreadyInTheQueue",
+          "alreadyEncoded",
+          "refused"
+        ],
+        "type": "string"
+      },
+      "EncodeRerunResponder": {
+        "required": [
+          "id",
+          "outcome",
+          "message",
+          "job"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/EncodeRerunOutcome"
+          },
+          "message": {
+            "type": "string"
+          },
+          "job": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/EncodeJobResponder"
+              }
+            ]
           }
         }
       },
@@ -18892,6 +19167,35 @@
         ],
         "type": "string"
       },
+      "RemakeThumbnailsRequest": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "RerunEncodeJobsRequest": {
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
       "RescanNoticeResponder": {
         "required": [
           "networkId",
@@ -22318,6 +22622,29 @@
         ],
         "type": "string"
       },
+      "ThumbnailRemakeListResponder": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ThumbnailRemakeRowResponder"
+            }
+          }
+        }
+      },
+      "ThumbnailRemakeOutcome": {
+        "enum": [
+          "queued",
+          "noSuchRecording",
+          "stillRecording",
+          "refused"
+        ],
+        "type": "string"
+      },
       "ThumbnailRemakeResponder": {
         "required": [
           "remake",
@@ -22330,6 +22657,25 @@
           },
           "thumbnail": {
             "$ref": "#/components/schemas/RecordingThumbnailResponder"
+          }
+        }
+      },
+      "ThumbnailRemakeRowResponder": {
+        "required": [
+          "id",
+          "outcome",
+          "message"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "outcome": {
+            "$ref": "#/components/schemas/ThumbnailRemakeOutcome"
+          },
+          "message": {
+            "type": "string"
           }
         }
       },
