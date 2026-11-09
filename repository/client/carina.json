@@ -11843,6 +11843,28 @@
           }
         }
       },
+      "BaseResponderOfstring": {
+        "required": [
+          "status",
+          "message",
+          "data"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "boolean"
+          },
+          "message": {
+            "type": "string"
+          },
+          "data": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "BaseResponderOfThumbnailRemakeListResponder": {
         "required": [
           "status",
@@ -11865,28 +11887,6 @@
               {
                 "$ref": "#/components/schemas/ThumbnailRemakeListResponder"
               }
-            ]
-          }
-        }
-      },
-      "BaseResponderOfstring": {
-        "required": [
-          "status",
-          "message",
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "status": {
-            "type": "boolean"
-          },
-          "message": {
-            "type": "string"
-          },
-          "data": {
-            "type": [
-              "null",
-              "string"
             ]
           }
         }

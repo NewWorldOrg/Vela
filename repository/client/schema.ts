@@ -2249,15 +2249,15 @@ export interface components {
       message: string
       data: null | components['schemas']['StorageResponder']
     }
-    BaseResponderOfThumbnailRemakeListResponder: {
-      status: boolean
-      message: string
-      data: null | components['schemas']['ThumbnailRemakeListResponder']
-    }
     BaseResponderOfstring: {
       status: boolean
       message: string
       data: null | string
+    }
+    BaseResponderOfThumbnailRemakeListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['ThumbnailRemakeListResponder']
     }
     BaseResponderOfThumbnailRemakeResponder: {
       status: boolean
