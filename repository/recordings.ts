@@ -338,6 +338,69 @@ export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
   }
 }
 
+export type ThumbnailRemakeOutcome =
+  components['schemas']['ThumbnailRemakeOutcome']
+
+/** What became of one recording handed to `サムネイルを再生成`: queued when `reason` is absent, otherwise the sentence that says why not. */
+export interface ThumbnailRemakeRow {
+  id: string
+  outcome: ThumbnailRemakeOutcome
+  reason?: string
+}
+
+export type ThumbnailRemakes =
+  | { state: 'ok'; items: ThumbnailRemakeRow[] }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
+const CANNOT_REMAKE = 'サムネイルを再生成できませんでした'
+
+const REMAKE_REASONS: Record<
+  Exclude<ThumbnailRemakeOutcome, 'queued'>,
+  string
+> = {
+  noSuchRecording: `この録画は残っていないため、${CANNOT_REMAKE}。`,
+  notReady: `録画が終わっていないか録画ファイルが整っていないため、${CANNOT_REMAKE}。`,
+  refused: couldNot(CANNOT_REMAKE),
+}
+
+/** The sentence a recording's row says when its thumbnail was not made again; nothing when it was queued. */
+export function whyItWasNotRemade(
+  outcome: ThumbnailRemakeOutcome,
+): string | undefined {
+  return outcome === 'queued'
+    ? undefined
+    : shapeFor(REMAKE_REASONS, outcome, couldNot(CANNOT_REMAKE))
+}
+
+export async function remakeThumbnails(
+  ids: readonly string[],
+): Promise<ThumbnailRemakes> {
+  const { data, response } = await carinaClient().POST(
+    '/api/recordings/thumbnails/remake',
+    { body: { ids: [...ids] } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  const items = data?.data?.items
+
+  if (!response.ok || items === undefined) {
+    return { state: 'rejected', message: couldNot(CANNOT_REMAKE) }
+  }
+
+  return {
+    state: 'ok',
+    items: items.map((one) => ({
+      id: one.id,
+      outcome: one.outcome,
+      reason: whyItWasNotRemade(one.outcome),
+    })),
+  }
+}
+
 type RecordingRefusal = components['schemas']['RecordingFailure']
 
 type RecordingDiscardRefused =

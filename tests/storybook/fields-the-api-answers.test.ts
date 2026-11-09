@@ -323,6 +323,7 @@ const NOT_READ_ON_PURPOSE: { because: string; fields: string[] }[] = [
       'the sentences the driver and the encoder write are English for the record, and the screen says the same thing in its own words from the kind that comes beside them',
     fields: [
       'EncodeFailureResponder.note',
+      'ThumbnailRemakeRowResponder.message',
       'TunerObservationResponder.detail',
       'TunerObservationResponder.healthDetail',
     ],

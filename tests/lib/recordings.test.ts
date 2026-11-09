@@ -13,6 +13,7 @@ import {
   isRecordingId,
   minutesMovedLater,
   playsInBrowser,
+  thumbnailRemakeSaying,
   recordingQualityShapeOf,
   scrambledPercent,
   unfinishedDeletionShapeOf,
@@ -244,4 +245,19 @@ test('a recording is named by 32 hexadecimal digits and nothing else', () => {
   assert.equal(isRecordingId('16d40bca0e3d4e0f9a1b2c3d4e5f6a7'), false)
   assert.equal(isRecordingId('16d40bca0e3d4e0f9a1b2c3d4e5f6a7g'), false)
   assert.equal(isRecordingId(''), false)
+})
+
+test('the toast after making thumbnails again counts what was queued and what was not', () => {
+  assert.equal(
+    thumbnailRemakeSaying(2, 0),
+    '2 件のサムネイルを再生成しました。',
+  )
+  assert.equal(
+    thumbnailRemakeSaying(0, 1),
+    '1 件のサムネイルを再生成できませんでした。',
+  )
+  assert.equal(
+    thumbnailRemakeSaying(1, 2),
+    '1 件のサムネイルを再生成、2 件はできませんでした。',
+  )
 })
