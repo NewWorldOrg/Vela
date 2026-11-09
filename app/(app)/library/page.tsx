@@ -13,6 +13,7 @@ import { LibraryView } from '@/components/library/library-page'
 import {
   throwRecordingAway,
   throwRecordingsAway,
+  remakeThumbnailsTogether,
 } from '@/app/(app)/library/actions'
 
 export const metadata: Metadata = { title: 'ライブラリ' }
@@ -43,6 +44,7 @@ export default async function Page({
         view={libraryViewOf(params, jar.get(LIBRARY_LAYOUT_COOKIE)?.value)}
         onDelete={throwRecordingAway}
         onDeleteAll={throwRecordingsAway}
+        onRemakeThumbnails={remakeThumbnailsTogether}
       />
     </>
   )

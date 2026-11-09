@@ -15,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MoreIcon, TrashIcon } from '@/components/vela/icons'
+import { InlineAlert } from '@/components/vela/banner'
 import { InFull } from '@/components/vela/in-full'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { RecordingThumb } from '@/components/library/recording-thumb'
@@ -95,6 +96,7 @@ export function RecordingRow({
   nth,
   picking,
   selected,
+  said,
   onSelect,
   onPickStart,
   onOpen,
@@ -104,6 +106,8 @@ export function RecordingRow({
   nth: number
   picking: boolean
   selected: boolean
+  /** Why this recording's thumbnail was not made again, said under the title while choosing. */
+  said?: string
   /** The row pressed while choosing, `range` when Shift was held. */
   onSelect: (range: boolean) => void
   /** On a mouse's screen, the press of the check on the row's picture, which starts the library choosing with this row taken. */
@@ -202,6 +206,11 @@ export function RecordingRow({
               <span className="mt-0.5 block truncate text-sub text-ink-2">
                 {under}
               </span>
+            )}
+            {said && (
+              <InlineAlert tone="warn" className="mt-1.5">
+                {said}
+              </InlineAlert>
             )}
           </span>
           <AttentionChips

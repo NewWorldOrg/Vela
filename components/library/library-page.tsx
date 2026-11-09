@@ -20,6 +20,7 @@ import type {
   RecordingDiscarded,
   RecordingsFilter,
   RecordingsResult,
+  ThumbnailRemakes,
 } from '@/repository/recordings'
 import { cn } from '@/lib/utils'
 import { RECORDING_STATE_FILTERS } from '@/lib/recordings'
@@ -41,9 +42,11 @@ import {
   PickingBand,
   PickingBar,
   PickToggle,
+  remakeAction,
   ROOM_FOR_THE_BAR,
   useLeaveOnEscape,
   usePickedDeletion,
+  usePickedRemake,
 } from '@/components/library/picking'
 import {
   everyShownPicked,
@@ -95,12 +98,14 @@ export function LibraryView({
   view = GRID_VIEW,
   onDelete,
   onDeleteAll,
+  onRemakeThumbnails,
 }: {
   result: RecordingsResult
   filter: RecordingsFilter
   view?: View
   onDelete: (id: string) => Promise<RecordingDiscarded>
   onDeleteAll: (ids: string[]) => Promise<RecordingBatch>
+  onRemakeThumbnails: (ids: string[]) => Promise<ThumbnailRemakes>
 }) {
   const [picked, setPicked] = useState<ReadonlySet<string>>(new Set())
   const [picking, setPicking] = useState(false)
@@ -181,9 +186,22 @@ export function LibraryView({
   const deletion = usePickedDeletion(chosen, onDeleteAll, () => {
     settle(new Set())
   })
+  const remake = usePickedRemake(
+    chosen,
+    picking,
+    onRemakeThumbnails,
+    (queued, every) => {
+      settle(
+        every
+          ? new Set()
+          : new Set([...picked].filter((id) => !queued.includes(id))),
+      )
+    },
+  )
   const pickingCards: Picking | undefined = picking
     ? {
         picked,
+        said: remake.said,
         onPick: (id, range) => {
           settle(
             pressedPick(
@@ -209,7 +227,7 @@ export function LibraryView({
     count: chosen.length,
     everyPicked,
     onEvery: () => settle(withEveryShown(picked, shownIds)),
-    action: deletionAction(deletion),
+    actions: [remakeAction(remake), deletionAction(deletion)],
     subject: '録画',
   } as const
 

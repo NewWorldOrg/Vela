@@ -49,6 +49,7 @@ export function RecordingsTable({
       onOpen={() => router.push(`/recordings/${r.id}`)}
       onDelete={() => setAsked(r)}
       selected={picking?.picked.has(r.id) ?? false}
+      said={picking?.said?.get(r.id)}
       onSelect={(range) => picking?.onPick(r.id, range)}
       onPickStart={onPickStart && (() => onPickStart(r.id))}
     />

@@ -231,7 +231,7 @@ export function JobsList({
     count: rerunning.chosen.length,
     everyPicked: everyShownPicked(rerunning.picked, rerunning.shownIds),
     onEvery: rerunning.every,
-    action,
+    actions: [action],
     subject: 'ジョブ',
   } as const
   const showAndForget: Show = (patch) => {

@@ -17,7 +17,13 @@ import {
   pickedSaying,
   type PickedSubject,
 } from '@/lib/library-picking'
-import type { Recording, RecordingBatch } from '@/repository/recordings'
+import { thumbnailRemakeSaying } from '@/lib/recordings'
+import type {
+  Recording,
+  RecordingBatch,
+  ThumbnailRemakeRow,
+  ThumbnailRemakes,
+} from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
@@ -32,6 +38,7 @@ import {
 import {
   CheckIcon,
   CloseIcon,
+  RebuildIcon,
   TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
@@ -128,9 +135,10 @@ export function usePickedDeletion(
   return { pending, deletable, ask: () => setAsking(true), dialog }
 }
 
-/** The one press at the end of the choosing bar and band: what it is called, its icon and colour, and whether it can be pressed now. */
+/** One press at the end of the choosing bar and band: what it is called, its icon and colour, and whether it can be pressed now. `short` is the word a phone's band uses when the whole label would not fit beside the others. */
 export interface PickedAction {
   label: string
+  short?: string
   icon: ReactNode
   variant: 'danger' | 'redo'
   pending: boolean
@@ -147,6 +155,81 @@ export function deletionAction(deletion: PickedDeletion): PickedAction {
     pending: deletion.pending,
     enabled: deletion.deletable,
     onPress: deletion.ask,
+  }
+}
+
+/** What the press of `サムネイルを再生成` did to the picked recordings: the press itself, and why each one that was not queued was left out. */
+export interface PickedRemake {
+  pending: boolean
+  /** Whether `サムネイルを再生成` can be pressed: something is picked and none of it is still being recorded. */
+  remakable: boolean
+  remake: () => void
+  said: ReadonlyMap<string, string>
+}
+
+const NO_REASONS: ReadonlyMap<string, string> = new Map()
+
+/** Asks the backend to make the picked recordings' thumbnails again, says in one toast how many it took, and keeps the reason each one it did not take was left out, until choosing ends. */
+export function usePickedRemake(
+  chosen: Recording[],
+  choosing: boolean,
+  onRemakeAll: (ids: string[]) => Promise<ThumbnailRemakes>,
+  onQueued: (ids: string[], every: boolean) => void,
+): PickedRemake {
+  const [pending, startTransition] = useTransition()
+  const [said, setSaid] = useState<ReadonlyMap<string, string>>(NO_REASONS)
+  const say = useToast()
+  const remakable =
+    chosen.length > 0 && chosen.every((one) => one.outcome !== 'recording')
+
+  if (!choosing && said !== NO_REASONS) {
+    setSaid(NO_REASONS)
+  }
+
+  const remake = (): void => {
+    if (pending || !remakable) {
+      return
+    }
+
+    startTransition(async () => {
+      const result = await onRemakeAll(chosen.map((one) => one.id))
+
+      if (result.state !== 'ok') {
+        say({
+          text:
+            result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
+        })
+
+        return
+      }
+
+      const left = result.items.filter(
+        (one): one is ThumbnailRemakeRow & { reason: string } =>
+          one.reason !== undefined,
+      )
+      const queued = result.items
+        .filter((one) => one.reason === undefined)
+        .map((one) => one.id)
+
+      setSaid(new Map(left.map((one) => [one.id, one.reason])))
+      say({ text: thumbnailRemakeSaying(queued.length, left.length) })
+      onQueued(queued, left.length === 0)
+    })
+  }
+
+  return { pending, remakable, remake, said }
+}
+
+/** The library's `サムネイルを再生成` as a press on the bar, in the amber of doing something again. */
+export function remakeAction(remake: PickedRemake): PickedAction {
+  return {
+    label: 'サムネイルを再生成',
+    short: '再生成',
+    icon: <RebuildIcon />,
+    variant: 'redo',
+    pending: remake.pending,
+    enabled: remake.remakable,
+    onPress: remake.remake,
   }
 }
 
@@ -204,7 +287,8 @@ export function PickToggle({
       className={cn(
         iconButtonVariants(),
         'h-10 w-auto px-4 text-ui font-semibold text-ink',
-        pressed && 'bg-accent-tint text-acc-text hover:bg-accent-tint',
+        pressed &&
+          'bg-accent-tint text-acc-text not-disabled:hover:bg-accent-tint not-disabled:hover:text-acc-text',
         className,
       )}
     >
@@ -239,7 +323,7 @@ function PickedCount({
       {onABand ? (
         <>
           {PICKED_UNIT}
-          <span className="max-[359px]:hidden">{PICKED_TAIL}</span>
+          <span className="max-[479px]:hidden">{PICKED_TAIL}</span>
         </>
       ) : (
         `${PICKED_UNIT}${PICKED_TAIL}`
@@ -252,8 +336,12 @@ interface PickingControls {
   count: number
   everyPicked: boolean
   onEvery: () => void
-  action: PickedAction
+  actions: readonly PickedAction[]
   subject: PickedSubject
+}
+
+function enabledOf(actions: readonly PickedAction[]): string {
+  return actions.map((one) => (one.enabled ? '1' : '0')).join('')
 }
 
 function whatItDoes(subject: PickedSubject): string {
@@ -267,7 +355,7 @@ export function PickingBar({
   everyPicked,
   onEvery,
   onClose,
-  action,
+  actions,
   subject,
   closeRef,
   className,
@@ -281,7 +369,7 @@ export function PickingBar({
   const [said, setSaid] = useState({
     count,
     everyPicked,
-    enabled: action.enabled,
+    enabled: enabledOf(actions),
   })
   const barRef = useRef<HTMLDivElement>(null)
 
@@ -293,9 +381,9 @@ export function PickingBar({
     shown &&
     (said.count !== count ||
       said.everyPicked !== everyPicked ||
-      said.enabled !== action.enabled)
+      said.enabled !== enabledOf(actions))
   ) {
-    setSaid({ count, everyPicked, enabled: action.enabled })
+    setSaid({ count, everyPicked, enabled: enabledOf(actions) })
   }
 
   useEffect(() => {
@@ -359,25 +447,30 @@ export function PickingBar({
       >
         {said.everyPicked ? 'すべて外す' : 'すべて選ぶ'}
       </Button>
-      <Button
-        variant={action.variant}
-        className="ml-3"
-        disabled={action.pending || !said.enabled}
-        onClick={action.onPress}
-      >
-        {action.pending ? <Spinner size="control" /> : action.icon}
-        {action.label}
-      </Button>
+      {actions.map((action, at) => (
+        <Button
+          key={action.label}
+          variant={action.variant}
+          className="ml-3"
+          disabled={action.pending || said.enabled[at] !== '1'}
+          onClick={action.onPress}
+        >
+          {action.pending ? <Spinner size="control" /> : action.icon}
+          {action.label}
+        </Button>
+      ))}
     </div>
   )
 }
 
-/** The band over a phone's tabs while a list is choosing: how many, every one, and the one action. */
+const BAND_PRESS = 'h-[calc(38rem/16)] px-3 text-ui'
+
+/** The band over a phone's tabs while a list is choosing: how many, every one, and the actions. The presses wrap under the count when the width has no room for them beside it. */
 export function PickingBand({
   count,
   everyPicked,
   onEvery,
-  action,
+  actions,
   subject,
   className,
 }: PickingControls & { className?: string }) {
@@ -387,7 +480,7 @@ export function PickingBand({
       aria-label={whatItDoes(subject)}
       data-slot="picking-band"
       className={cn(
-        'fixed inset-x-0 bottom-[var(--tab-bar-cover)] z-50 flex h-[calc(60rem/16)] items-center gap-2 bg-bg pr-3 pl-[calc(18rem/16)] shadow-[0_-1px_0_var(--hair)] sideways:left-[calc(80rem/16+env(safe-area-inset-left))] sideways:pb-[env(safe-area-inset-bottom)]',
+        'fixed inset-x-0 bottom-[var(--tab-bar-cover)] z-50 flex min-h-[calc(60rem/16)] flex-wrap items-center gap-2 bg-bg py-2 pr-3 pl-[calc(18rem/16)] shadow-[0_-1px_0_var(--hair)] sideways:left-[calc(80rem/16+env(safe-area-inset-left))] sideways:pb-[env(safe-area-inset-bottom)]',
         className,
       )}
     >
@@ -397,22 +490,23 @@ export function PickingBand({
         className="text-title font-semibold whitespace-nowrap"
         onABand
       />
-      <Button
-        variant="tone"
-        className="ml-auto h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui max-[359px]:px-3"
-        onClick={onEvery}
-      >
-        {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
-      </Button>
-      <Button
-        variant={action.variant}
-        className="h-[calc(38rem/16)] px-[calc(15rem/16)] text-ui max-[359px]:px-3"
-        disabled={action.pending || !action.enabled}
-        onClick={action.onPress}
-      >
-        {action.pending ? <Spinner size="control" /> : action.icon}
-        {action.label}
-      </Button>
+      <span className="ml-auto flex flex-wrap justify-end gap-2">
+        <Button variant="tone" className={BAND_PRESS} onClick={onEvery}>
+          {everyPicked ? 'すべて外す' : 'すべて選ぶ'}
+        </Button>
+        {actions.map((action) => (
+          <Button
+            key={action.label}
+            variant={action.variant}
+            className={BAND_PRESS}
+            disabled={action.pending || !action.enabled}
+            onClick={action.onPress}
+          >
+            {action.pending ? <Spinner size="control" /> : action.icon}
+            {action.short ?? action.label}
+          </Button>
+        ))}
+      </span>
     </div>
   )
 }

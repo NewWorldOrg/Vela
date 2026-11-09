@@ -17,6 +17,7 @@ import {
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronUpIcon, MoreIcon, TrashIcon } from '@/components/vela/icons'
+import { InlineAlert } from '@/components/vela/banner'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
 import {
@@ -227,9 +228,12 @@ export function PhoneRecordingRows({
 function RowFace({
   recording,
   mark,
+  said,
 }: {
   recording: Recording
   mark?: ReactNode
+  /** Why this recording's thumbnail was not made again, said under the row while choosing. */
+  said?: string
 }) {
   const state = watchStateOf(recording)
 
@@ -264,6 +268,11 @@ function RowFace({
           </span>
         </span>
         <AttentionChips recording={recording} className="mt-1.5" />
+        {said && (
+          <InlineAlert tone="warn" className="mt-1.5">
+            {said}
+          </InlineAlert>
+        )}
       </span>
     </>
   )
@@ -294,6 +303,7 @@ function PickedRow({
     >
       <RowFace
         recording={recording}
+        said={picking.said?.get(recording.id)}
         mark={
           <>
             <PickShade />
