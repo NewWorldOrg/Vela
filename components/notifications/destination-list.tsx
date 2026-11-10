@@ -68,9 +68,13 @@ export const GROUP_ROW =
 /** The name and the last result on the left; the switch and the `…` on the right, beside the name on a phone. */
 const ROW_AREAS = cn(
   'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 px-4 py-3',
-  "[grid-template-areas:'head_sw_more'_'last_sw_more']",
   "upright:min-h-0 upright:gap-x-1 upright:px-3.5 upright:[grid-template-areas:'head_sw_more'_'last_last_last']",
 )
+
+const TWO_LINES = "[grid-template-areas:'head_sw_more'_'last_sw_more']"
+
+/** A row with nothing to say under its name. */
+const ONE_LINE = "[grid-template-areas:'head_sw_more']"
 
 const SIGNED_OUT = signedOut('操作')
 
@@ -137,6 +141,7 @@ function ResultLine({
       aria-live="polite"
       className={cn(
         'mt-[calc(5rem/16)] flex min-w-0 items-center gap-1.5 text-sub tabular-nums [grid-area:last] upright:mt-1',
+        !shown && !testing && 'hidden upright:flex',
         testing && 'text-ink-2',
         !testing && tested && cn(TESTED_OF[tested.verdict], 'font-semibold'),
         !testing && !tested && LINE_OF[said?.verdict ?? 'calm'],
@@ -179,6 +184,8 @@ function DestinationRow({
   const say = useToast()
   const { id, name, kind, tail } = destination
   const webhook = kind !== 'webPush'
+  const said = lastResultSaid(destination, now)
+  const bare = !said && !tested && !testing
 
   const toggle = async (next: boolean) => {
     setEnabled(next)
@@ -207,7 +214,10 @@ function DestinationRow({
     })
 
   return (
-    <li data-destination={id} className={cn(GROUP_ROW, ROW_AREAS)}>
+    <li
+      data-destination={id}
+      className={cn(GROUP_ROW, ROW_AREAS, bare ? ONE_LINE : TWO_LINES)}
+    >
       <span className="flex min-w-0 items-center gap-2.5 pr-2 [grid-area:head] upright:gap-2 upright:pr-1">
         <span
           className={cn(
@@ -224,12 +234,7 @@ function DestinationRow({
           </span>
         )}
       </span>
-      <ResultLine
-        said={lastResultSaid(destination, now)}
-        testing={testing}
-        tested={tested}
-        tail={tail}
-      />
+      <ResultLine said={said} testing={testing} tested={tested} tail={tail} />
       <Switch
         checked={enabled}
         aria-label={`${name} を有効にする`}

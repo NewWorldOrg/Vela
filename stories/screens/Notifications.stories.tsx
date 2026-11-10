@@ -828,3 +828,60 @@ export const 電話_ルールセットを変更: Story = {
     )
   },
 }
+
+const NEVER_SENT = {
+  ...HOME_SLACK,
+  id: 'dest-slack-new',
+  name: '新しい Slack',
+  tail: 'e5f6',
+  lastResultAt: undefined,
+  lastFailure: undefined,
+}
+
+function neverSentRow(canvasElement: HTMLElement): HTMLElement {
+  return within(canvasElement)
+    .getByRole('list', { name: '送り先' })
+    .querySelector(`[data-destination="${NEVER_SENT.id}"]`) as HTMLElement
+}
+
+export const まだ送っていない送り先は名前が行の中央に立つ: Story = {
+  args: {
+    screen: {
+      ...NOTIFICATIONS_SCREEN,
+      destinations: [...DESTINATIONS, NEVER_SENT],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const row = neverSentRow(canvasElement)
+    const room = row.getBoundingClientRect()
+    const name = within(row).getByText(NEVER_SENT.name).getBoundingClientRect()
+    const flip = within(row).getByRole('switch').getBoundingClientRect()
+
+    await expect(
+      Math.abs(name.top + name.height / 2 - (room.top + room.height / 2)),
+    ).toBeLessThanOrEqual(1)
+    await expect(
+      Math.abs(flip.top + flip.height / 2 - (room.top + room.height / 2)),
+    ).toBeLessThanOrEqual(1)
+    await expect(within(row).getAllByText('…e5f6')[0]).toBeVisible()
+    await expect(row.querySelector('[aria-live]')).not.toBeVisible()
+  },
+}
+
+export const 電話_まだ送っていない送り先: Story = {
+  args: {
+    screen: {
+      ...NOTIFICATIONS_SCREEN,
+      destinations: [...DESTINATIONS, NEVER_SENT],
+    },
+  },
+  parameters: { screen: PHONE, coarse: true },
+  play: async ({ canvasElement }) => {
+    const row = neverSentRow(canvasElement)
+    const under = row.querySelector<HTMLElement>('[aria-live]')!
+
+    await expect(under).toBeVisible()
+    await expect(under).toHaveTextContent('…e5f6')
+    await expect(under.querySelector('[data-slot="status-dot"]')).toBeNull()
+  },
+}
