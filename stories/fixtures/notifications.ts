@@ -3,8 +3,8 @@ import type {
   NotificationDestination,
   NotificationRuleSet,
   NotificationsScreen,
+  WatchedProgramme,
 } from '@/lib/notifications'
-import type { WatchedProgramme } from '@/components/notifications/notify-only-row'
 
 export const NOTIFICATIONS_NOW = Date.parse('2026-11-09T12:30:00Z')
 
@@ -159,7 +159,7 @@ export const WATCHED_DOCUMENTARY: WatchedProgramme = {
   startAt: '2026-11-09T10:30:00Z',
   endAt: '2026-11-09T11:15:00Z',
   leadMinutes: 3,
-  destinationIds: [HOME_SLACK.id, IPAD_SAFARI.id],
+  destinationNames: [HOME_SLACK.name, IPAD_SAFARI.name],
 }
 
 export const WATCHED_FOOTBALL: WatchedProgramme = {
@@ -169,5 +169,5 @@ export const WATCHED_FOOTBALL: WatchedProgramme = {
   startAt: '2026-11-09T13:00:00Z',
   endAt: '2026-11-09T14:30:00Z',
   leadMinutes: 5,
-  destinationIds: [HOME_SLACK.id],
+  destinationNames: [HOME_SLACK.name],
 }

@@ -14,14 +14,19 @@ import type {
   NotificationSettings,
   NotificationWrite,
   NotificationsScreen,
+  ProgrammeWatch,
   RuleSetDraft,
   TestSending,
+  WatchDraft,
+  WatchOffer,
+  WatchWrite,
+  WatchedProgramme,
   WebhookDraft,
 } from '@/lib/notifications'
 import { couldNot } from '@/lib/try-again'
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
-import { toInt } from '@/repository/programmes'
+import { fetchProgramme, toInt } from '@/repository/programmes'
 import { whatItSaid } from '@/repository/said'
 
 type DestinationResponder =
@@ -29,6 +34,7 @@ type DestinationResponder =
 type RuleResponder = components['schemas']['NotificationRuleResponder']
 type DeliveryResponder = components['schemas']['NotificationDeliveryResponder']
 type SettingsResponder = components['schemas']['NotificationSettingsResponder']
+type WatchResponder = components['schemas']['NotificationWatchResponder']
 
 export interface NotificationAsking {
   did: string
@@ -76,6 +82,29 @@ export const WHEN_SETTLING_THE_LEAD: NotificationAsking = {
 }
 
 const UNREADABLE = '通知の設定を読めませんでした'
+
+const NOT_WATCHED = '通知を設定できませんでした'
+
+const NOT_IN_THE_GUIDE =
+  'この番組は番組表にもうないため、通知を設定できませんでした。番組表を読み直してください。'
+
+const WATCH_REFUSED: Partial<Record<number, string>> = {
+  400: '選んだ送り先が使えなくなったため、通知を設定できませんでした。画面を読み直してください。',
+  404: NOT_IN_THE_GUIDE,
+}
+
+const ALREADY_STARTED =
+  'この番組はもう始まっているため、通知を設定できませんでした。'
+
+const ALREADY_WATCHED =
+  'この番組の通知はすでに設定してあるか、もう送ったため、設定できませんでした。'
+
+const UNWATCH_REFUSED: Partial<Record<number, string>> = {
+  404: 'この通知は残っていないため、取り消せませんでした。',
+  409: 'この通知はもう済んでいるため、取り消せませんでした。',
+}
+
+const NOT_UNWATCHED = '通知を取り消せませんでした'
 
 const REFUSAL_SAYINGS: [RegExp, string][] = [
   [/not one a notice can be sent to/i, 'この URL は受け付けられません。'],
@@ -276,6 +305,113 @@ export async function settleLead(
   return toWrite(response, whatItSaid(error), WHEN_SETTLING_THE_LEAD)
 }
 
+/** The single notices still waiting, by the programme each is for. */
+export async function listWatches(): Promise<Map<string, ProgrammeWatch>> {
+  const waiting = await fetchWaitingWatches()
+
+  return new Map(waiting.map((one) => [one.programmeId, toWatch(one)]))
+}
+
+/** What a new single notice starts from; nothing while no destination is on. */
+export async function getWatchOffer(): Promise<WatchOffer | undefined> {
+  const [destinations, settings] = await Promise.all([
+    fetchDestinations(),
+    fetchSettings(),
+  ])
+  const on = destinations.filter(({ enabled }) => enabled)
+
+  return on.length > 0
+    ? {
+        leadMinutes: settings.notifyLeadMinutes,
+        destinations: on.map(({ id, name }) => ({ id, name })),
+      }
+    : undefined
+}
+
+export async function listWatchedProgrammes(): Promise<WatchedProgramme[]> {
+  const [waiting, destinations] = await Promise.all([
+    fetchWaitingWatches(),
+    fetchDestinations(),
+  ])
+  const names = new Map(destinations.map(({ id, name }) => [id, name]))
+
+  return waiting.map((one) => ({
+    ...toWatch(one),
+    title: one.programmeName,
+    channelName: one.stationName ?? '',
+    startAt: one.startsAt,
+    endAt: one.endsAt,
+    destinationNames: one.destinations
+      .map((id) => names.get(id))
+      .filter((name) => name !== undefined),
+  }))
+}
+
+export async function askForWatch(
+  programmeId: string,
+  draft: WatchDraft,
+  now: number = Date.now(),
+): Promise<WatchWrite> {
+  const programme = await fetchProgramme(programmeId)
+
+  if (!programme) {
+    return { state: 'rejected', message: NOT_IN_THE_GUIDE }
+  }
+
+  const { data, response } = await carinaClient().POST(
+    '/api/notifications/watches',
+    {
+      body: {
+        programme: programmeId,
+        programmeStartsAt: programme.startsAt,
+        leadMinutes: draft.leadMinutes,
+        destinations: draft.destinations,
+      },
+    },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.status === 409) {
+    return {
+      state: 'rejected',
+      message:
+        Date.parse(programme.startsAt) <= now
+          ? ALREADY_STARTED
+          : ALREADY_WATCHED,
+    }
+  }
+
+  const made = data?.data
+
+  return response.ok && made
+    ? { state: 'ok', watch: toWatch(made) }
+    : {
+        state: 'rejected',
+        message: WATCH_REFUSED[response.status] ?? couldNot(NOT_WATCHED),
+      }
+}
+
+export async function cancelWatch(id: string): Promise<NotificationWrite> {
+  const { response } = await carinaClient().DELETE(
+    '/api/notifications/watches/{id}',
+    { params: { path: { id } } },
+  )
+
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  return response.ok
+    ? { state: 'ok' }
+    : {
+        state: 'rejected',
+        message: UNWATCH_REFUSED[response.status] ?? couldNot(NOT_UNWATCHED),
+      }
+}
+
 function toRuleBody(draft: RuleSetDraft) {
   return {
     name: draft.name,
@@ -314,6 +450,16 @@ async function fetchDestinations(): Promise<NotificationDestination[]> {
   }
 
   return data.data.items.map(toDestination)
+}
+
+async function fetchWaitingWatches(): Promise<WatchResponder[]> {
+  const { data, error } = await carinaClient().GET('/api/notifications/watches')
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data.items.filter(({ state }) => state === 'waiting')
 }
 
 async function fetchRuleSets(): Promise<NotificationRuleSet[]> {
@@ -391,11 +537,22 @@ function toDelivery(
 }
 
 function toSettings(one: SettingsResponder): NotificationSettings {
-  const lead = toInt(one.notifyLeadMinutes)
+  return {
+    notifyLeadMinutes: leadOf(one.notifyLeadMinutes),
+    publicOriginKnown: one.publicOriginKnown,
+  }
+}
+
+function toWatch(one: WatchResponder): ProgrammeWatch {
+  return { id: one.id, leadMinutes: leadOf(one.leadMinutes) }
+}
+
+function leadOf(minutes: number | string): LeadMinutes {
+  const lead = toInt(minutes)
 
   if (!isLead(lead)) {
     throw new Error(UNREADABLE)
   }
 
-  return { notifyLeadMinutes: lead, publicOriginKnown: one.publicOriginKnown }
+  return lead
 }

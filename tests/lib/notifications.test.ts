@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  amongWatches,
   deliveriesShown,
   deliverySaid,
   destinationsByDefault,
@@ -23,8 +24,10 @@ import {
   ruleSetsGoingWith,
   testSaid,
   toggled,
+  watchLine,
   webhookKindOf,
   withWhy,
+  yetToStart,
   type DeliveryFailure,
   type NotificationDelivery,
   type NotificationEvent,
@@ -353,4 +356,93 @@ test('a new single notice goes to every destination that is on', () => {
 test('a choice toggles in and out', () => {
   assert.deepEqual(toggled(['a', 'b'], 'a'), ['b'])
   assert.deepEqual(toggled(['b'], 'a'), ['b', 'a'])
+})
+
+test('a single notice says its station, how early and where it goes', () => {
+  assert.equal(
+    watchLine({
+      channelName: '見本テレビ',
+      leadMinutes: 3,
+      destinationNames: ['見本の Slack', '見本の Discord'],
+    }),
+    '見本テレビ · 3 分前 · 見本の Slack・見本の Discord',
+  )
+  assert.equal(
+    watchLine({ channelName: '', leadMinutes: 0, destinationNames: [] }),
+    '開始時',
+  )
+})
+
+test('a programme on the day shown has yet to start while the clock is before it', () => {
+  assert.ok(yetToStart({ startMin: 601 }, 600, '2030-01-02', '2030-01-02'))
+  assert.ok(!yetToStart({ startMin: 600 }, 600, '2030-01-02', '2030-01-02'))
+  assert.ok(!yetToStart({ startMin: 599 }, 600, '2030-01-02', '2030-01-02'))
+})
+
+test('a programme on another day has yet to start only when that day is after today', () => {
+  assert.ok(yetToStart({ startMin: 0 }, undefined, '2030-01-03', '2030-01-02'))
+  assert.ok(!yetToStart({ startMin: 0 }, undefined, '2030-01-01', '2030-01-02'))
+  assert.ok(!yetToStart({ startMin: 0 }, undefined, '2030-01-02', '2030-01-02'))
+  assert.ok(!yetToStart({ startMin: 0 }, undefined, '2030-01-03', undefined))
+})
+
+function watchAt(id: string, startAt: string) {
+  return {
+    id,
+    leadMinutes: 3 as const,
+    title: id,
+    channelName: 'みなと総合1',
+    startAt,
+    endAt: startAt,
+    destinationNames: [],
+  }
+}
+
+test('a notice stands before the first entry that starts after it', () => {
+  const own = [
+    { id: 'a', startAt: '2030-01-02T10:00:00Z' },
+    { id: 'b', startAt: '2030-01-02T12:00:00Z' },
+  ]
+  const among = amongWatches(own, (one) => one.startAt, [
+    watchAt('w2', '2030-01-02T13:00:00Z'),
+    watchAt('w1', '2030-01-02T11:00:00Z'),
+  ])
+
+  assert.deepEqual(
+    among.map((one) => one.watch?.id ?? one.own?.id),
+    ['a', 'w1', 'b', 'w2'],
+  )
+})
+
+test('a notice starting with an entry stands after it, and an entry of no start keeps its place', () => {
+  const own: { id: string; startAt?: string }[] = [
+    { id: 'a', startAt: '2030-01-02T10:00:00Z' },
+    { id: 'none' },
+    { id: 'b', startAt: '2030-01-02T12:00:00Z' },
+  ]
+  const among = amongWatches(own, (one) => one.startAt, [
+    watchAt('w', '2030-01-02T10:00:00Z'),
+  ])
+
+  assert.deepEqual(
+    among.map((one) => one.watch?.id ?? one.own?.id),
+    ['a', 'none', 'w', 'b'],
+  )
+})
+
+test('notices alone make a list of their own', () => {
+  const among = amongWatches(
+    [] as { startAt: string }[],
+    (one) => one.startAt,
+    [watchAt('w', '2030-01-02T10:00:00Z')],
+  )
+
+  assert.equal(among.length, 1)
+  assert.equal(among[0].watch?.id, 'w')
+})
+
+test('what a single notice tells has words of its own in the record of what was sent', () => {
+  assert.equal(eventLabelOf('programmeStarting'), '放送開始')
+  assert.equal(eventLabelOf('watchedProgrammeMoved'), '放送時刻の変更')
+  assert.equal(eventLabelOf('watchedProgrammeGone'), '放送の取り消し')
 })

@@ -337,6 +337,7 @@ export const 別ページと同じ中身: Story = {
           program: args.program,
           channel: args.channel,
           day: PROGRAM_DAY,
+          today: PROGRAM_DAY.date,
         }}
         onReserve={args.onReserve}
         onCancel={args.onCancel}

@@ -73,6 +73,55 @@ function delivery(id: string, occurredAt: string, more: object = {}) {
   }
 }
 
+const DOCUMENTARY = '32736-1024-501'
+
+const PROGRAMME = {
+  id: DOCUMENTARY,
+  networkId: 32736,
+  serviceId: 1024,
+  eventId: 501,
+  startsAt: '2030-01-02T12:00:00Z',
+  endsAt: '2030-01-02T12:50:00Z',
+  name: '見本の番組 1',
+  summary: '',
+  isShadow: false,
+  hasSubtitles: false,
+  audio: 'stereo',
+  sounds: 1,
+  video: 'hd',
+  aspect: 'wide',
+  isArchived: false,
+}
+
+const BEFORE_IT_STARTS = Date.parse('2030-01-02T11:00:00Z')
+
+const AFTER_IT_STARTED = Date.parse('2030-01-02T12:00:00Z')
+
+function watch(id: string, more: object = {}) {
+  return {
+    id,
+    programmeId: DOCUMENTARY,
+    networkId: 32736,
+    serviceId: 1024,
+    eventId: 501,
+    startsAt: '2030-01-02T12:00:00Z',
+    endsAt: '2030-01-02T12:50:00Z',
+    programmeName: '見本の番組 1',
+    stationName: '見本テレビ',
+    leadMinutes: 3,
+    destinations: [HOME],
+    state: 'waiting',
+    notifiedAt: null,
+    createdAt: '2030-01-01T00:00:00Z',
+    changedAt: '2030-01-01T00:00:00Z',
+    ...more,
+  }
+}
+
+const WATCH_ONE = '0c000000-0000-4000-8000-000000000001'
+
+const WATCH_TWO = '0c000000-0000-4000-8000-000000000002'
+
 const sent: Sent[] = []
 
 const store: {
@@ -81,6 +130,9 @@ const store: {
   settings: unknown
   deliveries: Record<string, unknown[]>
   trial: unknown
+  watches: unknown[]
+  programme: unknown
+  made: unknown
   readStatus: number
   readMessage: string
   writeStatus: number
@@ -91,6 +143,9 @@ const store: {
   settings: null,
   deliveries: {},
   trial: null,
+  watches: [],
+  programme: null,
+  made: null,
   readStatus: 200,
   readMessage: '',
   writeStatus: 200,
@@ -127,8 +182,18 @@ function wrote(method: string) {
       body: options?.body,
     })
 
-    return written(path.endsWith('/test') ? store.trial : null)
+    return written(answerTo(method, path))
   }
+}
+
+function answerTo(method: string, path: string): unknown {
+  if (path.endsWith('/test')) {
+    return store.trial
+  }
+
+  return method === 'POST' && path === '/api/notifications/watches'
+    ? store.made
+    : null
 }
 
 const client = () => ({
@@ -152,6 +217,12 @@ const client = () => ({
           perPage: query?.perPage,
           items: store.deliveries[String(query?.destinationId)] ?? [],
         })
+      case '/api/notifications/watches':
+        return envelope({ items: store.watches })
+      case '/api/programs/{id}':
+        return store.programme
+          ? envelope(store.programme)
+          : { data: undefined, response: answered(404) }
       default:
         throw new Error(`unexpected GET ${path}`)
     }
@@ -172,8 +243,13 @@ const {
   WHEN_CHANGING_A_DESTINATION,
   WHEN_CHANGING_A_RULE_SET,
   WHEN_TRYING_A_DESTINATION,
+  askForWatch,
+  cancelWatch,
   defineRuleSet,
   getNotificationsScreen,
+  getWatchOffer,
+  listWatchedProgrammes,
+  listWatches,
   registerDestination,
   removeDestination,
   removeRuleSet,
@@ -193,6 +269,9 @@ beforeEach(() => {
   store.settings = { notifyLeadMinutes: 3, publicOriginKnown: true }
   store.deliveries = {}
   store.trial = { delivered: true, failure: null }
+  store.watches = []
+  store.programme = PROGRAMME
+  store.made = watch(WATCH_ONE)
   store.readStatus = 200
   store.readMessage = ''
   store.writeStatus = 200
@@ -629,4 +708,195 @@ test('what Carina says about a refusal is put in the words of the screen', () =>
     ),
     '送り先を追加できませんでした。時間をおいてからもう一度お試しください。',
   )
+})
+
+test('the programmes whose start is to be told are the single notices still waiting', async () => {
+  store.watches = [
+    watch(WATCH_ONE, { leadMinutes: '5' }),
+    watch(WATCH_TWO, { programmeId: '32736-1024-502', state: 'notified' }),
+    watch(GAMES, { programmeId: '32736-1024-503', state: 'skipped' }),
+    watch(HOME, { programmeId: '32736-1024-504', state: 'cancelled' }),
+  ]
+
+  assert.deepEqual(
+    [...(await listWatches())],
+    [[DOCUMENTARY, { id: WATCH_ONE, leadMinutes: 5 }]],
+  )
+})
+
+test('single notices that cannot be read are an error, not an empty answer', async () => {
+  store.readStatus = 500
+  store.readMessage = 'boom'
+
+  await assert.rejects(listWatches(), /boom/)
+  await assert.rejects(listWatchedProgrammes(), /boom/)
+  await assert.rejects(getWatchOffer(), /boom/)
+})
+
+test('a new single notice starts from the lead the settings hold and the destinations that are on', async () => {
+  assert.deepEqual(await getWatchOffer(), {
+    leadMinutes: 3,
+    destinations: [{ id: HOME, name: '見本の送り先 1' }],
+  })
+})
+
+test('nothing is offered while no destination is on', async () => {
+  store.destinations = [DESTINATION_GAMES]
+
+  assert.equal(await getWatchOffer(), undefined)
+})
+
+test('the waiting notices are listed with the names of the destinations that are still there', async () => {
+  store.watches = [
+    watch(WATCH_ONE, { destinations: [HOME, GAMES, FAILURES] }),
+    watch(WATCH_TWO, {
+      programmeId: '32736-1024-502',
+      stationName: null,
+      state: 'notified',
+    }),
+  ]
+
+  assert.deepEqual(await listWatchedProgrammes(), [
+    {
+      id: WATCH_ONE,
+      leadMinutes: 3,
+      title: '見本の番組 1',
+      channelName: '見本テレビ',
+      startAt: '2030-01-02T12:00:00Z',
+      endAt: '2030-01-02T12:50:00Z',
+      destinationNames: ['見本の送り先 1', '見本の送り先 2'],
+    },
+  ])
+})
+
+test('a single notice is asked for with the programme, its start, the lead and the destinations', async () => {
+  store.writeStatus = 201
+
+  assert.deepEqual(
+    await askForWatch(
+      DOCUMENTARY,
+      { leadMinutes: 3, destinations: [HOME] },
+      BEFORE_IT_STARTS,
+    ),
+    { state: 'ok', watch: { id: WATCH_ONE, leadMinutes: 3 } },
+  )
+  assert.deepEqual(sent.at(-1), {
+    method: 'POST',
+    path: '/api/notifications/watches',
+    at: undefined,
+    body: {
+      programme: DOCUMENTARY,
+      programmeStartsAt: '2030-01-02T12:00:00Z',
+      leadMinutes: 3,
+      destinations: [HOME],
+    },
+  })
+})
+
+test('a single notice for a programme the guide no longer has is refused before asking', async () => {
+  store.programme = null
+
+  assert.deepEqual(
+    await askForWatch(DOCUMENTARY, { leadMinutes: 3, destinations: [HOME] }),
+    {
+      state: 'rejected',
+      message:
+        'この番組は番組表にもうないため、通知を設定できませんでした。番組表を読み直してください。',
+    },
+  )
+  assert.ok(!sent.some(({ method }) => method === 'POST'))
+})
+
+test('what refuses a single notice is said by its status and the time, never in the words Carina used', async () => {
+  const asked = (now: number) =>
+    askForWatch(DOCUMENTARY, { leadMinutes: 3, destinations: [HOME] }, now)
+
+  store.writeMessage = 'The programme has already started.'
+
+  store.writeStatus = 404
+  assert.deepEqual(await asked(BEFORE_IT_STARTS), {
+    state: 'rejected',
+    message:
+      'この番組は番組表にもうないため、通知を設定できませんでした。番組表を読み直してください。',
+  })
+
+  store.writeStatus = 400
+  assert.deepEqual(await asked(BEFORE_IT_STARTS), {
+    state: 'rejected',
+    message:
+      '選んだ送り先が使えなくなったため、通知を設定できませんでした。画面を読み直してください。',
+  })
+
+  store.writeStatus = 409
+  assert.deepEqual(await asked(AFTER_IT_STARTED), {
+    state: 'rejected',
+    message: 'この番組はもう始まっているため、通知を設定できませんでした。',
+  })
+  assert.deepEqual(await asked(BEFORE_IT_STARTS), {
+    state: 'rejected',
+    message:
+      'この番組の通知はすでに設定してあるか、もう送ったため、設定できませんでした。',
+  })
+
+  store.writeStatus = 500
+  assert.deepEqual(await asked(BEFORE_IT_STARTS), {
+    state: 'rejected',
+    message:
+      '通知を設定できませんでした。時間をおいてからもう一度お試しください。',
+  })
+
+  store.writeStatus = 401
+  assert.deepEqual(await asked(BEFORE_IT_STARTS), { state: 'unauthenticated' })
+})
+
+test('a single notice Carina took without saying which is not counted as set', async () => {
+  store.writeStatus = 201
+  store.made = null
+
+  assert.deepEqual(
+    await askForWatch(
+      DOCUMENTARY,
+      { leadMinutes: 3, destinations: [HOME] },
+      BEFORE_IT_STARTS,
+    ),
+    {
+      state: 'rejected',
+      message:
+        '通知を設定できませんでした。時間をおいてからもう一度お試しください。',
+    },
+  )
+})
+
+test('a single notice is taken back by its id', async () => {
+  assert.deepEqual(await cancelWatch(WATCH_ONE), { state: 'ok' })
+  assert.deepEqual(sent.at(-1), {
+    method: 'DELETE',
+    path: '/api/notifications/watches/{id}',
+    at: { id: WATCH_ONE },
+    body: undefined,
+  })
+})
+
+test('what refuses taking a single notice back is said by its status', async () => {
+  store.writeStatus = 404
+  assert.deepEqual(await cancelWatch(WATCH_ONE), {
+    state: 'rejected',
+    message: 'この通知は残っていないため、取り消せませんでした。',
+  })
+
+  store.writeStatus = 409
+  assert.deepEqual(await cancelWatch(WATCH_ONE), {
+    state: 'rejected',
+    message: 'この通知はもう済んでいるため、取り消せませんでした。',
+  })
+
+  store.writeStatus = 503
+  assert.deepEqual(await cancelWatch(WATCH_ONE), {
+    state: 'rejected',
+    message:
+      '通知を取り消せませんでした。時間をおいてからもう一度お試しください。',
+  })
+
+  store.writeStatus = 401
+  assert.deepEqual(await cancelWatch(WATCH_ONE), { state: 'unauthenticated' })
 })

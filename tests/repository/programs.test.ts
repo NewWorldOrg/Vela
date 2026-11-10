@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import { mock, test } from 'node:test'
 
+import type { ProgrammeWatch } from '@/lib/notifications'
 import type { ProgramBooking } from '@/repository/programs'
 
 const JST_OFFSET_MS = 9 * 60 * 60 * 1000
@@ -841,4 +842,60 @@ test('a programme hands over no field it has nothing to say in', async () => {
   for (const unsaid of ['description', 'subtitled', 'endUndecided']) {
     assert.equal(unsaid in program, false, unsaid)
   }
+})
+
+test('a programme whose start is to be told carries its single notice, in the guide and at its own address', async () => {
+  standing()
+
+  const watches = new Map<string, ProgrammeWatch>([
+    [idOf(CARRIED), { id: 'watch-1', leadMinutes: 5 }],
+  ])
+  const guide = await getGuide(
+    'terrestrial',
+    broadcastDay(STARTS),
+    new Map(),
+    Promise.resolve(watches),
+  )
+  const detail = await getProgram(
+    idOf(CARRIED),
+    new Date(),
+    new Map(),
+    Promise.resolve(watches),
+  )
+  const { guide: opening, rest } = await getGuideInTwo(
+    'terrestrial',
+    broadcastDay(STARTS),
+    new Map(),
+    watches,
+  )
+  const inTwo = [...opening.programs, ...(await rest)]
+
+  assert.deepEqual(
+    guide.programs
+      .filter((program) => program.watch)
+      .map((program) => [program.id, program.watch]),
+    [[idOf(CARRIED), { id: 'watch-1', leadMinutes: 5 }]],
+  )
+  assert.deepEqual(
+    inTwo.find((program) => program.id === idOf(CARRIED))?.watch,
+    { id: 'watch-1', leadMinutes: 5 },
+  )
+  assert.deepEqual(detail?.program.watch, { id: 'watch-1', leadMinutes: 5 })
+  assert.equal((await getProgram(idOf(CARRIED)))?.program.watch, undefined)
+})
+
+test('a programme opened at its own address says which broadcast day today is', async () => {
+  standing()
+
+  const detail = await getProgram(
+    idOf(CARRIED),
+    new Date('2030-03-04T18:59:00Z'),
+  )
+  const afterTheDayTurns = await getProgram(
+    idOf(CARRIED),
+    new Date('2030-03-04T19:00:00Z'),
+  )
+
+  assert.equal(detail?.today, '2030-03-04')
+  assert.equal(afterTheDayTurns?.today, '2030-03-05')
 })

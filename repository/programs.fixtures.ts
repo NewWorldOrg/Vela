@@ -697,6 +697,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationLabel: '2 時間 25 分',
     },
     day: PROGRAM_DAY,
+    today: PROGRAM_DAY.date,
     channel: CHANNEL_FIXTURES[0],
   },
   relayed: {
@@ -742,6 +743,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationLabel: '2 時間',
     },
     day: PROGRAM_DAY,
+    today: PROGRAM_DAY.date,
     channel: CHANNEL_FIXTURES[0],
   },
   simulcast: {
@@ -804,6 +806,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationLabel: '30 分',
     },
     day: PROGRAM_DAY,
+    today: PROGRAM_DAY.date,
     channel: CHANNEL_FIXTURES[0],
   },
   undecided: {
@@ -828,6 +831,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       related: [],
     },
     day: PROGRAM_DAY,
+    today: PROGRAM_DAY.date,
     channel: CHANNEL_FIXTURES[5],
   },
   multiline: {
@@ -858,6 +862,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationLabel: '1 時間 15 分',
     },
     day: PROGRAM_DAY,
+    today: PROGRAM_DAY.date,
     channel: CHANNEL_FIXTURES[0],
   },
   minimal: {
@@ -879,6 +884,7 @@ export const PROGRAM_DETAIL_FIXTURES: Record<
       durationLabel: '1 時間',
     },
     day: PROGRAM_DAY,
+    today: PROGRAM_DAY.date,
     channel: CHANNEL_FIXTURES[7],
   },
 }

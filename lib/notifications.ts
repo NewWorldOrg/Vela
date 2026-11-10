@@ -48,6 +48,13 @@ export type NotificationEvent =
   | 'qualityIncidentResolved'
   | 'deviceDisconnected'
 
+/** What a notice can be of: an event a rule set chooses, or what a single notice tells, which no rule set does. */
+export type NoticeKind =
+  | NotificationEvent
+  | 'programmeStarting'
+  | 'watchedProgrammeMoved'
+  | 'watchedProgrammeGone'
+
 export interface NotificationRuleSet {
   id: string
   name: string
@@ -75,7 +82,7 @@ export type DeliveryState = 'queued' | 'sent' | 'failed' | 'givenUp'
 /** One notice on its way to one destination. Its title is the heading Carina gave the notice. */
 export interface NotificationDelivery {
   id: string
-  kind: NotificationEvent
+  kind: NoticeKind
   occurredAt: string
   destinationId: string
   state: DeliveryState
@@ -103,13 +110,85 @@ export interface NotificationsScreen {
 export interface ProgrammeWatch {
   id: string
   leadMinutes: LeadMinutes
-  destinationIds: string[]
+}
+
+/** A single notice still waiting for its programme, as the list of reservations shows it. */
+export interface WatchedProgramme extends ProgrammeWatch {
+  title: string
+  channelName: string
+  startAt: string
+  endAt: string
+  destinationNames: string[]
+}
+
+/** What a new single notice is asked with. */
+export interface WatchDraft {
+  leadMinutes: LeadMinutes
+  destinations: string[]
+}
+
+/** What a new single notice starts from: the lead the settings hold and the destinations that are on. */
+export interface WatchOffer {
+  leadMinutes: LeadMinutes
+  destinations: Pick<NotificationDestination, 'id' | 'name'>[]
 }
 
 export type NotificationWrite =
   | { state: 'ok' }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
+
+export type WatchWrite =
+  | { state: 'ok'; watch: ProgrammeWatch }
+  | { state: 'unauthenticated' }
+  | { state: 'rejected'; message: string }
+
+/** One place in a list single notices stand among: what the list held, or a notice. */
+export type AmongWatches<T> =
+  { own: T; watch?: undefined } | { own?: undefined; watch: WatchedProgramme }
+
+/** The list with each notice put before the first of its entries that starts later. */
+export function amongWatches<T>(
+  own: readonly T[],
+  startOf: (one: T) => string | undefined,
+  watches: readonly WatchedProgramme[],
+): AmongWatches<T>[] {
+  const waiting = [...watches].sort(
+    (left, right) => Date.parse(left.startAt) - Date.parse(right.startAt),
+  )
+  const among: AmongWatches<T>[] = []
+  let next = 0
+
+  for (const one of own) {
+    const start = startOf(one)
+
+    while (
+      start !== undefined &&
+      next < waiting.length &&
+      Date.parse(waiting[next].startAt) < Date.parse(start)
+    ) {
+      among.push({ watch: waiting[next] })
+      next += 1
+    }
+
+    among.push({ own: one })
+  }
+
+  return [...among, ...waiting.slice(next).map((watch) => ({ watch }))]
+}
+
+/** The single notices a list of reservations shows among its rows, and what takes one back. */
+export interface WaitingNotices {
+  watches: WatchedProgramme[]
+  onCancel: (id: string) => Promise<NotificationWrite>
+}
+
+/** What a programme's detail asks and takes back a single notice with; without an offer there is nowhere to send one. */
+export interface Noticing {
+  offer?: WatchOffer
+  onWatch: (programmeId: string, draft: WatchDraft) => Promise<WatchWrite>
+  onUnwatch: (watchId: string) => Promise<NotificationWrite>
+}
 
 export type TestSending =
   | { state: 'ok'; delivered: boolean; failure?: DeliveryFailure }
@@ -272,7 +351,7 @@ export function eventsSummary(events: readonly NotificationEvent[]): string {
   return said.length === 0 ? NO_EVENTS : said.join(' · ')
 }
 
-export const EVENT_LABEL: Record<NotificationEvent, string> = {
+export const EVENT_LABEL: Record<NoticeKind, string> = {
   recordingStarted: '録画の開始',
   recordingCompleted: '録画の完了',
   recordingTruncated: '録画の欠け',
@@ -286,9 +365,12 @@ export const EVENT_LABEL: Record<NotificationEvent, string> = {
   qualityIncidentDetected: '品質の異常の発生',
   qualityIncidentResolved: '品質の異常の解消',
   deviceDisconnected: '機器の切断',
+  programmeStarting: '放送開始',
+  watchedProgrammeMoved: '放送時刻の変更',
+  watchedProgrammeGone: '放送の取り消し',
 }
 
-export function eventLabelOf(event: NotificationEvent): string {
+export function eventLabelOf(event: NoticeKind): string {
   return wordFor(EVENT_LABEL, event)
 }
 
@@ -304,6 +386,36 @@ export function leadChipWords(lead: LeadMinutes): string {
 /** What the toast says once a programme's start is to be told. */
 export function leadToastWords(lead: LeadMinutes): string {
   return lead === 0 ? '開始時に通知します' : `開始の ${lead} 分前に通知します`
+}
+
+/** The line under a single notice's title in the list of reservations. */
+export function watchLine(
+  watch: Pick<
+    WatchedProgramme,
+    'channelName' | 'leadMinutes' | 'destinationNames'
+  >,
+): string {
+  return [
+    watch.channelName,
+    leadLabel(watch.leadMinutes),
+    watch.destinationNames.join('・'),
+  ]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/** Whether a programme is still ahead: by the clock on the day shown, by the date on any other. */
+export function yetToStart(
+  program: { startMin: number },
+  nowMin: number | undefined,
+  day: string,
+  today: string | undefined,
+): boolean {
+  if (nowMin !== undefined) {
+    return program.startMin > nowMin
+  }
+
+  return today !== undefined && day > today
 }
 
 export function isLead(value: number): value is LeadMinutes {
