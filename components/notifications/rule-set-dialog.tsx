@@ -202,7 +202,6 @@ function RuleSetForm({
           <RemoveButton
             what="ルールセット"
             name={ruleSet.name}
-            size="default"
             onRemove={onRemove}
             onRemoved={onClose}
           />

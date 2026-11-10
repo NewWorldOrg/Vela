@@ -35,36 +35,27 @@ export interface DestinationRevision {
 
 const SIGNED_OUT = signedOut('変更')
 
-export function EditDestinationButton({
+export function EditDestinationDialog({
   destination,
+  open,
+  onOpenChange,
   onRevise,
-  className,
 }: {
   destination: NotificationDestination
+  open: boolean
+  onOpenChange: (open: boolean) => void
   onRevise: (
     id: string,
     revision: DestinationRevision,
   ) => Promise<NotificationWrite>
-  className?: string
 }) {
-  const [open, setOpen] = useState(false)
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <Button
-        variant="tone"
-        size="sm"
-        aria-label={`${destination.name} を変更`}
-        className={className}
-        onClick={() => setOpen(true)}
-      >
-        変更
-      </Button>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <NoticeDialogContent>
         {open && (
           <EditDestinationForm
             destination={destination}
-            onClose={() => setOpen(false)}
+            onClose={() => onOpenChange(false)}
             onRevise={onRevise}
           />
         )}

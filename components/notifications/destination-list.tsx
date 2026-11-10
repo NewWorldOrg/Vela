@@ -5,7 +5,6 @@ import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
 import {
-  KIND_LABEL,
   lastResultSaid,
   tailOf,
   testSaid,
@@ -16,18 +15,16 @@ import {
   type TestSending,
   type Verdict,
 } from '@/lib/notifications'
-import { wordFor } from '@/lib/not-yet-in-this-build'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/vela/progress'
 import { StatusDot, type StatusTone } from '@/components/vela/status'
 import { useToast } from '@/components/vela/toast'
 import {
-  EditDestinationButton,
+  EditDestinationDialog,
   type DestinationRevision,
 } from '@/components/notifications/edit-destination-dialog'
-import { RemoveButton } from '@/components/notifications/remove-button'
+import { RemoveDialog } from '@/components/notifications/remove-button'
+import { KindChip, RowMenu } from '@/components/notifications/row-menu'
 
 export interface DestinationActions {
   onToggleDestination: (
@@ -67,14 +64,12 @@ const TESTED_OF: Record<Verdict, string> = {
 export const GROUP_ROW =
   'relative before:absolute before:top-0 before:right-0 before:left-4 before:h-px before:bg-hair first:before:hidden upright:before:left-3.5'
 
-/** On a wide window the switch, the answer to a test and the buttons stand to the right of the name; on a phone the switch stays beside the name and the buttons go under it. */
+/** The name and the last result on the left; the switch and the `…` on the right, beside the name on a phone. */
 const ROW_AREAS = cn(
-  'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto_auto] items-center gap-x-2 px-4 py-3',
-  "[grid-template-areas:'head_sw_res_acts'_'last_sw_res_acts']",
-  "upright:grid-cols-[minmax(0,1fr)_auto] upright:px-3.5 upright:[grid-template-areas:'head_sw'_'last_last'_'acts_acts'_'res_res']",
+  'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 px-4 py-3',
+  "[grid-template-areas:'head_sw_more'_'last_sw_more']",
+  "upright:min-h-0 upright:gap-x-1 upright:px-3.5 upright:[grid-template-areas:'head_sw_more'_'last_last_last']",
 )
-
-const FLAT_ON_A_PHONE = 'upright:shadow-none'
 
 const SIGNED_OUT = signedOut('操作')
 
@@ -108,27 +103,49 @@ export function DestinationList({
   )
 }
 
-function ResultLine({ said, tail }: { said?: Said; tail?: string }) {
-  if (!said && !tail) {
+const TEST_SENT = 'テスト送信'
+
+/** The line under the name: the answer to a test send while there is one, otherwise how the last notice went; on a phone the address's tail after it. */
+function ResultLine({
+  said,
+  testing,
+  tested,
+  tail,
+}: {
+  said?: Said
+  testing: boolean
+  tested?: Said
+  tail?: string
+}) {
+  const shown = tested ?? said
+  const words = testing
+    ? `${TEST_SENT} · 送信中`
+    : tested && `${TEST_SENT} · ${withWhy(tested)}`
+
+  if (!shown && !testing && !tail) {
     return null
   }
 
   return (
     <span
+      aria-live="polite"
       className={cn(
         'mt-[calc(5rem/16)] flex min-w-0 items-center gap-1.5 text-sub tabular-nums [grid-area:last] upright:mt-1',
-        LINE_OF[said?.verdict ?? 'calm'],
+        testing && 'text-ink-2',
+        !testing && tested && cn(TESTED_OF[tested.verdict], 'font-semibold'),
+        !testing && !tested && LINE_OF[said?.verdict ?? 'calm'],
       )}
     >
-      {said && (
-        <>
-          <StatusDot tone={DOT_OF[said.verdict]} className="size-1.5" />
-          <span className="truncate">{withWhy(said)}</span>
-        </>
+      {testing && <Spinner size="control" />}
+      {!testing && shown && (
+        <StatusDot tone={DOT_OF[shown.verdict]} className="size-1.5" />
+      )}
+      {(words || said) && (
+        <span className="truncate">{words || (said && withWhy(said))}</span>
       )}
       {tail && (
-        <span className="hidden shrink-0 text-ink-2 upright:inline">
-          {said && '· '}
+        <span className="hidden shrink-0 font-normal text-ink-2 upright:inline">
+          {(words || said) && '· '}
           {tailOf(tail)}
         </span>
       )}
@@ -148,6 +165,8 @@ function DestinationRow({
   const [enabled, setEnabled] = useState(destination.enabled)
   const [tested, setTested] = useState<Said>()
   const [testing, startTesting] = useTransition()
+  const [editing, setEditing] = useState(false)
+  const [removing, setRemoving] = useState(false)
   const say = useToast()
   const { id, name, kind, urlTail, lastResult } = destination
   const webhook = kind !== 'webPush'
@@ -180,7 +199,7 @@ function DestinationRow({
 
   return (
     <li data-destination={id} className={cn(GROUP_ROW, ROW_AREAS)}>
-      <span className="flex min-w-0 items-center gap-2.5 pr-2 [grid-area:head] upright:gap-2 upright:pr-0">
+      <span className="flex min-w-0 items-center gap-2.5 pr-2 [grid-area:head] upright:gap-2 upright:pr-1">
         <span
           className={cn(
             'min-w-0 truncate text-title font-semibold tracking-[-0.008em]',
@@ -189,9 +208,7 @@ function DestinationRow({
         >
           {name}
         </span>
-        <Badge variant="info" className="shrink-0">
-          {wordFor(KIND_LABEL, kind)}
-        </Badge>
+        <KindChip kind={kind} className="shrink-0" />
         {urlTail && (
           <span className="shrink-0 text-[calc(13rem/16)] text-ink-2 tabular-nums upright:hidden">
             {tailOf(urlTail)}
@@ -200,49 +217,42 @@ function DestinationRow({
       </span>
       <ResultLine
         said={lastResult && lastResultSaid(lastResult, now)}
+        testing={testing}
+        tested={tested}
         tail={urlTail}
       />
       <Switch
         checked={enabled}
         aria-label={`${name} を有効にする`}
         onCheckedChange={(next) => void toggle(next)}
-        className="mr-2.5 [grid-area:sw] upright:mr-0"
+        className="mr-1 [grid-area:sw] upright:mr-0.5"
       />
-      <span
-        aria-live="polite"
-        className={cn(
-          'text-sub font-semibold whitespace-nowrap tabular-nums [grid-area:res] upright:whitespace-normal',
-          tested && cn(TESTED_OF[tested.verdict], 'upright:mt-2'),
-        )}
-      >
-        {tested && withWhy(tested)}
-      </span>
-      <span className="flex items-center gap-2 [grid-area:acts] upright:mt-2.5 upright:flex-wrap">
-        <Button
-          variant="tone"
-          size="sm"
-          aria-label={`${name} にテスト送信`}
-          disabled={testing}
-          onClick={test}
-          className={FLAT_ON_A_PHONE}
-        >
-          {testing && <Spinner size="control" />}
-          テスト送信
-        </Button>
-        {webhook && (
-          <EditDestinationButton
-            destination={destination}
-            onRevise={actions.onReviseDestination}
-            className={FLAT_ON_A_PHONE}
-          />
-        )}
-        <RemoveButton
-          what="送り先"
-          name={name}
-          onRemove={() => actions.onRemoveDestination(id)}
-          className={FLAT_ON_A_PHONE}
+      <RowMenu
+        name={name}
+        className="[grid-area:more]"
+        actions={[
+          { label: TEST_SENT, onSelect: test },
+          ...(webhook
+            ? [{ label: '変更', onSelect: () => setEditing(true) }]
+            : []),
+        ]}
+        onRemove={() => setRemoving(true)}
+      />
+      {webhook && (
+        <EditDestinationDialog
+          destination={destination}
+          open={editing}
+          onOpenChange={setEditing}
+          onRevise={actions.onReviseDestination}
         />
-      </span>
+      )}
+      <RemoveDialog
+        what="送り先"
+        name={name}
+        open={removing}
+        onOpenChange={setRemoving}
+        onRemove={() => actions.onRemoveDestination(id)}
+      />
     </li>
   )
 }

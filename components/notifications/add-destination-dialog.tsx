@@ -116,8 +116,8 @@ function KindPicker({
       <ul className="mt-0.5 rounded-lg bg-surface dark:bg-surface-2">
         <KindOption
           icon={<LinkIcon />}
-          name="Slack・Discord"
-          says="Webhook の URL に送ります"
+          name="Webhook"
+          says="Slack・Discord の URL に送ります"
           onPick={() => onPick('webhook')}
         />
         <KindOption

@@ -103,6 +103,18 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
+/** Opens a row's `…` and picks one of its items. */
+async function fromTheMenu(
+  canvasElement: HTMLElement,
+  name: string,
+  item: string,
+) {
+  await userEvent.click(
+    within(canvasElement).getByRole('button', { name: `${name} の操作` }),
+  )
+  await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
 async function openThePicker(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
   const destinations = canvas.getByRole('heading', { name: '送り先' })
@@ -146,11 +158,16 @@ export const 通常: Story = {
       destinations.getByText('届いていない · 時間切れ'),
     ).toBeVisible()
     await expect(
-      destinations.getByRole('button', { name: '家の Slack を変更' }),
+      destinations.getByRole('button', { name: '家の Slack の操作' }),
     ).toBeVisible()
     await expect(
-      destinations.queryByRole('button', { name: 'iPad の Safari を変更' }),
+      destinations.queryByRole('button', { name: /テスト送信|変更|削除/ }),
     ).toBeNull()
+    await expect(
+      destinations
+        .getAllByText(/^(Slack|Discord|Web Push)$/)
+        .map((chip) => chip.dataset.kind),
+    ).toEqual(['slack', 'discord', 'webPush'])
     await expect(
       canvas.getByText(
         '録画の欠け・失敗 · エンコードの失敗 · 競合・取り逃し · 異常の発生 · 切断',
@@ -206,20 +223,49 @@ export const テスト送信: Story = {
 
     testDestination.mockClear()
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: '家の Slack にテスト送信' }),
-    )
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Discord の通知部屋 にテスト送信' }),
-    )
+    await fromTheMenu(canvasElement, '家の Slack', 'テスト送信')
+    await fromTheMenu(canvasElement, 'Discord の通知部屋', 'テスト送信')
 
     const destinations = within(canvas.getByRole('list', { name: '送り先' }))
 
     await waitFor(() => expect(testDestination).toHaveBeenCalledTimes(2))
-    await expect(await destinations.findByText('届いた')).toBeVisible()
     await expect(
-      await destinations.findByText('届かなかった · 時間切れ'),
+      await destinations.findByText('テスト送信 · 届いた'),
     ).toBeVisible()
+    await expect(
+      await destinations.findByText('テスト送信 · 届かなかった · 時間切れ'),
+    ).toBeVisible()
+    await expect(destinations.queryByText('届いていない · 時間切れ')).toBeNull()
+  },
+}
+
+export const 操作のメニュー: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: '家の Slack の操作' }),
+    )
+
+    const menu = within(await screen.findByRole('menu'))
+
+    await expect(
+      menu.getAllByRole('menuitem').map((item) => item.textContent),
+    ).toEqual(['テスト送信', '変更', '削除'])
+  },
+}
+
+export const 操作のメニュー_ブラウザ: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', {
+        name: 'iPad の Safari の操作',
+      }),
+    )
+
+    const menu = within(await screen.findByRole('menu'))
+
+    await expect(
+      menu.getAllByRole('menuitem').map((item) => item.textContent),
+    ).toEqual(['テスト送信', '削除'])
   },
 }
 
@@ -332,7 +378,7 @@ export const 送り先を追加_種類を選ぶ: Story = {
     const dialog = within(await openThePicker(canvasElement))
 
     await expect(
-      dialog.getByRole('button', { name: /Webhook の URL に送ります/ }),
+      dialog.getByRole('button', { name: /Slack・Discord の URL に送ります/ }),
     ).toBeVisible()
     await expect(
       dialog.getByText('Windows の Chrome に通知を出します'),
@@ -481,9 +527,7 @@ export const 送り先を変更: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: '家の Slack を変更' }),
-    )
+    await fromTheMenu(canvasElement, '家の Slack', '変更')
 
     const dialog = within(
       await screen.findByRole('dialog', { name: '送り先を変更' }),
@@ -505,9 +549,7 @@ export const 送り先の変更を保存する: Story = {
   play: async ({ canvasElement }) => {
     reviseDestination.mockClear()
 
-    await userEvent.click(
-      within(canvasElement).getByRole('button', { name: '家の Slack を変更' }),
-    )
+    await fromTheMenu(canvasElement, '家の Slack', '変更')
 
     const dialog = within(
       await screen.findByRole('dialog', { name: '送り先を変更' }),
@@ -530,9 +572,7 @@ export const 送り先を削除: Story = {
 
     removeDestination.mockClear()
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: 'Discord の通知部屋 を削除' }),
-    )
+    await fromTheMenu(canvasElement, 'Discord の通知部屋', '削除')
 
     const asked = within(await screen.findByRole('alertdialog'))
 
@@ -551,9 +591,7 @@ export const ルールセットを変更: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
-    await userEvent.click(
-      canvas.getByRole('button', { name: '困ったときだけ を変更' }),
-    )
+    await fromTheMenu(canvasElement, '困ったときだけ', '変更')
 
     const dialog = within(
       await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
@@ -581,11 +619,7 @@ export const ルールセットを保存する: Story = {
   play: async ({ canvasElement }) => {
     reviseRuleSet.mockClear()
 
-    await userEvent.click(
-      within(canvasElement).getByRole('button', {
-        name: '困ったときだけ を変更',
-      }),
-    )
+    await fromTheMenu(canvasElement, '困ったときだけ', '変更')
 
     const dialog = within(
       await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
@@ -681,8 +715,8 @@ export const 電話: Story = {
 
     await expect(slack.getByText('· …a1b2')).toBeVisible()
     await expect(
-      canvas.queryByRole('button', { name: '困ったときだけ を変更' }),
-    ).toBeNull()
+      canvas.getByRole('button', { name: '困ったときだけ の操作' }),
+    ).toBeVisible()
   },
 }
 
@@ -718,11 +752,7 @@ export const 電話_このブラウザ: Story = {
 export const 電話_ルールセットを変更: Story = {
   parameters: { screen: PHONE, coarse: true },
   play: async ({ canvasElement }) => {
-    const ruleSets = within(
-      within(canvasElement).getByRole('list', { name: 'ルールセット' }),
-    )
-
-    await userEvent.click(ruleSets.getByRole('button', { name: /^録画の記録/ }))
+    await fromTheMenu(canvasElement, '録画の記録', '変更')
 
     const dialog = await screen.findByRole('dialog', {
       name: 'ルールセットを変更',

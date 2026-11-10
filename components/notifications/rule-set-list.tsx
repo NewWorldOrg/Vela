@@ -16,10 +16,10 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Switch } from '@/components/ui/switch'
 import { PlusIcon } from '@/components/vela/icons'
-import { pressable } from '@/components/vela/tactile'
 import { useToast } from '@/components/vela/toast'
 import { GROUP_ROW } from '@/components/notifications/destination-list'
-import { RemoveButton } from '@/components/notifications/remove-button'
+import { RemoveDialog } from '@/components/notifications/remove-button'
+import { RowMenu } from '@/components/notifications/row-menu'
 import { RuleSetDialog } from '@/components/notifications/rule-set-dialog'
 
 export interface RuleSetActions {
@@ -34,11 +34,11 @@ export interface RuleSetActions {
 
 const SIGNED_OUT = signedOut('操作')
 
-/** On a wide window the switch and the buttons stand to the right; on a phone the switch stays beside the name and the row itself opens the editor. */
+/** The name, its events and destinations on the left; the switch and the `…` on the right, beside the name on a phone. */
 const ROW_AREAS = cn(
   'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 px-4 py-3',
-  "[grid-template-areas:'info_sw_acts']",
-  "upright:grid-cols-[minmax(0,1fr)_auto] upright:items-start upright:px-3.5 upright:[grid-template-areas:'info_sw']",
+  "[grid-template-areas:'info_sw_more']",
+  'upright:min-h-0 upright:items-start upright:gap-x-1 upright:px-3.5',
 )
 
 /** `追加` over the rule sets, which stops at twenty, and before there is anywhere to send to. */
@@ -137,6 +137,7 @@ function RuleSetRow({
   actions: RuleSetActions
 }) {
   const [enabled, setEnabled] = useState(ruleSet.enabled)
+  const [removing, setRemoving] = useState(false)
   const say = useToast()
   const { id, name } = ruleSet
 
@@ -155,14 +156,7 @@ function RuleSetRow({
 
   return (
     <li data-rule-set={id} className={cn(GROUP_ROW, ROW_AREAS)}>
-      <button
-        type="button"
-        onClick={onOpen}
-        className={cn(
-          'min-w-0 rounded-sm pr-2 text-left outline-none [grid-area:info] focus-visible:shadow-ring upright:pr-0',
-          pressable,
-        )}
-      >
+      <span className="min-w-0 pr-2 [grid-area:info] upright:pr-1">
         <span
           className={cn(
             'block truncate text-title font-semibold tracking-[-0.008em]',
@@ -188,28 +182,26 @@ function RuleSetRow({
             </Badge>
           ))}
         </span>
-      </button>
+      </span>
       <Switch
         checked={enabled}
         aria-label={`${name} を有効にする`}
         onCheckedChange={(next) => void toggle(next)}
-        className="mr-2.5 [grid-area:sw] upright:mr-0"
+        className="mr-1 [grid-area:sw] upright:mr-0.5"
       />
-      <span className="flex items-center gap-2 [grid-area:acts] upright:hidden">
-        <Button
-          variant="tone"
-          size="sm"
-          aria-label={`${name} を変更`}
-          onClick={onOpen}
-        >
-          変更
-        </Button>
-        <RemoveButton
-          what="ルールセット"
-          name={name}
-          onRemove={() => actions.onRemoveRuleSet(id)}
-        />
-      </span>
+      <RowMenu
+        name={name}
+        className="[grid-area:more] upright:-mt-1"
+        actions={[{ label: '変更', onSelect: onOpen }]}
+        onRemove={() => setRemoving(true)}
+      />
+      <RemoveDialog
+        what="ルールセット"
+        name={name}
+        open={removing}
+        onOpenChange={setRemoving}
+        onRemove={() => actions.onRemoveRuleSet(id)}
+      />
     </li>
   )
 }
