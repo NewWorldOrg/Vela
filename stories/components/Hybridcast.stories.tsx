@@ -521,6 +521,7 @@ async function movedBy(canvasElement: HTMLElement, label: string, key: string) {
 }
 
 export const 局の場所の_href_で移る: Story = {
+  name: '局の場所の href で移る',
   render: () => <Harness label="href で移る" />,
   play: async ({ canvasElement }) => movedBy(canvasElement, 'href で移る', '3'),
 }

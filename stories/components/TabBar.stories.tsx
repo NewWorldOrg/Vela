@@ -90,7 +90,7 @@ async function showsTheTopBar(canvasElement: HTMLElement): Promise<void> {
   ).toBeVisible()
 }
 
-export const OnAPhone: Story = {
+export const 電話: Story = {
   render: () => <Shell />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -120,7 +120,7 @@ export const OnAPhone: Story = {
   },
 }
 
-export const OnAPhoneWithAHomeBar: Story = {
+export const ホームバーのある電話: Story = {
   render: () => <Shell homeBar={HOME_BAR} />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -147,7 +147,7 @@ export const OnAPhoneWithAHomeBar: Story = {
   },
 }
 
-export const JustBelowSixHundred: Story = {
+export const 幅599: Story = {
   render: () => <Shell />,
   parameters: { screen: { width: 599, height: 900 } },
   play: async ({ canvasElement }) => {
@@ -155,7 +155,7 @@ export const JustBelowSixHundred: Story = {
   },
 }
 
-export const AtSixHundred: Story = {
+export const 幅600: Story = {
   render: () => <Shell />,
   parameters: { screen: { width: 600, height: 900 } },
   play: async ({ canvasElement }) => {
@@ -163,7 +163,7 @@ export const AtSixHundred: Story = {
   },
 }
 
-export const OnAWideWindow: Story = {
+export const 広い窓: Story = {
   render: () => <Shell />,
   parameters: { screen: { width: 1280, height: 800 } },
   play: async ({ canvasElement }) => {
@@ -174,7 +174,7 @@ export const OnAWideWindow: Story = {
   },
 }
 
-export const InTheSettingsOnAPhone: Story = {
+export const 電話の設定の中: Story = {
   render: () => <Shell />,
   parameters: {
     screen: PHONE,
@@ -196,7 +196,7 @@ export const InTheSettingsOnAPhone: Story = {
   },
 }
 
-export const TheBarSaysTheScreenOnAPhone: Story = {
+export const 電話では上の帯が画面の名前を言う: Story = {
   render: () => <Shell />,
   parameters: {
     screen: PHONE,
@@ -223,7 +223,7 @@ export const TheBarSaysTheScreenOnAPhone: Story = {
   },
 }
 
-export const TheOpenTabPressedAgainGoesToTheTop: Story = {
+export const 開いているタブをもう一度押すと上へ戻る: Story = {
   render: () => <Shell />,
   parameters: {
     screen: PHONE,
@@ -241,7 +241,7 @@ export const TheOpenTabPressedAgainGoesToTheTop: Story = {
   },
 }
 
-export const TheReservationsTabCountsTheConflicts: Story = {
+export const 予約のタブは競合を数える: Story = {
   render: () => <Shell conflicts={2} />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -262,7 +262,7 @@ export const TheReservationsTabCountsTheConflicts: Story = {
   },
 }
 
-export const GoneWhileThePlayerFillsTheWindow: Story = {
+export const プレイヤーが窓いっぱいのあいだは消える: Story = {
   render: () => (
     <>
       <Shell />
@@ -301,7 +301,7 @@ async function fieldSizes(canvasElement: HTMLElement): Promise<number[]> {
   )
 }
 
-export const FieldsOnAPhone: Story = {
+export const 電話の入力欄: Story = {
   render: () => <Fields />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -311,7 +311,7 @@ export const FieldsOnAPhone: Story = {
   },
 }
 
-export const FieldsOnAPhoneHeldSideways: Story = {
+export const 横向きの電話の入力欄: Story = {
   render: () => <Fields />,
   parameters: { screen: { width: 844, height: 390 }, coarse: true },
   play: async ({ canvasElement }) => {
@@ -321,7 +321,7 @@ export const FieldsOnAPhoneHeldSideways: Story = {
   },
 }
 
-export const FieldsOnAWideWindow: Story = {
+export const 広い窓の入力欄: Story = {
   render: () => <Fields />,
   parameters: { screen: { width: 1280, height: 800 } },
   play: async ({ canvasElement }) => {
@@ -354,7 +354,7 @@ function stepSize(canvasElement: HTMLElement, step: string): number {
   return parseFloat(getComputedStyle(found).fontSize)
 }
 
-export const TextOnAPhone: Story = {
+export const 電話の文字の段: Story = {
   render: () => <Steps />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -363,7 +363,7 @@ export const TextOnAPhone: Story = {
   },
 }
 
-export const TextOnAWideWindow: Story = {
+export const 広い窓の文字の段: Story = {
   render: () => <Steps />,
   parameters: { screen: { width: 1280, height: 800 } },
   play: async ({ canvasElement }) => {
@@ -374,7 +374,7 @@ export const TextOnAWideWindow: Story = {
 
 const SIDEWAYS = { width: 844, height: 390 }
 
-export const OnAPhoneHeldSideways: Story = {
+export const 横向きの電話: Story = {
   render: () => <Shell />,
   parameters: {
     screen: SIDEWAYS,

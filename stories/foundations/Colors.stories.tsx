@@ -117,7 +117,7 @@ const GENRE_CLASS: Record<string, [string, string, string, string]> = {
   ],
 }
 
-export const Palette: Story = {
+export const 一覧: Story = {
   render: () => (
     <div className="mx-auto max-w-[920px] px-10 py-8">
       <Row title="地と面">

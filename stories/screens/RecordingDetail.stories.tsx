@@ -435,6 +435,7 @@ export const 同じシリーズの回を畳んだまま開く: Story = {
 }
 
 export const iPadでも同じシリーズの回を畳める: Story = {
+  name: 'iPadでも同じシリーズの回を畳める',
   args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
   parameters: { screen: { width: 1180, height: 820 } },
   beforeEach: () => {
@@ -833,6 +834,7 @@ export const Range直配信: Story = {
 }
 
 export const H265のエンコード版を再生できないブラウザ: Story = {
+  name: 'H.265のエンコード版を再生できないブラウザ',
   args: {
     detail: detail('1274'),
     playback: planned({ artefactCodec: 'h265' }),
@@ -1446,6 +1448,7 @@ export const 操作は題と値の下に横1行: Story = {
 }
 
 export const iPad_の横でも操作は横1行: Story = {
+  name: 'iPad の横でも操作は横1行',
   args: { detail: withoutAnArtefact('1274') },
   parameters: { screen: { width: 1180, height: 820 } },
   play: async ({ canvasElement }) => {
@@ -1459,6 +1462,7 @@ export const iPad_の横でも操作は横1行: Story = {
 }
 
 export const iPad_の縦では操作を二列に並べて重ねない: Story = {
+  name: 'iPad の縦では操作を二列に並べて重ねない',
   args: { detail: withoutAnArtefact('1274') },
   parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
@@ -1627,6 +1631,7 @@ export const 成果物が無い録画は外部プレイヤーに元のままだ�
 }
 
 export const iPad_では外部プレイヤーのアプリで開く: Story = {
+  name: 'iPad では外部プレイヤーのアプリで開く',
   args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
   beforeEach: browsingAs(AN_IPAD),
   play: async ({ canvasElement }) => {

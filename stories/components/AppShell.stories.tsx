@@ -59,7 +59,7 @@ function ServiceTopBar({ settingsActive }: { settingsActive?: boolean }) {
   )
 }
 
-export const Service: Story = {
+export const サービスの画面: Story = {
   render: () => (
     <div className="p-6">
       <AppShell>
@@ -75,7 +75,7 @@ export const Service: Story = {
   ),
 }
 
-export const AsChildNav: Story = {
+export const ナビをリンクで組む: Story = {
   render: () => (
     <div className="p-6">
       <AppShell>
@@ -123,7 +123,7 @@ export const AsChildNav: Story = {
   ),
 }
 
-export const Admin: Story = {
+export const 設定の画面: Story = {
   render: () => (
     <div className="p-6">
       <AppShell>
@@ -221,11 +221,11 @@ function AdminFrame() {
   )
 }
 
-export const Frame: Story = {
+export const 設定の枠: Story = {
   render: () => <AdminFrame />,
 }
 
-export const IconOnlyFrame: Story = {
+export const アイコンだけの設定の枠: Story = {
   render: () => <AdminFrame />,
   parameters: { screen: { width: 768, height: 1024 } },
 }

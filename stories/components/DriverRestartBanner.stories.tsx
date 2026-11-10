@@ -100,11 +100,13 @@ export const 録画中で断られた: Story = {
 }
 
 export const driver未接続: Story = {
+  name: 'driver未接続',
   args: { onRestart: answering({ state: 'disconnected' }) },
   play: press('driver が接続されていないため'),
 }
 
 export const driverが未対応: Story = {
+  name: 'driverが未対応',
   args: { onRestart: answering({ state: 'unsupported' }) },
   play: press('再起動の要求に対応していないため'),
 }

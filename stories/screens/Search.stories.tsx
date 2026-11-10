@@ -1475,6 +1475,7 @@ export const 電話の幅では結果を番組表の行に組む: Story = {
 }
 
 export const 幅600pxからは結果を行で並べる: Story = {
+  name: '幅600pxからは結果を行で並べる',
   args: 検索結果.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

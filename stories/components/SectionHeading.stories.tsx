@@ -20,7 +20,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Marks: Story = {
+export const 配色: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>配色</SectionHeading>
@@ -47,7 +47,7 @@ export const Marks: Story = {
   ),
 }
 
-export const Page: Story = {
+export const ページの見出し: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <PageHeading

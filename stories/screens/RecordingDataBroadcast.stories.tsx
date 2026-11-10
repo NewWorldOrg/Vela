@@ -554,6 +554,7 @@ export const ノートの窓では一段小さい板が送らずに収まる: St
 }
 
 export const 幅が1180px以下の窓では箱の下の帯: Story = {
+  name: '幅が1180px以下の窓では箱の下の帯',
   parameters: { screen: { width: 1180, height: 820 } },
   play: async ({ canvasElement }) => {
     await opened(canvasElement)

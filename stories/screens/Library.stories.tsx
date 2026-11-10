@@ -440,6 +440,7 @@ export const 表でも選ぶ帯は最後の行を隠さない: Story = {
 }
 
 export const iPadでも選ぶ帯は窓の下に浮かぶ: Story = {
+  name: 'iPadでも選ぶ帯は窓の下に浮かぶ',
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
@@ -673,6 +674,7 @@ async function waitsAtNoneThenLeaves(canvasElement: HTMLElement) {
 }
 
 export const iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  name: 'iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる',
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
@@ -681,6 +683,7 @@ export const iPadでは選ぶ直後の0件は帯が待ち1件選んで外すと�
 }
 
 export const 表_iPadでも選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  name: '表 iPadでも選ぶ直後の0件は帯が待ち1件選んで外すとやめる',
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
@@ -864,6 +867,7 @@ export const Tabでチェックに焦点が来ると見える: Story = {
 }
 
 export const iPadでは上に選ぶがありチェックは出ない: Story = {
+  name: 'iPadでは上に選ぶがありチェックは出ない',
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
@@ -886,6 +890,7 @@ export const iPadでは上に選ぶがありチェックは出ない: Story = {
 }
 
 export const 表_iPadでは上に選ぶがありチェックは出ない: Story = {
+  name: '表 iPadでは上に選ぶがありチェックは出ない',
   ...iPadでは上に選ぶがありチェックは出ない,
   args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
 }
@@ -1730,6 +1735,7 @@ export const 電話の幅では絞りの数をボタンで言う: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: { result: resultOf(LONG_AND_SHORT), filter: {} },
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
@@ -1826,6 +1832,7 @@ export const 日付の格子: Story = {
 }
 
 export const 日付の格子_iPad: Story = {
+  name: '日付の格子 iPad',
   args: { result: shelf, filter: {}, view: GRID },
   parameters: { screen: { width: 1180, height: 820 } },
   play: async ({ canvasElement }) => {
@@ -1936,6 +1943,7 @@ export const 表: Story = {
 }
 
 export const 表_iPad: Story = {
+  name: '表 iPad',
   ...表,
   parameters: { screen: { width: 1180, height: 820 } },
 }

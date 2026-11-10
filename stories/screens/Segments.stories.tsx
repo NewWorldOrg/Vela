@@ -882,6 +882,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 人が選んだ版.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

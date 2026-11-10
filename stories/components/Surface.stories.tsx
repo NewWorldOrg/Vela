@@ -22,7 +22,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Surfaces: Story = {
+export const 面: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
       <SectionHeading>Surface(枠なしの面)</SectionHeading>
@@ -69,7 +69,7 @@ export const Surfaces: Story = {
   ),
 }
 
-export const EmptyStates: Story = {
+export const 空状態: Story = {
   render: () => (
     <div className="mx-auto grid max-w-[720px] gap-3 p-6 sm:grid-cols-2">
       <EmptyState action={<Button>スキャンを実行</Button>}>
@@ -112,7 +112,7 @@ export const 空状態の四通り: Story = {
   ),
 }
 
-export const EmptyStateInAColumn: Story = {
+export const 列の中の空状態: Story = {
   render: () => (
     <div className="flex w-[900px] flex-col p-6">
       <EmptyState title="条件に合う録画がありません" className="max-w-[560px]">

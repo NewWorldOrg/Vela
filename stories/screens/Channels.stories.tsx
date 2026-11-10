@@ -633,6 +633,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 通常.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
@@ -649,6 +650,7 @@ export const 電話の幅では一行をカードに組む_スキャン中: Stor
 }
 
 export const 幅600pxからは表のまま_スキャン中: Story = {
+  name: '幅600pxからは表のまま スキャン中',
   args: スキャン中.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

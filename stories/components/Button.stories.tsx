@@ -47,9 +47,9 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {}
+export const 通常: Story = {}
 
-export const Variants: Story = {
+export const 種類: Story = {
   render: (args) => (
     <Surface className="max-w-[640px]">
       <div className="flex flex-wrap items-center gap-2.5">
@@ -77,8 +77,7 @@ export const Variants: Story = {
   ),
 }
 
-export const RecordingActions: Story = {
-  name: '録画の操作',
+export const 録画の操作: Story = {
   render: (args) => (
     <Surface className="max-w-[720px]">
       <div className="flex flex-wrap items-center gap-2.5">
@@ -126,7 +125,7 @@ function StateRow({ label, className }: { label: string; className?: string }) {
   )
 }
 
-export const States: Story = {
+export const 状態: Story = {
   render: () => (
     <Surface className="max-w-[640px]">
       <StateRow label="通常" />
@@ -171,7 +170,7 @@ export const States: Story = {
   ),
 }
 
-export const Sizes: Story = {
+export const 大きさ: Story = {
   render: () => (
     <Surface className="max-w-[560px]">
       <div className="flex flex-col gap-5">
@@ -193,7 +192,7 @@ export const Sizes: Story = {
   ),
 }
 
-export const IconOnly: Story = {
+export const アイコンだけ: Story = {
   render: () => (
     <Surface>
       <div className="flex flex-wrap items-center gap-5">
@@ -205,6 +204,6 @@ export const IconOnly: Story = {
   ),
 }
 
-export const Disabled: Story = {
+export const 押せない: Story = {
   args: { disabled: true },
 }

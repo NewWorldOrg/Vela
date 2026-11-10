@@ -1287,6 +1287,7 @@ export const 形式は_Carina_が出せてブラウザが再生できるもの�
 }
 
 export const 自動はハードウェアで再生できない_AV1_を選ばない: Story = {
+  name: '自動はハードウェアで再生できない AV1 を選ばない',
   args: { screen: ON_A_CARD, askBrowser: PLAYS_AV1_IN_SOFTWARE },
   play: async ({ canvasElement }) => {
     const formats = await theFormats(canvasElement)
@@ -1297,6 +1298,7 @@ export const 自動はハードウェアで再生できない_AV1_を選ばな�
 }
 
 export const 聞く手立ての無いブラウザは_AV1_を自動で選ばない: Story = {
+  name: '聞く手立ての無いブラウザは AV1 を自動で選ばない',
   args: { screen: ON_A_CARD, askBrowser: TAKES_EVERY_TYPE },
   play: async ({ canvasElement }) => {
     const formats = await theFormats(canvasElement)
@@ -1357,6 +1359,7 @@ export const 覚えた形式が使えなくなっていたら黙って自動で�
 }
 
 export const H264_しか出せない機械に形式の行は無い: Story = {
+  name: 'H.264 しか出せない機械に形式の行は無い',
   args: { askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY, formatChoice: 'h265' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1370,6 +1373,7 @@ export const H264_しか出せない機械に形式の行は無い: Story = {
 }
 
 export const H264_しか再生できないブラウザに形式の行は無い: Story = {
+  name: 'H.264 しか再生できないブラウザに形式の行は無い',
   args: { screen: ON_A_CARD, askBrowser: PLAYS_ONLY_H264 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -3502,6 +3506,7 @@ export const 外部プレイヤーへ渡す: Story = {
 }
 
 export const iPad_では外部プレイヤーのアプリで開く: Story = {
+  name: 'iPad では外部プレイヤーのアプリで開く',
   args: { openSocket: withAPicture },
   beforeEach: browsingAs(AN_IPAD),
   play: async ({ canvasElement }) => {
@@ -3597,6 +3602,7 @@ export const 札を頼む通信が落ちたらその場で言う: Story = {
 }
 
 export const AirPlay_はライブに描かない: Story = {
+  name: 'AirPlay はライブに描かない',
   args: { openSocket: withAPicture },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)

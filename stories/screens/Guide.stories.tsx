@@ -1739,6 +1739,7 @@ async function sidewaysInsideTheGrid(
 }
 
 export const iPadの幅: Story = {
+  name: 'iPadの幅',
   args: { guide: aerial },
   parameters: { screen: AN_IPAD },
   play: async ({ canvasElement }) => {
@@ -1749,6 +1750,7 @@ export const iPadの幅: Story = {
 }
 
 export const iPadを横にした幅: Story = {
+  name: 'iPadを横にした幅',
   args: { guide: aerial },
   parameters: { screen: AN_IPAD_TURNED },
   play: async ({ canvasElement }) => {
@@ -2499,6 +2501,7 @@ export const 横向きの電話は局を列に並べる: Story = {
 }
 
 export const 幅600pxからは表: Story = {
+  name: '幅600pxからは表',
   args: { guide: base },
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
@@ -2654,6 +2657,7 @@ export const 横から縦に替えると放送中の行から始まる: Story = 
 }
 
 export const 幅600pxで番組を押すと対話が開く: Story = {
+  name: '幅600pxで番組を押すと対話が開く',
   args: { guide: base },
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

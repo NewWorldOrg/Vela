@@ -22,7 +22,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Default: Story = {
+export const 通常: Story = {
   args: {
     tone: 'info',
     children: 'チャンネルスキャンを実行中です',
@@ -34,7 +34,7 @@ export const Default: Story = {
   ),
 }
 
-export const Tones: Story = {
+export const 色の種類: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>ページ上部バナー</SectionHeading>
@@ -68,7 +68,7 @@ export const Tones: Story = {
   ),
 }
 
-export const Actions: Story = {
+export const 導線つき: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>バナーの導線</SectionHeading>
@@ -122,7 +122,7 @@ export const Actions: Story = {
   ),
 }
 
-export const Inline: Story = {
+export const インラインの小型: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>インライン小型アラート</SectionHeading>

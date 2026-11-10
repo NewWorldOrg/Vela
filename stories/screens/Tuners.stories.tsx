@@ -131,6 +131,7 @@ export const 未設定から検出: Story = {
 }
 
 export const driver未接続: Story = {
+  name: 'driver未接続',
   args: {
     result: {
       state: 'ok',
@@ -140,6 +141,7 @@ export const driver未接続: Story = {
 }
 
 export const driver状態不明: Story = {
+  name: 'driver状態不明',
   args: {
     result: {
       state: 'ok',

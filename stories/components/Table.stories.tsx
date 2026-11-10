@@ -65,7 +65,7 @@ const ROWS = [
   },
 ]
 
-export const Default: Story = {
+export const 通常: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <SectionHeading>チャンネル一覧</SectionHeading>
@@ -118,7 +118,7 @@ export const Default: Story = {
   ),
 }
 
-export const Empty: Story = {
+export const 空: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <SectionHeading>空状態</SectionHeading>

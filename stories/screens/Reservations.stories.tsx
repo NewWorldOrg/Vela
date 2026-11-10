@@ -1430,6 +1430,7 @@ export const 電話の幅で行のばつで取り消し知らせで元に戻す:
 }
 
 export const 幅600pxからは広い画面の一覧: Story = {
+  name: '幅600pxからは広い画面の一覧',
   args: { result: shown(RESERVATION_FIXTURES) },
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

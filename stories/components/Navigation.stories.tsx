@@ -26,7 +26,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const UnderlineTabs: Story = {
+export const 下線のタブ: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>下線タブ(種別切替)</SectionHeading>
@@ -59,7 +59,7 @@ export const UnderlineTabs: Story = {
   ),
 }
 
-export const Segmented: Story = {
+export const セグメント: Story = {
   render: function Render() {
     const [value, setValue] = useState('all')
     return (
@@ -110,8 +110,7 @@ export const Segmented: Story = {
   },
 }
 
-export const DatePagerStory: StoryObj<typeof meta> = {
-  name: 'Date pager',
+export const 日付送り: StoryObj<typeof meta> = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>日付ページャ</SectionHeading>
@@ -126,7 +125,7 @@ export const DatePagerStory: StoryObj<typeof meta> = {
   ),
 }
 
-export const IconButtons: Story = {
+export const アイコンボタン: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>アイコンボタン</SectionHeading>

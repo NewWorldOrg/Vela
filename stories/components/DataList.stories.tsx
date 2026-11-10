@@ -34,7 +34,7 @@ const CANDIDATES = [
   ['BS15/TS0', '湾岸 BS1', '9.8 dB', false],
 ] as const
 
-export const Rows: Story = {
+export const 行: Story = {
   render: function Render() {
     const [open, setOpen] = useState(true)
 
@@ -177,7 +177,7 @@ export const Rows: Story = {
   },
 }
 
-export const Empty: Story = {
+export const 空: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
       <SectionHeading>空状態</SectionHeading>

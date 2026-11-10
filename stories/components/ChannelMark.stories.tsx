@@ -61,7 +61,7 @@ function Row({
   )
 }
 
-export const States: Story = {
+export const 状態: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
       <SectionHeading>読み取れている局</SectionHeading>
@@ -102,7 +102,7 @@ const LOGO_AT: Partial<Record<number, StationLogo>> = {
   9: LOGO_NONE_BROADCAST,
 }
 
-export const ManyMissing: Story = {
+export const 多くが欠ける: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
       <SectionHeading>27 列のうち 3 局</SectionHeading>

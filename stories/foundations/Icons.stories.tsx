@@ -134,7 +134,7 @@ function IconGrid({ items }: { items: [string, ComponentType<IconProps>][] }) {
   )
 }
 
-export const IconSet: Story = {
+export const 一覧: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <section className="mb-7">

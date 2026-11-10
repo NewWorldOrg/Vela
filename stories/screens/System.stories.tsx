@@ -198,6 +198,7 @@ export const 停止準備中: Story = {
 }
 
 export const driver未接続: Story = {
+  name: 'driver未接続',
   args: {
     status: {
       ...SYSTEM_CENSUS,
