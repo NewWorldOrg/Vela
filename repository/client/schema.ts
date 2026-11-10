@@ -1053,6 +1053,22 @@ export interface paths {
     patch: operations['reviseQualityThreshold']
     trace?: never
   }
+  '/api/notifications/watches/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['cancelNotificationWatch']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/notifications/destinations': {
     parameters: {
       query?: never
@@ -1079,6 +1095,22 @@ export interface paths {
     get: operations['listNotificationRules']
     put?: never
     post: operations['createNotificationRule']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/watches': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listNotificationWatches']
+    put?: never
+    post: operations['createNotificationWatch']
     delete?: never
     options?: never
     head?: never
@@ -2136,6 +2168,16 @@ export interface components {
       message: string
       data: null | components['schemas']['NotificationSettingsResponder']
     }
+    BaseResponderOfNotificationWatchListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationWatchListResponder']
+    }
+    BaseResponderOfNotificationWatchResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationWatchResponder']
+    }
     BaseResponderOfOidcConfigRefusedResponder: {
       status: boolean
       message: string
@@ -2629,7 +2671,31 @@ export interface components {
     CreateNotificationRuleRequest: {
       name?: null | string
       enabled?: null | boolean
-      events?: null | components['schemas']['NoticeKind'][]
+      events?:
+        | null
+        | (
+            | 'recordingStarted'
+            | 'recordingCompleted'
+            | 'recordingTruncated'
+            | 'recordingFailed'
+            | 'encodeStarted'
+            | 'encodeCompleted'
+            | 'encodeFailed'
+            | 'reservationCompeting'
+            | 'reservationMissed'
+            | 'programmeMoved'
+            | 'qualityIncidentDetected'
+            | 'qualityIncidentResolved'
+            | 'deviceDisconnected'
+          )[]
+      destinations?: null | string[]
+    }
+    CreateNotificationWatchRequest: {
+      programme?: null | string
+      /** Format: date-time */
+      programmeStartsAt?: null | string
+      /** Format: int32 */
+      leadMinutes?: null | number | string
       destinations?: null | string[]
     }
     CreateReservationRequest: {
@@ -3404,6 +3470,9 @@ export interface components {
       | 'qualityIncidentDetected'
       | 'qualityIncidentResolved'
       | 'deviceDisconnected'
+      | 'programmeStarting'
+      | 'watchedProgrammeMoved'
+      | 'watchedProgrammeGone'
     NoticeTrialResponder: {
       delivered: boolean
       failure: null | components['schemas']['NoticeFailure']
@@ -3464,7 +3533,21 @@ export interface components {
       id: string
       name: string
       enabled: boolean
-      events: components['schemas']['NoticeKind'][]
+      events: (
+        | 'recordingStarted'
+        | 'recordingCompleted'
+        | 'recordingTruncated'
+        | 'recordingFailed'
+        | 'encodeStarted'
+        | 'encodeCompleted'
+        | 'encodeFailed'
+        | 'reservationCompeting'
+        | 'reservationMissed'
+        | 'programmeMoved'
+        | 'qualityIncidentDetected'
+        | 'qualityIncidentResolved'
+        | 'deviceDisconnected'
+      )[]
       destinations: string[]
       /** Format: date-time */
       createdAt: string
@@ -3475,6 +3558,36 @@ export interface components {
       /** Format: int32 */
       notifyLeadMinutes: number | string
       publicOriginKnown: boolean
+    }
+    NotificationWatchListResponder: {
+      items: components['schemas']['NotificationWatchResponder'][]
+    }
+    NotificationWatchResponder: {
+      /** Format: uuid */
+      id: string
+      programmeId: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      /** Format: date-time */
+      endsAt: string
+      programmeName: string
+      stationName: null | string
+      /** Format: int32 */
+      leadMinutes: number | string
+      destinations: string[]
+      state: components['schemas']['ProgrammeWatchState']
+      /** Format: date-time */
+      notifiedAt: null | string
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      changedAt: string
     }
     /** @enum {string} */
     OidcConfigRefusal:
@@ -3648,6 +3761,8 @@ export interface components {
     }
     /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    /** @enum {string} */
+    ProgrammeWatchState: 'waiting' | 'notified' | 'skipped' | 'cancelled'
     PutDataBroadcastSettingsRequest: {
       postalCode: null | string
       /** Format: int32 */
@@ -4599,7 +4714,23 @@ export interface components {
     ReviseNotificationRuleRequest: {
       name?: null | string
       enabled?: null | boolean
-      events?: null | components['schemas']['NoticeKind'][]
+      events?:
+        | null
+        | (
+            | 'recordingStarted'
+            | 'recordingCompleted'
+            | 'recordingTruncated'
+            | 'recordingFailed'
+            | 'encodeStarted'
+            | 'encodeCompleted'
+            | 'encodeFailed'
+            | 'reservationCompeting'
+            | 'reservationMissed'
+            | 'programmeMoved'
+            | 'qualityIncidentDetected'
+            | 'qualityIncidentResolved'
+            | 'deviceDisconnected'
+          )[]
       destinations?: null | string[]
     }
     ReviseQualityThresholdRequest: {
@@ -9665,6 +9796,71 @@ export interface operations {
       }
     }
   }
+  cancelNotificationWatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+    }
+  }
   listNotificationDestinations: {
     parameters: {
       query?: never
@@ -9846,6 +10042,112 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+    }
+  }
+  listNotificationWatches: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchListResponder']
+        }
+      }
+    }
+  }
+  createNotificationWatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateNotificationWatchRequest']
+        'application/*+json':
+          null | components['schemas']['CreateNotificationWatchRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
         }
       }
     }
