@@ -533,6 +533,7 @@ function toWrite(
   return {
     state: 'rejected',
     message: whyItRefused(asking, said),
+    ...(response.status === 404 ? { gone: true as const } : {}),
   }
 }
 

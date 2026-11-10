@@ -13,6 +13,7 @@ import {
   type NotificationWrite,
 } from '@/lib/notifications'
 import { wordFor } from '@/lib/not-yet-in-this-build'
+import { useTellingOfTheGone } from '@/hooks/useTellingOfTheGone'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -76,6 +77,7 @@ function EditDestinationForm({
   const [enabled, setEnabled] = useState(destination.enabled)
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
+  const tellOfTheGone = useTellingOfTheGone()
   const webhook = destination.kind !== 'webPush'
   const { refused } = readAddress(url)
   const ready = nameFits(name) && !refused && !pending
@@ -97,6 +99,7 @@ function EditDestinationForm({
         return
       }
 
+      tellOfTheGone(result)
       setRefusal(
         result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
       )

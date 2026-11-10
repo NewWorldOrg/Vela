@@ -138,6 +138,8 @@ export interface WriteRefusal {
   state: 'rejected'
   message: string
   unreached?: true
+  /** What was written to is no longer there, so its row leaves the page. */
+  gone?: true
 }
 
 export type NotificationWrite =
@@ -153,6 +155,11 @@ export function wasAnswered(
   result: NotificationWrite | WatchWrite | TestSending,
 ): boolean {
   return !(result.state === 'rejected' && result.unreached === true)
+}
+
+/** The refusal of a write to what is no longer there, to be said where it outlives the row; nothing for any other answer. */
+export function saidOfTheGone(result: NotificationWrite): string | undefined {
+  return result.state === 'rejected' && result.gone ? result.message : undefined
 }
 
 /** One place in a list single notices stand among: what the list held, or a notice. */

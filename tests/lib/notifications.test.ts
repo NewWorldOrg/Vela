@@ -22,6 +22,7 @@ import {
   registeringAs,
   ruleSetsFull,
   ruleSetsGoingWith,
+  saidOfTheGone,
   testSaid,
   toggled,
   watchLine,
@@ -445,4 +446,17 @@ test('what a single notice tells has words of its own in the record of what was 
   assert.equal(eventLabelOf('programmeStarting'), '放送開始')
   assert.equal(eventLabelOf('watchedProgrammeMoved'), '放送時刻の変更')
   assert.equal(eventLabelOf('watchedProgrammeGone'), '放送の取り消し')
+})
+
+test('a refusal for what is no longer there is said where it outlives the row, any other stays where it was asked', () => {
+  assert.equal(
+    saidOfTheGone({ state: 'rejected', message: '残っていない', gone: true }),
+    '残っていない',
+  )
+  assert.equal(
+    saidOfTheGone({ state: 'rejected', message: '受け付けられない' }),
+    undefined,
+  )
+  assert.equal(saidOfTheGone({ state: 'unauthenticated' }), undefined)
+  assert.equal(saidOfTheGone({ state: 'ok' }), undefined)
 })

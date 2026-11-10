@@ -685,6 +685,46 @@ test('an address Carina will not send to is refused in the words the form uses',
   })
 })
 
+test('a change or a removal of what is no longer there says so, and that it is gone', async () => {
+  store.writeStatus = 404
+  store.writeMessage = 'No destination is registered under that id.'
+
+  const gone = {
+    state: 'rejected',
+    message: 'この送り先は残っていないため、変更できませんでした。',
+    gone: true,
+  }
+
+  assert.deepEqual(
+    await reviseDestination(HOME, { name: 'n', enabled: true }),
+    gone,
+  )
+  assert.deepEqual(await switchDestination(HOME, false), gone)
+  assert.deepEqual(await removeDestination(HOME), {
+    ...gone,
+    message: 'この送り先は残っていないため、削除できませんでした。',
+  })
+
+  store.writeMessage = 'No set of rules is held under that id.'
+
+  assert.deepEqual(
+    await reviseRuleSet(FAILURES, {
+      name: 'n',
+      enabled: true,
+      events: [],
+      destinations: [HOME],
+    }),
+    {
+      ...gone,
+      message: 'このルールセットは残っていないため、変更できませんでした。',
+    },
+  )
+  assert.deepEqual(await removeRuleSet(FAILURES), {
+    ...gone,
+    message: 'このルールセットは残っていないため、削除できませんでした。',
+  })
+})
+
 test('the twenty-first rule set is refused with the number that are held', async () => {
   store.writeStatus = 409
   store.writeMessage =

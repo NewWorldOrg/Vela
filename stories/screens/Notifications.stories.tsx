@@ -1,3 +1,4 @@
+import { useState, type ComponentProps } from 'react'
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
@@ -648,6 +649,153 @@ export const 送り先を削除: Story = {
     await waitFor(() =>
       expect(removeDestination).toHaveBeenCalledWith(DISCORD_ROOM.id),
     )
+  },
+}
+
+const DESTINATION_GONE = 'この送り先は残っていないため、変更できませんでした。'
+
+const DESTINATION_GONE_REMOVING =
+  'この送り先は残っていないため、削除できませんでした。'
+
+const RULE_SET_GONE =
+  'このルールセットは残っていないため、変更できませんでした。'
+
+const RULE_SET_GONE_REMOVING =
+  'このルールセットは残っていないため、削除できませんでした。'
+
+/** The page as it is when what is changed or removed was removed on another screen: the write is refused and the row leaves the page. */
+function RemovedElsewhere(props: ComponentProps<typeof NotificationsView>) {
+  const [held, setHeld] = useState(props.screen)
+
+  const refusedAs =
+    (message: string) =>
+    async (id: string): Promise<NotificationWrite> => {
+      setHeld((was) => ({
+        ...was,
+        destinations: was.destinations.filter((one) => one.id !== id),
+        ruleSets: was.ruleSets.filter((one) => one.id !== id),
+      }))
+
+      return { state: 'rejected', message, gone: true }
+    }
+
+  return (
+    <NotificationsView
+      {...props}
+      screen={held}
+      actions={{
+        ...props.actions,
+        onReviseDestination: refusedAs(DESTINATION_GONE),
+        onRemoveDestination: refusedAs(DESTINATION_GONE_REMOVING),
+        onReviseRuleSet: refusedAs(RULE_SET_GONE),
+        onRemoveRuleSet: refusedAs(RULE_SET_GONE_REMOVING),
+      }}
+    />
+  )
+}
+
+/** The refusal stands whole in the toast, the dialog that asked having left. */
+async function theToastSays(words: string) {
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+  await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+
+  const said = await screen.findByText(words)
+
+  await expect(said.closest('[data-slot="toast"]')).toBeVisible()
+  await expect(said.scrollWidth).toBeLessThanOrEqual(said.clientWidth)
+}
+
+export const よそで消された送り先を保存する: Story = {
+  render: (args) => <RemovedElsewhere {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await fromTheMenu(canvasElement, '家の Slack', '変更')
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: '送り先を変更' }),
+    )
+
+    await userEvent.type(dialog.getByLabelText('名前'), '(居間)')
+    await userEvent.click(dialog.getByRole('button', { name: '保存' }))
+
+    await theToastSays(DESTINATION_GONE)
+    await expect(
+      within(canvas.getByRole('list', { name: '送り先' })).getAllByRole(
+        'listitem',
+      ),
+    ).toHaveLength(2)
+  },
+}
+
+export const よそで消された送り先を削除する: Story = {
+  render: (args) => <RemovedElsewhere {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await fromTheMenu(canvasElement, 'Discord の通知部屋', '削除')
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+
+    await theToastSays(DESTINATION_GONE_REMOVING)
+    await expect(
+      canvas.queryByRole('button', { name: 'Discord の通知部屋 の操作' }),
+    ).toBeNull()
+  },
+}
+
+export const よそで消されたルールセットを保存する: Story = {
+  render: (args) => <RemovedElsewhere {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await fromTheMenu(canvasElement, '困ったときだけ', '変更')
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
+    )
+
+    await userEvent.click(
+      within(dialog.getByRole('group', { name: '録画' })).getByRole('button', {
+        name: '開始',
+      }),
+    )
+    await userEvent.click(dialog.getByRole('button', { name: '保存' }))
+
+    await theToastSays(RULE_SET_GONE)
+    await expect(
+      canvas.queryByRole('button', { name: '困ったときだけ の操作' }),
+    ).toBeNull()
+  },
+}
+
+export const よそで消されたルールセットを削除する: Story = {
+  render: (args) => <RemovedElsewhere {...args} />,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await fromTheMenu(canvasElement, '困ったときだけ', '変更')
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
+    )
+
+    await userEvent.click(
+      dialog.getByRole('button', { name: '困ったときだけ を削除' }),
+    )
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+
+    await theToastSays(RULE_SET_GONE_REMOVING)
+    await expect(
+      canvas.queryByRole('button', { name: '困ったときだけ の操作' }),
+    ).toBeNull()
   },
 }
 

@@ -13,6 +13,7 @@ import {
   type NotificationWrite,
   type RuleSetDraft,
 } from '@/lib/notifications'
+import { useTellingOfTheGone } from '@/hooks/useTellingOfTheGone'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -92,6 +93,7 @@ function RuleSetForm({
   const [sendTo, setSendTo] = useState<string[]>(from.destinations)
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
+  const tellOfTheGone = useTellingOfTheGone()
   const ready = nameFits(name) && sendTo.length > 0 && !pending
   const title = ruleSet ? 'ルールセットを変更' : 'ルールセットを追加'
 
@@ -112,6 +114,7 @@ function RuleSetForm({
         return
       }
 
+      tellOfTheGone(result)
       setRefusal(
         result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
       )

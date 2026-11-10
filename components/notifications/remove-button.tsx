@@ -4,6 +4,7 @@ import { useState, useTransition } from 'react'
 
 import { signedOut } from '@/lib/signed-out'
 import type { NotificationWrite } from '@/lib/notifications'
+import { useTellingOfTheGone } from '@/hooks/useTellingOfTheGone'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -41,6 +42,7 @@ export function RemoveDialog({
 }) {
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
+  const tellOfTheGone = useTellingOfTheGone()
 
   const remove = () =>
     startTransition(async () => {
@@ -55,6 +57,7 @@ export function RemoveDialog({
         return
       }
 
+      tellOfTheGone(result)
       setRefusal(
         result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
       )

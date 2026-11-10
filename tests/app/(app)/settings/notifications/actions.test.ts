@@ -141,6 +141,7 @@ test('a change about a destination that is gone reads the page again', async () 
   assert.deepEqual(await dropDestination(ONE), {
     state: 'rejected',
     message: 'この送り先は残っていないため、削除できませんでした。',
+    gone: true,
   })
   assert.deepEqual(revalidated, [PAGE])
 })
