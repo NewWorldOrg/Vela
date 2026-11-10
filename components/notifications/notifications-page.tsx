@@ -10,6 +10,7 @@ import {
   type LeadMinutes,
   type NotificationsScreen,
   type NotificationWrite,
+  type WebhookDraft,
 } from '@/lib/notifications'
 import { Banner } from '@/components/vela/banner'
 import { PageHeading } from '@/components/vela/section-heading'
@@ -18,7 +19,6 @@ import { useToast } from '@/components/vela/toast'
 import {
   AddDestinationDialog,
   type BrowserChoice,
-  type WebhookDraft,
 } from '@/components/notifications/add-destination-dialog'
 import {
   DeliveryFilter,

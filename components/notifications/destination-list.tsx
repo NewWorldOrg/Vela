@@ -11,6 +11,7 @@ import {
   tailOf,
   testSaid,
   withWhy,
+  type DestinationRevision,
   type NotificationDestination,
   type NotificationRuleSet,
   type NotificationWrite,
@@ -22,10 +23,7 @@ import { Switch } from '@/components/ui/switch'
 import { Spinner } from '@/components/vela/progress'
 import { StatusDot, type StatusTone } from '@/components/vela/status'
 import { useToast } from '@/components/vela/toast'
-import {
-  EditDestinationDialog,
-  type DestinationRevision,
-} from '@/components/notifications/edit-destination-dialog'
+import { EditDestinationDialog } from '@/components/notifications/edit-destination-dialog'
 import { RemoveDialog } from '@/components/notifications/remove-button'
 import { KindChip, RowMenu } from '@/components/notifications/row-menu'
 

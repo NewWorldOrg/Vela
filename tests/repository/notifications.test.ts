@@ -1,0 +1,632 @@
+import assert from 'node:assert/strict'
+import { beforeEach, mock, test } from 'node:test'
+
+interface Sent {
+  method: string
+  path: string
+  at?: Record<string, unknown>
+  query?: Record<string, unknown>
+  body?: Record<string, unknown>
+}
+
+interface Asked {
+  params?: {
+    path?: Record<string, unknown>
+    query?: Record<string, unknown>
+  }
+  body?: Record<string, unknown>
+}
+
+const HOME = '0a000000-0000-4000-8000-000000000001'
+
+const GAMES = '0a000000-0000-4000-8000-000000000002'
+
+const FAILURES = '0b000000-0000-4000-8000-000000000001'
+
+const DESTINATION_HOME = {
+  id: HOME,
+  name: '見本の送り先 1',
+  kind: 'slack',
+  tail: 'a1b2',
+  enabled: true,
+  readable: true,
+  lastResultAt: '2026-01-02T03:04:05Z',
+  lastFailure: null,
+  createdAt: '2026-01-01T00:00:00Z',
+  changedAt: '2026-01-01T00:00:00Z',
+}
+
+const DESTINATION_GAMES = {
+  ...DESTINATION_HOME,
+  id: GAMES,
+  name: '見本の送り先 2',
+  kind: 'discord',
+  tail: '9f3e',
+  enabled: false,
+  readable: false,
+  lastFailure: 'timedOut',
+}
+
+const RULE = {
+  id: FAILURES,
+  name: '見本のルールセット',
+  enabled: true,
+  events: ['recordingFailed', 'encodeFailed'],
+  destinations: [HOME],
+  createdAt: '2026-01-01T00:00:00Z',
+  changedAt: '2026-01-01T00:00:00Z',
+}
+
+function delivery(id: string, occurredAt: string, more: object = {}) {
+  return {
+    id,
+    kind: 'recordingFailed',
+    title: '見本の見出し',
+    occurredAt,
+    state: 'sent',
+    attempts: 1,
+    queuedAt: occurredAt,
+    sentAt: occurredAt,
+    nextAttemptAt: null,
+    failure: null,
+    ...more,
+  }
+}
+
+const sent: Sent[] = []
+
+const store: {
+  destinations: unknown[]
+  rules: unknown[]
+  settings: unknown
+  deliveries: Record<string, unknown[]>
+  trial: unknown
+  readStatus: number
+  readMessage: string
+  writeStatus: number
+  writeMessage: string
+} = {
+  destinations: [],
+  rules: [],
+  settings: null,
+  deliveries: {},
+  trial: null,
+  readStatus: 200,
+  readMessage: '',
+  writeStatus: 200,
+  writeMessage: '',
+}
+
+const answered = (status: number) => ({ status, ok: status < 400 })
+
+const envelope = (data: unknown) => ({
+  data: { status: true, message: '', data },
+  response: answered(200),
+})
+
+const refusal = (status: number, message: string) => ({
+  error: { status: false, message, data: null },
+  response: answered(status),
+})
+
+function written(data: unknown = null) {
+  return store.writeStatus < 400
+    ? {
+        data: { status: true, message: '', data },
+        response: answered(store.writeStatus),
+      }
+    : refusal(store.writeStatus, store.writeMessage)
+}
+
+function wrote(method: string) {
+  return async (path: string, options?: Asked) => {
+    sent.push({
+      method,
+      path,
+      at: options?.params?.path,
+      body: options?.body,
+    })
+
+    return written(path.endsWith('/test') ? store.trial : null)
+  }
+}
+
+const client = () => ({
+  GET: async (path: string, options?: Asked) => {
+    const query = options?.params?.query
+    sent.push({ method: 'GET', path, query })
+
+    if (store.readStatus >= 400) {
+      return refusal(store.readStatus, store.readMessage)
+    }
+
+    switch (path) {
+      case '/api/notifications/destinations':
+        return envelope({ items: store.destinations })
+      case '/api/notifications/rules':
+        return envelope({ items: store.rules })
+      case '/api/notifications/settings':
+        return envelope(store.settings)
+      case '/api/notifications/deliveries':
+        return envelope({
+          perPage: query?.perPage,
+          items: store.deliveries[String(query?.destinationId)] ?? [],
+        })
+      default:
+        throw new Error(`unexpected GET ${path}`)
+    }
+  },
+  POST: wrote('POST'),
+  PUT: wrote('PUT'),
+  PATCH: wrote('PATCH'),
+  DELETE: wrote('DELETE'),
+})
+
+mock.module('@/repository/client/carina', {
+  namedExports: { carinaClient: client, revalidatingCarinaClient: client },
+})
+
+const {
+  WHEN_ADDING_A_DESTINATION,
+  WHEN_ADDING_A_RULE_SET,
+  WHEN_CHANGING_A_DESTINATION,
+  WHEN_CHANGING_A_RULE_SET,
+  WHEN_TRYING_A_DESTINATION,
+  defineRuleSet,
+  getNotificationsScreen,
+  registerDestination,
+  removeDestination,
+  removeRuleSet,
+  reviseDestination,
+  reviseRuleSet,
+  settleLead,
+  switchDestination,
+  switchRuleSet,
+  tryDestination,
+  whyItRefused,
+} = await import('@/repository/notifications')
+
+beforeEach(() => {
+  sent.length = 0
+  store.destinations = [DESTINATION_HOME, DESTINATION_GAMES]
+  store.rules = [RULE]
+  store.settings = { notifyLeadMinutes: 3, publicOriginKnown: true }
+  store.deliveries = {}
+  store.trial = { delivered: true, failure: null }
+  store.readStatus = 200
+  store.readMessage = ''
+  store.writeStatus = 200
+  store.writeMessage = ''
+})
+
+test('the screen is read from the destinations, the rule sets and the settings', async () => {
+  const screen = await getNotificationsScreen()
+
+  assert.deepEqual(screen.destinations, [
+    {
+      id: HOME,
+      name: '見本の送り先 1',
+      kind: 'slack',
+      tail: 'a1b2',
+      enabled: true,
+      readable: true,
+      lastResultAt: '2026-01-02T03:04:05Z',
+      lastFailure: undefined,
+    },
+    {
+      id: GAMES,
+      name: '見本の送り先 2',
+      kind: 'discord',
+      tail: '9f3e',
+      enabled: false,
+      readable: false,
+      lastResultAt: '2026-01-02T03:04:05Z',
+      lastFailure: 'timedOut',
+    },
+  ])
+  assert.deepEqual(screen.ruleSets, [
+    {
+      id: FAILURES,
+      name: '見本のルールセット',
+      enabled: true,
+      events: ['recordingFailed', 'encodeFailed'],
+      destinations: [HOME],
+    },
+  ])
+  assert.deepEqual(screen.settings, {
+    notifyLeadMinutes: 3,
+    publicOriginKnown: true,
+  })
+})
+
+test('a destination that has sent nothing yet has no last result', async () => {
+  store.destinations = [{ ...DESTINATION_HOME, lastResultAt: null }]
+
+  const screen = await getNotificationsScreen()
+
+  assert.equal(screen.destinations[0].lastResultAt, undefined)
+})
+
+test('the lead arrives as a number even when the API writes it as text', async () => {
+  store.settings = { notifyLeadMinutes: '10', publicOriginKnown: false }
+
+  const screen = await getNotificationsScreen()
+
+  assert.deepEqual(screen.settings, {
+    notifyLeadMinutes: 10,
+    publicOriginKnown: false,
+  })
+})
+
+test('a lead the screen cannot offer is not shown as another one', async () => {
+  store.settings = { notifyLeadMinutes: 15, publicOriginKnown: true }
+
+  await assert.rejects(getNotificationsScreen(), /通知の設定を読めませんでした/)
+})
+
+test('the deliveries of every destination are asked for, fifty each', async () => {
+  await getNotificationsScreen()
+
+  assert.deepEqual(
+    sent
+      .filter((one) => one.path === '/api/notifications/deliveries')
+      .map((one) => one.query),
+    [
+      { destinationId: HOME, perPage: 50 },
+      { destinationId: GAMES, perPage: 50 },
+    ],
+  )
+})
+
+test('the deliveries come as one list, the newest first, each with the destination it went to', async () => {
+  store.deliveries = {
+    [HOME]: [
+      delivery('d-1', '2026-01-02T10:00:00Z'),
+      delivery('d-3', '2026-01-02T08:00:00Z'),
+    ],
+    [GAMES]: [
+      delivery('d-2', '2026-01-02T09:00:00Z', {
+        kind: 'encodeFailed',
+        state: 'givenUp',
+        failure: 'rejected',
+      }),
+    ],
+  }
+
+  const screen = await getNotificationsScreen()
+
+  assert.deepEqual(screen.deliveries, [
+    {
+      id: 'd-1',
+      kind: 'recordingFailed',
+      occurredAt: '2026-01-02T10:00:00Z',
+      destinationId: HOME,
+      state: 'sent',
+      failure: undefined,
+    },
+    {
+      id: 'd-2',
+      kind: 'encodeFailed',
+      occurredAt: '2026-01-02T09:00:00Z',
+      destinationId: GAMES,
+      state: 'givenUp',
+      failure: 'rejected',
+    },
+    {
+      id: 'd-3',
+      kind: 'recordingFailed',
+      occurredAt: '2026-01-02T08:00:00Z',
+      destinationId: HOME,
+      state: 'sent',
+      failure: undefined,
+    },
+  ])
+})
+
+test('with no destination, no delivery is asked for', async () => {
+  store.destinations = []
+  store.rules = []
+
+  const screen = await getNotificationsScreen()
+
+  assert.deepEqual(screen.deliveries, [])
+  assert.equal(
+    sent.some((one) => one.path === '/api/notifications/deliveries'),
+    false,
+  )
+})
+
+test('a screen that cannot be read says so', async () => {
+  store.readStatus = 500
+
+  await assert.rejects(getNotificationsScreen(), /通知の設定を読めませんでした/)
+})
+
+test('a destination is registered by its name and its address', async () => {
+  store.writeStatus = 201
+
+  const result = await registerDestination({
+    name: '見本の送り先 3',
+    url: 'https://webhook.example/one',
+  })
+
+  assert.deepEqual(result, { state: 'ok' })
+  assert.deepEqual(sent, [
+    {
+      method: 'POST',
+      path: '/api/notifications/destinations',
+      at: undefined,
+      body: { name: '見本の送り先 3', url: 'https://webhook.example/one' },
+    },
+  ])
+})
+
+test('a change that leaves the address empty sends it empty, so the address stays', async () => {
+  await reviseDestination(HOME, { name: '見本の送り先 1', enabled: false })
+
+  assert.deepEqual(sent, [
+    {
+      method: 'PATCH',
+      path: '/api/notifications/destinations/{id}',
+      at: { id: HOME },
+      body: { name: '見本の送り先 1', enabled: false, url: '' },
+    },
+  ])
+})
+
+test('a change that writes the address anew sends it', async () => {
+  await reviseDestination(HOME, {
+    name: '見本の送り先 1',
+    enabled: true,
+    url: 'https://webhook.example/two',
+  })
+
+  assert.deepEqual(sent[0].body, {
+    name: '見本の送り先 1',
+    enabled: true,
+    url: 'https://webhook.example/two',
+  })
+})
+
+test('the switch of a destination sends the switch alone', async () => {
+  await switchDestination(GAMES, true)
+
+  assert.deepEqual(sent, [
+    {
+      method: 'PATCH',
+      path: '/api/notifications/destinations/{id}',
+      at: { id: GAMES },
+      body: { enabled: true },
+    },
+  ])
+})
+
+test('a destination is removed by its id', async () => {
+  const result = await removeDestination(HOME)
+
+  assert.deepEqual(result, { state: 'ok' })
+  assert.deepEqual(sent, [
+    {
+      method: 'DELETE',
+      path: '/api/notifications/destinations/{id}',
+      at: { id: HOME },
+      body: undefined,
+    },
+  ])
+})
+
+test('a trial that arrived says so', async () => {
+  const result = await tryDestination(HOME)
+
+  assert.deepEqual(result, {
+    state: 'ok',
+    delivered: true,
+    failure: undefined,
+  })
+  assert.deepEqual(sent, [
+    {
+      method: 'POST',
+      path: '/api/notifications/destinations/{id}/test',
+      at: { id: HOME },
+      body: undefined,
+    },
+  ])
+})
+
+test('a trial that did not arrive carries why', async () => {
+  store.trial = { delivered: false, failure: 'unreachable' }
+
+  assert.deepEqual(await tryDestination(HOME), {
+    state: 'ok',
+    delivered: false,
+    failure: 'unreachable',
+  })
+})
+
+test('a trial sent too soon after another is refused in words a reader can act on', async () => {
+  store.writeStatus = 429
+  store.writeMessage =
+    'A trial was sent a moment ago. One destination is tried once a minute, and five trials are sent a minute in all.'
+
+  assert.deepEqual(await tryDestination(HOME), {
+    state: 'rejected',
+    message: '続けてテスト送信はできません。1 分ほどおいてからお試しください。',
+  })
+})
+
+test('a trial to a destination whose address cannot be opened says to write it again', async () => {
+  store.writeStatus = 409
+  store.writeMessage =
+    'The address of this destination cannot be opened with the keys this server holds. Write the address again to send to it.'
+
+  assert.deepEqual(await tryDestination(HOME), {
+    state: 'rejected',
+    message: 'この送り先の URL を開けません。URL を入れ直してください。',
+  })
+})
+
+test('a rule set is made of its name, its switch, its events and its destinations', async () => {
+  store.writeStatus = 201
+
+  const result = await defineRuleSet({
+    name: '見本のルールセット 2',
+    enabled: true,
+    events: ['recordingCompleted'],
+    destinations: [HOME, GAMES],
+  })
+
+  assert.deepEqual(result, { state: 'ok' })
+  assert.deepEqual(sent, [
+    {
+      method: 'POST',
+      path: '/api/notifications/rules',
+      at: undefined,
+      body: {
+        name: '見本のルールセット 2',
+        enabled: true,
+        events: ['recordingCompleted'],
+        destinations: [HOME, GAMES],
+      },
+    },
+  ])
+})
+
+test('a rule set is changed, switched and removed by its id', async () => {
+  await reviseRuleSet(FAILURES, {
+    name: '見本のルールセット',
+    enabled: true,
+    events: [],
+    destinations: [GAMES],
+  })
+  await switchRuleSet(FAILURES, false)
+  await removeRuleSet(FAILURES)
+
+  assert.deepEqual(sent, [
+    {
+      method: 'PATCH',
+      path: '/api/notifications/rules/{id}',
+      at: { id: FAILURES },
+      body: {
+        name: '見本のルールセット',
+        enabled: true,
+        events: [],
+        destinations: [GAMES],
+      },
+    },
+    {
+      method: 'PATCH',
+      path: '/api/notifications/rules/{id}',
+      at: { id: FAILURES },
+      body: { enabled: false },
+    },
+    {
+      method: 'DELETE',
+      path: '/api/notifications/rules/{id}',
+      at: { id: FAILURES },
+      body: undefined,
+    },
+  ])
+})
+
+test('the lead is put as the minutes chosen', async () => {
+  const result = await settleLead(5)
+
+  assert.deepEqual(result, { state: 'ok' })
+  assert.deepEqual(sent, [
+    {
+      method: 'PUT',
+      path: '/api/notifications/settings',
+      at: undefined,
+      body: { notifyLeadMinutes: 5 },
+    },
+  ])
+})
+
+test('a write from someone signed out says so, whatever was being written', async () => {
+  store.writeStatus = 401
+
+  assert.deepEqual(await registerDestination({ name: 'n', url: 'u' }), {
+    state: 'unauthenticated',
+  })
+  assert.deepEqual(await tryDestination(HOME), { state: 'unauthenticated' })
+  assert.deepEqual(await settleLead(0), { state: 'unauthenticated' })
+})
+
+test('an address Carina will not send to is refused in the words the form uses', async () => {
+  store.writeStatus = 400
+  store.writeMessage =
+    'The address is not one a notice can be sent to: an https webhook of Slack or of Discord. It is not repeated here.'
+
+  assert.deepEqual(await registerDestination({ name: 'n', url: 'u' }), {
+    state: 'rejected',
+    message: 'この URL は受け付けられません。',
+  })
+})
+
+test('the twenty-first rule set is refused with the number that are held', async () => {
+  store.writeStatus = 409
+  store.writeMessage =
+    'At most 20 sets of rules are held. Remove one to make another.'
+
+  assert.deepEqual(
+    await defineRuleSet({
+      name: 'n',
+      enabled: true,
+      events: [],
+      destinations: [HOME],
+    }),
+    {
+      state: 'rejected',
+      message: 'ルールセットは 20 本までのため、追加できませんでした。',
+    },
+  )
+})
+
+test('what Carina says about a refusal is put in the words of the screen', () => {
+  assert.equal(
+    whyItRefused(
+      WHEN_CHANGING_A_DESTINATION,
+      'No destination is registered under that id.',
+    ),
+    'この送り先は残っていないため、変更できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_TRYING_A_DESTINATION,
+      'No destination is registered under that id.',
+    ),
+    'この送り先は残っていないため、テスト送信できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_CHANGING_A_RULE_SET,
+      'No set of rules is held under that id.',
+    ),
+    'このルールセットは残っていないため、変更できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_ADDING_A_RULE_SET,
+      'A set of rules sends to at least one destination, each of them registered.',
+    ),
+    '選んだ送り先が残っていないため、追加できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_ADDING_A_DESTINATION,
+      'A destination is named in one to sixty-four characters, none of them a control character.',
+    ),
+    '名前が 1 〜 64 文字でないため、追加できませんでした。',
+  )
+  assert.equal(
+    whyItRefused(WHEN_ADDING_A_DESTINATION, undefined),
+    '送り先を追加できませんでした。時間をおいてからもう一度お試しください。',
+  )
+  assert.equal(
+    whyItRefused(
+      WHEN_ADDING_A_DESTINATION,
+      'Something this build never heard.',
+    ),
+    '送り先を追加できませんでした。時間をおいてからもう一度お試しください。',
+  )
+})

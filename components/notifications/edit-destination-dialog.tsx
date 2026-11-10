@@ -8,6 +8,7 @@ import {
   nameFits,
   readAddress,
   tailOf,
+  type DestinationRevision,
   type NotificationDestination,
   type NotificationWrite,
 } from '@/lib/notifications'
@@ -25,13 +26,6 @@ import {
   NoticeLabel,
 } from '@/components/notifications/notice-dialog'
 import { WebhookField } from '@/components/notifications/webhook-field'
-
-/** What changing a destination sends: its name, whether it is on, and a new address only when one was typed. */
-export interface DestinationRevision {
-  name: string
-  enabled: boolean
-  url?: string
-}
 
 const SIGNED_OUT = signedOut('変更')
 

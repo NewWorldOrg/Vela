@@ -9,6 +9,7 @@ import {
   readAddress,
   type BrowserPermission,
   type NotificationWrite,
+  type WebhookDraft,
 } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
@@ -29,11 +30,6 @@ import {
   NoticeLabel,
 } from '@/components/notifications/notice-dialog'
 import { WebhookField } from '@/components/notifications/webhook-field'
-
-export interface WebhookDraft {
-  name: string
-  url: string
-}
 
 export interface BrowserDraft {
   name: string

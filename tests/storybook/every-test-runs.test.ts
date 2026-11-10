@@ -193,6 +193,7 @@ const THE_SUITE = [
   'tests/repository/live-viewers.test.ts',
   'tests/repository/live.test.ts',
   'tests/repository/migration.test.ts',
+  'tests/repository/notifications.test.ts',
   'tests/repository/oidc.test.ts',
   'tests/repository/playback-sources.test.ts',
   'tests/repository/programs.test.ts',

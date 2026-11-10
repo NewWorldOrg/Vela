@@ -58,6 +58,18 @@ export interface NotificationRuleSet {
 
 export type RuleSetDraft = Omit<NotificationRuleSet, 'id'>
 
+export interface WebhookDraft {
+  name: string
+  url: string
+}
+
+/** What changing a destination sends: its name, whether it is on, and a new address only when one was typed. */
+export interface DestinationRevision {
+  name: string
+  enabled: boolean
+  url?: string
+}
+
 export type DeliveryState = 'queued' | 'sent' | 'failed' | 'givenUp'
 
 /** One notice on its way to one destination. Its title is the heading Carina gave the notice. */

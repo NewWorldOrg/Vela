@@ -1,0 +1,401 @@
+import {
+  DELIVERIES_SHOWN,
+  NAME_LONGEST,
+  RULE_SETS_AT_MOST,
+  isLead,
+  newestFirst,
+} from '@/lib/notifications'
+import type {
+  DestinationRevision,
+  LeadMinutes,
+  NotificationDelivery,
+  NotificationDestination,
+  NotificationRuleSet,
+  NotificationSettings,
+  NotificationWrite,
+  NotificationsScreen,
+  RuleSetDraft,
+  TestSending,
+  WebhookDraft,
+} from '@/lib/notifications'
+import { couldNot } from '@/lib/try-again'
+import { carinaClient } from '@/repository/client/carina'
+import type { components } from '@/repository/client/schema'
+import { toInt } from '@/repository/programmes'
+import { whatItSaid } from '@/repository/said'
+
+type DestinationResponder =
+  components['schemas']['NotificationDestinationResponder']
+type RuleResponder = components['schemas']['NotificationRuleResponder']
+type DeliveryResponder = components['schemas']['NotificationDeliveryResponder']
+type SettingsResponder = components['schemas']['NotificationSettingsResponder']
+
+export interface NotificationAsking {
+  did: string
+  fell: string
+}
+
+export const WHEN_ADDING_A_DESTINATION: NotificationAsking = {
+  did: '追加',
+  fell: '送り先を追加できませんでした',
+}
+
+export const WHEN_CHANGING_A_DESTINATION: NotificationAsking = {
+  did: '変更',
+  fell: '送り先を変更できませんでした',
+}
+
+export const WHEN_REMOVING_A_DESTINATION: NotificationAsking = {
+  did: '削除',
+  fell: '送り先を削除できませんでした',
+}
+
+export const WHEN_TRYING_A_DESTINATION: NotificationAsking = {
+  did: 'テスト送信',
+  fell: 'テスト送信ができませんでした',
+}
+
+export const WHEN_ADDING_A_RULE_SET: NotificationAsking = {
+  did: '追加',
+  fell: 'ルールセットを追加できませんでした',
+}
+
+export const WHEN_CHANGING_A_RULE_SET: NotificationAsking = {
+  did: '変更',
+  fell: 'ルールセットを変更できませんでした',
+}
+
+export const WHEN_REMOVING_A_RULE_SET: NotificationAsking = {
+  did: '削除',
+  fell: 'ルールセットを削除できませんでした',
+}
+
+export const WHEN_SETTLING_THE_LEAD: NotificationAsking = {
+  did: '変更',
+  fell: '単発の通知の既定を変更できませんでした',
+}
+
+const UNREADABLE = '通知の設定を読めませんでした'
+
+const REFUSAL_SAYINGS: [RegExp, string][] = [
+  [/not one a notice can be sent to/i, 'この URL は受け付けられません。'],
+  [
+    /a trial was sent a moment ago/i,
+    '続けてテスト送信はできません。1 分ほどおいてからお試しください。',
+  ],
+  [
+    /cannot be opened with the keys/i,
+    'この送り先の URL を開けません。URL を入れ直してください。',
+  ],
+]
+
+const REFUSAL_REASONS: [RegExp, string][] = [
+  [
+    /no destination is (registered|held) under/i,
+    'この送り先は残っていないため、',
+  ],
+  [/no set of rules is held under/i, 'このルールセットは残っていないため、'],
+  [
+    /at most \d+ sets of rules are held/i,
+    `ルールセットは ${RULE_SETS_AT_MOST} 本までのため、`,
+  ],
+  [/sends to at least one destination/i, '選んだ送り先が残っていないため、'],
+  [
+    /is named in one to sixty-four characters/i,
+    `名前が 1 〜 ${NAME_LONGEST} 文字でないため、`,
+  ],
+]
+
+export function whyItRefused(
+  asking: NotificationAsking,
+  said: string | undefined,
+): string {
+  const heard = said ?? ''
+  const saying = REFUSAL_SAYINGS.find(([reads]) => reads.test(heard))
+
+  if (saying) {
+    return saying[1]
+  }
+
+  const reason = REFUSAL_REASONS.find(([reads]) => reads.test(heard))
+
+  return reason
+    ? `${reason[1]}${asking.did}できませんでした。`
+    : couldNot(asking.fell)
+}
+
+export async function getNotificationsScreen(): Promise<NotificationsScreen> {
+  const [destinations, ruleSets, settings] = await Promise.all([
+    fetchDestinations(),
+    fetchRuleSets(),
+    fetchSettings(),
+  ])
+  const sentTo = await Promise.all(
+    destinations.map(({ id }) => fetchDeliveries(id)),
+  )
+
+  return {
+    settings,
+    destinations,
+    ruleSets,
+    deliveries: newestFirst(sentTo.flat()),
+  }
+}
+
+export async function registerDestination(
+  draft: WebhookDraft,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().POST(
+    '/api/notifications/destinations',
+    { body: { name: draft.name, url: draft.url } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_ADDING_A_DESTINATION)
+}
+
+export async function reviseDestination(
+  id: string,
+  change: DestinationRevision,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/notifications/destinations/{id}',
+    {
+      params: { path: { id } },
+      body: {
+        name: change.name,
+        enabled: change.enabled,
+        url: change.url ?? '',
+      },
+    },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
+}
+
+export async function switchDestination(
+  id: string,
+  enabled: boolean,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/notifications/destinations/{id}',
+    { params: { path: { id } }, body: { enabled } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
+}
+
+export async function removeDestination(
+  id: string,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().DELETE(
+    '/api/notifications/destinations/{id}',
+    { params: { path: { id } } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_REMOVING_A_DESTINATION)
+}
+
+export async function tryDestination(id: string): Promise<TestSending> {
+  const { data, error, response } = await carinaClient().POST(
+    '/api/notifications/destinations/{id}/test',
+    { params: { path: { id } } },
+  )
+  const written = toWrite(
+    response,
+    whatItSaid(error, data),
+    WHEN_TRYING_A_DESTINATION,
+  )
+
+  if (written.state !== 'ok') {
+    return written
+  }
+
+  const trial = data?.data
+
+  return trial
+    ? {
+        state: 'ok',
+        delivered: trial.delivered,
+        failure: trial.failure ?? undefined,
+      }
+    : { state: 'rejected', message: couldNot(WHEN_TRYING_A_DESTINATION.fell) }
+}
+
+export async function defineRuleSet(
+  draft: RuleSetDraft,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().POST(
+    '/api/notifications/rules',
+    { body: toRuleBody(draft) },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_ADDING_A_RULE_SET)
+}
+
+export async function reviseRuleSet(
+  id: string,
+  draft: RuleSetDraft,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/notifications/rules/{id}',
+    { params: { path: { id } }, body: toRuleBody(draft) },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_RULE_SET)
+}
+
+export async function switchRuleSet(
+  id: string,
+  enabled: boolean,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().PATCH(
+    '/api/notifications/rules/{id}',
+    { params: { path: { id } }, body: { enabled } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_RULE_SET)
+}
+
+export async function removeRuleSet(id: string): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().DELETE(
+    '/api/notifications/rules/{id}',
+    { params: { path: { id } } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_REMOVING_A_RULE_SET)
+}
+
+export async function settleLead(
+  lead: LeadMinutes,
+): Promise<NotificationWrite> {
+  const { error, response } = await carinaClient().PUT(
+    '/api/notifications/settings',
+    { body: { notifyLeadMinutes: lead } },
+  )
+
+  return toWrite(response, whatItSaid(error), WHEN_SETTLING_THE_LEAD)
+}
+
+function toRuleBody(draft: RuleSetDraft) {
+  return {
+    name: draft.name,
+    enabled: draft.enabled,
+    events: draft.events,
+    destinations: draft.destinations,
+  }
+}
+
+function toWrite(
+  response: Response,
+  said: string | undefined,
+  asking: NotificationAsking,
+): NotificationWrite {
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok) {
+    return { state: 'ok' }
+  }
+
+  return {
+    state: 'rejected',
+    message: whyItRefused(asking, said),
+  }
+}
+
+async function fetchDestinations(): Promise<NotificationDestination[]> {
+  const { data, error } = await carinaClient().GET(
+    '/api/notifications/destinations',
+  )
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data.items.map(toDestination)
+}
+
+async function fetchRuleSets(): Promise<NotificationRuleSet[]> {
+  const { data, error } = await carinaClient().GET('/api/notifications/rules')
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data.items.map(toRuleSet)
+}
+
+async function fetchSettings(): Promise<NotificationSettings> {
+  const { data, error } = await carinaClient().GET(
+    '/api/notifications/settings',
+  )
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return toSettings(data.data)
+}
+
+async function fetchDeliveries(
+  destinationId: string,
+): Promise<NotificationDelivery[]> {
+  const { data, error } = await carinaClient().GET(
+    '/api/notifications/deliveries',
+    { params: { query: { destinationId, perPage: DELIVERIES_SHOWN } } },
+  )
+
+  if (error || !data?.data) {
+    throw new Error(whatItSaid(error, data) || UNREADABLE)
+  }
+
+  return data.data.items
+    .map(toDelivery)
+    .map((one) => ({ ...one, destinationId }))
+}
+
+function toDestination(one: DestinationResponder): NotificationDestination {
+  return {
+    id: one.id,
+    name: one.name,
+    kind: one.kind,
+    tail: one.tail,
+    enabled: one.enabled,
+    readable: one.readable,
+    lastResultAt: one.lastResultAt ?? undefined,
+    lastFailure: one.lastFailure ?? undefined,
+  }
+}
+
+function toRuleSet(one: RuleResponder): NotificationRuleSet {
+  return {
+    id: one.id,
+    name: one.name,
+    enabled: one.enabled,
+    events: one.events,
+    destinations: one.destinations,
+  }
+}
+
+function toDelivery(
+  one: DeliveryResponder,
+): Omit<NotificationDelivery, 'destinationId'> {
+  return {
+    id: one.id,
+    kind: one.kind,
+    occurredAt: one.occurredAt,
+    state: one.state,
+    failure: one.failure ?? undefined,
+  }
+}
+
+function toSettings(one: SettingsResponder): NotificationSettings {
+  const lead = toInt(one.notifyLeadMinutes)
+
+  if (!isLead(lead)) {
+    throw new Error(UNREADABLE)
+  }
+
+  return { notifyLeadMinutes: lead, publicOriginKnown: one.publicOriginKnown }
+}
