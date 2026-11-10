@@ -724,6 +724,42 @@ export const 放送開始を通知する番組は取り消すボタンになる:
   },
 }
 
+const NOTICE_GONE = 'この通知は残っていないため、取り消せませんでした。'
+
+export const 通知の取り消しを断られるとボタンは取り消すのまま残る: Story = {
+  args: {
+    detail: {
+      ...ahead,
+      program: {
+        ...ahead.program,
+        watch: { id: 'watch-told', leadMinutes: 10 },
+      },
+    },
+    noticing: {
+      ...NOTICING,
+      onUnwatch: async (): Promise<NotificationWrite> => ({
+        state: 'rejected',
+        message: NOTICE_GONE,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: STOP_NOTIFYING }))
+
+    const said = await screen.findByText(NOTICE_GONE)
+
+    await expect(said.closest('[data-slot="toast"]')).toBeVisible()
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: STOP_NOTIFYING }),
+      ).toBeEnabled(),
+    )
+    await expect(canvas.getByText('開始 10 分前に通知')).toBeVisible()
+  },
+}
+
 export const 放送中の番組には放送開始の通知を置かない: Story = {
   args: { detail: { ...standard, nowMin: NOW_MIN }, noticing: NOTICING },
   play: async ({ canvasElement }) => {

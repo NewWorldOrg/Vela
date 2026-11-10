@@ -1598,6 +1598,40 @@ export const 放送開始の通知は行のばつで取り消す: Story = {
   },
 }
 
+const NOTICE_ALREADY_SENT =
+  'この通知はもう済んでいるため、取り消せませんでした。'
+
+export const 放送開始の通知の取り消しを断られる: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    notices: {
+      ...NOTICES,
+      onCancel: async () => ({
+        state: 'rejected',
+        message: NOTICE_ALREADY_SENT,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const cancel = within(watchRow(listOf(canvasElement), BAY_CUP)).getByRole(
+      'button',
+      { name: `${BAY_CUP.title} の通知を取り消す` },
+    )
+
+    await userEvent.click(cancel)
+
+    const said = await screen.findByText(NOTICE_ALREADY_SENT)
+
+    await expect(said.closest('[data-slot="toast"]')).toBeVisible()
+    await waitFor(() => expect(cancel).toBeEnabled())
+    await expect(
+      listOf(canvasElement).querySelectorAll('li[data-watch]'),
+    ).toHaveLength(2)
+  },
+}
+
 export const 放送開始の通知は選ぶ対象にならない: Story = {
   args: { result: shown(RESERVATION_FIXTURES), notices: NOTICES },
   play: async ({ canvasElement }) => {

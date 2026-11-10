@@ -382,6 +382,108 @@ export const 切り替えを断られる: Story = {
   },
 }
 
+const NOT_REACHED_REVISING =
+  '送り先を変更できませんでした。時間をおいてからもう一度お試しください。'
+
+const NOT_REACHED_REMOVING =
+  '送り先を削除できませんでした。時間をおいてからもう一度お試しください。'
+
+const LEAD_NOT_SETTLED =
+  '単発の通知の既定を変更できませんでした。時間をおいてからもう一度お試しください。'
+
+const TESTED_TOO_SOON =
+  '続けてテスト送信はできません。1 分ほどおいてからお試しください。'
+
+const RULE_SETS_FULL = 'ルールセットは 20 本までのため、追加できませんでした。'
+
+const CHOSEN_DESTINATION_GONE =
+  '選んだ送り先が残っていないため、変更できませんでした。'
+
+const RULE_SET_NOT_REMOVED =
+  'ルールセットを削除できませんでした。時間をおいてからもう一度お試しください。'
+
+/** An action that turns away whatever it is asked, in these words. */
+function turnedAway(message: string) {
+  return async (): Promise<NotificationWrite> => ({
+    state: 'rejected',
+    message,
+  })
+}
+
+async function aToastSays(words: string) {
+  const said = await screen.findByText(words)
+
+  await expect(said.closest('[data-slot="toast"]')).toBeVisible()
+}
+
+export const 送り先の切り替えを断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onToggleDestination: turnedAway(NOT_REACHED_REVISING),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const slack = within(canvasElement).getByRole('switch', {
+      name: '家の Slack を有効にする',
+    })
+
+    await expect(slack).toBeChecked()
+
+    await userEvent.click(slack)
+
+    await aToastSays(NOT_REACHED_REVISING)
+    await waitFor(() => expect(slack).toBeChecked())
+  },
+}
+
+export const 単発の通知の既定を断られる: Story = {
+  args: {
+    actions: { ...ACTIONS, onSettleLead: turnedAway(LEAD_NOT_SETTLED) },
+  },
+  play: async ({ canvasElement }) => {
+    const lead = within(
+      within(canvasElement).getByRole('group', { name: '単発の通知の既定' }),
+    )
+
+    await userEvent.click(lead.getByRole('button', { name: '5 分前' }))
+
+    await aToastSays(LEAD_NOT_SETTLED)
+    await waitFor(() =>
+      expect(lead.getByRole('button', { name: '3 分前' })).toHaveAttribute(
+        'aria-pressed',
+        'true',
+      ),
+    )
+    await expect(lead.getByRole('button', { name: '5 分前' })).toHaveAttribute(
+      'aria-pressed',
+      'false',
+    )
+  },
+}
+
+export const テスト送信を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onTestDestination: async () => ({
+        state: 'rejected',
+        message: TESTED_TOO_SOON,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await fromTheMenu(canvasElement, '家の Slack', 'テスト送信')
+
+    await aToastSays(TESTED_TOO_SOON)
+    await expect(
+      within(
+        within(canvasElement).getByRole('list', { name: '送り先' }),
+      ).queryByText(/^テスト送信 · /),
+    ).toBeNull()
+  },
+}
+
 export const 単発の通知の既定を変える: Story = {
   play: async ({ canvasElement }) => {
     const lead = within(
@@ -582,6 +684,11 @@ export const 送り先の追加を断られる: Story = {
     await expect(
       await dialog.findByText('この URL は受け付けられません。'),
     ).toBeVisible()
+    await expect(dialog.getByLabelText('名前')).toHaveValue('家の Slack')
+    await expect(dialog.getByLabelText('Webhook の URL')).toHaveValue(
+      SLACK_ADDRESS,
+    )
+    await expect(dialog.getByRole('button', { name: '追加' })).toBeEnabled()
   },
 }
 
@@ -625,6 +732,68 @@ export const 送り先の変更を保存する: Story = {
         enabled: true,
       }),
     )
+  },
+}
+
+export const 送り先の変更を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onReviseDestination: turnedAway('この URL は受け付けられません。'),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await fromTheMenu(canvasElement, '家の Slack', '変更')
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: '送り先を変更' }),
+    )
+
+    await userEvent.type(dialog.getByLabelText('名前'), '(居間)')
+    await userEvent.type(
+      dialog.getByLabelText('Webhook の URL'),
+      DISCORD_ADDRESS,
+    )
+    await userEvent.click(dialog.getByRole('switch', { name: '有効' }))
+    await userEvent.click(dialog.getByRole('button', { name: '保存' }))
+
+    await expect(
+      await dialog.findByText('この URL は受け付けられません。'),
+    ).toBeVisible()
+    await expect(dialog.getByLabelText('名前')).toHaveValue('家の Slack(居間)')
+    await expect(dialog.getByLabelText('Webhook の URL')).toHaveValue(
+      DISCORD_ADDRESS,
+    )
+    await expect(dialog.getByRole('switch', { name: '有効' })).not.toBeChecked()
+    await expect(dialog.getByRole('button', { name: '保存' })).toBeEnabled()
+  },
+}
+
+export const 送り先の削除を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onRemoveDestination: turnedAway(NOT_REACHED_REMOVING),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await fromTheMenu(canvasElement, 'Discord の通知部屋', '削除')
+
+    const asked = within(await screen.findByRole('alertdialog'))
+
+    await userEvent.click(asked.getByRole('button', { name: '削除する' }))
+
+    await expect(await asked.findByText(NOT_REACHED_REMOVING)).toBeVisible()
+    await expect(asked.getByRole('button', { name: '削除する' })).toBeEnabled()
+
+    await userEvent.click(asked.getByRole('button', { name: 'キャンセル' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    await expect(
+      within(canvasElement).getByRole('button', {
+        name: 'Discord の通知部屋 の操作',
+      }),
+    ).toBeVisible()
   },
 }
 
@@ -860,6 +1029,113 @@ export const ルールセットを保存する: Story = {
         }),
       ),
     )
+  },
+}
+
+export const ルールセットの保存を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onReviseRuleSet: turnedAway(CHOSEN_DESTINATION_GONE),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await fromTheMenu(canvasElement, '困ったときだけ', '変更')
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
+    )
+    const recording = within(dialog.getByRole('group', { name: '録画' }))
+    const to = within(dialog.getByRole('group', { name: '送り先' }))
+
+    await userEvent.type(dialog.getByLabelText('名前'), '(夜)')
+    await userEvent.click(recording.getByRole('button', { name: '開始' }))
+    await userEvent.click(
+      to.getByRole('button', { name: 'Discord の通知部屋' }),
+    )
+    await userEvent.click(dialog.getByRole('button', { name: '保存' }))
+
+    await expect(await dialog.findByText(CHOSEN_DESTINATION_GONE)).toBeVisible()
+    await expect(dialog.getByLabelText('名前')).toHaveValue(
+      '困ったときだけ(夜)',
+    )
+    await expect(
+      recording.getByRole('button', { name: '開始' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      to.getByRole('button', { name: 'Discord の通知部屋' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(dialog.getByRole('button', { name: '保存' })).toBeEnabled()
+  },
+}
+
+export const ルールセットの削除を断られる: Story = {
+  args: {
+    actions: {
+      ...ACTIONS,
+      onRemoveRuleSet: turnedAway(RULE_SET_NOT_REMOVED),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await fromTheMenu(canvasElement, '困ったときだけ', '変更')
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
+    )
+
+    await userEvent.click(
+      dialog.getByRole('button', { name: '困ったときだけ を削除' }),
+    )
+
+    const asked = within(await screen.findByRole('alertdialog'))
+
+    await userEvent.click(asked.getByRole('button', { name: '削除する' }))
+
+    await expect(await asked.findByText(RULE_SET_NOT_REMOVED)).toBeVisible()
+
+    await userEvent.click(asked.getByRole('button', { name: 'キャンセル' }))
+
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())
+    await expect(
+      within(
+        await screen.findByRole('dialog', { name: 'ルールセットを変更' }),
+      ).getByLabelText('名前'),
+    ).toHaveValue('困ったときだけ')
+  },
+}
+
+export const ルールセットの追加を断られる: Story = {
+  args: {
+    actions: { ...ACTIONS, onAddRuleSet: turnedAway(RULE_SETS_FULL) },
+  },
+  play: async ({ canvasElement }) => {
+    const ruleSets = within(canvasElement).getByRole('heading', {
+      name: 'ルールセット',
+    }).parentElement as HTMLElement
+
+    await userEvent.click(
+      within(ruleSets).getByRole('button', { name: '追加' }),
+    )
+
+    const dialog = within(
+      await screen.findByRole('dialog', { name: 'ルールセットを追加' }),
+    )
+    const recording = within(dialog.getByRole('group', { name: '録画' }))
+    const to = within(dialog.getByRole('group', { name: '送り先' }))
+
+    await userEvent.type(dialog.getByLabelText('名前'), '夜中の失敗')
+    await userEvent.click(recording.getByRole('button', { name: '失敗' }))
+    await userEvent.click(to.getByRole('button', { name: '家の Slack' }))
+    await userEvent.click(dialog.getByRole('button', { name: '保存' }))
+
+    await expect(await dialog.findByText(RULE_SETS_FULL)).toBeVisible()
+    await expect(dialog.getByLabelText('名前')).toHaveValue('夜中の失敗')
+    await expect(
+      recording.getByRole('button', { name: '失敗' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+    await expect(
+      to.getByRole('button', { name: '家の Slack' }),
+    ).toHaveAttribute('aria-pressed', 'true')
   },
 }
 
