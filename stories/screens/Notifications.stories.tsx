@@ -12,7 +12,7 @@ import {
   type BrowserChoice,
 } from '@/components/notifications/add-destination-dialog'
 import { REFUSED_ADDRESS } from '@/components/notifications/webhook-field'
-import { inTheSettingsWithNotifications } from '@/stories/frames'
+import { inTheSettings } from '@/stories/frames'
 import { PHONE } from '@/stories/rows-as-cards'
 import {
   DESTINATIONS,
@@ -102,7 +102,7 @@ const meta = {
     browser: BROWSER,
     now: NOTIFICATIONS_NOW,
   },
-  decorators: [inTheSettingsWithNotifications],
+  decorators: [inTheSettings],
 } satisfies Meta<typeof NotificationsView>
 
 export default meta

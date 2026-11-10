@@ -20,13 +20,11 @@ export function SettingsFrame({
   status,
   values,
   hasMigration,
-  hasNotifications = false,
   children,
 }: {
   status: SystemStatus
   values: SettingsEntranceValues
   hasMigration: boolean
-  hasNotifications?: boolean
   children: ReactNode
 }) {
   const pathname = usePathname()
@@ -56,7 +54,6 @@ export function SettingsFrame({
               status={status}
               values={values}
               hasMigration={hasMigration}
-              hasNotifications={hasNotifications}
               current={pathname}
               withValues={false}
             />
@@ -65,7 +62,6 @@ export function SettingsFrame({
             status={status}
             values={values}
             hasMigration={hasMigration}
-            hasNotifications={hasNotifications}
           />
           <AdminMain
             className={`px-0 pt-3.5 pb-10 [&_[data-slot=crumb]]:hidden ${A_SETTINGS_HEADING}`}

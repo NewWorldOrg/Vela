@@ -87,7 +87,7 @@ export function DestinationList({
   destinations: NotificationDestination[]
   ruleSets: Pick<NotificationRuleSet, 'name' | 'destinations'>[]
   actions: DestinationActions
-  now: number
+  now?: number
 }) {
   return (
     <ul
@@ -169,7 +169,7 @@ function DestinationRow({
   /** The names of the rule sets that are removed when this destination is. */
   goingWith: string[]
   actions: DestinationActions
-  now: number
+  now?: number
 }) {
   const [enabled, setEnabled] = useState(destination.enabled)
   const [tested, setTested] = useState<Said>()

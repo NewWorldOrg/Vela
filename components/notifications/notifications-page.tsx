@@ -78,8 +78,8 @@ export function NotificationsView({
   actions: NotificationActions
   /** This browser as a destination, where it can be one. */
   browser?: BrowserChoice
-  /** The moment the screen was drawn for, which today's times are said against. */
-  now: number
+  /** The present held still, for a picture. */
+  now?: number
 }) {
   const { settings, destinations, ruleSets } = screen
   const [lead, setLead] = useState(settings.notifyLeadMinutes)

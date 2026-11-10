@@ -35,7 +35,7 @@ const GROUPS: [string, string[]][] = [
   ['観る', ['視聴', '表示']],
   ['録る', ['エンコード', 'CM・OP・ED の検出', '品質']],
   ['機器', ['チューナー', 'チャンネル']],
-  ['管理', ['認証', '整合性チェック', '移行記録']],
+  ['管理', ['認証', '整合性チェック', '通知', '移行記録']],
 ]
 
 function entranceOf(canvasElement: HTMLElement): HTMLElement {
@@ -119,7 +119,7 @@ export const 移行記録が無い: Story = {
       within(entranceOf(canvasElement)).getByRole('region', { name: '管理' }),
     )
 
-    await expect(keeping.getAllByRole('link')).toHaveLength(2)
+    await expect(keeping.getAllByRole('link')).toHaveLength(3)
     await expect(keeping.queryByText('移行記録')).not.toBeInTheDocument()
   },
 }

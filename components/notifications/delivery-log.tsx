@@ -88,7 +88,7 @@ export function DeliveryLog({
 }: {
   deliveries: NotificationDelivery[]
   destinations: Pick<NotificationDestination, 'id' | 'name'>[]
-  now: number
+  now?: number
 }) {
   const names = new Map(destinations.map(({ id, name }) => [id, name]))
 
@@ -127,7 +127,7 @@ function DeliveryRow({
 }: {
   delivery: NotificationDelivery
   sentTo?: string
-  now: number
+  now?: number
 }) {
   const said = deliverySaid(delivery)
 
