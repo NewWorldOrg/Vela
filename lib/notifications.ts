@@ -10,20 +10,27 @@ export type WebhookKind = 'slack' | 'discord'
 export type DestinationKind = WebhookKind | 'webPush'
 
 export type DeliveryFailure =
-  'timeout' | 'rateLimited' | 'rejected' | 'tls' | 'unreachable'
-
-export type DestinationResult =
-  | { state: 'sent'; at: string }
-  | { state: 'failed' | 'givenUp'; at: string; failure: DeliveryFailure }
+  | 'timedOut'
+  | 'rateLimited'
+  | 'serverFailed'
+  | 'unreachable'
+  | 'rejected'
+  | 'destinationDisabled'
+  | 'unreadable'
+  | 'tooOld'
+  | 'tlsFailed'
 
 /** A place notices are sent to. A webhook's address never comes back from Carina, only its last four characters. */
 export interface NotificationDestination {
   id: string
   name: string
   kind: DestinationKind
-  urlTail?: string
+  tail?: string
   enabled: boolean
-  lastResult?: DestinationResult
+  /** Whether Carina can still open the address it keeps sealed. */
+  readable: boolean
+  lastResultAt?: string
+  lastFailure?: DeliveryFailure
 }
 
 export type NotificationEvent =
@@ -37,8 +44,8 @@ export type NotificationEvent =
   | 'reservationCompeting'
   | 'reservationMissed'
   | 'programmeMoved'
-  | 'qualityRaised'
-  | 'qualityResolved'
+  | 'qualityIncidentDetected'
+  | 'qualityIncidentResolved'
   | 'deviceDisconnected'
 
 export interface NotificationRuleSet {
@@ -46,20 +53,19 @@ export interface NotificationRuleSet {
   name: string
   enabled: boolean
   events: NotificationEvent[]
-  destinationIds: string[]
+  destinations: string[]
 }
 
 export type RuleSetDraft = Omit<NotificationRuleSet, 'id'>
 
 export type DeliveryState = 'queued' | 'sent' | 'failed' | 'givenUp'
 
+/** One notice on its way to one destination. Its title is the heading Carina gave the notice. */
 export interface NotificationDelivery {
   id: string
-  at: string
-  event: NotificationEvent | 'programmeStarting'
-  subject: string
+  kind: NotificationEvent
+  occurredAt: string
   destinationId: string
-  destinationName: string
   state: DeliveryState
   failure?: DeliveryFailure
 }
@@ -69,8 +75,16 @@ export const LEADS = [0, 1, 3, 5, 10] as const
 export type LeadMinutes = (typeof LEADS)[number]
 
 export interface NotificationSettings {
-  leadMinutes: LeadMinutes
-  hasPublicOrigin: boolean
+  notifyLeadMinutes: LeadMinutes
+  publicOriginKnown: boolean
+}
+
+export interface NotificationsScreen {
+  settings: NotificationSettings
+  destinations: NotificationDestination[]
+  ruleSets: NotificationRuleSet[]
+  /** What went to every destination lately, the newest first. */
+  deliveries: NotificationDelivery[]
 }
 
 /** A notice that a programme is about to start, set from the guide without recording it. */
@@ -86,8 +100,7 @@ export type NotificationWrite =
   | { state: 'rejected'; message: string }
 
 export type TestSending =
-  | { state: 'ok'; delivered: true }
-  | { state: 'ok'; delivered: false; failure: DeliveryFailure }
+  | { state: 'ok'; delivered: boolean; failure?: DeliveryFailure }
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
@@ -102,12 +115,24 @@ export const KIND_LABEL: Record<DestinationKind, string> = {
 }
 
 export const FAILURE_LABEL: Record<DeliveryFailure, string> = {
-  timeout: '時間切れ',
+  timedOut: '時間切れ',
   rateLimited: '回数の上限',
-  rejected: '断られた',
-  tls: '暗号化の失敗',
+  serverFailed: '送り先の障害',
   unreachable: 'つながらない',
+  rejected: '断られた',
+  destinationDisabled: '送り先が無効',
+  unreadable: '開けない',
+  tooOld: '古くなった',
+  tlsFailed: '暗号化の失敗',
 }
+
+const WORTH_ANOTHER_TRY: ReadonlySet<DeliveryFailure> = new Set([
+  'timedOut',
+  'rateLimited',
+  'serverFailed',
+  'unreachable',
+  'tlsFailed',
+])
 
 const SLACK_HOST = 'hooks.slack.com'
 
@@ -164,8 +189,8 @@ export function registeringAs(kind: WebhookKind): string {
   return `${KIND_LABEL[kind]} として登録します`
 }
 
-export function tailOf(urlTail: string): string {
-  return `…${urlTail}`
+export function tailOf(tail: string): string {
+  return `…${tail}`
 }
 
 export interface EventGroup {
@@ -208,8 +233,8 @@ export const EVENT_GROUPS: EventGroup[] = [
     name: '品質',
     prefix: '',
     events: [
-      { event: 'qualityRaised', label: '異常の発生' },
-      { event: 'qualityResolved', label: '解消' },
+      { event: 'qualityIncidentDetected', label: '異常の発生' },
+      { event: 'qualityIncidentResolved', label: '解消' },
     ],
   },
   {
@@ -235,7 +260,7 @@ export function eventsSummary(events: readonly NotificationEvent[]): string {
   return said.length === 0 ? NO_EVENTS : said.join(' · ')
 }
 
-export const EVENT_LABEL: Record<NotificationDelivery['event'], string> = {
+export const EVENT_LABEL: Record<NotificationEvent, string> = {
   recordingStarted: '録画の開始',
   recordingCompleted: '録画の完了',
   recordingTruncated: '録画の欠け',
@@ -246,13 +271,12 @@ export const EVENT_LABEL: Record<NotificationDelivery['event'], string> = {
   reservationCompeting: '予約の競合',
   reservationMissed: '予約の取り逃し',
   programmeMoved: '番組の移動',
-  qualityRaised: '品質の異常の発生',
-  qualityResolved: '品質の異常の解消',
+  qualityIncidentDetected: '品質の異常の発生',
+  qualityIncidentResolved: '品質の異常の解消',
   deviceDisconnected: '機器の切断',
-  programmeStarting: '放送開始の通知',
 }
 
-export function eventLabelOf(event: NotificationDelivery['event']): string {
+export function eventLabelOf(event: NotificationEvent): string {
   return wordFor(EVENT_LABEL, event)
 }
 
@@ -282,26 +306,43 @@ export interface Said {
   why?: string
 }
 
-function failureWord(failure: DeliveryFailure | undefined): string | undefined {
+export function failureWord(
+  failure: DeliveryFailure | undefined,
+): string | undefined {
   return failure === undefined ? undefined : wordFor(FAILURE_LABEL, failure)
 }
 
-/** How the last notice sent to a destination went: reached it, still being tried, or given up on. */
+/** How the last notice sent to a destination went: reached it, not yet there, or never will be. Nothing while none was sent. */
 export function lastResultSaid(
-  result: DestinationResult,
+  destination: Pick<
+    NotificationDestination,
+    'readable' | 'lastResultAt' | 'lastFailure'
+  >,
   now: number = Date.now(),
-): Said {
-  if (result.state === 'sent') {
+): Said | undefined {
+  const { readable, lastResultAt, lastFailure } = destination
+
+  if (!readable) {
+    return { verdict: 'err', words: FAILURE_LABEL.unreadable }
+  }
+
+  if (lastResultAt === undefined) {
+    return undefined
+  }
+
+  if (lastFailure === undefined) {
     return {
       verdict: 'ok',
-      words: `届いた ${formatRecentMoment(result.at, now)}`,
+      words: `届いた ${formatRecentMoment(lastResultAt, now)}`,
     }
   }
 
+  const retried = WORTH_ANOTHER_TRY.has(lastFailure)
+
   return {
-    verdict: result.state === 'failed' ? 'warn' : 'err',
-    words: result.state === 'failed' ? '届いていない' : '届かなかった',
-    why: failureWord(result.failure),
+    verdict: retried ? 'warn' : 'err',
+    words: retried ? '届いていない' : '届かなかった',
+    why: failureWord(lastFailure),
   }
 }
 
@@ -357,6 +398,56 @@ export function nameFits(name: string): boolean {
   const trimmed = name.trim()
 
   return trimmed.length > 0 && [...trimmed].length <= NAME_LONGEST
+}
+
+/** The rule sets that go when a destination does: the ones that send to it alone. */
+export function ruleSetsGoingWith<
+  T extends Pick<NotificationRuleSet, 'destinations'>,
+>(destinationId: string, ruleSets: readonly T[]): T[] {
+  return ruleSets.filter(
+    ({ destinations }) =>
+      destinations.length > 0 &&
+      destinations.every((one) => one === destinationId),
+  )
+}
+
+/** What removing a destination says about the rule sets that go with it; nothing when none does. */
+export function goingToo(names: readonly string[]): string | undefined {
+  return names.length === 0
+    ? undefined
+    : `ルールセット${names.map((name) => `「${name}」`).join('')}も削除します。`
+}
+
+export const DELIVERIES_SHOWN = 50
+
+/** The deliveries of several destinations as one log, the newest first. */
+export function newestFirst(
+  deliveries: readonly NotificationDelivery[],
+): NotificationDelivery[] {
+  return [...deliveries].sort(
+    (one, other) => Date.parse(other.occurredAt) - Date.parse(one.occurredAt),
+  )
+}
+
+/** The destination the log is narrowed to: the one chosen while it is still held, otherwise none. */
+export function narrowedTo(
+  destinations: readonly Pick<NotificationDestination, 'id'>[],
+  chosen: string | undefined,
+): string | undefined {
+  return destinations.some(({ id }) => id === chosen) ? chosen : undefined
+}
+
+/** The rows the log lists: the newest fifty of every destination, or of the one it is narrowed to. */
+export function deliveriesShown(
+  deliveries: readonly NotificationDelivery[],
+  destinationId: string | undefined,
+): NotificationDelivery[] {
+  const asked =
+    destinationId === undefined
+      ? deliveries
+      : deliveries.filter((one) => one.destinationId === destinationId)
+
+  return asked.slice(0, DELIVERIES_SHOWN)
 }
 
 /** The destinations a new single notice goes to when nobody chose: every one that is on. */

@@ -83,11 +83,15 @@ export function DeliveryFilter({
 
 export function DeliveryLog({
   deliveries,
+  destinations,
   now,
 }: {
   deliveries: NotificationDelivery[]
+  destinations: Pick<NotificationDestination, 'id' | 'name'>[]
   now: number
 }) {
+  const names = new Map(destinations.map(({ id, name }) => [id, name]))
+
   return (
     <div className="mt-1 upright:overflow-hidden upright:rounded-lg upright:bg-surface">
       <div
@@ -104,7 +108,12 @@ export function DeliveryLog({
       </div>
       <ul aria-label="直近の配送">
         {deliveries.map((delivery) => (
-          <DeliveryRow key={delivery.id} delivery={delivery} now={now} />
+          <DeliveryRow
+            key={delivery.id}
+            delivery={delivery}
+            sentTo={names.get(delivery.destinationId)}
+            now={now}
+          />
         ))}
       </ul>
     </div>
@@ -113,9 +122,11 @@ export function DeliveryLog({
 
 function DeliveryRow({
   delivery,
+  sentTo,
   now,
 }: {
   delivery: NotificationDelivery
+  sentTo?: string
   now: number
 }) {
   const said = deliverySaid(delivery)
@@ -131,25 +142,22 @@ function DeliveryRow({
       <span className="contents upright:flex upright:min-w-0 upright:items-center upright:gap-1 upright:text-note upright:text-ink-2 upright:[grid-area:meta]">
         <span className="text-ink-2 tabular-nums [grid-area:tm]">
           <span className="upright:hidden">
-            {deliveryMoment(delivery.at, now)}
+            {deliveryMoment(delivery.occurredAt, now)}
           </span>
           <span className="hidden upright:inline">
-            {deliveryClock(delivery.at)}
+            {deliveryClock(delivery.occurredAt)}
           </span>
         </span>
         <span aria-hidden="true" className="hidden upright:inline">
           ·
         </span>
         <span className="min-w-0 truncate text-ink-2 [grid-area:to]">
-          {delivery.destinationName}
+          {sentTo}
         </span>
       </span>
-      <span className="flex min-w-0 items-baseline gap-2 whitespace-nowrap [grid-area:ev] upright:gap-1.5">
-        <b className="shrink-0 font-semibold text-ink">
-          {eventLabelOf(delivery.event)}
-        </b>
-        <span className="min-w-0 truncate text-ink-2">{delivery.subject}</span>
-      </span>
+      <b className="min-w-0 truncate font-semibold text-ink [grid-area:ev]">
+        {eventLabelOf(delivery.kind)}
+      </b>
       <span className="[grid-area:st] upright:self-center">
         <Badge variant={CHIP_OF[said.verdict]}>
           <ChipDot className={DOT_OF[said.verdict]} />

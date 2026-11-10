@@ -35,7 +35,7 @@ const FRESH: RuleSetDraft = {
   name: '',
   enabled: true,
   events: [],
-  destinationIds: [],
+  destinations: [],
 }
 
 /** The editor of a rule set: its name, whether it is on, the events it sends, and where it sends them. `削除` stands only for a rule set that already is. */
@@ -89,7 +89,7 @@ function RuleSetForm({
   const [name, setName] = useState(from.name)
   const [enabled, setEnabled] = useState(from.enabled)
   const [events, setEvents] = useState<NotificationEvent[]>(from.events)
-  const [sendTo, setSendTo] = useState<string[]>(from.destinationIds)
+  const [sendTo, setSendTo] = useState<string[]>(from.destinations)
   const [refusal, setRefusal] = useState<string>()
   const [pending, startTransition] = useTransition()
   const ready = nameFits(name) && sendTo.length > 0 && !pending
@@ -103,7 +103,7 @@ function RuleSetForm({
         name: name.trim(),
         enabled,
         events,
-        destinationIds: sendTo,
+        destinations: sendTo,
       })
 
       if (result.state === 'ok') {

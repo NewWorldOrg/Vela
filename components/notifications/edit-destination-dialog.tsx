@@ -133,7 +133,7 @@ function EditDestinationForm({
             placeholder="変えないときは空のまま"
             hint={[
               wordFor(KIND_LABEL, destination.kind),
-              destination.urlTail && `末尾 ${tailOf(destination.urlTail)}`,
+              destination.tail && `末尾 ${tailOf(destination.tail)}`,
             ]
               .filter(Boolean)
               .join(' · ')}

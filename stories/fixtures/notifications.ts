@@ -2,8 +2,8 @@ import type {
   NotificationDelivery,
   NotificationDestination,
   NotificationRuleSet,
+  NotificationsScreen,
 } from '@/lib/notifications'
-import type { NotificationsScreen } from '@/components/notifications/notifications-page'
 import type { WatchedProgramme } from '@/components/notifications/notify-only-row'
 
 export const NOTIFICATIONS_NOW = Date.parse('2026-11-09T12:30:00Z')
@@ -12,22 +12,21 @@ export const HOME_SLACK: NotificationDestination = {
   id: 'dest-slack',
   name: '家の Slack',
   kind: 'slack',
-  urlTail: 'a1b2',
+  tail: 'a1b2',
   enabled: true,
-  lastResult: { state: 'sent', at: '2026-11-09T12:03:00Z' },
+  readable: true,
+  lastResultAt: '2026-11-09T12:03:00Z',
 }
 
 export const DISCORD_ROOM: NotificationDestination = {
   id: 'dest-discord',
   name: 'Discord の通知部屋',
   kind: 'discord',
-  urlTail: '9f3e',
+  tail: '9f3e',
   enabled: true,
-  lastResult: {
-    state: 'failed',
-    at: '2026-11-09T11:58:00Z',
-    failure: 'timeout',
-  },
+  readable: true,
+  lastResultAt: '2026-11-09T11:58:00Z',
+  lastFailure: 'timedOut',
 }
 
 export const IPAD_SAFARI: NotificationDestination = {
@@ -35,7 +34,8 @@ export const IPAD_SAFARI: NotificationDestination = {
   name: 'iPad の Safari',
   kind: 'webPush',
   enabled: true,
-  lastResult: { state: 'sent', at: '2026-11-09T12:03:00Z' },
+  readable: true,
+  lastResultAt: '2026-11-09T12:03:00Z',
 }
 
 export const DESTINATIONS: NotificationDestination[] = [
@@ -54,10 +54,10 @@ export const ONLY_WHEN_TROUBLED: NotificationRuleSet = {
     'encodeFailed',
     'reservationCompeting',
     'reservationMissed',
-    'qualityRaised',
+    'qualityIncidentDetected',
     'deviceDisconnected',
   ],
-  destinationIds: [HOME_SLACK.id, IPAD_SAFARI.id],
+  destinations: [HOME_SLACK.id, IPAD_SAFARI.id],
 }
 
 export const RULE_SETS: NotificationRuleSet[] = [
@@ -67,7 +67,7 @@ export const RULE_SETS: NotificationRuleSet[] = [
     name: '録画の記録',
     enabled: true,
     events: ['recordingStarted', 'recordingCompleted', 'encodeCompleted'],
-    destinationIds: [DISCORD_ROOM.id],
+    destinations: [DISCORD_ROOM.id],
   },
   {
     id: 'rule-away',
@@ -81,86 +81,42 @@ export const RULE_SETS: NotificationRuleSet[] = [
       'encodeStarted',
       'encodeCompleted',
       'encodeFailed',
-      'qualityRaised',
-      'qualityResolved',
+      'qualityIncidentDetected',
+      'qualityIncidentResolved',
     ],
-    destinationIds: [HOME_SLACK.id, DISCORD_ROOM.id],
+    destinations: [HOME_SLACK.id, DISCORD_ROOM.id],
   },
 ]
 
-const HARBOUR_RECIPES = '港町レシピ帖 #15「灯台守のパン」'
-
 function delivery(
   id: string,
-  at: string,
-  event: NotificationDelivery['event'],
-  subject: string,
+  occurredAt: string,
+  kind: NotificationDelivery['kind'],
   to: NotificationDestination,
   state: NotificationDelivery['state'] = 'sent',
   failure?: NotificationDelivery['failure'],
 ): NotificationDelivery {
-  return {
-    id,
-    at,
-    event,
-    subject,
-    destinationId: to.id,
-    destinationName: to.name,
-    state,
-    failure,
-  }
+  return { id, kind, occurredAt, destinationId: to.id, state, failure }
 }
 
 export const DELIVERIES: NotificationDelivery[] = [
-  delivery(
-    'del-1',
-    '2026-11-09T12:03:00Z',
-    'recordingTruncated',
-    HARBOUR_RECIPES,
-    HOME_SLACK,
-  ),
-  delivery(
-    'del-2',
-    '2026-11-09T12:03:00Z',
-    'recordingTruncated',
-    HARBOUR_RECIPES,
-    IPAD_SAFARI,
-  ),
+  delivery('del-1', '2026-11-09T12:03:00Z', 'recordingTruncated', HOME_SLACK),
+  delivery('del-2', '2026-11-09T12:03:00Z', 'recordingTruncated', IPAD_SAFARI),
   delivery(
     'del-3',
     '2026-11-09T11:58:00Z',
     'encodeCompleted',
-    'ちびっこ忍者 第12話',
     DISCORD_ROOM,
     'failed',
-    'timeout',
+    'timedOut',
   ),
-  delivery(
-    'del-4',
-    '2026-11-09T11:54:00Z',
-    'recordingCompleted',
-    'ドラマ「ひだまり荘の人々」#18',
-    DISCORD_ROOM,
-  ),
-  delivery(
-    'del-5',
-    '2026-11-09T11:15:00Z',
-    'recordingStarted',
-    HARBOUR_RECIPES,
-    DISCORD_ROOM,
-  ),
-  delivery(
-    'del-6',
-    '2026-11-09T10:27:00Z',
-    'programmeStarting',
-    'ドキュメント 灯りの仕事',
-    HOME_SLACK,
-  ),
+  delivery('del-4', '2026-11-09T11:54:00Z', 'recordingCompleted', DISCORD_ROOM),
+  delivery('del-5', '2026-11-09T11:15:00Z', 'recordingStarted', DISCORD_ROOM),
+  delivery('del-6', '2026-11-09T10:27:00Z', 'programmeMoved', HOME_SLACK),
   delivery(
     'del-7',
     '2026-11-09T09:40:00Z',
     'reservationCompeting',
-    '深夜ドラマ「灯台守の娘」#3',
     HOME_SLACK,
     'givenUp',
     'rejected',
@@ -168,21 +124,20 @@ export const DELIVERIES: NotificationDelivery[] = [
   delivery(
     'del-8',
     '2026-11-09T09:12:00Z',
-    'qualityRaised',
-    '中央テレビ · ドロップ率',
+    'qualityIncidentDetected',
     IPAD_SAFARI,
   ),
 ]
 
 export const NOTIFICATIONS_SCREEN: NotificationsScreen = {
-  settings: { leadMinutes: 3, hasPublicOrigin: false },
+  settings: { notifyLeadMinutes: 3, publicOriginKnown: false },
   destinations: DESTINATIONS,
   ruleSets: RULE_SETS,
   deliveries: DELIVERIES,
 }
 
 export const EMPTY_NOTIFICATIONS_SCREEN: NotificationsScreen = {
-  settings: { leadMinutes: 3, hasPublicOrigin: true },
+  settings: { notifyLeadMinutes: 3, publicOriginKnown: true },
   destinations: [],
   ruleSets: [],
   deliveries: [],

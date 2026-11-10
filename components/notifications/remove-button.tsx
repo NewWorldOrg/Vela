@@ -21,10 +21,11 @@ import { Spinner } from '@/components/vela/progress'
 
 const SIGNED_OUT = signedOut('削除')
 
-/** The question asked before anything goes: the name of what goes, and that it cannot come back. */
+/** The question asked before anything goes: the name of what goes, what goes with it, and that it cannot come back. */
 export function RemoveDialog({
   what,
   name,
+  also,
   open,
   onOpenChange,
   onRemove,
@@ -32,6 +33,7 @@ export function RemoveDialog({
 }: {
   what: '送り先' | 'ルールセット'
   name: string
+  also?: string
   open: boolean
   onOpenChange: (open: boolean) => void
   onRemove: () => Promise<NotificationWrite>
@@ -71,6 +73,7 @@ export function RemoveDialog({
           <AlertDialogTitle>この{what}を削除します</AlertDialogTitle>
           <AlertDialogDescription>
             <b className="block font-bold text-ink">{name}</b>
+            {also && <span className="block">{also}</span>}
             元に戻せません。
           </AlertDialogDescription>
         </AlertDialogHeader>

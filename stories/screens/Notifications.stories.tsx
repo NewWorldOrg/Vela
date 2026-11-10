@@ -1,5 +1,4 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { useState } from 'react'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type { NotificationWrite, TestSending } from '@/lib/notifications'
@@ -8,7 +7,10 @@ import {
   NotificationsView,
   type NotificationActions,
 } from '@/components/notifications/notifications-page'
-import { DENIED_HERE } from '@/components/notifications/add-destination-dialog'
+import {
+  DENIED_HERE,
+  type BrowserChoice,
+} from '@/components/notifications/add-destination-dialog'
 import { REFUSED_ADDRESS } from '@/components/notifications/webhook-field'
 import { inTheSettingsWithNotifications } from '@/stories/frames'
 import { PHONE } from '@/stories/rows-as-cards'
@@ -32,7 +34,15 @@ const REFUSED = 'https://hook.example.jp/carina'
 
 const addWebhook = fn<NotificationActions['onAddWebhook']>(async () => OK)
 
-const addBrowser = fn<NotificationActions['onAddBrowser']>(async () => OK)
+const addBrowser = fn<BrowserChoice['onAdd']>(async () => OK)
+
+const BROWSER: BrowserChoice = {
+  here: 'Windows の Chrome',
+  permission: 'default',
+  onAdd: addBrowser,
+}
+
+const ON_A_PHONE: BrowserChoice = { ...BROWSER, here: 'iPhone の Safari' }
 
 const toggleDestination = fn<NotificationActions['onToggleDestination']>(
   async () => OK,
@@ -41,7 +51,7 @@ const toggleDestination = fn<NotificationActions['onToggleDestination']>(
 const testDestination = fn<NotificationActions['onTestDestination']>(
   async (id): Promise<TestSending> =>
     id === DISCORD_ROOM.id
-      ? { state: 'ok', delivered: false, failure: 'timeout' }
+      ? { state: 'ok', delivered: false, failure: 'timedOut' }
       : { state: 'ok', delivered: true },
 )
 
@@ -63,11 +73,8 @@ const removeRuleSet = fn<NotificationActions['onRemoveRuleSet']>(async () => OK)
 
 const settleLead = fn<NotificationActions['onSettleLead']>(async () => OK)
 
-const showDeliveriesFor = fn<NotificationActions['onShowDeliveriesFor']>()
-
 const ACTIONS: NotificationActions = {
   onAddWebhook: addWebhook,
-  onAddBrowser: addBrowser,
   onToggleDestination: toggleDestination,
   onTestDestination: testDestination,
   onReviseDestination: reviseDestination,
@@ -77,7 +84,6 @@ const ACTIONS: NotificationActions = {
   onToggleRuleSet: toggleRuleSet,
   onRemoveRuleSet: removeRuleSet,
   onSettleLead: settleLead,
-  onShowDeliveriesFor: showDeliveriesFor,
 }
 
 const meta = {
@@ -93,8 +99,7 @@ const meta = {
   args: {
     screen: NOTIFICATIONS_SCREEN,
     actions: ACTIONS,
-    here: 'Windows の Chrome',
-    permission: 'default',
+    browser: BROWSER,
     now: NOTIFICATIONS_NOW,
   },
   decorators: [inTheSettingsWithNotifications],
@@ -116,7 +121,7 @@ async function fromTheMenu(
   await userEvent.click(await screen.findByRole('menuitem', { name: item }))
 }
 
-async function openThePicker(canvasElement: HTMLElement) {
+async function openTheAdding(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
   const destinations = canvas.getByRole('heading', { name: '送り先' })
     .parentElement as HTMLElement
@@ -129,7 +134,7 @@ async function openThePicker(canvasElement: HTMLElement) {
 }
 
 async function openTheWebhookForm(canvasElement: HTMLElement) {
-  const dialog = await openThePicker(canvasElement)
+  const dialog = await openTheAdding(canvasElement)
 
   await userEvent.click(
     within(dialog).getByRole('button', { name: /Slack・Discord/ }),
@@ -139,33 +144,13 @@ async function openTheWebhookForm(canvasElement: HTMLElement) {
 }
 
 async function openTheBrowserForm(canvasElement: HTMLElement) {
-  const dialog = await openThePicker(canvasElement)
+  const dialog = await openTheAdding(canvasElement)
 
   await userEvent.click(
     within(dialog).getByRole('button', { name: /このブラウザ/ }),
   )
 
   return dialog
-}
-
-/** The log narrowed to one destination, as the page would answer the URL it is given. */
-function NarrowedLog(args: Story['args']) {
-  const [only, setOnly] = useState<string>()
-
-  return (
-    <NotificationsView
-      {...meta.args}
-      {...args}
-      screen={{
-        ...NOTIFICATIONS_SCREEN,
-        deliveriesFor: only,
-        deliveries: NOTIFICATIONS_SCREEN.deliveries.filter(
-          (delivery) => only === undefined || delivery.destinationId === only,
-        ),
-      }}
-      actions={{ ...ACTIONS, onShowDeliveriesFor: setOnly }}
-    />
-  )
 }
 
 export const 通常: Story = {
@@ -212,7 +197,7 @@ export const 公開のアドレスがある: Story = {
   args: {
     screen: {
       ...NOTIFICATIONS_SCREEN,
-      settings: { leadMinutes: 3, hasPublicOrigin: true },
+      settings: { notifyLeadMinutes: 3, publicOriginKnown: true },
     },
   },
   play: async ({ canvasElement }) => {
@@ -248,13 +233,10 @@ export const 送り先が多い: Story = {
           ...HOME_SLACK,
           id: 'dest-slack-2',
           name: '実家のリビングの Slack のお知らせ用チャンネル',
-          urlTail: 'c3d4',
+          tail: 'c3d4',
           enabled: false,
-          lastResult: {
-            state: 'givenUp',
-            at: '2026-11-08T12:03:00Z',
-            failure: 'rejected',
-          },
+          lastResultAt: '2026-11-08T12:03:00Z',
+          lastFailure: 'rejected',
         },
       ],
     },
@@ -268,6 +250,24 @@ export const 送り先が多い: Story = {
       }),
     ).not.toBeChecked()
     await expect(canvas.getByText('届かなかった · 断られた')).toBeVisible()
+  },
+}
+
+export const 開けない送り先: Story = {
+  args: {
+    screen: {
+      ...NOTIFICATIONS_SCREEN,
+      destinations: [{ ...HOME_SLACK, readable: false }, DISCORD_ROOM],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const slack = within(
+      within(canvasElement)
+        .getByRole('list', { name: '送り先' })
+        .querySelector(`[data-destination="${HOME_SLACK.id}"]`) as HTMLElement,
+    )
+
+    await expect(slack.getByText('開けない')).toBeVisible()
   },
 }
 
@@ -400,7 +400,6 @@ export const 単発の通知の既定を変える: Story = {
 }
 
 export const 配送を送り先で絞る: Story = {
-  render: (args) => <NarrowedLog {...args} />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
@@ -424,7 +423,7 @@ export const 配送を送り先で絞る: Story = {
 
 export const 送り先を追加_種類を選ぶ: Story = {
   play: async ({ canvasElement }) => {
-    const dialog = within(await openThePicker(canvasElement))
+    const dialog = within(await openTheAdding(canvasElement))
 
     await expect(
       dialog.getByRole('button', { name: /Slack・Discord の URL に送ります/ }),
@@ -432,6 +431,19 @@ export const 送り先を追加_種類を選ぶ: Story = {
     await expect(
       dialog.getByText('Windows の Chrome に通知を出します'),
     ).toBeVisible()
+  },
+}
+
+export const 送り先を追加_Webhookだけ: Story = {
+  args: { browser: undefined },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheAdding(canvasElement))
+
+    await expect(dialog.getByLabelText('Webhook の URL')).toBeVisible()
+    await expect(dialog.queryByRole('button', { name: '戻る' })).toBeNull()
+    await expect(
+      dialog.queryByRole('button', { name: /Slack・Discord/ }),
+    ).toBeNull()
   },
 }
 
@@ -516,7 +528,7 @@ export const 送り先を追加_このブラウザ: Story = {
 }
 
 export const 送り先を追加_通知を拒否している: Story = {
-  args: { permission: 'denied' },
+  args: { browser: { ...BROWSER, permission: 'denied' } },
   play: async ({ canvasElement }) => {
     const dialog = within(await openTheBrowserForm(canvasElement))
 
@@ -627,12 +639,26 @@ export const 送り先を削除: Story = {
 
     await expect(asked.getByText('この送り先を削除します')).toBeVisible()
     await expect(asked.getByText('Discord の通知部屋')).toBeVisible()
+    await expect(
+      asked.getByText('ルールセット「録画の記録」も削除します。'),
+    ).toBeVisible()
 
     await userEvent.click(asked.getByRole('button', { name: '削除する' }))
 
     await waitFor(() =>
       expect(removeDestination).toHaveBeenCalledWith(DISCORD_ROOM.id),
     )
+  },
+}
+
+export const 送り先を削除_ほかにも送るルールセット: Story = {
+  play: async ({ canvasElement }) => {
+    await fromTheMenu(canvasElement, '家の Slack', '削除')
+
+    const asked = within(await screen.findByRole('alertdialog'))
+
+    await expect(asked.getByText('家の Slack')).toBeVisible()
+    await expect(asked.queryByText(/も削除します/)).toBeNull()
   },
 }
 
@@ -731,7 +757,7 @@ export const ルールセットを追加: Story = {
         name: '夜中の失敗',
         enabled: true,
         events: ['recordingFailed'],
-        destinationIds: [HOME_SLACK.id],
+        destinations: [HOME_SLACK.id],
       }),
     )
   },
@@ -756,9 +782,9 @@ export const 電話: Story = {
 
 export const 電話_送り先を追加: Story = {
   parameters: { screen: PHONE, coarse: true },
-  args: { here: 'iPhone の Safari' },
+  args: { browser: ON_A_PHONE },
   play: async ({ canvasElement }) => {
-    const dialog = await openThePicker(canvasElement)
+    const dialog = await openTheAdding(canvasElement)
     const sheet = dialog.getBoundingClientRect()
 
     await expect(
@@ -775,7 +801,7 @@ export const 電話_送り先を追加: Story = {
 
 export const 電話_このブラウザ: Story = {
   parameters: { screen: PHONE, coarse: true },
-  args: { here: 'iPhone の Safari' },
+  args: { browser: ON_A_PHONE },
   play: async ({ canvasElement }) => {
     const dialog = within(await openTheBrowserForm(canvasElement))
 

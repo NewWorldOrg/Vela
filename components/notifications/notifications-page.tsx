@@ -4,14 +4,12 @@ import { useState, type ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
-import type {
-  BrowserPermission,
-  LeadMinutes,
-  NotificationDelivery,
-  NotificationDestination,
-  NotificationRuleSet,
-  NotificationSettings,
-  NotificationWrite,
+import {
+  deliveriesShown,
+  narrowedTo,
+  type LeadMinutes,
+  type NotificationsScreen,
+  type NotificationWrite,
 } from '@/lib/notifications'
 import { Banner } from '@/components/vela/banner'
 import { PageHeading } from '@/components/vela/section-heading'
@@ -19,7 +17,7 @@ import { SettingsGroup } from '@/components/vela/settings-rows'
 import { useToast } from '@/components/vela/toast'
 import {
   AddDestinationDialog,
-  type BrowserDraft,
+  type BrowserChoice,
   type WebhookDraft,
 } from '@/components/notifications/add-destination-dialog'
 import {
@@ -37,21 +35,10 @@ import {
   type RuleSetActions,
 } from '@/components/notifications/rule-set-list'
 
-export interface NotificationsScreen {
-  settings: NotificationSettings
-  destinations: NotificationDestination[]
-  ruleSets: NotificationRuleSet[]
-  deliveries: NotificationDelivery[]
-  /** The destination the log is narrowed to; every destination when absent. */
-  deliveriesFor?: string
-}
-
 export interface NotificationActions
   extends DestinationActions, RuleSetActions {
   onAddWebhook: (draft: WebhookDraft) => Promise<NotificationWrite>
-  onAddBrowser: (draft: BrowserDraft) => Promise<NotificationWrite>
   onSettleLead: (lead: LeadMinutes) => Promise<NotificationWrite>
-  onShowDeliveriesFor: (destinationId: string | undefined) => void
 }
 
 export const NO_PUBLIC_ORIGIN =
@@ -84,21 +71,22 @@ function Nothing({ children }: { children: string }) {
 export function NotificationsView({
   screen,
   actions,
-  here,
-  permission,
+  browser,
   now,
 }: {
   screen: NotificationsScreen
   actions: NotificationActions
-  /** This browser as a person names it, `Windows の Chrome`. */
-  here: string
-  permission: BrowserPermission
+  /** This browser as a destination, where it can be one. */
+  browser?: BrowserChoice
   /** The moment the screen was drawn for, which today's times are said against. */
   now: number
 }) {
-  const { settings, destinations, ruleSets, deliveries } = screen
-  const [lead, setLead] = useState(settings.leadMinutes)
+  const { settings, destinations, ruleSets } = screen
+  const [lead, setLead] = useState(settings.notifyLeadMinutes)
   const [addingRuleSet, setAddingRuleSet] = useState(false)
+  const [chosen, setChosen] = useState<string>()
+  const logFor = narrowedTo(destinations, chosen)
+  const deliveries = deliveriesShown(screen.deliveries, logFor)
   const say = useToast()
 
   const settleLead = async (next: LeadMinutes) => {
@@ -120,7 +108,7 @@ export function NotificationsView({
     <>
       <PageHeading>通知</PageHeading>
 
-      {!settings.hasPublicOrigin && (
+      {!settings.publicOriginKnown && (
         <Banner className="mt-[calc(18rem/16)] items-center py-3">
           {NO_PUBLIC_ORIGIN}
         </Banner>
@@ -130,10 +118,8 @@ export function NotificationsView({
         <GroupTitle
           end={
             <AddDestinationDialog
-              here={here}
-              permission={permission}
+              browser={browser}
               onAddWebhook={actions.onAddWebhook}
-              onAddBrowser={actions.onAddBrowser}
             />
           }
         >
@@ -142,6 +128,7 @@ export function NotificationsView({
         {destinations.length > 0 ? (
           <DestinationList
             destinations={destinations}
+            ruleSets={ruleSets}
             actions={actions}
             now={now}
           />
@@ -198,8 +185,8 @@ export function NotificationsView({
             destinations.length > 0 && (
               <DeliveryFilter
                 destinations={destinations}
-                value={screen.deliveriesFor}
-                onChange={actions.onShowDeliveriesFor}
+                value={logFor}
+                onChange={setChosen}
               />
             )
           }
@@ -207,7 +194,11 @@ export function NotificationsView({
           直近の配送
         </GroupTitle>
         {deliveries.length > 0 ? (
-          <DeliveryLog deliveries={deliveries} now={now} />
+          <DeliveryLog
+            deliveries={deliveries}
+            destinations={destinations}
+            now={now}
+          />
         ) : (
           <Nothing>配送の記録はありません</Nothing>
         )}

@@ -48,26 +48,31 @@ export const DENIED_HERE =
 
 type Step = 'pick' | 'webhook' | 'browser'
 
-/** `追加` and the dialog it opens: first which kind of destination, then the form for that kind, with a way back to the choice. */
-export function AddDestinationDialog({
-  here,
-  permission,
-  onAddWebhook,
-  onAddBrowser,
-}: {
+/** This browser as a destination: what a person calls it, whether it lets notices through, and what adds it. */
+export interface BrowserChoice {
   here: string
   permission: BrowserPermission
+  onAdd: (draft: BrowserDraft) => Promise<NotificationWrite>
+}
+
+/** `追加` and the dialog it opens: the form for a webhook, or, where this browser can be a destination too, the choice of kind first with a way back to it. */
+export function AddDestinationDialog({
+  browser,
+  onAddWebhook,
+}: {
+  browser?: BrowserChoice
   onAddWebhook: (draft: WebhookDraft) => Promise<NotificationWrite>
-  onAddBrowser: (draft: BrowserDraft) => Promise<NotificationWrite>
 }) {
+  const first: Step = browser ? 'pick' : 'webhook'
   const [open, setOpen] = useState(false)
-  const [step, setStep] = useState<Step>('pick')
+  const [step, setStep] = useState<Step>(first)
+  const back = browser ? () => setStep('pick') : undefined
 
   const openTo = (next: boolean) => {
     setOpen(next)
 
     if (next) {
-      setStep('pick')
+      setStep(first)
     }
   }
 
@@ -78,21 +83,23 @@ export function AddDestinationDialog({
         追加
       </Button>
       <NoticeDialogContent>
-        {step === 'pick' && <KindPicker here={here} onPick={setStep} />}
+        {step === 'pick' && browser && (
+          <KindPicker here={browser.here} onPick={setStep} />
+        )}
         {step === 'webhook' && (
           <WebhookForm
-            onBack={() => setStep('pick')}
+            onBack={back}
             onClose={() => setOpen(false)}
             onAdd={onAddWebhook}
           />
         )}
-        {step === 'browser' && (
+        {step === 'browser' && browser && (
           <BrowserForm
-            here={here}
-            permission={permission}
-            onBack={() => setStep('pick')}
+            here={browser.here}
+            permission={browser.permission}
+            onBack={back}
             onClose={() => setOpen(false)}
-            onAdd={onAddBrowser}
+            onAdd={browser.onAdd}
           />
         )}
       </NoticeDialogContent>
@@ -199,7 +206,7 @@ function WebhookForm({
   onClose,
   onAdd,
 }: {
-  onBack: () => void
+  onBack?: () => void
   onClose: () => void
   onAdd: (draft: WebhookDraft) => Promise<NotificationWrite>
 }) {
@@ -263,7 +270,7 @@ function BrowserForm({
 }: {
   here: string
   permission: BrowserPermission
-  onBack: () => void
+  onBack?: () => void
   onClose: () => void
   onAdd: (draft: BrowserDraft) => Promise<NotificationWrite>
 }) {

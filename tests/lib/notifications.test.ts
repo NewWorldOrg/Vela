@@ -2,24 +2,32 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import {
+  deliveriesShown,
   deliverySaid,
   destinationsByDefault,
   eventLabelOf,
   eventsSummary,
+  failureWord,
+  goingToo,
   isLead,
   lastResultSaid,
   leadChipWords,
   leadLabel,
   leadToastWords,
+  narrowedTo,
   nameFits,
+  newestFirst,
   readAddress,
   registeringAs,
   ruleSetsFull,
+  ruleSetsGoingWith,
   testSaid,
   toggled,
   webhookKindOf,
   withWhy,
+  type DeliveryFailure,
   type NotificationDelivery,
+  type NotificationEvent,
 } from '@/lib/notifications'
 
 test('a Slack address is Slack, and both Discord hosts are Discord under their webhook path', () => {
@@ -83,7 +91,7 @@ test('a rule set says its events group by group, each group after its prefix', (
       'encodeFailed',
       'reservationCompeting',
       'reservationMissed',
-      'qualityRaised',
+      'qualityIncidentDetected',
       'deviceDisconnected',
     ]),
     '録画の欠け・失敗 · エンコードの失敗 · 競合・取り逃し · 異常の発生 · 切断',
@@ -100,12 +108,9 @@ test('a rule set says its events group by group, each group after its prefix', (
 })
 
 test('every event has a label, and one this build does not know is said as such', () => {
-  assert.equal(eventLabelOf('programmeStarting'), '放送開始の通知')
-  assert.equal(eventLabelOf('qualityRaised'), '品質の異常の発生')
-  assert.equal(
-    eventLabelOf('somethingNew' as NotificationDelivery['event']),
-    '未知の値',
-  )
+  assert.equal(eventLabelOf('qualityIncidentDetected'), '品質の異常の発生')
+  assert.equal(eventLabelOf('qualityIncidentResolved'), '品質の異常の解消')
+  assert.equal(eventLabelOf('somethingNew' as NotificationEvent), '未知の値')
 })
 
 test('the lead is said as the start itself or minutes before it', () => {
@@ -119,43 +124,107 @@ test('the lead is said as the start itself or minutes before it', () => {
   assert.ok(!isLead(2))
 })
 
-test('the last result of a destination is good, being retried or given up', () => {
-  const now = Date.parse('2026-11-09T12:30:00Z')
+test('each of the nine failures Carina names has a word of its own', () => {
+  const words = [
+    'timedOut',
+    'rateLimited',
+    'serverFailed',
+    'unreachable',
+    'rejected',
+    'destinationDisabled',
+    'unreadable',
+    'tooOld',
+    'tlsFailed',
+  ].map((failure) => failureWord(failure as DeliveryFailure))
 
+  assert.deepEqual(words, [
+    '時間切れ',
+    '回数の上限',
+    '送り先の障害',
+    'つながらない',
+    '断られた',
+    '送り先が無効',
+    '開けない',
+    '古くなった',
+    '暗号化の失敗',
+  ])
+  assert.equal(failureWord('somethingNew' as DeliveryFailure), '未知の値')
+  assert.equal(failureWord(undefined), undefined)
+})
+
+test('a destination nothing was sent to yet says nothing', () => {
+  assert.equal(lastResultSaid({ readable: true }), undefined)
+})
+
+test('the last result of a destination is good, worth another try or over', () => {
+  const now = Date.parse('2026-11-09T12:30:00Z')
+  const lastResultAt = '2026-11-09T12:03:00Z'
+
+  assert.deepEqual(lastResultSaid({ readable: true, lastResultAt }, now), {
+    verdict: 'ok',
+    words: '届いた 21:03',
+  })
+
+  for (const lastFailure of [
+    'timedOut',
+    'rateLimited',
+    'serverFailed',
+    'unreachable',
+    'tlsFailed',
+  ] as const) {
+    assert.deepEqual(
+      lastResultSaid({ readable: true, lastResultAt, lastFailure }, now),
+      {
+        verdict: 'warn',
+        words: '届いていない',
+        why: failureWord(lastFailure),
+      },
+      lastFailure,
+    )
+  }
+
+  for (const lastFailure of [
+    'rejected',
+    'destinationDisabled',
+    'unreadable',
+    'tooOld',
+  ] as const) {
+    assert.deepEqual(
+      lastResultSaid({ readable: true, lastResultAt, lastFailure }, now),
+      {
+        verdict: 'err',
+        words: '届かなかった',
+        why: failureWord(lastFailure),
+      },
+      lastFailure,
+    )
+  }
+})
+
+test('a destination whose address cannot be opened says so before anything else', () => {
   assert.deepEqual(
-    lastResultSaid({ state: 'sent', at: '2026-11-09T12:03:00Z' }, now),
-    { verdict: 'ok', words: '届いた 21:03' },
-  )
-  assert.deepEqual(
-    lastResultSaid(
-      { state: 'failed', at: '2026-11-09T12:03:00Z', failure: 'timeout' },
-      now,
-    ),
-    { verdict: 'warn', words: '届いていない', why: '時間切れ' },
-  )
-  assert.deepEqual(
-    lastResultSaid(
-      { state: 'givenUp', at: '2026-11-09T12:03:00Z', failure: 'rejected' },
-      now,
-    ),
-    { verdict: 'err', words: '届かなかった', why: '断られた' },
+    lastResultSaid({
+      readable: false,
+      lastResultAt: '2026-11-09T12:03:00Z',
+    }),
+    { verdict: 'err', words: '開けない' },
   )
 })
 
 test('a delivery wears its reason only while it has not arrived', () => {
   const delivery: NotificationDelivery = {
     id: 'd',
-    at: '2026-11-09T12:03:00Z',
-    event: 'recordingTruncated',
-    subject: '港町レシピ帖',
+    kind: 'recordingTruncated',
+    occurredAt: '2026-11-09T12:03:00Z',
     destinationId: 'a',
-    destinationName: '家の Slack',
     state: 'sent',
   }
 
   assert.deepEqual(deliverySaid(delivery), { verdict: 'ok', words: '届いた' })
   assert.equal(
-    withWhy(deliverySaid({ ...delivery, state: 'failed', failure: 'timeout' })),
+    withWhy(
+      deliverySaid({ ...delivery, state: 'failed', failure: 'timedOut' }),
+    ),
     '送り直し中 · 時間切れ',
   )
   assert.equal(
@@ -180,9 +249,82 @@ test('a delivery wears its reason only while it has not arrived', () => {
 test('a test send says whether it arrived, and why not when it did not', () => {
   assert.equal(withWhy(testSaid({ state: 'ok', delivered: true })), '届いた')
   assert.equal(
-    withWhy(testSaid({ state: 'ok', delivered: false, failure: 'timeout' })),
+    withWhy(testSaid({ state: 'ok', delivered: false, failure: 'timedOut' })),
     '届かなかった · 時間切れ',
   )
+  assert.equal(
+    withWhy(testSaid({ state: 'ok', delivered: false })),
+    '届かなかった',
+  )
+})
+
+test('the rule sets that send to one destination alone go with it', () => {
+  const ruleSets = [
+    { name: '困ったときだけ', destinations: ['a', 'b'] },
+    { name: '録画の記録', destinations: ['b'] },
+    { name: '留守の週', destinations: ['b'] },
+    { name: '機器だけ', destinations: ['a'] },
+  ]
+
+  assert.deepEqual(
+    ruleSetsGoingWith('b', ruleSets).map(({ name }) => name),
+    ['録画の記録', '留守の週'],
+  )
+  assert.deepEqual(ruleSetsGoingWith('c', ruleSets), [])
+  assert.equal(
+    goingToo(['録画の記録', '留守の週']),
+    'ルールセット「録画の記録」「留守の週」も削除します。',
+  )
+  assert.equal(goingToo([]), undefined)
+})
+
+function sentAt(
+  id: string,
+  occurredAt: string,
+  destinationId: string,
+): NotificationDelivery {
+  return {
+    id,
+    kind: 'recordingStarted',
+    occurredAt,
+    destinationId,
+    state: 'sent',
+  }
+}
+
+test('the deliveries of several destinations read as one log, the newest first', () => {
+  const log = newestFirst([
+    sentAt('1', '2026-11-09T10:00:00Z', 'a'),
+    sentAt('2', '2026-11-09T12:00:00.5Z', 'a'),
+    sentAt('3', '2026-11-09T12:00:00Z', 'b'),
+  ])
+
+  assert.deepEqual(
+    log.map(({ id }) => id),
+    ['2', '3', '1'],
+  )
+})
+
+test('the log is narrowed to a destination only while that destination is held', () => {
+  const destinations = [{ id: 'a' }, { id: 'b' }]
+
+  assert.equal(narrowedTo(destinations, 'b'), 'b')
+  assert.equal(narrowedTo(destinations, undefined), undefined)
+  assert.equal(narrowedTo(destinations, 'gone'), undefined)
+})
+
+test('the log lists fifty rows of every destination, or of the one it is narrowed to', () => {
+  const log = Array.from({ length: 120 }, (_, index) =>
+    sentAt(String(index), '2026-11-09T12:00:00Z', index % 2 === 0 ? 'a' : 'b'),
+  )
+
+  assert.deepEqual(
+    deliveriesShown(log, undefined).map(({ id }) => id),
+    log.slice(0, 50).map(({ id }) => id),
+  )
+  assert.equal(deliveriesShown(log, 'b').length, 50)
+  assert.ok(deliveriesShown(log, 'b').every((one) => one.destinationId === 'b'))
+  assert.deepEqual(deliveriesShown(log, 'gone'), [])
 })
 
 test('rule sets stop at twenty', () => {

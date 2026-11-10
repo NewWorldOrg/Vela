@@ -91,7 +91,7 @@ export function RuleSetList({
             <RuleSetRow
               key={`${ruleSet.id}:${ruleSet.enabled}`}
               ruleSet={ruleSet}
-              sendsTo={ruleSet.destinationIds.flatMap((id) => {
+              sendsTo={ruleSet.destinations.flatMap((id) => {
                 const name = nameOf.get(id)
 
                 return name === undefined ? [] : [name]

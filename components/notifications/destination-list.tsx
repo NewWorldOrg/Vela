@@ -5,11 +5,14 @@ import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
 import {
+  goingToo,
   lastResultSaid,
+  ruleSetsGoingWith,
   tailOf,
   testSaid,
   withWhy,
   type NotificationDestination,
+  type NotificationRuleSet,
   type NotificationWrite,
   type Said,
   type TestSending,
@@ -79,10 +82,12 @@ function refusalOf(result: Exclude<NotificationWrite, { state: 'ok' }>) {
 
 export function DestinationList({
   destinations,
+  ruleSets,
   actions,
   now,
 }: {
   destinations: NotificationDestination[]
+  ruleSets: Pick<NotificationRuleSet, 'name' | 'destinations'>[]
   actions: DestinationActions
   now: number
 }) {
@@ -95,6 +100,9 @@ export function DestinationList({
         <DestinationRow
           key={`${destination.id}:${destination.enabled}`}
           destination={destination}
+          goingWith={ruleSetsGoingWith(destination.id, ruleSets).map(
+            ({ name }) => name,
+          )}
           actions={actions}
           now={now}
         />
@@ -155,10 +163,13 @@ function ResultLine({
 
 function DestinationRow({
   destination,
+  goingWith,
   actions,
   now,
 }: {
   destination: NotificationDestination
+  /** The names of the rule sets that are removed when this destination is. */
+  goingWith: string[]
   actions: DestinationActions
   now: number
 }) {
@@ -168,7 +179,7 @@ function DestinationRow({
   const [editing, setEditing] = useState(false)
   const [removing, setRemoving] = useState(false)
   const say = useToast()
-  const { id, name, kind, urlTail, lastResult } = destination
+  const { id, name, kind, tail } = destination
   const webhook = kind !== 'webPush'
 
   const toggle = async (next: boolean) => {
@@ -209,17 +220,17 @@ function DestinationRow({
           {name}
         </span>
         <KindChip kind={kind} className="shrink-0" />
-        {urlTail && (
+        {tail && (
           <span className="shrink-0 text-[calc(13rem/16)] text-ink-2 tabular-nums upright:hidden">
-            {tailOf(urlTail)}
+            {tailOf(tail)}
           </span>
         )}
       </span>
       <ResultLine
-        said={lastResult && lastResultSaid(lastResult, now)}
+        said={lastResultSaid(destination, now)}
         testing={testing}
         tested={tested}
-        tail={urlTail}
+        tail={tail}
       />
       <Switch
         checked={enabled}
@@ -249,6 +260,7 @@ function DestinationRow({
       <RemoveDialog
         what="送り先"
         name={name}
+        also={goingToo(goingWith)}
         open={removing}
         onOpenChange={setRemoving}
         onRemove={() => actions.onRemoveDestination(id)}
