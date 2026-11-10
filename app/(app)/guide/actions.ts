@@ -114,6 +114,7 @@ export async function watchProgramme(
   if (wasAnswered(result)) {
     revalidatePath('/guide')
     revalidatePath('/reservations')
+    revalidatePath('/search')
   }
 
   return result
@@ -125,6 +126,7 @@ export async function unwatchProgramme(id: string): Promise<NotificationWrite> {
   if (wasAnswered(result)) {
     revalidatePath('/guide')
     revalidatePath('/reservations')
+    revalidatePath('/search')
   }
 
   return result

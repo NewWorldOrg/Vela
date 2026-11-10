@@ -581,3 +581,43 @@ test('a reservation that is no longer standing marks nothing', async () => {
     [undefined],
   )
 })
+
+test('a hit that has not started says so and carries the notice asked of it, and one that has started carries neither', async () => {
+  standing()
+
+  const hourAhead = (hours: number): string =>
+    new Date(Date.now() + hours * 60 * 60 * 1000).toISOString()
+
+  store.page = {
+    items: [
+      programme(131, 1310, 40001, '空から見る港町の夏', hourAhead(3)),
+      programme(131, 1310, 40002, '真夜中の水槽通信', hourAhead(5)),
+      programme(131, 1310, 40003, '朝の灯台だより', hourAhead(-1)),
+    ],
+    total: 3,
+    currentPage: 1,
+    lastPage: 1,
+    perPage: 20,
+  }
+
+  const result = await searchPrograms(
+    { q: '観測所' },
+    Promise.resolve(
+      new Map([
+        ['131-1310-40001', { id: 'watch-1', leadMinutes: 5 as const }],
+        ['131-1310-40003', { id: 'watch-3', leadMinutes: 0 as const }],
+      ]),
+    ),
+  )
+
+  assert.deepEqual(
+    result.outcome.state === 'searched'
+      ? result.outcome.found.hits.map((hit) => [hit.id, hit.ahead, hit.watch])
+      : [],
+    [
+      ['131-1310-40001', true, { id: 'watch-1', leadMinutes: 5 }],
+      ['131-1310-40002', true, undefined],
+      ['131-1310-40003', undefined, undefined],
+    ],
+  )
+})

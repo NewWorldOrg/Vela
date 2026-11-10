@@ -5,6 +5,7 @@ import { getRouter } from '@storybook/nextjs/navigation.mock'
 import {
   expect,
   fireEvent,
+  fn,
   screen,
   userEvent,
   waitFor,
@@ -13,10 +14,17 @@ import {
 
 import type {
   SearchCondition,
+  SearchHit,
   SearchHits,
   SearchResult,
 } from '@/repository/search'
 import type { GuideChannel } from '@/repository/programs'
+import type {
+  NotificationWrite,
+  Noticing,
+  WatchDraft,
+  WatchWrite,
+} from '@/lib/notifications'
 import {
   SEARCH_MOST_CHANNELS,
   narrowsAnything,
@@ -28,6 +36,10 @@ import {
   SEARCH_HIT_FIXTURES,
 } from '@/repository/search.fixtures'
 import { SearchView } from '@/components/search/search-page'
+import {
+  NOTIFY_START,
+  STOP_NOTIFYING,
+} from '@/components/notifications/programme-notice'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import { inTheApp } from '@/stories/frames'
@@ -1600,3 +1612,131 @@ export const 横向きの電話は結果と詳細を左右に置き条件の札�
       ).not.toBeVisible()
     },
   }
+
+const watchIt = fn(
+  async (_programmeId: string, draft: WatchDraft): Promise<WatchWrite> => ({
+    state: 'ok',
+    watch: { id: 'watch-asked', leadMinutes: draft.leadMinutes },
+  }),
+)
+
+const unwatchIt = fn(async (_watchId: string): Promise<NotificationWrite> => ({
+  state: 'ok',
+}))
+
+const NOTICING: Noticing = {
+  offer: {
+    leadMinutes: 3,
+    destinations: [
+      { id: 'dest-slack', name: '家の Slack' },
+      { id: 'dest-ipad', name: 'iPad の Safari' },
+    ],
+  },
+  onWatch: watchIt,
+  onUnwatch: unwatchIt,
+}
+
+const CINEMA_AHEAD: SearchHit = { ...SEARCH_HIT_FIXTURES[1], ahead: true }
+
+const AQUARIUM_TOLD: SearchHit = {
+  ...SEARCH_HIT_FIXTURES[2],
+  ahead: true,
+  watch: { id: 'watch-told', leadMinutes: 10 },
+}
+
+const STARTED: SearchHit = {
+  ...SEARCH_HIT_FIXTURES[1],
+  id: '131-1310-40011',
+  title: '夕方の灯台だより',
+  startLabel: '17:00',
+  endLabel: '17:30',
+}
+
+/** The detail beside the list once the row at a place in it is chosen. */
+async function besideTheRow(
+  canvasElement: HTMLElement,
+  at: number,
+): Promise<HTMLElement> {
+  const beside = await within(canvasElement).findByRole('region', {
+    name: '番組の詳細',
+  })
+  const rows = canvasElement.querySelectorAll<HTMLElement>(
+    '[data-pane="list"] li[data-programme]',
+  )
+
+  await userEvent.click(within(rows[at]).getAllByRole('button')[0])
+  await waitFor(() => expect(rows[at]).toHaveAttribute('data-chosen'))
+
+  return beside
+}
+
+export const 横向きの電話の詳細でも録画予約の隣で放送開始の通知を頼む: Story = {
+  args: {
+    result: {
+      condition,
+      channels,
+      outcome: searched({
+        hits: [STARTED, CINEMA_AHEAD, AQUARIUM_TOLD],
+        total: 3,
+        page: 1,
+        lastPage: 1,
+        perPage: 20,
+        rangeFrom: 1,
+        rangeTo: 3,
+      }),
+    },
+    noticing: NOTICING,
+  },
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  beforeEach: () => {
+    watchIt.mockClear()
+    unwatchIt.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    const first = within(await besideTheRow(canvasElement, 1))
+    const reserve = first.getByRole('button', { name: '録画予約' })
+    const ask = first.getByRole('button', { name: NOTIFY_START })
+
+    await expect(Math.round(ask.getBoundingClientRect().top)).toBe(
+      Math.round(reserve.getBoundingClientRect().top),
+    )
+    await expect(ask.getBoundingClientRect().left).toBeGreaterThan(
+      reserve.getBoundingClientRect().right,
+    )
+    await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+      844,
+    )
+    await userEvent.click(ask)
+
+    const form = within(
+      await screen.findByRole('dialog', { name: NOTIFY_START }),
+    )
+
+    await userEvent.click(form.getByRole('button', { name: '通知する' }))
+    await waitFor(() =>
+      expect(watchIt).toHaveBeenCalledWith(CINEMA_AHEAD.id, {
+        leadMinutes: 3,
+        destinations: ['dest-slack', 'dest-ipad'],
+      }),
+    )
+    await expect(
+      await screen.findByText('開始の 3 分前に通知します'),
+    ).toBeVisible()
+
+    const told = within(await besideTheRow(canvasElement, 2))
+
+    await expect(told.getByText('開始 10 分前に通知')).toBeVisible()
+    await expect(told.queryByRole('button', { name: NOTIFY_START })).toBeNull()
+    await userEvent.click(told.getByRole('button', { name: STOP_NOTIFYING }))
+    await waitFor(() => expect(unwatchIt).toHaveBeenCalledWith('watch-told'))
+
+    const started = within(await besideTheRow(canvasElement, 0))
+
+    await expect(
+      started.getByRole('button', { name: '録画予約' }),
+    ).toBeVisible()
+    await expect(
+      started.queryByRole('button', { name: NOTIFY_START }),
+    ).toBeNull()
+  },
+}

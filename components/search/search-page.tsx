@@ -12,6 +12,7 @@ import {
   ruleTermsOfSearch,
 } from '@/lib/rules'
 import { cn } from '@/lib/utils'
+import type { Noticing } from '@/lib/notifications'
 import type { SearchOutcome, SearchResult } from '@/repository/search'
 import {
   EMPTY_SEARCH_CONDITION,
@@ -107,6 +108,8 @@ interface Reserving {
   onCancel?: (id: string) => Promise<ReservationWrite>
   /** Puts back a reservation the circle took back. */
   onRestore?: (id: string) => Promise<ReservationWrite>
+  /** Asks for a notice when a hit starts, and takes one back, from the detail beside the list. */
+  noticing?: Noticing
 }
 
 export function SearchView({
@@ -131,6 +134,7 @@ function SearchScreen({
   onReserve,
   onCancel,
   onRestore,
+  noticing,
 }: Reserving & { result: SearchResult }) {
   const sideways = usePhoneOnItsSide()
   const [chosenId, choose] = useState<string>()
@@ -457,6 +461,7 @@ function SearchScreen({
                           hit={chosen}
                           words={words}
                           onReserve={onReserve}
+                          noticing={noticing}
                         />
                       )
                     }

@@ -104,14 +104,14 @@ beforeEach(() => {
   store.down = false
 })
 
-test('a single notice that was set reads the guide and the reservations again', async () => {
+test('a single notice that was set reads the guide, the reservations and the search again', async () => {
   store.status = 201
 
   assert.deepEqual(await watchProgramme(DOCUMENTARY, DRAFT), {
     state: 'ok',
     watch: { id: WATCH, leadMinutes: 5 },
   })
-  assert.deepEqual(revalidated, ['/guide', '/reservations'])
+  assert.deepEqual(revalidated, ['/guide', '/reservations', '/search'])
 })
 
 test('a single notice that was refused reads them again too, since what refused it may show there', async () => {
@@ -120,12 +120,12 @@ test('a single notice that was refused reads them again too, since what refused 
   const result = await watchProgramme(DOCUMENTARY, DRAFT)
 
   assert.equal(result.state, 'rejected')
-  assert.deepEqual(revalidated, ['/guide', '/reservations'])
+  assert.deepEqual(revalidated, ['/guide', '/reservations', '/search'])
 })
 
-test('taking a single notice back reads the guide and the reservations again', async () => {
+test('taking a single notice back reads the guide, the reservations and the search again', async () => {
   assert.deepEqual(await unwatchProgramme(WATCH), { state: 'ok' })
-  assert.deepEqual(revalidated, ['/guide', '/reservations'])
+  assert.deepEqual(revalidated, ['/guide', '/reservations', '/search'])
 })
 
 test('a session that ended is said as such', async () => {
@@ -134,7 +134,7 @@ test('a session that ended is said as such', async () => {
   assert.deepEqual(await unwatchProgramme(WATCH), { state: 'unauthenticated' })
 })
 
-test('a single notice whose asking or taking back never reached the API leaves both pages as they are', async () => {
+test('a single notice whose asking or taking back never reached the API leaves the pages as they are', async () => {
   store.down = true
 
   assert.deepEqual(await watchProgramme(DOCUMENTARY, DRAFT), {

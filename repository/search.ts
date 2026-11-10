@@ -9,6 +9,7 @@ import type {
   RawSearchCondition,
   SearchCondition,
 } from '@/lib/search-condition'
+import type { ProgrammeWatch } from '@/lib/notifications'
 import type { Programme, SearchQuery } from '@/repository/programmes'
 import {
   SEARCH_DAY_OF,
@@ -50,6 +51,10 @@ export interface SearchHit {
   booked?: boolean
   /** The reservation a booked programme holds, so the phone's circle can take it back. */
   booking?: ProgramBooking
+  /** Set while the programme has not started, which is when a notice of its start can be asked. */
+  ahead?: true
+  /** The notice of its start already asked, on a programme that has not started. */
+  watch?: ProgrammeWatch
 }
 
 export interface SearchHits {
@@ -99,13 +104,16 @@ function toHit(
   programme: Programme,
   channels: GuideChannel[],
   booking: ProgramBooking | undefined,
+  watch: ProgrammeWatch | undefined,
 ): SearchHit {
   const channelId = `${programme.networkId}-${programme.serviceId}`
   const channel = channels.find((c) => c.id === channelId)
   const startsAt = new Date(programme.startsAt)
   const genre = genreDisplayOf(programme)
   const day = calendarDateOf(startsAt)
-  const near = nearDayOf(day, new Date())
+  const now = new Date()
+  const near = nearDayOf(day, now)
+  const ahead = startsAt.getTime() > now.getTime()
 
   return {
     id: programme.id,
@@ -126,11 +134,16 @@ function toHit(
     genreLabel: genre.label,
     booked: booking ? true : undefined,
     ...(booking ? { booking } : {}),
+    ...(ahead ? { ahead: true as const } : {}),
+    ...(ahead && watch ? { watch } : {}),
   }
 }
 
 export async function searchPrograms(
   raw: RawSearchCondition,
+  watches: Promise<ReadonlyMap<string, ProgrammeWatch>> = Promise.resolve(
+    new Map(),
+  ),
 ): Promise<SearchResult> {
   const condition = readSearchCondition(raw)
   const channels = await listPickableChannels()
@@ -139,7 +152,7 @@ export async function searchPrograms(
     return { condition, channels, outcome: { state: 'idle' } }
   }
 
-  const [search, bookings] = await Promise.all([
+  const [search, bookings, told] = await Promise.all([
     searchProgrammes({
       keyword: condition.q,
       exclude: condition.exclude,
@@ -164,6 +177,7 @@ export async function searchPrograms(
       perPage: condition.perPage,
     }),
     listBookings(),
+    watches,
   ])
 
   if (search.state === 'refused') {
@@ -183,7 +197,12 @@ export async function searchPrograms(
       state: 'searched',
       found: {
         hits: page.items.map((programme) =>
-          toHit(programme, channels, bookings.get(programme.id)),
+          toHit(
+            programme,
+            channels,
+            bookings.get(programme.id),
+            told.get(programme.id),
+          ),
         ),
         total: page.total,
         page: page.currentPage,
