@@ -1,5 +1,27 @@
 import assert from 'node:assert/strict'
+import { registerHooks } from 'node:module'
 import { beforeEach, mock, test } from 'node:test'
+
+const NAVIGATION = 'next/navigation'
+
+const STOOD_IN = 'vela-stand-in:next/navigation'
+
+registerHooks({
+  resolve(specifier, context, next) {
+    return specifier === NAVIGATION
+      ? { url: STOOD_IN, shortCircuit: true }
+      : next(specifier, context)
+  },
+  load(url, context, next) {
+    return url === STOOD_IN
+      ? {
+          format: 'module',
+          source: 'export const unstable_rethrow = () => {}',
+          shortCircuit: true,
+        }
+      : next(url, context)
+  },
+})
 
 interface Sent {
   method: string
@@ -137,6 +159,7 @@ const store: {
   readMessage: string
   writeStatus: number
   writeMessage: string
+  down: 'nothing' | 'writes' | 'everything'
 } = {
   destinations: [],
   rules: [],
@@ -150,7 +173,10 @@ const store: {
   readMessage: '',
   writeStatus: 200,
   writeMessage: '',
+  down: 'nothing',
 }
+
+const NOT_THERE = 'the API is not there'
 
 const answered = (status: number) => ({ status, ok: status < 400 })
 
@@ -182,6 +208,10 @@ function wrote(method: string) {
       body: options?.body,
     })
 
+    if (store.down !== 'nothing') {
+      throw new Error(NOT_THERE)
+    }
+
     return written(answerTo(method, path))
   }
 }
@@ -200,6 +230,10 @@ const client = () => ({
   GET: async (path: string, options?: Asked) => {
     const query = options?.params?.query
     sent.push({ method: 'GET', path, query })
+
+    if (store.down === 'everything') {
+      throw new Error(NOT_THERE)
+    }
 
     if (store.readStatus >= 400) {
       return refusal(store.readStatus, store.readMessage)
@@ -276,6 +310,7 @@ beforeEach(() => {
   store.readMessage = ''
   store.writeStatus = 200
   store.writeMessage = ''
+  store.down = 'nothing'
 })
 
 test('the screen is read from the destinations, the rule sets and the settings', async () => {
@@ -899,4 +934,98 @@ test('what refuses taking a single notice back is said by its status', async () 
 
   store.writeStatus = 401
   assert.deepEqual(await cancelWatch(WATCH_ONE), { state: 'unauthenticated' })
+})
+
+test('a write that never reached Carina is refused in the words of what was asked, never thrown', async () => {
+  store.down = 'everything'
+
+  const later = '時間をおいてからもう一度お試しください。'
+  const refused = (what: string) => ({
+    state: 'rejected',
+    message: `${what}。${later}`,
+    unreached: true,
+  })
+  const rule = {
+    name: '見本のルールセット',
+    enabled: true,
+    events: ['recordingFailed' as const],
+    destinations: [HOME],
+  }
+
+  assert.deepEqual(
+    await registerDestination({ name: 'n', url: 'u' }),
+    refused('送り先を追加できませんでした'),
+  )
+  assert.deepEqual(
+    await reviseDestination(HOME, { name: 'n', enabled: true }),
+    refused('送り先を変更できませんでした'),
+  )
+  assert.deepEqual(
+    await switchDestination(HOME, false),
+    refused('送り先を変更できませんでした'),
+  )
+  assert.deepEqual(
+    await removeDestination(HOME),
+    refused('送り先を削除できませんでした'),
+  )
+  assert.deepEqual(
+    await tryDestination(HOME),
+    refused('テスト送信ができませんでした'),
+  )
+  assert.deepEqual(
+    await defineRuleSet(rule),
+    refused('ルールセットを追加できませんでした'),
+  )
+  assert.deepEqual(
+    await reviseRuleSet(FAILURES, rule),
+    refused('ルールセットを変更できませんでした'),
+  )
+  assert.deepEqual(
+    await switchRuleSet(FAILURES, false),
+    refused('ルールセットを変更できませんでした'),
+  )
+  assert.deepEqual(
+    await removeRuleSet(FAILURES),
+    refused('ルールセットを削除できませんでした'),
+  )
+  assert.deepEqual(
+    await settleLead(0),
+    refused('単発の通知の既定を変更できませんでした'),
+  )
+  assert.deepEqual(
+    await askForWatch(DOCUMENTARY, { leadMinutes: 3, destinations: [HOME] }),
+    refused('通知を設定できませんでした'),
+  )
+  assert.deepEqual(
+    await cancelWatch(WATCH_ONE),
+    refused('通知を取り消せませんでした'),
+  )
+})
+
+test('a single notice whose asking never arrived is refused the same way, the programme having been read', async () => {
+  store.down = 'writes'
+
+  assert.deepEqual(
+    await askForWatch(
+      DOCUMENTARY,
+      { leadMinutes: 3, destinations: [HOME] },
+      BEFORE_IT_STARTS,
+    ),
+    {
+      state: 'rejected',
+      message:
+        '通知を設定できませんでした。時間をおいてからもう一度お試しください。',
+      unreached: true,
+    },
+  )
+  assert.equal(sent.at(-1)?.method, 'POST')
+})
+
+test('what is read stays an error while Carina is not there', async () => {
+  store.down = 'everything'
+
+  await assert.rejects(getNotificationsScreen(), /the API is not there/)
+  await assert.rejects(listWatches(), /the API is not there/)
+  await assert.rejects(getWatchOffer(), /the API is not there/)
+  await assert.rejects(listWatchedProgrammes(), /the API is not there/)
 })

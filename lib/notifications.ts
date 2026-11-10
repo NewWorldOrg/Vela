@@ -133,15 +133,27 @@ export interface WatchOffer {
   destinations: Pick<NotificationDestination, 'id' | 'name'>[]
 }
 
+/** A write that was not done: Carina refused it, or it never reached Carina. */
+export interface WriteRefusal {
+  state: 'rejected'
+  message: string
+  unreached?: true
+}
+
 export type NotificationWrite =
-  | { state: 'ok' }
-  | { state: 'unauthenticated' }
-  | { state: 'rejected'; message: string }
+  { state: 'ok' } | { state: 'unauthenticated' } | WriteRefusal
 
 export type WatchWrite =
   | { state: 'ok'; watch: ProgrammeWatch }
   | { state: 'unauthenticated' }
-  | { state: 'rejected'; message: string }
+  | WriteRefusal
+
+/** Whether Carina answered the write, so what the pages show may have changed. */
+export function wasAnswered(
+  result: NotificationWrite | WatchWrite | TestSending,
+): boolean {
+  return !(result.state === 'rejected' && result.unreached === true)
+}
 
 /** One place in a list single notices stand among: what the list held, or a notice. */
 export type AmongWatches<T> =
@@ -193,7 +205,7 @@ export interface Noticing {
 export type TestSending =
   | { state: 'ok'; delivered: boolean; failure?: DeliveryFailure }
   | { state: 'unauthenticated' }
-  | { state: 'rejected'; message: string }
+  | WriteRefusal
 
 export type BrowserPermission = 'default' | 'granted' | 'denied'
 

@@ -13,6 +13,7 @@ import type {
   WatchDraft,
   WatchWrite,
 } from '@/lib/notifications'
+import { wasAnswered } from '@/lib/notifications'
 import { askForWatch, cancelWatch } from '@/repository/notifications'
 import type { ProgramExtras } from '@/repository/programs'
 import { extrasOf } from '@/repository/programs'
@@ -110,8 +111,10 @@ export async function watchProgramme(
 ): Promise<WatchWrite> {
   const result = await askForWatch(programmeId, draft)
 
-  revalidatePath('/guide')
-  revalidatePath('/reservations')
+  if (wasAnswered(result)) {
+    revalidatePath('/guide')
+    revalidatePath('/reservations')
+  }
 
   return result
 }
@@ -119,8 +122,10 @@ export async function watchProgramme(
 export async function unwatchProgramme(id: string): Promise<NotificationWrite> {
   const result = await cancelWatch(id)
 
-  revalidatePath('/guide')
-  revalidatePath('/reservations')
+  if (wasAnswered(result)) {
+    revalidatePath('/guide')
+    revalidatePath('/reservations')
+  }
 
   return result
 }

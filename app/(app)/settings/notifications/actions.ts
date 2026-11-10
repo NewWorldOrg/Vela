@@ -10,6 +10,7 @@ import type {
   TestSending,
   WebhookDraft,
 } from '@/lib/notifications'
+import { wasAnswered } from '@/lib/notifications'
 import {
   defineRuleSet,
   registerDestination,
@@ -25,100 +26,69 @@ import {
 
 const NOTIFICATIONS = '/settings/notifications'
 
+/** The page is read again once Carina has answered; a write that never reached it leaves the page as it is. */
+function readAgain<T extends NotificationWrite | TestSending>(result: T): T {
+  if (wasAnswered(result)) {
+    revalidatePath(NOTIFICATIONS)
+  }
+
+  return result
+}
+
 export async function addDestination(
   draft: WebhookDraft,
 ): Promise<NotificationWrite> {
-  const result = await registerDestination(draft)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await registerDestination(draft))
 }
 
 export async function changeDestination(
   id: string,
   revision: DestinationRevision,
 ): Promise<NotificationWrite> {
-  const result = await reviseDestination(id, revision)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await reviseDestination(id, revision))
 }
 
 export async function turnDestination(
   id: string,
   enabled: boolean,
 ): Promise<NotificationWrite> {
-  const result = await switchDestination(id, enabled)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await switchDestination(id, enabled))
 }
 
 export async function sendTrial(id: string): Promise<TestSending> {
-  const result = await tryDestination(id)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await tryDestination(id))
 }
 
 export async function dropDestination(id: string): Promise<NotificationWrite> {
-  const result = await removeDestination(id)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await removeDestination(id))
 }
 
 export async function addRuleSet(
   draft: RuleSetDraft,
 ): Promise<NotificationWrite> {
-  const result = await defineRuleSet(draft)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await defineRuleSet(draft))
 }
 
 export async function changeRuleSet(
   id: string,
   draft: RuleSetDraft,
 ): Promise<NotificationWrite> {
-  const result = await reviseRuleSet(id, draft)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await reviseRuleSet(id, draft))
 }
 
 export async function turnRuleSet(
   id: string,
   enabled: boolean,
 ): Promise<NotificationWrite> {
-  const result = await switchRuleSet(id, enabled)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await switchRuleSet(id, enabled))
 }
 
 export async function dropRuleSet(id: string): Promise<NotificationWrite> {
-  const result = await removeRuleSet(id)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await removeRuleSet(id))
 }
 
 export async function settleTheLead(
   lead: LeadMinutes,
 ): Promise<NotificationWrite> {
-  const result = await settleLead(lead)
-
-  revalidatePath(NOTIFICATIONS)
-
-  return result
+  return readAgain(await settleLead(lead))
 }

@@ -22,8 +22,11 @@ import type {
   WatchWrite,
   WatchedProgramme,
   WebhookDraft,
+  WriteRefusal,
 } from '@/lib/notifications'
 import { couldNot } from '@/lib/try-again'
+import { unstable_rethrow } from 'next/navigation'
+
 import { carinaClient } from '@/repository/client/carina'
 import type { components } from '@/repository/client/schema'
 import { fetchProgramme, toInt } from '@/repository/programmes'
@@ -174,135 +177,188 @@ export async function getNotificationsScreen(): Promise<NotificationsScreen> {
 export async function registerDestination(
   draft: WebhookDraft,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().POST(
-    '/api/notifications/destinations',
-    { body: { name: draft.name, url: draft.url } },
-  )
+  return reaching(
+    WHEN_ADDING_A_DESTINATION.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().POST(
+        '/api/notifications/destinations',
+        { body: { name: draft.name, url: draft.url } },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_ADDING_A_DESTINATION)
+      return toWrite(response, whatItSaid(error), WHEN_ADDING_A_DESTINATION)
+    },
+  )
 }
 
 export async function reviseDestination(
   id: string,
   change: DestinationRevision,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().PATCH(
-    '/api/notifications/destinations/{id}',
-    {
-      params: { path: { id } },
-      body: {
-        name: change.name,
-        enabled: change.enabled,
-        url: change.url ?? '',
-      },
+  return reaching(
+    WHEN_CHANGING_A_DESTINATION.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().PATCH(
+        '/api/notifications/destinations/{id}',
+        {
+          params: { path: { id } },
+          body: {
+            name: change.name,
+            enabled: change.enabled,
+            url: change.url ?? '',
+          },
+        },
+      )
+
+      return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
     },
   )
-
-  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
 }
 
 export async function switchDestination(
   id: string,
   enabled: boolean,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().PATCH(
-    '/api/notifications/destinations/{id}',
-    { params: { path: { id } }, body: { enabled } },
-  )
+  return reaching(
+    WHEN_CHANGING_A_DESTINATION.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().PATCH(
+        '/api/notifications/destinations/{id}',
+        { params: { path: { id } }, body: { enabled } },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
+      return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_DESTINATION)
+    },
+  )
 }
 
 export async function removeDestination(
   id: string,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().DELETE(
-    '/api/notifications/destinations/{id}',
-    { params: { path: { id } } },
-  )
+  return reaching(
+    WHEN_REMOVING_A_DESTINATION.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().DELETE(
+        '/api/notifications/destinations/{id}',
+        { params: { path: { id } } },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_REMOVING_A_DESTINATION)
+      return toWrite(response, whatItSaid(error), WHEN_REMOVING_A_DESTINATION)
+    },
+  )
 }
 
 export async function tryDestination(id: string): Promise<TestSending> {
-  const { data, error, response } = await carinaClient().POST(
-    '/api/notifications/destinations/{id}/test',
-    { params: { path: { id } } },
-  )
-  const written = toWrite(
-    response,
-    whatItSaid(error, data),
-    WHEN_TRYING_A_DESTINATION,
-  )
+  return reaching(
+    WHEN_TRYING_A_DESTINATION.fell,
+    async (): Promise<TestSending> => {
+      const { data, error, response } = await carinaClient().POST(
+        '/api/notifications/destinations/{id}/test',
+        { params: { path: { id } } },
+      )
+      const written = toWrite(
+        response,
+        whatItSaid(error, data),
+        WHEN_TRYING_A_DESTINATION,
+      )
 
-  if (written.state !== 'ok') {
-    return written
-  }
-
-  const trial = data?.data
-
-  return trial
-    ? {
-        state: 'ok',
-        delivered: trial.delivered,
-        failure: trial.failure ?? undefined,
+      if (written.state !== 'ok') {
+        return written
       }
-    : { state: 'rejected', message: couldNot(WHEN_TRYING_A_DESTINATION.fell) }
+
+      const trial = data?.data
+
+      return trial
+        ? {
+            state: 'ok',
+            delivered: trial.delivered,
+            failure: trial.failure ?? undefined,
+          }
+        : {
+            state: 'rejected',
+            message: couldNot(WHEN_TRYING_A_DESTINATION.fell),
+          }
+    },
+  )
 }
 
 export async function defineRuleSet(
   draft: RuleSetDraft,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().POST(
-    '/api/notifications/rules',
-    { body: toRuleBody(draft) },
-  )
+  return reaching(
+    WHEN_ADDING_A_RULE_SET.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().POST(
+        '/api/notifications/rules',
+        { body: toRuleBody(draft) },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_ADDING_A_RULE_SET)
+      return toWrite(response, whatItSaid(error), WHEN_ADDING_A_RULE_SET)
+    },
+  )
 }
 
 export async function reviseRuleSet(
   id: string,
   draft: RuleSetDraft,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().PATCH(
-    '/api/notifications/rules/{id}',
-    { params: { path: { id } }, body: toRuleBody(draft) },
-  )
+  return reaching(
+    WHEN_CHANGING_A_RULE_SET.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().PATCH(
+        '/api/notifications/rules/{id}',
+        { params: { path: { id } }, body: toRuleBody(draft) },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_RULE_SET)
+      return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_RULE_SET)
+    },
+  )
 }
 
 export async function switchRuleSet(
   id: string,
   enabled: boolean,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().PATCH(
-    '/api/notifications/rules/{id}',
-    { params: { path: { id } }, body: { enabled } },
-  )
+  return reaching(
+    WHEN_CHANGING_A_RULE_SET.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().PATCH(
+        '/api/notifications/rules/{id}',
+        { params: { path: { id } }, body: { enabled } },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_RULE_SET)
+      return toWrite(response, whatItSaid(error), WHEN_CHANGING_A_RULE_SET)
+    },
+  )
 }
 
 export async function removeRuleSet(id: string): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().DELETE(
-    '/api/notifications/rules/{id}',
-    { params: { path: { id } } },
-  )
+  return reaching(
+    WHEN_REMOVING_A_RULE_SET.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().DELETE(
+        '/api/notifications/rules/{id}',
+        { params: { path: { id } } },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_REMOVING_A_RULE_SET)
+      return toWrite(response, whatItSaid(error), WHEN_REMOVING_A_RULE_SET)
+    },
+  )
 }
 
 export async function settleLead(
   lead: LeadMinutes,
 ): Promise<NotificationWrite> {
-  const { error, response } = await carinaClient().PUT(
-    '/api/notifications/settings',
-    { body: { notifyLeadMinutes: lead } },
-  )
+  return reaching(
+    WHEN_SETTLING_THE_LEAD.fell,
+    async (): Promise<NotificationWrite> => {
+      const { error, response } = await carinaClient().PUT(
+        '/api/notifications/settings',
+        { body: { notifyLeadMinutes: lead } },
+      )
 
-  return toWrite(response, whatItSaid(error), WHEN_SETTLING_THE_LEAD)
+      return toWrite(response, whatItSaid(error), WHEN_SETTLING_THE_LEAD)
+    },
+  )
 }
 
 /** The single notices still waiting, by the programme each is for. */
@@ -352,64 +408,82 @@ export async function askForWatch(
   draft: WatchDraft,
   now: number = Date.now(),
 ): Promise<WatchWrite> {
-  const programme = await fetchProgramme(programmeId)
+  return reaching(NOT_WATCHED, async (): Promise<WatchWrite> => {
+    const programme = await fetchProgramme(programmeId)
 
-  if (!programme) {
-    return { state: 'rejected', message: NOT_IN_THE_GUIDE }
-  }
-
-  const { data, response } = await carinaClient().POST(
-    '/api/notifications/watches',
-    {
-      body: {
-        programme: programmeId,
-        programmeStartsAt: programme.startsAt,
-        leadMinutes: draft.leadMinutes,
-        destinations: draft.destinations,
-      },
-    },
-  )
-
-  if (response.status === 401) {
-    return { state: 'unauthenticated' }
-  }
-
-  if (response.status === 409) {
-    return {
-      state: 'rejected',
-      message:
-        Date.parse(programme.startsAt) <= now
-          ? ALREADY_STARTED
-          : ALREADY_WATCHED,
+    if (!programme) {
+      return { state: 'rejected', message: NOT_IN_THE_GUIDE }
     }
-  }
 
-  const made = data?.data
+    const { data, response } = await carinaClient().POST(
+      '/api/notifications/watches',
+      {
+        body: {
+          programme: programmeId,
+          programmeStartsAt: programme.startsAt,
+          leadMinutes: draft.leadMinutes,
+          destinations: draft.destinations,
+        },
+      },
+    )
 
-  return response.ok && made
-    ? { state: 'ok', watch: toWatch(made) }
-    : {
+    if (response.status === 401) {
+      return { state: 'unauthenticated' }
+    }
+
+    if (response.status === 409) {
+      return {
         state: 'rejected',
-        message: WATCH_REFUSED[response.status] ?? couldNot(NOT_WATCHED),
+        message:
+          Date.parse(programme.startsAt) <= now
+            ? ALREADY_STARTED
+            : ALREADY_WATCHED,
       }
+    }
+
+    const made = data?.data
+
+    return response.ok && made
+      ? { state: 'ok', watch: toWatch(made) }
+      : {
+          state: 'rejected',
+          message: WATCH_REFUSED[response.status] ?? couldNot(NOT_WATCHED),
+        }
+  })
 }
 
 export async function cancelWatch(id: string): Promise<NotificationWrite> {
-  const { response } = await carinaClient().DELETE(
-    '/api/notifications/watches/{id}',
-    { params: { path: { id } } },
-  )
+  return reaching(NOT_UNWATCHED, async (): Promise<NotificationWrite> => {
+    const { response } = await carinaClient().DELETE(
+      '/api/notifications/watches/{id}',
+      { params: { path: { id } } },
+    )
 
-  if (response.status === 401) {
-    return { state: 'unauthenticated' }
+    if (response.status === 401) {
+      return { state: 'unauthenticated' }
+    }
+
+    return response.ok
+      ? { state: 'ok' }
+      : {
+          state: 'rejected',
+          message: UNWATCH_REFUSED[response.status] ?? couldNot(NOT_UNWATCHED),
+        }
+  })
+}
+
+/** What a write answers; one that never reached Carina is refused as what could not be done, never thrown. */
+async function reaching<T>(
+  fell: string,
+  write: () => Promise<T>,
+): Promise<T | WriteRefusal> {
+  try {
+    return await write()
+  } catch (error) {
+    unstable_rethrow(error)
+
+    return { state: 'rejected', message: couldNot(fell), unreached: true }
   }
-
-  return response.ok
-    ? { state: 'ok' }
-    : {
-        state: 'rejected',
-        message: UNWATCH_REFUSED[response.status] ?? couldNot(NOT_UNWATCHED),
-      }
 }
 
 function toRuleBody(draft: RuleSetDraft) {
