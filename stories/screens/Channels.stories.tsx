@@ -544,14 +544,6 @@ export const 収まらないほどのサービスと履歴: Story = {
   },
 }
 
-export const 狭い幅で収まらないほどのサービスと履歴: Story = {
-  args: { result: { state: 'ok', result: MORE_CHANNELS_THAN_FIT } },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await bothListsScrollInside(canvasElement)
-  },
-}
-
 export const スキャン中に収まらないほどの走査結果: Story = {
   args: {
     result: {
@@ -562,22 +554,6 @@ export const スキャン中に収まらないほどの走査結果: Story = {
       },
     },
   },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
-  },
-}
-
-export const 狭い幅でスキャン中に収まらないほどの走査結果: Story = {
-  args: {
-    result: {
-      state: 'ok',
-      result: {
-        ...CHANNELS,
-        running: { state: 'read', progress: MORE_ATTEMPTS_THAN_FIT },
-      },
-    },
-  },
-  parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
   },
@@ -621,6 +597,30 @@ export const 受信できるチューナーのない種別は受信不可: Story
     await expect(
       within(ground as HTMLElement).queryByText('受信不可'),
     ).not.toBeInTheDocument()
+  },
+}
+
+export const 狭い幅で収まらないほどのサービスと履歴: Story = {
+  args: { result: { state: 'ok', result: MORE_CHANNELS_THAN_FIT } },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await bothListsScrollInside(canvasElement)
+  },
+}
+
+export const 狭い幅でスキャン中に収まらないほどの走査結果: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...CHANNELS,
+        running: { state: 'read', progress: MORE_ATTEMPTS_THAN_FIT },
+      },
+    },
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
   },
 }
 

@@ -162,16 +162,6 @@ export const 収まらないほどの食い違い: Story = {
   },
 }
 
-export const 狭い幅で収まらないほどの食い違い: Story = {
-  args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
-      pageStays: true,
-    })
-  },
-}
-
 export const 保存先の空きは丸めて出す: Story = {
   args: { result: INTEGRITY_FIXTURE },
   play: async ({ canvasElement }) => {
@@ -337,6 +327,16 @@ export const 指標タイルの面: Story = {
 
     await expect(grounds[0]).not.toBe(getComputedStyle(behind).backgroundColor)
     await expect(grounds[0]).not.toBe('rgba(0, 0, 0, 0)')
+  },
+}
+
+export const 狭い幅で収まらないほどの食い違い: Story = {
+  args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
+      pageStays: true,
+    })
   },
 }
 

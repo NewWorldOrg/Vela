@@ -420,14 +420,6 @@ export const 収まらないほどのチューナー: Story = {
   },
 }
 
-export const 狭い幅で収まらないほどのチューナー: Story = {
-  args: { result: MORE_TUNERS_THAN_FIT },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チューナー')
-  },
-}
-
 export const 推移: Story = {
   args: { result: QUALITY },
   play: async ({ canvasElement }) => {
@@ -623,6 +615,14 @@ export const 選局の失敗が続く衛星チューナー: Story = {
     ).toBeVisible()
     await expect(canvas.getByText(/分類 選局失敗/)).toBeVisible()
     await expect(canvas.queryByText('TuneFailing')).toBeNull()
+  },
+}
+
+export const 狭い幅で収まらないほどのチューナー: Story = {
+  args: { result: MORE_TUNERS_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チューナー')
   },
 }
 

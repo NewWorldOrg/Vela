@@ -147,6 +147,56 @@ export const ホームバーのある電話: Story = {
   },
 }
 
+const SIDEWAYS = { width: 844, height: 390 }
+
+export const 横向きの電話: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: SIDEWAYS,
+    coarse: true,
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+  },
+  play: async ({ canvasElement }) => {
+    const rail = tabBarOf(canvasElement)
+    const box = rail.getBoundingClientRect()
+
+    await expect(rail).toBeVisible()
+    await expect(box.left).toBe(0)
+    await expect(box.top).toBe(0)
+    await expect(box.height).toBe(window.innerHeight)
+    await expect(box.width).toBeLessThan(100)
+
+    const links = within(rail).getAllByRole('link')
+
+    await expect(links.map((link) => link.textContent)).toEqual([
+      '番組表',
+      'ライブ',
+      'ライブラリ',
+      '予約',
+      '設定',
+    ])
+
+    for (const link of links) {
+      await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+        44,
+      )
+    }
+
+    await expect(
+      canvasElement.querySelector('[data-slot="global-nav"]'),
+    ).not.toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="phone-bar-title"]'),
+    ).toHaveTextContent('ライブラリ')
+
+    const bar = canvasElement
+      .querySelector('[data-slot="top-bar"]')!
+      .getBoundingClientRect()
+
+    await expect(bar.left).toBeGreaterThanOrEqual(box.right - 1)
+  },
+}
+
 export const 幅599: Story = {
   render: () => <Shell />,
   parameters: { screen: { width: 599, height: 900 } },
@@ -369,55 +419,5 @@ export const 広い窓の文字の段: Story = {
   play: async ({ canvasElement }) => {
     await expect(stepSize(canvasElement, 'body')).toBe(14)
     await expect(stepSize(canvasElement, 'micro')).toBe(11)
-  },
-}
-
-const SIDEWAYS = { width: 844, height: 390 }
-
-export const 横向きの電話: Story = {
-  render: () => <Shell />,
-  parameters: {
-    screen: SIDEWAYS,
-    coarse: true,
-    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
-  },
-  play: async ({ canvasElement }) => {
-    const rail = tabBarOf(canvasElement)
-    const box = rail.getBoundingClientRect()
-
-    await expect(rail).toBeVisible()
-    await expect(box.left).toBe(0)
-    await expect(box.top).toBe(0)
-    await expect(box.height).toBe(window.innerHeight)
-    await expect(box.width).toBeLessThan(100)
-
-    const links = within(rail).getAllByRole('link')
-
-    await expect(links.map((link) => link.textContent)).toEqual([
-      '番組表',
-      'ライブ',
-      'ライブラリ',
-      '予約',
-      '設定',
-    ])
-
-    for (const link of links) {
-      await expect(link.getBoundingClientRect().height).toBeGreaterThanOrEqual(
-        44,
-      )
-    }
-
-    await expect(
-      canvasElement.querySelector('[data-slot="global-nav"]'),
-    ).not.toBeVisible()
-    await expect(
-      canvasElement.querySelector('[data-slot="phone-bar-title"]'),
-    ).toHaveTextContent('ライブラリ')
-
-    const bar = canvasElement
-      .querySelector('[data-slot="top-bar"]')!
-      .getBoundingClientRect()
-
-    await expect(bar.left).toBeGreaterThanOrEqual(box.right - 1)
   },
 }

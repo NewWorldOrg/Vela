@@ -535,35 +535,6 @@ export const 中止: Story = {
   },
 }
 
-const WHERE_THE_TYPE_STEPS_UP_PX = 1440
-
-export const 字の段が上がる幅でも枠に収まる表: Story = {
-  parameters: { screen: { width: WHERE_THE_TYPE_STEPS_UP_PX, height: 1000 } },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
-    const boxes = [
-      ...canvasElement.querySelectorAll<HTMLElement>(
-        '[data-slot="table-container"]',
-      ),
-    ]
-
-    await expect(boxes).toHaveLength(3)
-
-    for (const box of boxes) {
-      const edge = box.getBoundingClientRect().right
-
-      await expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth)
-
-      for (const press of box.querySelectorAll('button')) {
-        await expect(press.getBoundingClientRect().right).toBeLessThanOrEqual(
-          edge,
-        )
-      }
-    }
-  },
-}
-
 export const 失敗だけに絞る: Story = {
   args: {
     screen: {
@@ -604,14 +575,6 @@ export const 収まらないほどのジョブ: Story = {
     await expect(
       canvas.getByRole('button', { name: '2 ページ目' }),
     ).toHaveAttribute('aria-current', 'page')
-  },
-}
-
-export const 狭い幅で収まらないほどのジョブ: Story = {
-  args: { screen: MORE_JOBS_THAN_FIT },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, '番組')
   },
 }
 
@@ -1455,23 +1418,6 @@ export const 行の操作の並び: Story = {
   },
 }
 
-export const 電話の幅では一行をカードに組む: Story = {
-  args: 通常.args,
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => {
-    await laysRowsAsCards(canvasElement)
-  },
-}
-
-export const 幅600pxからは表のまま: Story = {
-  name: '幅600pxからは表のまま',
-  args: 通常.args,
-  parameters: { screen: FROM_600 },
-  play: async ({ canvasElement }) => {
-    await laysRowsAsATable(canvasElement)
-  },
-}
-
 const WHAT_THE_PICKED_JOBS_DO = '選んだジョブの操作'
 
 /** The bar that floats at the window's foot while the failed jobs are being chosen, or the band over a phone's tabs. */
@@ -1725,6 +1671,60 @@ export const まとめて再実行を断られる: Story = {
     await expect(rowsOfTheTableHeaded(canvasElement, '番組')).toHaveLength(
       FAILED_JOBS.length,
     )
+  },
+}
+
+const WHERE_THE_TYPE_STEPS_UP_PX = 1440
+
+export const 字の段が上がる幅でも枠に収まる表: Story = {
+  parameters: { screen: { width: WHERE_THE_TYPE_STEPS_UP_PX, height: 1000 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const boxes = [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="table-container"]',
+      ),
+    ]
+
+    await expect(boxes).toHaveLength(3)
+
+    for (const box of boxes) {
+      const edge = box.getBoundingClientRect().right
+
+      await expect(box.scrollWidth).toBeLessThanOrEqual(box.clientWidth)
+
+      for (const press of box.querySelectorAll('button')) {
+        await expect(press.getBoundingClientRect().right).toBeLessThanOrEqual(
+          edge,
+        )
+      }
+    }
+  },
+}
+
+export const 狭い幅で収まらないほどのジョブ: Story = {
+  args: { screen: MORE_JOBS_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '番組')
+  },
+}
+
+export const 電話の幅では一行をカードに組む: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsCards(canvasElement)
+  },
+}
+
+export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
+  args: 通常.args,
+  parameters: { screen: FROM_600 },
+  play: async ({ canvasElement }) => {
+    await laysRowsAsATable(canvasElement)
   },
 }
 

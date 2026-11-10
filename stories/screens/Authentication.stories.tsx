@@ -114,73 +114,6 @@ export const 名前が長いセッション: Story = {
   },
 }
 
-export const 狭い幅で名前が長いセッション: Story = {
-  args: { sessions: LONG_NAMES },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const subject = canvas.getByText(A_SUBJECT)
-    const cell = subject.closest('td')
-    const table = subject.closest('table')
-
-    if (!cell || !table) {
-      throw new Error('the name is not in a list')
-    }
-
-    const width = cell.getBoundingClientRect().width
-
-    await expect(width).toBeGreaterThanOrEqual(160)
-    await expect(width).toBeLessThan(260)
-    await expect(table.getBoundingClientRect().width).toBeLessThan(
-      table.getBoundingClientRect().width - width + 260,
-    )
-    await expect(subject.getBoundingClientRect().height).toBeGreaterThan(
-      Number.parseFloat(getComputedStyle(subject).lineHeight),
-    )
-  },
-}
-
-const LAST_YEAR = formatMoment(
-  Date.UTC(new Date().getUTCFullYear() - 1, 11, 31, 14, 59),
-)
-
-export const 年の付く日時も作成と取得日時の列に収まる: Story = {
-  args: {
-    sessions: SESSIONS.map((session) => ({
-      ...session,
-      createdAt: LAST_YEAR,
-      lastUsedAt: LAST_YEAR,
-    })),
-  },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
-    const cells = rowsOfTheTableHeaded(canvasElement, '端末').flatMap((row) => [
-      cellOf(row, CREATED_COLUMN),
-      cellOf(row, TAKEN_COLUMN),
-    ])
-
-    await expect(cells).toHaveLength(SESSIONS.length * 2)
-
-    for (const cell of cells) {
-      const drawn = getComputedStyle(cell)
-      const room =
-        cell.clientWidth -
-        Number.parseFloat(drawn.paddingLeft) -
-        Number.parseFloat(drawn.paddingRight)
-      const words = document.createRange()
-
-      words.selectNodeContents(cell)
-
-      await expect(cell.textContent).toMatch(/^\d{4}\//)
-      await expect(words.getBoundingClientRect().width).toBeLessThanOrEqual(
-        room,
-      )
-    }
-  },
-}
-
 export const いまの端末のみ: Story = { args: { sessions: ONLY_THIS_DEVICE } }
 
 export const 失効直後: Story = {
@@ -207,14 +140,6 @@ export const 絞り込み未設定: Story = { args: { oidc: OIDC_ADMITS_EVERYONE
 
 export const 収まらないほどのセッション: Story = {
   args: { sessions: MORE_SESSIONS_THAN_FIT },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, '端末')
-  },
-}
-
-export const 狭い幅で収まらないほどのセッション: Story = {
-  args: { sessions: MORE_SESSIONS_THAN_FIT },
-  parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, '端末')
   },
@@ -286,6 +211,81 @@ export const パスワードを変更する対話: Story = {
     await userEvent.click(showReplacement)
 
     await expect(replacement).toHaveAttribute('type', 'text')
+  },
+}
+
+export const 狭い幅で名前が長いセッション: Story = {
+  args: { sessions: LONG_NAMES },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const subject = canvas.getByText(A_SUBJECT)
+    const cell = subject.closest('td')
+    const table = subject.closest('table')
+
+    if (!cell || !table) {
+      throw new Error('the name is not in a list')
+    }
+
+    const width = cell.getBoundingClientRect().width
+
+    await expect(width).toBeGreaterThanOrEqual(160)
+    await expect(width).toBeLessThan(260)
+    await expect(table.getBoundingClientRect().width).toBeLessThan(
+      table.getBoundingClientRect().width - width + 260,
+    )
+    await expect(subject.getBoundingClientRect().height).toBeGreaterThan(
+      Number.parseFloat(getComputedStyle(subject).lineHeight),
+    )
+  },
+}
+
+const LAST_YEAR = formatMoment(
+  Date.UTC(new Date().getUTCFullYear() - 1, 11, 31, 14, 59),
+)
+
+export const 年の付く日時も作成と取得日時の列に収まる: Story = {
+  args: {
+    sessions: SESSIONS.map((session) => ({
+      ...session,
+      createdAt: LAST_YEAR,
+      lastUsedAt: LAST_YEAR,
+    })),
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const cells = rowsOfTheTableHeaded(canvasElement, '端末').flatMap((row) => [
+      cellOf(row, CREATED_COLUMN),
+      cellOf(row, TAKEN_COLUMN),
+    ])
+
+    await expect(cells).toHaveLength(SESSIONS.length * 2)
+
+    for (const cell of cells) {
+      const drawn = getComputedStyle(cell)
+      const room =
+        cell.clientWidth -
+        Number.parseFloat(drawn.paddingLeft) -
+        Number.parseFloat(drawn.paddingRight)
+      const words = document.createRange()
+
+      words.selectNodeContents(cell)
+
+      await expect(cell.textContent).toMatch(/^\d{4}\//)
+      await expect(words.getBoundingClientRect().width).toBeLessThanOrEqual(
+        room,
+      )
+    }
+  },
+}
+
+export const 狭い幅で収まらないほどのセッション: Story = {
+  args: { sessions: MORE_SESSIONS_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '端末')
   },
 }
 

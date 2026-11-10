@@ -112,13 +112,6 @@ export const 通常: Story = {
   },
 }
 
-export const 狭い電話: Story = {
-  parameters: { screen: NARROW_PHONE },
-  play: async ({ canvasElement }) => {
-    await everySettingIsOnePressAway(canvasElement)
-  },
-}
-
 export const 移行記録が無い: Story = {
   args: { hasMigration: false, values: {} },
   play: async ({ canvasElement }) => {
@@ -146,5 +139,12 @@ export const APIに届かない: Story = {
     })
 
     await expect(system).not.toHaveTextContent('チューナー')
+  },
+}
+
+export const 狭い電話: Story = {
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    await everySettingIsOnePressAway(canvasElement)
   },
 }

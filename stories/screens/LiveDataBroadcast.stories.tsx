@@ -794,48 +794,6 @@ export const 開いている_PC_全画面: Story = {
   },
 }
 
-export const 開いている_縦の_iPad: Story = {
-  name: '開いている 縦の iPad',
-  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await opened(canvasElement)
-    await underTheBox(canvasElement)
-  },
-}
-
-export const 開いている_横の_iPad_全画面: Story = {
-  name: '開いている 横の iPad 全画面',
-  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await filled(canvasElement)
-
-    const band = await overThePicture(canvasElement)
-    const stage = onTheScreen(canvasElement, 'player-stage')
-    const { width, height, right } = stage.getBoundingClientRect()
-
-    await expect(right).toBe(window.innerWidth)
-    await expect(Math.abs(width / height - 16 / 9)).toBeLessThan(0.01)
-    await expect(band.getBoundingClientRect().width).toBe(window.innerWidth)
-
-    await userEvent.click(
-      within(band).getByRole('button', { name: '123 数字' }),
-    )
-    await near(band.getBoundingClientRect().height, 136 * unit(width))
-    await expect(
-      within(band).getByRole('button', { name: '0' }).getBoundingClientRect()
-        .top,
-    ).toBe(
-      within(band).getByRole('button', { name: '青' }).getBoundingClientRect()
-        .top,
-    )
-    await expect(
-      canvas.getByRole('button', { name: '全画面' }),
-    ).toHaveAttribute('aria-pressed', 'true')
-  },
-}
-
 export const 鍵の振り分け: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1703,34 +1661,6 @@ export const Hybridcast_起動中_PC: Story = {
   },
 }
 
-export const Hybridcast_iPad: Story = {
-  name: 'Hybridcast iPad',
-  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
-  args: {
-    openSocket: carrying(...HYBRIDCAST),
-    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
-  },
-  beforeEach: lineSetTo(true, false, true),
-  play: async ({ canvasElement }) => {
-    await openedOnTheLine(canvasElement)
-
-    const group = await runningOnTheBand(canvasElement)
-    const close = within(group)
-      .getByRole('button', { name: 'Hybridcast を閉じる' })
-      .getBoundingClientRect()
-    const back = within(canvasElement)
-      .getByRole('button', { name: '戻る' })
-      .getBoundingClientRect()
-
-    const name = group.querySelector('b') as HTMLElement
-
-    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
-    await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
-    await expect(close.right).toBeLessThanOrEqual(back.left)
-    await expect(Math.abs(close.top - back.top)).toBeLessThan(1)
-  },
-}
-
 export const Hybridcast_開けない: Story = {
   args: {
     openSocket: carrying(...HYBRIDCAST),
@@ -2010,6 +1940,76 @@ export const Hybridcast_効果音: Story = {
         { sound: 5, gain: romSoundGain(true, 1) },
       ]),
     )
+  },
+}
+
+export const 開いている_縦の_iPad: Story = {
+  name: '開いている 縦の iPad',
+  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+    await underTheBox(canvasElement)
+  },
+}
+
+export const 開いている_横の_iPad_全画面: Story = {
+  name: '開いている 横の iPad 全画面',
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await filled(canvasElement)
+
+    const band = await overThePicture(canvasElement)
+    const stage = onTheScreen(canvasElement, 'player-stage')
+    const { width, height, right } = stage.getBoundingClientRect()
+
+    await expect(right).toBe(window.innerWidth)
+    await expect(Math.abs(width / height - 16 / 9)).toBeLessThan(0.01)
+    await expect(band.getBoundingClientRect().width).toBe(window.innerWidth)
+
+    await userEvent.click(
+      within(band).getByRole('button', { name: '123 数字' }),
+    )
+    await near(band.getBoundingClientRect().height, 136 * unit(width))
+    await expect(
+      within(band).getByRole('button', { name: '0' }).getBoundingClientRect()
+        .top,
+    ).toBe(
+      within(band).getByRole('button', { name: '青' }).getBoundingClientRect()
+        .top,
+    )
+    await expect(
+      canvas.getByRole('button', { name: '全画面' }),
+    ).toHaveAttribute('aria-pressed', 'true')
+  },
+}
+
+export const Hybridcast_iPad: Story = {
+  name: 'Hybridcast iPad',
+  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+
+    const group = await runningOnTheBand(canvasElement)
+    const close = within(group)
+      .getByRole('button', { name: 'Hybridcast を閉じる' })
+      .getBoundingClientRect()
+    const back = within(canvasElement)
+      .getByRole('button', { name: '戻る' })
+      .getBoundingClientRect()
+
+    const name = group.querySelector('b') as HTMLElement
+
+    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
+    await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
+    await expect(close.right).toBeLessThanOrEqual(back.left)
+    await expect(Math.abs(close.top - back.top)).toBeLessThan(1)
   },
 }
 

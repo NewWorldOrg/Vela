@@ -75,54 +75,6 @@ export const サービスの画面: Story = {
   ),
 }
 
-export const ナビをリンクで組む: Story = {
-  render: () => (
-    <div className="p-6">
-      <AppShell>
-        <TopBar>
-          <Brand />
-          <GlobalNav>
-            <GlobalNavItem asChild active>
-              <a href="#">番組表</a>
-            </GlobalNavItem>
-            <GlobalNavItem asChild>
-              <a href="#">ライブ</a>
-            </GlobalNavItem>
-          </GlobalNav>
-          <div className="flex items-center gap-[7px]">
-            <SettingsLink asChild>
-              <a href="#">設定</a>
-            </SettingsLink>
-          </div>
-        </TopBar>
-        <AdminBody>
-          <AdminSideNav caption="管理">
-            <AdminSideNavItem
-              asChild
-              label="チューナー"
-              icon={<TunerIcon />}
-              active
-            >
-              <a href="#" />
-            </AdminSideNavItem>
-            <AdminSideNavItem asChild label="チャンネル" icon={<ChannelIcon />}>
-              <a href="#" />
-            </AdminSideNavItem>
-          </AdminSideNav>
-          <AdminMain>
-            <Crumb>
-              設定 / <CrumbCurrent>チューナー</CrumbCurrent>
-            </Crumb>
-          </AdminMain>
-        </AdminBody>
-      </AppShell>
-      <p className="mt-[9px] text-note text-ink-2">
-        アプリ本体はこの形でルーティングのリンクを差し込む。
-      </p>
-    </div>
-  ),
-}
-
 export const 設定の画面: Story = {
   render: () => (
     <div className="p-6">
@@ -176,6 +128,54 @@ export const 設定の画面: Story = {
       <p className="mt-[9px] text-note text-ink-2">
         たまに触る管理系は「設定」から入る別エリアで、左サイドナビ+ページ見出しと説明文
         を持つ落ち着いた構成。サービス系との行き来はトップバーで常に可能。
+      </p>
+    </div>
+  ),
+}
+
+export const ナビをリンクで組む: Story = {
+  render: () => (
+    <div className="p-6">
+      <AppShell>
+        <TopBar>
+          <Brand />
+          <GlobalNav>
+            <GlobalNavItem asChild active>
+              <a href="#">番組表</a>
+            </GlobalNavItem>
+            <GlobalNavItem asChild>
+              <a href="#">ライブ</a>
+            </GlobalNavItem>
+          </GlobalNav>
+          <div className="flex items-center gap-[7px]">
+            <SettingsLink asChild>
+              <a href="#">設定</a>
+            </SettingsLink>
+          </div>
+        </TopBar>
+        <AdminBody>
+          <AdminSideNav caption="管理">
+            <AdminSideNavItem
+              asChild
+              label="チューナー"
+              icon={<TunerIcon />}
+              active
+            >
+              <a href="#" />
+            </AdminSideNavItem>
+            <AdminSideNavItem asChild label="チャンネル" icon={<ChannelIcon />}>
+              <a href="#" />
+            </AdminSideNavItem>
+          </AdminSideNav>
+          <AdminMain>
+            <Crumb>
+              設定 / <CrumbCurrent>チューナー</CrumbCurrent>
+            </Crumb>
+          </AdminMain>
+        </AdminBody>
+      </AppShell>
+      <p className="mt-[9px] text-note text-ink-2">
+        アプリ本体はこの形でルーティングのリンクを差し込む。
       </p>
     </div>
   ),

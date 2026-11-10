@@ -434,39 +434,6 @@ export const 同じシリーズの回を畳んだまま開く: Story = {
   },
 }
 
-export const iPadでも同じシリーズの回を畳める: Story = {
-  name: 'iPadでも同じシリーズの回を畳める',
-  args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
-  parameters: { screen: { width: 1180, height: 820 } },
-  beforeEach: () => {
-    document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
-
-    return () => {
-      document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
-    }
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const fold = canvas.getByRole('button', { name: SERIES_FOLD })
-    const column = seriesColumn(canvasElement)
-
-    await expect(within(column).getAllByRole('link')).toHaveLength(7)
-
-    await userEvent.click(fold)
-
-    await waitFor(async () => {
-      await expect(within(column).queryAllByRole('link')).toHaveLength(0)
-    })
-    await expect(fold).toBeVisible()
-
-    await userEvent.click(fold)
-
-    await waitFor(async () => {
-      await expect(within(column).getAllByRole('link')).toHaveLength(7)
-    })
-  },
-}
-
 export const 削除未完了: Story = {
   args: { detail: { ...detail('1274'), unfinishedDeletion: { filesLeft: 2 } } },
   play: async ({ canvasElement }) => {
@@ -1447,52 +1414,6 @@ export const 操作は題と値の下に横1行: Story = {
   },
 }
 
-export const iPad_の横でも操作は横1行: Story = {
-  name: 'iPad の横でも操作は横1行',
-  args: { detail: withoutAnArtefact('1274') },
-  parameters: { screen: { width: 1180, height: 820 } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const drawn = THE_ACTIONS.map((name) =>
-      canvas.getByRole('button', { name }).getBoundingClientRect(),
-    )
-
-    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
-  },
-}
-
-export const iPad_の縦では操作を二列に並べて重ねない: Story = {
-  name: 'iPad の縦では操作を二列に並べて重ねない',
-  args: { detail: withoutAnArtefact('1274') },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const drawn = THE_ACTIONS.map((name) =>
-      canvas.getByRole('button', { name }).getBoundingClientRect(),
-    )
-
-    await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
-      1,
-    )
-    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(2)
-
-    for (const [nth, one] of drawn.entries()) {
-      for (const other of drawn.slice(nth + 1)) {
-        await expect(
-          one.right <= other.left ||
-            other.right <= one.left ||
-            one.bottom <= other.top ||
-            other.bottom <= one.top,
-        ).toBe(true)
-      }
-    }
-
-    for (const name of THE_ACTIONS) {
-      await standsOnAGround(canvas.getByRole('button', { name }))
-    }
-  },
-}
-
 export const 記録の値は札で言う: Story = {
   args: { detail: detail('1274') },
   play: async ({ canvasElement }) => {
@@ -1630,6 +1551,119 @@ export const 成果物が無い録画は外部プレイヤーに元のままだ�
   },
 }
 
+export const Mac_では_Infuse_で開く: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  beforeEach: browsingAs(A_MAC),
+  play: async ({ canvasElement }) => {
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(waysToHandOver()).toEqual(['Infuse で再生', 'URL をコピー'])
+
+    const left = await whereItLeftFor(async (sent) => {
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
+      await waitFor(() => expect(sent).toHaveLength(1))
+    })
+
+    await expect(
+      handedTo('infuse://x-callback-url/play?url=', left[0]),
+    ).toMatch(THE_ARTEFACT_NAMED_BY_ITS_TITLE)
+  },
+}
+
+export const URL_をコピーできなかったらその場で言う: Story = {
+  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
+  play: async ({ canvasElement }) => {
+    const copied = await whatWasCopied(async () => {
+      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
+      await expect(
+        await within(canvasElement).findByText(
+          'URL をコピーできませんでした。',
+        ),
+      ).toBeVisible()
+    }, false)
+
+    await expect(copied).toEqual([])
+  },
+}
+
+export const iPadでも同じシリーズの回を畳める: Story = {
+  name: 'iPadでも同じシリーズの回を畳める',
+  args: { detail: detail('1274'), episodes: KITCHEN_EPISODES },
+  parameters: { screen: { width: 1180, height: 820 } },
+  beforeEach: () => {
+    document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
+
+    return () => {
+      document.cookie = forgettingCookie(RECORDING_SERIES_FOLDED)
+    }
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const fold = canvas.getByRole('button', { name: SERIES_FOLD })
+    const column = seriesColumn(canvasElement)
+
+    await expect(within(column).getAllByRole('link')).toHaveLength(7)
+
+    await userEvent.click(fold)
+
+    await waitFor(async () => {
+      await expect(within(column).queryAllByRole('link')).toHaveLength(0)
+    })
+    await expect(fold).toBeVisible()
+
+    await userEvent.click(fold)
+
+    await waitFor(async () => {
+      await expect(within(column).getAllByRole('link')).toHaveLength(7)
+    })
+  },
+}
+
+export const iPad_の横でも操作は横1行: Story = {
+  name: 'iPad の横でも操作は横1行',
+  args: { detail: withoutAnArtefact('1274') },
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const drawn = THE_ACTIONS.map((name) =>
+      canvas.getByRole('button', { name }).getBoundingClientRect(),
+    )
+
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(1)
+  },
+}
+
+export const iPad_の縦では操作を二列に並べて重ねない: Story = {
+  name: 'iPad の縦では操作を二列に並べて重ねない',
+  args: { detail: withoutAnArtefact('1274') },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const drawn = THE_ACTIONS.map((name) =>
+      canvas.getByRole('button', { name }).getBoundingClientRect(),
+    )
+
+    await expect(new Set(drawn.map((box) => Math.round(box.width))).size).toBe(
+      1,
+    )
+    await expect(new Set(drawn.map((box) => Math.round(box.top))).size).toBe(2)
+
+    for (const [nth, one] of drawn.entries()) {
+      for (const other of drawn.slice(nth + 1)) {
+        await expect(
+          one.right <= other.left ||
+            other.right <= one.left ||
+            one.bottom <= other.top ||
+            other.bottom <= one.top,
+        ).toBe(true)
+      }
+    }
+
+    for (const name of THE_ACTIONS) {
+      await standsOnAGround(canvas.getByRole('button', { name }))
+    }
+  },
+}
+
 export const iPad_では外部プレイヤーのアプリで開く: Story = {
   name: 'iPad では外部プレイヤーのアプリで開く',
   args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
@@ -1663,40 +1697,6 @@ export const iPad_では外部プレイヤーのアプリで開く: Story = {
     await expect(
       within(canvasElement).queryByText('URL をコピーしました。'),
     ).toBeNull()
-  },
-}
-
-export const Mac_では_Infuse_で開く: Story = {
-  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
-  beforeEach: browsingAs(A_MAC),
-  play: async ({ canvasElement }) => {
-    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
-    await expect(waysToHandOver()).toEqual(['Infuse で再生', 'URL をコピー'])
-
-    const left = await whereItLeftFor(async (sent) => {
-      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
-      await waitFor(() => expect(sent).toHaveLength(1))
-    })
-
-    await expect(
-      handedTo('infuse://x-callback-url/play?url=', left[0]),
-    ).toMatch(THE_ARTEFACT_NAMED_BY_ITS_TITLE)
-  },
-}
-
-export const URL_をコピーできなかったらその場で言う: Story = {
-  args: { detail: detail('1274'), playback: ENCODED_AND_RECORDED },
-  play: async ({ canvasElement }) => {
-    const copied = await whatWasCopied(async () => {
-      await pressInTheHandoverMenu(canvasElement, 'URL をコピー')
-      await expect(
-        await within(canvasElement).findByText(
-          'URL をコピーできませんでした。',
-        ),
-      ).toBeVisible()
-    }, false)
-
-    await expect(copied).toEqual([])
   },
 }
 

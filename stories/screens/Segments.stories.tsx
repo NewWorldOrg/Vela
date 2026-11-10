@@ -816,23 +816,6 @@ export const サインインが切れている: Story = {
   },
 }
 
-export const 狭い幅: Story = {
-  args: { status: DETECTION_BY_HAND },
-  parameters: { screen: { width: 390, height: 844 } },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
-    const page = canvasElement.ownerDocument.documentElement
-
-    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
-    await expect(
-      within(versions(canvasElement)).getByRole('button', {
-        name: BACK_TO_AUTOMATIC,
-      }),
-    ).toBeVisible()
-  },
-}
-
 async function theNavNameFits(canvasElement: HTMLElement): Promise<void> {
   await afterTheArrival(canvasElement)
   await canvasElement.ownerDocument.fonts.ready
@@ -863,6 +846,23 @@ export const ナビの名前が収まる: Story = {
   parameters: { screen: { width: 1440, height: 900 } },
   play: async ({ canvasElement }) => {
     await theNavNameFits(canvasElement)
+  },
+}
+
+export const 狭い幅: Story = {
+  args: { status: DETECTION_BY_HAND },
+  parameters: { screen: { width: 390, height: 844 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const page = canvasElement.ownerDocument.documentElement
+
+    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
+    await expect(
+      within(versions(canvasElement)).getByRole('button', {
+        name: BACK_TO_AUTOMATIC,
+      }),
+    ).toBeVisible()
   },
 }
 
