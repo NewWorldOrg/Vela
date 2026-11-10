@@ -35,7 +35,7 @@ import { MarkPill, MarkRuler, MarkSplit } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'
 
 const meta = {
-  title: 'Components/Form',
+  title: 'Components/ボタンとフォーム/フォームの部品',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

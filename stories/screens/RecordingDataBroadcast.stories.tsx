@@ -94,7 +94,7 @@ async function done(): Promise<EncodeWrite> {
 }
 
 const meta = {
-  title: 'Screens/録画詳細/データ放送',
+  title: 'Screens/ライブラリ/録画詳細/データ放送',
   component: RecordingDetailView,
   parameters: {
     nextjs: {

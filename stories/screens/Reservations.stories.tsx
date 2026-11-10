@@ -173,7 +173,7 @@ function whatIsMarkedRequired(dialog: HTMLElement): string[] {
 }
 
 const meta = {
-  title: 'Screens/予約',
+  title: 'Screens/予約/予約',
   component: ReservationsView,
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/reservations' } },

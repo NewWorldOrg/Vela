@@ -59,7 +59,7 @@ const retyped = async (input: HTMLElement, text: string) => {
 }
 
 const meta = {
-  title: 'Screens/設定・品質',
+  title: 'Screens/設定/録る/品質',
   component: QualityView,
   parameters: {
     nextjs: {

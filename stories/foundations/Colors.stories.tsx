@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge'
 import { GenrePill } from '@/components/vela/genre-pill'
 
 const meta = {
-  title: 'Foundations/Colors',
+  title: 'Foundations/色',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

@@ -18,7 +18,7 @@ import {
 } from '@/stories/rows-as-cards'
 
 const meta = {
-  title: 'Screens/設定・移行記録',
+  title: 'Screens/設定/管理/移行記録',
   component: MigrationView,
   parameters: {
     nextjs: {

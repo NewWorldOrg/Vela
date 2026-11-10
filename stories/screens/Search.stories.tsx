@@ -232,7 +232,7 @@ const reservedHere: string[] = []
 const takenBackHere: string[] = []
 
 const meta = {
-  title: 'Screens/番組検索',
+  title: 'Screens/番組表/番組検索',
   component: SearchView,
   parameters: {
     layout: 'fullscreen',

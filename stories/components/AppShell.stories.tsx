@@ -28,7 +28,7 @@ import {
 } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/AppShell',
+  title: 'Components/枠組み/アプリの枠',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

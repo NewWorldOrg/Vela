@@ -202,7 +202,7 @@ function picked(canvasElement: HTMLElement, kind: string): string[] {
 }
 
 const meta = {
-  title: 'Screens/ルール',
+  title: 'Screens/予約/ルール',
   component: RulesView,
   parameters: {
     nextjs: {

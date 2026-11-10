@@ -20,7 +20,7 @@ import { MarkDots, MarkPill, SignalIcon } from '@/components/vela/icons'
 import { TermTip } from '@/components/vela/term-tip'
 
 const meta = {
-  title: 'Components/Status',
+  title: 'Components/状態と知らせ/状態の表示',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

@@ -97,7 +97,7 @@ async function remakingAllButTheSecond(
 }
 
 const meta = {
-  title: 'Screens/ライブラリ',
+  title: 'Screens/ライブラリ/ライブラリ',
   component: LibraryView,
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/library' } },

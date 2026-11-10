@@ -43,7 +43,7 @@ const refuse = answering({
 })
 
 const meta = {
-  title: 'Screens/設定・チャンネル',
+  title: 'Screens/設定/機器/チャンネル',
   component: ChannelsView,
   parameters: {
     nextjs: {

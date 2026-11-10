@@ -48,7 +48,7 @@ function applying(refusal: string) {
 }
 
 const meta = {
-  title: 'Screens/設定・スキャン結果',
+  title: 'Screens/設定/機器/スキャン結果',
   component: ScanProposalView,
   parameters: {
     nextjs: {

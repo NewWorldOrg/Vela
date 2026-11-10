@@ -33,7 +33,7 @@ function answering(result: DriverRestartResult) {
 }
 
 const meta = {
-  title: 'Components/driver 再起動の帯',
+  title: 'Components/状態と知らせ/driver 再起動の帯',
   component: DriverRestartBanner,
   parameters: { layout: 'padded' },
   args: {

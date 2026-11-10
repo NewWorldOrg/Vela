@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { MarkCup, MarkPanel, MarkStar } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Surface',
+  title: 'Components/枠組み/面と空状態',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

@@ -552,7 +552,7 @@ function Choosing({
 }
 
 const meta = {
-  title: 'Screens/ライブ',
+  title: 'Screens/ライブ/ライブ',
   component: LiveView,
   parameters: {
     layout: 'fullscreen',

@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch'
 import { ChevronRightIcon, MarkStar, ListIcon } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/DataList',
+  title: 'Components/一覧と表/データの一覧',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

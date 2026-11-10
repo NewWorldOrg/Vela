@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/vela/surface'
 
 const meta = {
-  title: 'Foundations/Elevation',
+  title: 'Foundations/面と影',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

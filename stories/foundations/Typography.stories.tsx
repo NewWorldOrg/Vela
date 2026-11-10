@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 const meta = {
-  title: 'Foundations/Typography',
+  title: 'Foundations/文字',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

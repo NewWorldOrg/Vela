@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { ListIcon, MarkStar } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Table',
+  title: 'Components/一覧と表/表',
   component: Table,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof Table>

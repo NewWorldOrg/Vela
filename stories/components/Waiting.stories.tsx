@@ -5,7 +5,7 @@ import { MarkDots } from '@/components/vela/icons'
 import { WaitingRows } from '@/components/vela/waiting'
 
 const meta = {
-  title: 'Components/読み込み中',
+  title: 'Components/状態と知らせ/読み込み中',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

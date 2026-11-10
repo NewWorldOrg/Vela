@@ -12,7 +12,7 @@ import {
 } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/SectionHeading',
+  title: 'Components/見出しと文字/節の見出し',
   component: SectionHeading,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof SectionHeading>

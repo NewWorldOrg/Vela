@@ -78,7 +78,7 @@ import {
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
 const meta = {
-  title: 'Components/DataBroadcast',
+  title: 'Components/データ放送/BML',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

@@ -60,7 +60,7 @@ const ACTIONS = {
 }
 
 const meta = {
-  title: 'Screens/設定・CM・OP・ED の検出',
+  title: 'Screens/設定/録る/CM・OP・ED の検出',
   component: SegmentsView,
   parameters: {
     nextjs: {

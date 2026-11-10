@@ -140,7 +140,7 @@ const JOB_STATE_COLUMN = 1
 const STARTED_COLUMN = 4
 
 const meta = {
-  title: 'Screens/設定・エンコード',
+  title: 'Screens/設定/録る/エンコード',
   component: EncodeView,
   parameters: {
     nextjs: {

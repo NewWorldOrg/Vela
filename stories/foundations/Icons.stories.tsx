@@ -7,7 +7,7 @@ import * as Icons from '@/components/vela/icons'
 import type { IconProps } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Foundations/Icons',
+  title: 'Foundations/アイコン',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

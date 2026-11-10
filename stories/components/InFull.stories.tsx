@@ -5,7 +5,7 @@ import { Tile } from '@/components/vela/surface'
 import { InFull } from '@/components/vela/in-full'
 
 const meta = {
-  title: 'Components/InFull',
+  title: 'Components/重なり/見切れた文字の全文',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

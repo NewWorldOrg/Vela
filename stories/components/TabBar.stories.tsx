@@ -13,7 +13,7 @@ const PHONE = { width: 390, height: 844 }
 const HOME_BAR = 34
 
 const meta = {
-  title: 'Components/TabBar',
+  title: 'Components/ナビゲーション/タブバー',
   parameters: {
     layout: 'fullscreen',
     nextjs: {

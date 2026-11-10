@@ -24,7 +24,7 @@ import {
 } from '@/components/recordings/player-palette'
 
 const meta = {
-  title: 'Components/Hybridcast',
+  title: 'Components/データ放送/Hybridcast',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

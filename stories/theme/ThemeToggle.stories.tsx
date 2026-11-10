@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 
 const meta = {
-  title: 'Theme/ThemeToggle',
+  title: 'Theme/テーマの切り替え',
   component: ThemeToggle,
   parameters: { layout: 'centered' },
 } satisfies Meta<typeof ThemeToggle>

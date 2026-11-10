@@ -53,7 +53,7 @@ import {
 } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Overlay',
+  title: 'Components/重なり/ダイアログとメニュー',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

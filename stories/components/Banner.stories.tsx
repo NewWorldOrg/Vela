@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label'
 import { MarkPanel, MarkSlashes } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Banner',
+  title: 'Components/状態と知らせ/バナー',
   component: Banner,
   parameters: { layout: 'fullscreen' },
   argTypes: {

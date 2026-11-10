@@ -471,7 +471,7 @@ async function keepingThePosition(id: string, positionSec: number) {
 }
 
 const meta = {
-  title: 'Components/録画プレイヤー',
+  title: 'Components/プレイヤー/録画プレイヤー',
   component: Player,
   parameters: { layout: 'fullscreen' },
   args: {

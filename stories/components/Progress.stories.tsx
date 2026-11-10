@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { EncodeIcon, SearchIcon, TunerIcon } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Progress',
+  title: 'Components/状態と知らせ/進み具合',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

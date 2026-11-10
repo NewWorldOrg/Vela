@@ -199,7 +199,7 @@ async function keepingThePosition() {
 }
 
 const meta = {
-  title: 'Screens/録画詳細',
+  title: 'Screens/ライブラリ/録画詳細/録画詳細',
   component: RecordingDetailView,
   parameters: {
     nextjs: {

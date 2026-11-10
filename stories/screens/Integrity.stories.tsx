@@ -53,7 +53,7 @@ const tooSoon = async (): Promise<SweepWrite> => ({
 })
 
 const meta = {
-  title: 'Screens/整合性チェック',
+  title: 'Screens/設定/管理/整合性チェック',
   component: IntegrityView,
   parameters: {
     nextjs: {

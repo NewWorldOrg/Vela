@@ -65,7 +65,7 @@ const base = {
 }
 
 const meta = {
-  title: 'Screens/番組表',
+  title: 'Screens/番組表/番組表',
   component: GuideView,
   parameters: {
     layout: 'fullscreen',

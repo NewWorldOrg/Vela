@@ -11,7 +11,7 @@ import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
 
 const meta = {
-  title: 'Screens/設定・システム',
+  title: 'Screens/設定/システム',
   component: SystemView,
   parameters: {
     nextjs: {

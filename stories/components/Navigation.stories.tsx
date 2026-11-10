@@ -19,7 +19,7 @@ import {
 } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Navigation',
+  title: 'Components/ナビゲーション/タブと日付送り',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

@@ -16,7 +16,7 @@ import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
 
 const meta = {
-  title: 'Screens/番組詳細',
+  title: 'Screens/番組表/番組詳細',
   component: ProgramDetailView,
   parameters: {
     nextjs: {

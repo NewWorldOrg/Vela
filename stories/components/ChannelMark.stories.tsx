@@ -17,7 +17,7 @@ import { MarkPill } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
 
 const meta = {
-  title: 'Components/ChannelMark',
+  title: 'Components/番組と局/局のロゴ',
   component: ChannelMark,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof ChannelMark>

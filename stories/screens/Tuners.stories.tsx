@@ -32,7 +32,7 @@ function lineOf(canvasElement: HTMLElement, id: string): HTMLElement {
 }
 
 const meta = {
-  title: 'Screens/設定・チューナー',
+  title: 'Screens/設定/機器/チューナー',
   component: TunersView,
   parameters: {
     nextjs: {

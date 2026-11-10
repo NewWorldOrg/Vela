@@ -44,7 +44,7 @@ const FAILURES: [string, string][] = [
 const KIND_COLUMN = 5
 
 const meta = {
-  title: 'Screens/失敗台帳',
+  title: 'Screens/予約/失敗台帳',
   component: OutcomeLedgerView,
   parameters: {
     nextjs: {

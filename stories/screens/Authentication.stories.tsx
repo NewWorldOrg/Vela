@@ -28,7 +28,7 @@ import {
 import { formatMoment } from '@/lib/format'
 
 const meta = {
-  title: 'Screens/設定・認証',
+  title: 'Screens/設定/管理/認証',
   component: AuthenticationView,
   parameters: {
     nextjs: {

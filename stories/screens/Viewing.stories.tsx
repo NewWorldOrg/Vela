@@ -37,7 +37,7 @@ import { inTheSettings } from '@/stories/frames'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 
 const meta = {
-  title: 'Screens/設定・視聴',
+  title: 'Screens/設定/観る/視聴',
   component: ViewingView,
   parameters: {
     nextjs: {

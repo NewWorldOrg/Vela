@@ -19,7 +19,7 @@ function hold(event: React.MouseEvent) {
 }
 
 const meta = {
-  title: 'Components/Button',
+  title: 'Components/ボタンとフォーム/ボタン',
   component: Button,
   parameters: { layout: 'centered' },
   args: { children: '変更' },

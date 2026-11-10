@@ -10,7 +10,7 @@ const PHONE = { width: 390, height: 844 }
 const NARROW_PHONE = { width: 360, height: 800 }
 
 const meta = {
-  title: 'Screens/設定・入口',
+  title: 'Screens/設定/入口',
   component: SettingsEntranceView,
   parameters: {
     nextjs: {
