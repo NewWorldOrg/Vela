@@ -8,6 +8,15 @@ import { formatClock } from '@/lib/format'
 import { calendarDayOf, dayHeadingOf } from '@/lib/library-days'
 import type { Span } from '@/lib/conflict-line'
 import type { Reservation, ReservationWrite } from '@/repository/reservations'
+import {
+  amongWatches,
+  watchLine,
+  type AmongWatches,
+  type NotificationWrite,
+  type WaitingNotices,
+  type WatchedProgramme,
+} from '@/lib/notifications'
+import { Badge } from '@/components/ui/badge'
 import { CloseIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
@@ -16,6 +25,11 @@ import { EditReservationDialog } from '@/components/reservations/edit-reservatio
 import { GenreDot } from '@/components/reservations/genre-dot'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { whereFrom } from '@/components/reservations/reservation-row'
+import {
+  NOTIFY_ONLY,
+  takenBackWords,
+} from '@/components/notifications/notify-only-row'
+import { NotifyBell } from '@/components/notifications/programme-notice'
 
 function clockOf(at: string): string {
   return formatClock(new Date(at).getTime())
@@ -35,9 +49,70 @@ function spanOf(reservation: Reservation): Span | undefined {
   return reservation.span
 }
 
+const ROW_LINE =
+  "relative before:absolute before:top-0 before:right-3 before:left-[calc(78rem/16)] before:h-px before:bg-hair before:content-[''] first:before:hidden"
+
+const TAKE_BACK =
+  'flex size-11 shrink-0 items-center justify-center self-center rounded-full text-ink-2 outline-none hover:bg-surface-2 focus-visible:shadow-ring [&_svg]:size-[calc(17rem/16)]'
+
+/** A notice that a programme starts, among the reservations of a phone: a bell for the genre's dot, `通知` at its end, and the × that takes it back. */
+function WatchRow({
+  watch,
+  onCancel,
+}: {
+  watch: WatchedProgramme
+  onCancel: (id: string) => Promise<NotificationWrite>
+}) {
+  const say = useToast()
+  const [pending, start] = useTransition()
+
+  return (
+    <li data-watch={watch.id} className={ROW_LINE}>
+      <div className="flex items-stretch pr-1.5">
+        <div className="flex min-h-[calc(62rem/16)] min-w-0 flex-1 items-center gap-2.5 py-2.5 pr-1 pl-[calc(18rem/16)]">
+          <span className="flex w-[calc(50rem/16)] shrink-0 flex-col font-code leading-[calc(19rem/16)] tabular-nums">
+            <span className="text-title font-semibold text-ink">
+              {clockOf(watch.startAt)}
+            </span>
+            <span className="text-sub text-ink-2">{clockOf(watch.endAt)}</span>
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="flex min-w-0 items-center gap-[calc(7rem/16)] text-title leading-[calc(19rem/16)] font-semibold text-ink">
+              <NotifyBell />
+              <span className="min-w-0 truncate">{watch.title}</span>
+            </span>
+            <span className="mt-0.5 block truncate text-sub text-ink-2">
+              {watchLine(watch)}
+            </span>
+          </span>
+          <Badge variant="info" className="mr-1 shrink-0">
+            {NOTIFY_ONLY}
+          </Badge>
+        </div>
+        <button
+          type="button"
+          aria-label={`${watch.title} の通知を取り消す`}
+          disabled={pending}
+          onClick={() =>
+            start(async () => {
+              say({
+                text: takenBackWords(await onCancel(watch.id), watch.title),
+              })
+            })
+          }
+          className={cn(TAKE_BACK, pressable)}
+        >
+          <CloseIcon />
+        </button>
+      </div>
+    </li>
+  )
+}
+
 /** The reservations on a phone held upright: under the day each starts on, a row each of its start and end, its title, channel and where it came from, a chip only for what needs attention, and the × that takes it back. Pressing the row opens its change under it. */
 export function PhoneReservationRows({
   reservations,
+  notices,
   now,
   actions,
   chosenId,
@@ -45,6 +120,8 @@ export function PhoneReservationRows({
   className,
 }: {
   reservations: Reservation[]
+  /** The notices waiting for a programme to start, shown among the reservations by their start. */
+  notices?: WaitingNotices
   now: Date
   actions: ReservationActions
   /** The reservation whose detail stands beside the list, on a phone held on its side: ringed. */
@@ -56,17 +133,21 @@ export function PhoneReservationRows({
   const [open, setOpen] = useState<string>()
   const say = useToast()
   const [, start] = useTransition()
-  const days: { day: string; items: Reservation[] }[] = []
+  const days: { day: string; items: AmongWatches<Reservation>[] }[] = []
 
-  for (const reservation of reservations) {
-    const span = spanOf(reservation)
-    const day = span ? calendarDayOf(span.startAt) : ''
+  for (const row of amongWatches(
+    reservations,
+    (one) => spanOf(one)?.startAt,
+    notices?.watches ?? [],
+  )) {
+    const startAt = row.watch ? row.watch.startAt : spanOf(row.own)?.startAt
+    const day = startAt ? calendarDayOf(startAt) : ''
     const last = days.find((one) => one.day === day)
 
     if (last) {
-      last.items.push(reservation)
+      last.items.push(row)
     } else {
-      days.push({ day, items: [reservation] })
+      days.push({ day, items: [row] })
     }
   }
 
@@ -112,7 +193,20 @@ export function PhoneReservationRows({
               </h2>
             )}
             <ul>
-              {items.map((reservation) => {
+              {items.map((row) => {
+                if (row.watch) {
+                  return (
+                    notices && (
+                      <WatchRow
+                        key={row.watch.id}
+                        watch={row.watch}
+                        onCancel={notices.onCancel}
+                      />
+                    )
+                  )
+                }
+
+                const reservation = row.own
                 const span = spanOf(reservation)
                 const opened = open === reservation.id
                 const recording = reservation.standing === 'recording'
@@ -127,7 +221,7 @@ export function PhoneReservationRows({
                     data-keep={reservation.id}
                     data-chosen={reservation.id === chosenId ? '' : undefined}
                     className={cn(
-                      "relative before:absolute before:top-0 before:right-3 before:left-[calc(78rem/16)] before:h-px before:bg-hair before:content-[''] first:before:hidden",
+                      ROW_LINE,
                       reservation.id === chosenId &&
                         'z-[1] rounded-md bg-surface before:hidden [&+li]:before:hidden',
                       opened &&
@@ -189,10 +283,7 @@ export function PhoneReservationRows({
                           type="button"
                           aria-label="取り消す"
                           onClick={() => takeBack(reservation)}
-                          className={cn(
-                            'flex size-11 shrink-0 items-center justify-center self-center rounded-full text-ink-2 outline-none hover:bg-surface-2 focus-visible:shadow-ring [&_svg]:size-[calc(17rem/16)]',
-                            pressable,
-                          )}
+                          className={cn(TAKE_BACK, pressable)}
                         >
                           <CloseIcon />
                         </button>

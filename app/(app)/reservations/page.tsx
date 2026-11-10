@@ -4,6 +4,7 @@ import { RESERVATIONS_EVENT } from '@/repository/events'
 import type { EpgDriftKind } from '@/repository/reservations'
 import { listReservations } from '@/repository/reservations'
 import { getTuners } from '@/repository/tuners'
+import { listWatchedProgrammes } from '@/repository/notifications'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { ReservationsView } from '@/components/reservations/reservations-page'
 import {
@@ -15,6 +16,7 @@ import {
   throwReservationAway,
   throwReservationsAway,
 } from '@/app/(app)/reservations/actions'
+import { unwatchProgramme } from '@/app/(app)/guide/actions'
 
 export const metadata: Metadata = { title: '予約' }
 
@@ -24,12 +26,13 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const params = await searchParams
-  const [result, tuners] = await Promise.all([
+  const [result, tuners, watches] = await Promise.all([
     listReservations({
       show: params.show === 'all' ? 'all' : undefined,
       epg: driftAsked(params.epg),
     }),
     getTuners().catch(() => undefined),
+    listWatchedProgrammes().catch(() => []),
   ])
 
   return (
@@ -49,6 +52,7 @@ export default async function Page({
           onCancelAll: dropReservations,
           onDiscardAll: throwReservationsAway,
         }}
+        notices={{ watches, onCancel: unwatchProgramme }}
       />
     </>
   )

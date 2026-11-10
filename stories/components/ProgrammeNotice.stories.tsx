@@ -3,9 +3,12 @@ import { useState } from 'react'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import type {
-  LeadMinutes,
   NotificationWrite,
+  Noticing,
   ProgrammeWatch,
+  WatchDraft,
+  WatchOffer,
+  WatchWrite,
 } from '@/lib/notifications'
 import {
   NOTIFY_START,
@@ -13,65 +16,78 @@ import {
   NotifyLeadChip,
   NotifyStartButton,
   STOP_NOTIFYING,
-  type WatchWrite,
 } from '@/components/notifications/programme-notice'
 import {
   NOTIFY_ONLY,
   NotifyOnlyRow,
-  type WatchActions,
 } from '@/components/notifications/notify-only-row'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListIcon, RecordIcon } from '@/components/vela/icons'
 import { Toasts } from '@/components/vela/toast'
+import { afterTheArrival } from '@/stories/after-the-arrival'
 import { PHONE } from '@/stories/rows-as-cards'
 import {
   DESTINATIONS,
-  HOME_SLACK,
   WATCHED_DOCUMENTARY,
   WATCHED_FOOTBALL,
 } from '@/stories/fixtures/notifications'
 
 const OK: NotificationWrite = { state: 'ok' }
 
-const changeLead = fn<WatchActions['onChangeLead']>(async () => OK)
+const PROGRAMME = '40001-4001-52001'
 
-const changeDestinations = fn<WatchActions['onChangeDestinations']>(
-  async () => OK,
-)
-
-const cancel = fn<WatchActions['onCancel']>(async () => OK)
-
-const WATCH_ACTIONS: WatchActions = {
-  onChangeLead: changeLead,
-  onChangeDestinations: changeDestinations,
-  onCancel: cancel,
+const OFFER: WatchOffer = {
+  leadMinutes: 3,
+  destinations: DESTINATIONS.map(({ id, name }) => ({ id, name })),
 }
 
+const ALREADY_SET =
+  'この番組の通知はすでに設定してあるか、もう送ったため、設定できませんでした。'
+
+const asked = fn<(programmeId: string, draft: WatchDraft) => void>()
+
+const cancel = fn<(id: string) => Promise<NotificationWrite>>(async () => OK)
+
 /** A programme's detail as far as the single notice reaches into it: the time with the chip beside it once set, and the row of actions with the button. */
-function DetailWithTheNotice({ watching }: { watching: boolean }) {
+function DetailWithTheNotice({
+  watching,
+  nowhere = false,
+  refused = false,
+}: {
+  watching: boolean
+  /** No destination is on, so there is nowhere to send a notice. */
+  nowhere?: boolean
+  /** The notice is turned away when asked. */
+  refused?: boolean
+}) {
   const [watch, setWatch] = useState<ProgrammeWatch | undefined>(
-    watching
-      ? { id: 'watch-doc', leadMinutes: 3, destinationIds: [HOME_SLACK.id] }
-      : undefined,
+    watching ? { id: 'watch-doc', leadMinutes: 3 } : undefined,
   )
 
-  const onWatch = async (): Promise<WatchWrite> => {
-    const made: ProgrammeWatch = {
-      id: 'watch-doc',
-      leadMinutes: 3,
-      destinationIds: [HOME_SLACK.id],
-    }
+  const noticing: Noticing = {
+    offer: nowhere ? undefined : OFFER,
+    onWatch: async (programmeId, draft): Promise<WatchWrite> => {
+      asked(programmeId, draft)
 
-    setWatch(made)
+      if (refused) {
+        return { state: 'rejected', message: ALREADY_SET }
+      }
 
-    return { state: 'ok', watch: made }
-  }
+      const made: ProgrammeWatch = {
+        id: 'watch-doc',
+        leadMinutes: draft.leadMinutes,
+      }
 
-  const onUnwatch = async (): Promise<NotificationWrite> => {
-    setWatch(undefined)
+      setWatch(made)
 
-    return OK
+      return { state: 'ok', watch: made }
+    },
+    onUnwatch: async () => {
+      setWatch(undefined)
+
+      return OK
+    },
   }
 
   return (
@@ -85,14 +101,7 @@ function DetailWithTheNotice({ watching }: { watching: boolean }) {
       <p className="mt-2 flex flex-wrap items-center gap-2.5 text-body tabular-nums">
         <span>11/09(月) 19:30 – 20:15</span>
         <span className="text-ink-2">45 分</span>
-        {watch && (
-          <NotifyLeadChip
-            leadMinutes={watch.leadMinutes}
-            onChangeLead={(lead: LeadMinutes) =>
-              setWatch({ ...watch, leadMinutes: lead })
-            }
-          />
-        )}
+        {watch && <NotifyLeadChip leadMinutes={watch.leadMinutes} />}
       </p>
       <p className="mt-3 flex gap-1.5">
         <Badge className="bg-g-doc-light text-g-doc-text">
@@ -109,9 +118,9 @@ function DetailWithTheNotice({ watching }: { watching: boolean }) {
           録画予約
         </Button>
         <NotifyStartButton
+          programmeId={PROGRAMME}
           watch={watch}
-          onWatch={onWatch}
-          onUnwatch={onUnwatch}
+          noticing={noticing}
         />
         <Button variant="tone">
           <ListIcon />
@@ -187,26 +196,24 @@ function GuideCells() {
   )
 }
 
-/** Two single notices among the reservation list's rows, one of them open. */
-function ReservationRows({ firstOpen }: { firstOpen: boolean }) {
-  const [open, setOpen] = useState<string | undefined>(
-    firstOpen ? WATCHED_DOCUMENTARY.id : undefined,
-  )
-
+/** Two single notices the way the list of reservations shows them among its rows. */
+function ReservationRows() {
   return (
     <ul className="w-[min(calc(900rem/16),100vw)] px-4 upright:px-0">
-      {[WATCHED_DOCUMENTARY, WATCHED_FOOTBALL].map((watch) => (
+      {[WATCHED_DOCUMENTARY, WATCHED_FOOTBALL].map((watch, nth) => (
         <NotifyOnlyRow
           key={watch.id}
           watch={watch}
-          destinations={DESTINATIONS}
-          open={open === watch.id}
-          onToggle={() => setOpen(open === watch.id ? undefined : watch.id)}
-          actions={WATCH_ACTIONS}
+          nth={nth}
+          onCancel={cancel}
         />
       ))}
     </ul>
   )
+}
+
+async function theAskForm() {
+  return within(await screen.findByRole('dialog', { name: NOTIFY_START }))
 }
 
 export const 通常: Story = {
@@ -225,22 +232,151 @@ export const 押したあと: Story = {
     await expect(
       canvas.getByRole('button', { name: STOP_NOTIFYING }),
     ).toBeVisible()
-    await expect(
-      canvas.getByRole('button', { name: /開始 3 分前に通知/ }),
-    ).toHaveAttribute('aria-expanded', 'false')
+    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
   },
 }
 
-export const 札を開いたまま: Story = {
-  render: () => (
-    <div className="flex h-[calc(160rem/16)] items-start pt-2">
-      <NotifyLeadChip leadMinutes={3} onChangeLead={() => {}} defaultOpen />
-    </div>
-  ),
-  play: async () => {
+export const 送り先が無いとボタンは出ない: Story = {
+  args: { nowhere: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByRole('button', { name: '録画予約' })).toBeVisible()
     await expect(
-      await screen.findByRole('group', { name: '何分前' }),
+      canvas.queryByRole('button', { name: NOTIFY_START }),
+    ).not.toBeInTheDocument()
+  },
+}
+
+export const 押すと分と送り先を選ぶ面が開く: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: NOTIFY_START }),
+    )
+
+    const form = await theAskForm()
+    const leads = within(form.getByRole('group', { name: '何分前' }))
+
+    await expect(leads.getByRole('button', { name: '3 分前' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    const to = within(form.getByRole('group', { name: '送り先' }))
+
+    for (const destination of DESTINATIONS) {
+      await expect(
+        to.getByRole('button', { name: destination.name }),
+      ).toHaveAttribute('aria-pressed', 'true')
+    }
+  },
+}
+
+export const 送り先を全部外すと頼めない: Story = {
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: NOTIFY_START }),
+    )
+
+    const form = await theAskForm()
+    const to = within(form.getByRole('group', { name: '送り先' }))
+
+    for (const destination of DESTINATIONS) {
+      await userEvent.click(to.getByRole('button', { name: destination.name }))
+    }
+
+    await expect(form.getByRole('button', { name: '通知する' })).toBeDisabled()
+  },
+}
+
+export const 選んだ分と送り先で頼む: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    asked.mockClear()
+
+    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
+
+    const form = await theAskForm()
+
+    await userEvent.click(
+      within(form.getByRole('group', { name: '何分前' })).getByRole('button', {
+        name: '10 分前',
+      }),
+    )
+    await userEvent.click(
+      within(form.getByRole('group', { name: '送り先' })).getByRole('button', {
+        name: 'Discord の通知部屋',
+      }),
+    )
+    await userEvent.click(form.getByRole('button', { name: '通知する' }))
+
+    await waitFor(() =>
+      expect(asked).toHaveBeenCalledWith(PROGRAMME, {
+        leadMinutes: 10,
+        destinations: ['dest-slack', 'dest-ipad'],
+      }),
+    )
+    await expect(
+      await screen.findByText('開始の 10 分前に通知します'),
     ).toBeVisible()
+    await expect(canvas.getByText('開始 10 分前に通知')).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: STOP_NOTIFYING }),
+    ).toBeVisible()
+  },
+}
+
+export const 知らせから取り消す: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
+    await userEvent.click(
+      (await theAskForm()).getByRole('button', { name: '通知する' }),
+    )
+
+    await expect(
+      await screen.findByText('開始の 3 分前に通知します'),
+    ).toBeVisible()
+
+    await userEvent.click(screen.getByRole('button', { name: '取り消す' }))
+
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: NOTIFY_START })).toBeVisible(),
+    )
+    await expect(
+      canvas.queryByText('開始 3 分前に通知'),
+    ).not.toBeInTheDocument()
+  },
+}
+
+export const 断られると面の中に理由が出る: Story = {
+  args: { refused: true },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: NOTIFY_START }),
+    )
+
+    const form = await theAskForm()
+
+    await userEvent.click(form.getByRole('button', { name: '通知する' }))
+
+    await expect(await form.findByText(ALREADY_SET)).toBeVisible()
+    await expect(form.getByRole('button', { name: '通知する' })).toBeEnabled()
+  },
+}
+
+export const 取り消すボタンで取り消す: Story = {
+  args: { watching: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: STOP_NOTIFYING }))
+
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: NOTIFY_START })).toBeVisible(),
+    )
   },
 }
 
@@ -253,120 +389,24 @@ export const 番組表のベル: Story = {
   },
 }
 
-export const 押すと知らせが出る: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
-
-    await expect(
-      await screen.findByText('開始の 3 分前に通知します'),
-    ).toBeVisible()
-    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
-  },
-}
-
-export const 知らせから取り消す: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
-
-    await expect(
-      await screen.findByText('開始の 3 分前に通知します'),
-    ).toBeVisible()
-    await expect(
-      canvas.getByRole('button', { name: STOP_NOTIFYING }),
-    ).toBeVisible()
-    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
-
-    await userEvent.click(screen.getByRole('button', { name: '取り消す' }))
-
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: NOTIFY_START })).toBeVisible(),
-    )
-  },
-}
-
-export const 札を押して分を選ぶ: Story = {
-  args: { watching: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: /開始 3 分前に通知/ }),
-    )
-
-    const leads = within(await screen.findByRole('group', { name: '何分前' }))
-
-    await expect(leads.getByRole('button', { name: '3 分前' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-
-    await userEvent.click(leads.getByRole('button', { name: '開始時' }))
-
-    await expect(
-      await canvas.findByRole('button', { name: /開始時に通知/ }),
-    ).toBeVisible()
-  },
-}
-
 export const 予約一覧の行: Story = {
-  render: () => <ReservationRows firstOpen={false} />,
+  render: () => <ReservationRows />,
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
 
+    await afterTheArrival(canvasElement)
     await expect(canvas.getAllByText(NOTIFY_ONLY)).toHaveLength(2)
-
-    changeLead.mockClear()
-    changeDestinations.mockClear()
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: WATCHED_DOCUMENTARY.title }),
-    )
-
-    const leads = within(canvas.getByRole('group', { name: '何分前' }))
-
-    await userEvent.click(leads.getByRole('button', { name: '10 分前' }))
-
-    await waitFor(() =>
-      expect(changeLead).toHaveBeenCalledWith(WATCHED_DOCUMENTARY.id, 10),
-    )
-
-    const to = within(canvas.getByRole('group', { name: '送り先' }))
-
-    await userEvent.click(
-      to.getByRole('button', { name: 'Discord の通知部屋' }),
-    )
-
-    await waitFor(() =>
-      expect(changeDestinations).toHaveBeenCalledWith(WATCHED_DOCUMENTARY.id, [
-        'dest-slack',
-        'dest-ipad',
-        'dest-discord',
-      ]),
-    )
-  },
-}
-
-export const 予約一覧の行_最後の送り先は外せない: Story = {
-  render: () => <ReservationRows firstOpen={false} />,
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: WATCHED_FOOTBALL.title }),
-    )
-
-    const to = within(canvas.getByRole('group', { name: '送り先' }))
-
-    await expect(to.getByRole('button', { name: '家の Slack' })).toBeDisabled()
+    await expect(
+      canvas.getByText('みなと総合1 · 3 分前 · 家の Slack・iPad の Safari'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByText('第一テレビ · 5 分前 · 家の Slack'),
+    ).toBeVisible()
   },
 }
 
 export const 予約一覧の行_取り消す: Story = {
-  render: () => <ReservationRows firstOpen={false} />,
+  render: () => <ReservationRows />,
   play: async ({ canvasElement }) => {
     cancel.mockClear()
 
@@ -379,16 +419,21 @@ export const 予約一覧の行_取り消す: Story = {
     await waitFor(() =>
       expect(cancel).toHaveBeenCalledWith(WATCHED_FOOTBALL.id),
     )
+    await expect(
+      await screen.findByText(
+        '通知を取り消しました サッカー中継 湾岸カップ 準決勝',
+      ),
+    ).toBeVisible()
   },
 }
 
 export const 予約一覧の行_電話: Story = {
   parameters: { screen: PHONE, coarse: true, layout: 'fullscreen' },
-  render: () => <ReservationRows firstOpen />,
+  render: () => <ReservationRows />,
   play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).getByRole('group', { name: '何分前' }),
-    ).toBeVisible()
+    await expect(within(canvasElement).getAllByText(NOTIFY_ONLY)).toHaveLength(
+      2,
+    )
   },
 }
 
@@ -399,5 +444,18 @@ export const 電話の番組詳細: Story = {
     await expect(
       within(canvasElement).getByRole('button', { name: STOP_NOTIFYING }),
     ).toBeVisible()
+  },
+}
+
+export const 電話で頼む面: Story = {
+  parameters: { screen: PHONE, coarse: true, layout: 'fullscreen' },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(
+      within(canvasElement).getByRole('button', { name: NOTIFY_START }),
+    )
+
+    await expect(
+      (await theAskForm()).getByRole('button', { name: '通知する' }),
+    ).toBeEnabled()
   },
 }

@@ -19,6 +19,11 @@ import {
 import { calendarDayOf, dayHeadingOf } from '@/lib/library-days'
 import { whatIsLost } from '@/lib/conflict-line'
 import { linesOf, type ReservationLine } from '@/lib/reservations'
+import {
+  amongWatches,
+  type AmongWatches,
+  type WaitingNotices,
+} from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -29,6 +34,7 @@ import { waitsWhile } from '@/components/vela/waiting'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { ReservationRow } from '@/components/reservations/reservation-row'
 import { RelayRow } from '@/components/reservations/relay-row'
+import { NotifyOnlyRow } from '@/components/notifications/notify-only-row'
 import type { ReservationBulkActions } from '@/components/reservations/reservation-selection'
 import { ReservationSelection } from '@/components/reservations/reservation-selection'
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
@@ -104,21 +110,21 @@ function startOf(line: ReservationLine): string | undefined {
     : (line.segments[0].relay?.wholeStartAt ?? line.segments[0].span?.startAt)
 }
 
-/** The lines in the order given, gathered under the day each starts on; a day keeps the place of its first line. */
-function daysOf(
-  lines: readonly ReservationLine[],
-): { day: string; lines: ReservationLine[] }[] {
-  const days: { day: string; lines: ReservationLine[] }[] = []
+type ListRow = AmongWatches<ReservationLine>
 
-  for (const line of lines) {
-    const start = startOf(line)
+/** The rows in the order given, gathered under the day each starts on; a day keeps the place of its first row. */
+function daysOf(rows: readonly ListRow[]): { day: string; rows: ListRow[] }[] {
+  const days: { day: string; rows: ListRow[] }[] = []
+
+  for (const row of rows) {
+    const start = row.watch ? row.watch.startAt : startOf(row.own)
     const day = start ? calendarDayOf(start) : ''
     const found = days.find((one) => one.day === day)
 
     if (found) {
-      found.lines.push(line)
+      found.rows.push(row)
     } else {
-      days.push({ day, lines: [line] })
+      days.push({ day, rows: [row] })
     }
   }
 
@@ -130,15 +136,20 @@ export function ReservationsView({
   actions,
   bulk,
   tuners,
+  notices,
 }: {
   result: ReservationsResult
   actions: ReservationActions
   bulk: ReservationBulkActions
   /** The tuners as they stand, for the chips under the next recording; left out when they cannot be read. */
   tuners?: TunerRow[]
+  /** The notices waiting for a programme to start; a list narrowed to what drifted from the guide shows none. */
+  notices?: WaitingNotices
 }) {
   const { items, total, drift, filter } = result
   const lines = linesOf(items)
+  const told = filter.epg ? undefined : notices
+  const anything = items.length > 0 || (told?.watches.length ?? 0) > 0
   const [open, setOpen] = useState<string>()
   const firstConflict = items.find((one) => one.standing === 'conflict')?.id
   const [relaysOpen, setRelaysOpen] = useState<ReadonlySet<string>>(
@@ -381,12 +392,13 @@ export function ReservationsView({
 
       <div className="hidden phone:block">{filters}</div>
 
-      {items.length > 0 && sideways && (
+      {anything && sideways && (
         <SidewaysPanes
           detailLabel="予約の詳細"
           list={
             <PhoneReservationRows
               reservations={items}
+              notices={told}
               now={now}
               actions={actions}
               chosenId={besideId}
@@ -424,7 +436,7 @@ export function ReservationsView({
           }
         />
       )}
-      {items.length > 0 && (
+      {anything && (
         <OnAnUprightPhone>
           <div
             data-slot="phone-reservations"
@@ -440,13 +452,14 @@ export function ReservationsView({
             ))}
             <PhoneReservationRows
               reservations={items}
+              notices={told}
               now={now}
               actions={actions}
             />
           </div>
         </OnAnUprightPhone>
       )}
-      {items.length === 0 && <div className="hidden phone:block">{empty}</div>}
+      {!anything && <div className="hidden phone:block">{empty}</div>}
 
       <div
         data-slot="reservations-columns"
@@ -490,7 +503,7 @@ export function ReservationsView({
               className="mt-3 mb-0"
             />
           )}
-          {items.length === 0 ? (
+          {!anything ? (
             empty
           ) : (
             <div
@@ -502,69 +515,88 @@ export function ReservationsView({
                 wait.className,
               )}
             >
-              {daysOf(lines).map(({ day, lines: theirs }) => {
-                const heading = day ? dayHeadingOf(day, now) : undefined
+              {daysOf(amongWatches(lines, startOf, told?.watches ?? [])).map(
+                ({ day, rows: theirs }) => {
+                  const heading = day ? dayHeadingOf(day, now) : undefined
 
-                return (
-                  <section
-                    key={day}
-                    aria-label={
-                      heading ? (heading.near ?? heading.date) : '予約'
-                    }
-                  >
-                    {heading && (
-                      <h2 className="mt-5 mb-1.5 ml-2.5 flex items-baseline gap-1.5 text-ui font-semibold text-ink">
-                        {heading.near ?? (
-                          <span className="font-code">{heading.date}</span>
-                        )}
-                        {heading.near && (
-                          <span className="font-code font-medium text-ink-2">
-                            {heading.date}
-                          </span>
-                        )}
-                      </h2>
-                    )}
-                    <ul>
-                      {theirs.map((line, nth) => {
-                        if (line.kind === 'one') {
-                          return rowOf(line.reservation, nth)
-                        }
-
-                        const relayOpen = relaysOpen.has(line.key)
-
-                        return [
-                          <RelayRow
-                            key={line.key}
-                            segments={line.segments}
-                            nth={nth}
-                            open={relayOpen}
-                            onToggle={() => toggleRelay(line.key)}
-                            picking={picking}
-                            chosen={
-                              line.segments.filter((one) => picked.has(one.id))
-                                .length
-                            }
-                            onSelect={(taken) =>
-                              pick(
-                                line.segments.map((one) => one.id),
-                                taken,
+                  return (
+                    <section
+                      key={day}
+                      aria-label={
+                        heading ? (heading.near ?? heading.date) : '予約'
+                      }
+                    >
+                      {heading && (
+                        <h2 className="mt-5 mb-1.5 ml-2.5 flex items-baseline gap-1.5 text-ui font-semibold text-ink">
+                          {heading.near ?? (
+                            <span className="font-code">{heading.date}</span>
+                          )}
+                          {heading.near && (
+                            <span className="font-code font-medium text-ink-2">
+                              {heading.date}
+                            </span>
+                          )}
+                        </h2>
+                      )}
+                      <ul>
+                        {theirs.map((row, nth) => {
+                          if (row.watch) {
+                            return (
+                              told && (
+                                <NotifyOnlyRow
+                                  key={row.watch.id}
+                                  watch={row.watch}
+                                  nth={nth}
+                                  picking={picking}
+                                  onCancel={told.onCancel}
+                                />
                               )
-                            }
-                          />,
-                          ...(relayOpen
-                            ? line.segments.map((one, at) =>
-                                rowOf(one, at, {
-                                  nth: one.relay?.nth ?? at + 1,
-                                  of: one.relay?.of ?? line.segments.length,
-                                }),
-                              )
-                            : []),
-                        ]
-                      })}
-                    </ul>
-                  </section>
-                )
-              })}
+                            )
+                          }
+
+                          const line = row.own
+
+                          if (line.kind === 'one') {
+                            return rowOf(line.reservation, nth)
+                          }
+
+                          const relayOpen = relaysOpen.has(line.key)
+
+                          return [
+                            <RelayRow
+                              key={line.key}
+                              segments={line.segments}
+                              nth={nth}
+                              open={relayOpen}
+                              onToggle={() => toggleRelay(line.key)}
+                              picking={picking}
+                              chosen={
+                                line.segments.filter((one) =>
+                                  picked.has(one.id),
+                                ).length
+                              }
+                              onSelect={(taken) =>
+                                pick(
+                                  line.segments.map((one) => one.id),
+                                  taken,
+                                )
+                              }
+                            />,
+                            ...(relayOpen
+                              ? line.segments.map((one, at) =>
+                                  rowOf(one, at, {
+                                    nth: one.relay?.nth ?? at + 1,
+                                    of: one.relay?.of ?? line.segments.length,
+                                  }),
+                                )
+                              : []),
+                          ]
+                        })}
+                      </ul>
+                    </section>
+                  )
+                },
+              )}
             </div>
           )}
         </div>
