@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 
 import { forTheGrid, getGuideInTwo } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
+import { getWatchOffer, listWatches } from '@/repository/notifications'
 import {
   coverageDaysOf,
   epgHealthOf,
@@ -29,6 +30,8 @@ import {
   reserveProgramme,
   readProgramExtras,
   reviseProgrammeReservation,
+  unwatchProgramme,
+  watchProgramme,
 } from './actions'
 
 export const metadata: Metadata = { title: '番組表' }
@@ -40,13 +43,15 @@ export default async function Page({
 }) {
   const params = await searchParams
   const jar = await cookies()
-  const [{ guide, rest }, collection] = await Promise.all([
+  const [{ guide, rest }, collection, offer] = await Promise.all([
     getGuideInTwo(
       typeof params.kind === 'string' ? params.kind : undefined,
       typeof params.date === 'string' ? params.date : undefined,
       listBookings(),
+      listWatches().catch(() => new Map()),
     ),
     getCollectionStatus(),
+    getWatchOffer().catch(() => undefined),
   ])
   const opening = guide.programs.length > 0 ? guide.programs : await rest
   const later =
@@ -75,6 +80,11 @@ export default async function Page({
         onRestore={restoreProgrammeReservation}
         onRevise={reviseProgrammeReservation}
         onReadExtras={readProgramExtras}
+        noticing={{
+          offer,
+          onWatch: watchProgramme,
+          onUnwatch: unwatchProgramme,
+        }}
         subChannelsFolded={flagOf(
           jar.get(GUIDE_SUB_CHANNELS_FOLDED)?.value,
           FOLD_SPELLING,

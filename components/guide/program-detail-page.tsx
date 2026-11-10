@@ -1,6 +1,7 @@
 import Link from 'next/link'
 
 import { isOnAir } from '@/lib/guide'
+import { yetToStart, type Noticing } from '@/lib/notifications'
 import type { ProgramDetail } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
@@ -15,9 +16,11 @@ export function ProgramDetailView({
   onReserve,
   onCancel,
   onRevise,
+  noticing,
 }: {
   detail: ProgramDetail
   onReserve: (programmeId: string) => Promise<ReservationWrite>
+  noticing?: Noticing
 } & ProgramBookingActions) {
   const { program, channel, day, nowMin } = detail
 
@@ -40,6 +43,8 @@ export function ProgramDetailView({
             channel={channel}
             dayLabel={day.label}
             onAir={isOnAir(program, nowMin)}
+            ahead={yetToStart(program, nowMin, day.date, detail.today)}
+            noticing={noticing}
             onReserve={onReserve}
             reservation={
               program.booking && (

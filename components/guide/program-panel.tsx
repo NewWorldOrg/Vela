@@ -3,6 +3,7 @@
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
+import type { Noticing } from '@/lib/notifications'
 import {
   Dialog,
   DialogContent,
@@ -18,6 +19,8 @@ export function ProgramPanel({
   channel,
   dayLabel,
   onAir,
+  ahead,
+  noticing,
   open,
   onClose,
   onReserve,
@@ -30,6 +33,8 @@ export function ProgramPanel({
   channel?: Channel
   dayLabel: string
   onAir?: boolean
+  ahead?: boolean
+  noticing?: Noticing
   open: boolean
   onClose: () => void
   onReserve: (programmeId: string) => Promise<ReservationWrite>
@@ -58,6 +63,8 @@ export function ProgramPanel({
             channel={channel}
             dayLabel={dayLabel}
             onAir={onAir}
+            ahead={ahead}
+            noticing={noticing}
             onReserve={onReserve}
             reservation={
               booking && (

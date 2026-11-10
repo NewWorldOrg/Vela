@@ -1,31 +1,34 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useId, useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
 import { signedOut } from '@/lib/signed-out'
 import {
   leadChipWords,
   leadToastWords,
+  toggled,
   type LeadMinutes,
   type NotificationWrite,
+  type Noticing,
   type ProgrammeWatch,
+  type WatchDraft,
+  type WatchOffer,
+  type WatchWrite,
 } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { BellIcon, BellOffIcon, ChevronDownIcon } from '@/components/vela/icons'
-import { pressable } from '@/components/vela/tactile'
+import { Dialog } from '@/components/ui/dialog'
+import { InlineAlert } from '@/components/vela/banner'
+import { BellIcon, BellOffIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'
 import { LeadChoice } from '@/components/notifications/lead-choice'
-
-export type WatchWrite =
-  | { state: 'ok'; watch: ProgrammeWatch }
-  | { state: 'unauthenticated' }
-  | { state: 'rejected'; message: string }
+import {
+  NoticeDialogContent,
+  NoticeDialogFooter,
+  NoticeDialogHeader,
+  NoticeGroupLabel,
+} from '@/components/notifications/notice-dialog'
+import { PickChip, PickChips } from '@/components/notifications/pick-chip'
 
 export const NOTIFY_START = '放送開始を通知'
 
@@ -39,52 +42,52 @@ function refusalOf(
   return result.state === 'unauthenticated' ? SIGNED_OUT : result.message
 }
 
-/** Beside `録画予約` in a programme's detail: asks for a notice when the programme starts, without recording it, and once asked takes it back. The toast it leaves offers to take it back too. */
+/** Beside `録画予約` in a programme's detail: opens a small dialog that asks for a notice when the programme starts, without recording it, and once asked takes it back. The toast it leaves offers to take it back too. Nothing where there is neither a notice nor anywhere to send one. */
 export function NotifyStartButton({
+  programmeId,
   watch,
-  onWatch,
-  onUnwatch,
+  noticing,
   className,
 }: {
+  programmeId: string
   watch?: ProgrammeWatch
-  onWatch: () => Promise<WatchWrite>
-  onUnwatch: () => Promise<NotificationWrite>
+  noticing: Noticing
   className?: string
 }) {
+  const [asking, setAsking] = useState(false)
   const [pending, startTransition] = useTransition()
   const say = useToast()
 
-  const unwatch = () =>
+  const unwatch = (watchId: string) =>
     startTransition(async () => {
-      const result = await onUnwatch()
+      const result = await noticing.onUnwatch(watchId)
 
       if (result.state !== 'ok') {
         say({ text: refusalOf(result) })
       }
     })
 
-  const ask = () =>
-    startTransition(async () => {
-      const result = await onWatch()
+  const ask = async (draft: WatchDraft) => {
+    const result = await noticing.onWatch(programmeId, draft)
 
-      if (result.state !== 'ok') {
-        say({ text: refusalOf(result) })
-
-        return
-      }
+    if (result.state === 'ok') {
+      const asked = result.watch
 
       say({
-        text: leadToastWords(result.watch.leadMinutes),
-        action: { label: '取り消す', onPress: () => void onUnwatch() },
+        text: leadToastWords(asked.leadMinutes),
+        action: { label: '取り消す', onPress: () => unwatch(asked.id) },
       })
-    })
+    }
+
+    return result
+  }
 
   if (watch) {
     return (
       <Button
         variant="tone"
         disabled={pending}
-        onClick={unwatch}
+        onClick={() => unwatch(watch.id)}
         className={className}
       >
         <BellOffIcon />
@@ -93,63 +96,127 @@ export function NotifyStartButton({
     )
   }
 
+  if (!noticing.offer) {
+    return null
+  }
+
   return (
-    <Button
-      variant="tone"
-      disabled={pending}
-      onClick={ask}
-      className={className}
-    >
-      <BellIcon />
-      {NOTIFY_START}
-    </Button>
+    <>
+      <Button
+        variant="tone"
+        disabled={pending}
+        onClick={() => setAsking(true)}
+        className={className}
+      >
+        <BellIcon />
+        {NOTIFY_START}
+      </Button>
+      <Dialog open={asking} onOpenChange={setAsking}>
+        <NoticeDialogContent className="data-[size=default]:sm:max-w-[calc(460rem/16)]">
+          {asking && (
+            <AskForm
+              offer={noticing.offer}
+              onAsk={ask}
+              onClose={() => setAsking(false)}
+            />
+          )}
+        </NoticeDialogContent>
+      </Dialog>
+    </>
   )
 }
 
-/** The amber chip a programme wears once its start is to be told, beside its time; pressing it picks how early. */
-export function NotifyLeadChip({
-  leadMinutes,
-  onChangeLead,
-  defaultOpen,
+function AskForm({
+  offer,
+  onAsk,
+  onClose,
 }: {
-  leadMinutes: LeadMinutes
-  onChangeLead: (lead: LeadMinutes) => void
-  defaultOpen?: boolean
+  offer: WatchOffer
+  onAsk: (draft: WatchDraft) => Promise<WatchWrite>
+  onClose: () => void
 }) {
-  const [open, setOpen] = useState(defaultOpen ?? false)
+  const id = useId()
+  const [lead, setLead] = useState<LeadMinutes>(offer.leadMinutes)
+  const [sendTo, setSendTo] = useState<string[]>(() =>
+    offer.destinations.map((destination) => destination.id),
+  )
+  const [refusal, setRefusal] = useState<string>()
+  const [pending, startTransition] = useTransition()
+
+  const ask = () => {
+    setRefusal(undefined)
+
+    startTransition(async () => {
+      const result = await onAsk({ leadMinutes: lead, destinations: sendTo })
+
+      if (result.state === 'ok') {
+        onClose()
+
+        return
+      }
+
+      setRefusal(refusalOf(result))
+    })
+  }
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        data-slot="notify-lead-chip"
-        className={cn(
-          'tap-target inline-flex h-[calc(26rem/16)] items-center gap-[5px] rounded-full bg-warn-soft pr-2.5 pl-2 text-sub font-semibold whitespace-nowrap text-warn-text outline-none tabular-nums',
-          'transition-[box-shadow,transform] duration-[140ms] ease-toy active:scale-[0.98] focus-visible:shadow-ring',
-          'data-[state=open]:shadow-[0_0_0_2px_var(--bg),0_0_0_3.5px_var(--accent)]',
-          pressable,
-        )}
+    <>
+      <NoticeDialogHeader
+        title={NOTIFY_START}
+        description="何分前に、どこへ通知するかを選びます。"
+      />
+      <div
+        data-slot="dialog-body"
+        className="-mx-1 flex min-h-0 flex-col gap-4 overflow-y-auto px-1 pb-1"
       >
-        <BellIcon className="size-[calc(13rem/16)]" />
-        {leadChipWords(leadMinutes)}
-        <ChevronDownIcon className="-ml-0.5 size-3 opacity-80" />
-      </PopoverTrigger>
-      <PopoverContent
-        align="start"
-        sideOffset={8}
-        collisionPadding={16}
-        aria-label="何分前に通知するか"
-        className="w-auto p-1.5"
-      >
-        <LeadChoice
-          value={leadMinutes}
-          onValueChange={(lead) => {
-            onChangeLead(lead)
-            setOpen(false)
-          }}
-          className="bg-transparent p-0"
-        />
-      </PopoverContent>
-    </Popover>
+        <div className="flex flex-col gap-1.5">
+          <NoticeGroupLabel>何分前</NoticeGroupLabel>
+          <LeadChoice
+            value={lead}
+            onValueChange={setLead}
+            className="mt-1 w-fit max-w-full"
+          />
+        </div>
+        <div className="flex flex-col gap-1.5">
+          <NoticeGroupLabel id={`${id}-to`}>送り先</NoticeGroupLabel>
+          <PickChips aria-labelledby={`${id}-to`} className="mt-1">
+            {offer.destinations.map((destination) => (
+              <PickChip
+                key={destination.id}
+                on={sendTo.includes(destination.id)}
+                onPress={() => setSendTo(toggled(sendTo, destination.id))}
+              >
+                {destination.name}
+              </PickChip>
+            ))}
+          </PickChips>
+        </div>
+        <span aria-live="polite" className="contents">
+          {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+        </span>
+      </div>
+      <NoticeDialogFooter>
+        <Button variant="tone" onClick={onClose}>
+          キャンセル
+        </Button>
+        <Button disabled={pending || sendTo.length === 0} onClick={ask}>
+          通知する
+        </Button>
+      </NoticeDialogFooter>
+    </>
+  )
+}
+
+/** The amber chip a programme wears beside its time once its start is to be told: how early. */
+export function NotifyLeadChip({ leadMinutes }: { leadMinutes: LeadMinutes }) {
+  return (
+    <span
+      data-slot="notify-lead-chip"
+      className="inline-flex h-[calc(26rem/16)] items-center gap-[5px] rounded-full bg-warn-soft pr-2.5 pl-2 text-sub font-semibold whitespace-nowrap text-warn-text tabular-nums"
+    >
+      <BellIcon aria-hidden="true" className="size-[calc(13rem/16)]" />
+      {leadChipWords(leadMinutes)}
+    </span>
   )
 }
 

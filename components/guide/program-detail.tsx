@@ -9,6 +9,7 @@ import type {
   RelationKind,
 } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
+import type { Noticing } from '@/lib/notifications'
 import {
   audioSaying,
   secondSoundSaying,
@@ -33,6 +34,10 @@ import {
   ProgramExtended,
 } from '@/components/guide/program-description'
 import { ReservationArea } from '@/components/guide/reservation-area'
+import {
+  NotifyLeadChip,
+  NotifyStartButton,
+} from '@/components/notifications/programme-notice'
 import { InlineAlert } from '@/components/vela/banner'
 import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 
@@ -76,6 +81,8 @@ export function ProgramDetailBody({
   onReserve,
   reservation,
   extras = 'ready',
+  ahead = false,
+  noticing,
 }: {
   program: Program
   channel?: Channel
@@ -84,6 +91,9 @@ export function ProgramDetailBody({
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   reservation?: ReactNode
   extras?: 'ready' | 'waiting' | 'failed'
+  /** Whether the programme has yet to start, which is when its start can be told. */
+  ahead?: boolean
+  noticing?: Noticing
 }) {
   const related = program.related ?? []
   const items = program.items ?? []
@@ -97,15 +107,20 @@ export function ProgramDetailBody({
           <span className="text-ui text-ink-2">{channel.name}</span>
         )}
       </div>
-      <p className="font-code text-body tabular-nums">
-        {program.dateLabel ?? dayLabel} {program.startLabel} –{' '}
-        {program.endUndecided ? '終了未定' : program.endLabel}
-        {program.durationLabel && (
-          <span className="ml-[calc(9rem/16)] text-sub text-ink-2">
-            {program.durationLabel}
-          </span>
+      <div className="flex flex-wrap items-center gap-x-[calc(11rem/16)] gap-y-1.5">
+        <p className="font-code text-body tabular-nums">
+          {program.dateLabel ?? dayLabel} {program.startLabel} –{' '}
+          {program.endUndecided ? '終了未定' : program.endLabel}
+          {program.durationLabel && (
+            <span className="ml-[calc(9rem/16)] text-sub text-ink-2">
+              {program.durationLabel}
+            </span>
+          )}
+        </p>
+        {ahead && program.watch && (
+          <NotifyLeadChip leadMinutes={program.watch.leadMinutes} />
         )}
-      </p>
+      </div>
       <div className="mt-[calc(13rem/16)] flex flex-wrap gap-[calc(7rem/16)]">
         <GenrePill genre={program.genre} className="font-bold">
           {program.genreLabel}
@@ -174,6 +189,16 @@ export function ProgramDetailBody({
           booked={reservation}
           seriesHref={series ? newRuleHref(series) : undefined}
           onReserve={onReserve}
+          notice={
+            ahead &&
+            noticing && (
+              <NotifyStartButton
+                programmeId={program.id}
+                watch={program.watch}
+                noticing={noticing}
+              />
+            )
+          }
           first={
             onAir && (
               <Button asChild>
