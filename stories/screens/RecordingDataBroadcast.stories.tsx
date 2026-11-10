@@ -94,7 +94,7 @@ async function done(): Promise<EncodeWrite> {
 }
 
 const meta = {
-  title: 'Screens/録画詳細/データ放送',
+  title: 'Screens/ライブラリ/録画詳細/データ放送',
   component: RecordingDetailView,
   parameters: {
     nextjs: {
@@ -553,33 +553,6 @@ export const ノートの窓では一段小さい板が送らずに収まる: St
   },
 }
 
-export const 幅が1180px以下の窓では箱の下の帯: Story = {
-  parameters: { screen: { width: 1180, height: 820 } },
-  play: async ({ canvasElement }) => {
-    await opened(canvasElement)
-
-    const band = within(canvasElement).getByRole('group', {
-      name: 'データ放送のリモコン',
-    })
-    const chrome = onTheScreen(canvasElement, 'player-chrome')
-
-    await expect(band).toHaveAttribute('data-place', 'under')
-    await expect(band).toHaveAttribute('data-slot', 'data-broadcast-band')
-    await expect(theColumn(canvasElement)).toBeNull()
-    await near(
-      band.getBoundingClientRect().top,
-      chrome.getBoundingClientRect().bottom,
-    )
-    await expect(band.getBoundingClientRect().width).toBe(
-      chrome.getBoundingClientRect().width,
-    )
-    await expect(band.getBoundingClientRect().height).toBeGreaterThanOrEqual(
-      BAND_UNDER_THE_BOX,
-    )
-    await rowUnderTheBox(canvasElement)
-  },
-}
-
 export const 全画面では帯を映像に重ねる: Story = {
   parameters: { screen: { width: 1600, height: 1000 } },
   play: async ({ canvasElement }) => {
@@ -631,35 +604,6 @@ export const 動きを減らす設定では一息に替える: Story = {
       }),
     ).toBeNull()
     await near(column.getBoundingClientRect().width, rem(RAIL))
-  },
-}
-
-export const 背の低い窓で畳んでも番組の情報は動かない: Story = {
-  parameters: { screen: { width: 1280, height: 800 } },
-  play: async ({ canvasElement }) => {
-    const closed = await closedFaceWidth(canvasElement)
-
-    await opened(canvasElement)
-    await inTheColumn(canvasElement, closed)
-
-    const column = columnOn(canvasElement)
-    const fold = within(column).getByRole('button', { name: 'リモコン' })
-    const meta = onTheScreen(canvasElement, 'watch-meta')
-    const top = meta.getBoundingClientRect().top
-
-    await expect(column.getBoundingClientRect().bottom).toBeGreaterThan(
-      onTheScreen(canvasElement, 'player').getBoundingClientRect().bottom,
-    )
-
-    await userEvent.click(fold)
-    await columnAtRest(canvasElement)
-    await remoteGone(canvasElement)
-    await near(meta.getBoundingClientRect().top, top)
-    await oneColumn(canvasElement)
-
-    await userEvent.click(fold)
-    await inTheColumn(canvasElement, closed)
-    await near(meta.getBoundingClientRect().top, top)
   },
 }
 
@@ -730,5 +674,62 @@ export const 効果音: Story = {
     await expect(sounds.heard()).toEqual([
       { sound: 7, gain: romSoundGain(true, 0.4) },
     ])
+  },
+}
+
+export const 幅が1180px以下の窓では箱の下の帯: Story = {
+  name: '幅が1180px以下の窓では箱の下の帯',
+  parameters: { screen: { width: 1180, height: 820 } },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+
+    const band = within(canvasElement).getByRole('group', {
+      name: 'データ放送のリモコン',
+    })
+    const chrome = onTheScreen(canvasElement, 'player-chrome')
+
+    await expect(band).toHaveAttribute('data-place', 'under')
+    await expect(band).toHaveAttribute('data-slot', 'data-broadcast-band')
+    await expect(theColumn(canvasElement)).toBeNull()
+    await near(
+      band.getBoundingClientRect().top,
+      chrome.getBoundingClientRect().bottom,
+    )
+    await expect(band.getBoundingClientRect().width).toBe(
+      chrome.getBoundingClientRect().width,
+    )
+    await expect(band.getBoundingClientRect().height).toBeGreaterThanOrEqual(
+      BAND_UNDER_THE_BOX,
+    )
+    await rowUnderTheBox(canvasElement)
+  },
+}
+
+export const 背の低い窓で畳んでも番組の情報は動かない: Story = {
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    const closed = await closedFaceWidth(canvasElement)
+
+    await opened(canvasElement)
+    await inTheColumn(canvasElement, closed)
+
+    const column = columnOn(canvasElement)
+    const fold = within(column).getByRole('button', { name: 'リモコン' })
+    const meta = onTheScreen(canvasElement, 'watch-meta')
+    const top = meta.getBoundingClientRect().top
+
+    await expect(column.getBoundingClientRect().bottom).toBeGreaterThan(
+      onTheScreen(canvasElement, 'player').getBoundingClientRect().bottom,
+    )
+
+    await userEvent.click(fold)
+    await columnAtRest(canvasElement)
+    await remoteGone(canvasElement)
+    await near(meta.getBoundingClientRect().top, top)
+    await oneColumn(canvasElement)
+
+    await userEvent.click(fold)
+    await inTheColumn(canvasElement, closed)
+    await near(meta.getBoundingClientRect().top, top)
   },
 }

@@ -7,7 +7,7 @@ import * as Icons from '@/components/vela/icons'
 import type { IconProps } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Foundations/Icons',
+  title: 'Foundations/アイコン',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -136,7 +136,7 @@ function IconGrid({ items }: { items: [string, ComponentType<IconProps>][] }) {
   )
 }
 
-export const IconSet: Story = {
+export const 一覧: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <section className="mb-7">

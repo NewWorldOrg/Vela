@@ -35,7 +35,7 @@ import { MarkPill, MarkRuler, MarkSplit } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'
 
 const meta = {
-  title: 'Components/Form',
+  title: 'Components/ボタンとフォーム/フォームの部品',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -59,7 +59,7 @@ function Sample({
   )
 }
 
-export const TextInputs: Story = {
+export const テキストの入力: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
       <SectionHeading>テキスト入力</SectionHeading>
@@ -167,7 +167,7 @@ function PasswordSamples() {
   )
 }
 
-export const Passwords: Story = { render: () => <PasswordSamples /> }
+export const パスワード: Story = { render: () => <PasswordSamples /> }
 
 export const パスワードを表示中: Story = {
   render: () => <PasswordSamples />,
@@ -185,7 +185,7 @@ export const パスワードを表示中: Story = {
   },
 }
 
-export const Selects: Story = {
+export const セレクト: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
       <SectionHeading>セレクト</SectionHeading>
@@ -241,7 +241,7 @@ export const Selects: Story = {
   ),
 }
 
-export const Toggles: Story = {
+export const スイッチとチェックボックスとラジオ: Story = {
   render: () => (
     <div className="mx-auto max-w-[720px] p-6">
       <SectionHeading>スイッチ・チェックボックス・ラジオ</SectionHeading>

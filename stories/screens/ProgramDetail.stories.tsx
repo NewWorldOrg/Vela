@@ -16,7 +16,7 @@ import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
 
 const meta = {
-  title: 'Screens/番組詳細',
+  title: 'Screens/番組表/番組詳細',
   component: ProgramDetailView,
   parameters: {
     nextjs: {
@@ -99,6 +99,77 @@ const simulcastElsewhere = (simulcast.program.related ?? []).filter(
   (other) => other.kind === 'shared',
 )
 
+const BOOKING = PROGRAM_FIXTURES.find((program) => program.booking)!.booking!
+
+const beingRecorded: ProgramDetail = {
+  ...standard,
+  program: {
+    ...standard.program,
+    booked: true,
+    booking: { ...BOOKING, standing: 'recording' },
+  },
+}
+
+export const 通常: Story = {
+  args: { detail: standard },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await reads(canvasElement, standard)
+    await expect(
+      canvas.getByRole('link', { name: '番組表へ' }),
+    ).toHaveAttribute('href', '/guide')
+  },
+}
+
+export const 情報最小: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.minimal },
+  play: async ({ canvasElement }) => {
+    const detail = PROGRAM_DETAIL_FIXTURES.minimal
+
+    await reads(canvasElement, detail)
+    await expect(detail.program.description).toBeUndefined()
+    await expect(detail.program.items ?? []).toHaveLength(0)
+    await expect(
+      canvasElement.querySelectorAll('[data-program-detail] h2'),
+    ).toHaveLength(0)
+    await expect(
+      canvasElement.querySelector('[data-program-detail] dl dd')?.textContent,
+    ).toBe('なし')
+  },
+}
+
+export const 改行を含む本文: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.multiline },
+  play: async ({ canvasElement }) => {
+    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.multiline)
+  },
+}
+
+export const 終了未定: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.undecided },
+  play: async ({ canvasElement }) => {
+    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.undecided)
+    await expect(
+      canvasElement.querySelector('[data-program-detail]')?.textContent,
+    ).toContain('終了未定')
+  },
+}
+
+export const リレーあり: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.relayed },
+  play: async ({ canvasElement }) => {
+    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.relayed)
+  },
+}
+
+export const 同時放送の重複: Story = {
+  args: { detail: PROGRAM_DETAIL_FIXTURES.simulcast },
+  play: async ({ canvasElement }) => {
+    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.simulcast)
+  },
+}
+
 export const 同時放送は放送中ならライブへ: Story = {
   args: {
     detail: { ...simulcast, nowMin: simulcast.program.startMin + 1 },
@@ -174,113 +245,6 @@ export const 継続先が写しなら番組の詳細へは送らない: Story = 
 
     await expect(canvas.getByText(/で継続されます。/)).toBeVisible()
     await expect(canvas.queryByRole('link', { name: '継続先へ' })).toBeNull()
-  },
-}
-
-export const 通常: Story = {
-  args: { detail: standard },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await reads(canvasElement, standard)
-    await expect(
-      canvas.getByRole('link', { name: '番組表へ' }),
-    ).toHaveAttribute('href', '/guide')
-  },
-}
-
-export const シリーズはルールの下書きへ渡す: Story = {
-  args: { detail: standard },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const asked = new URL(
-      canvas
-        .getByRole('link', { name: 'シリーズで予約' })
-        .getAttribute('href')!,
-      'http://vela.invalid',
-    )
-    const readBack = searchTermsOf(
-      searchConditionOfQuery(asked.searchParams.toString()),
-    )
-
-    await expect(asked.pathname).toBe('/reservations/rules')
-    await expect(asked.searchParams.get('rule')).toBe('new')
-    await expect(readBack.fields).toBe('title')
-    await expect(readBack.channels).toEqual([standard.program.channelId])
-    await expect(readBack.q).toBeTruthy()
-    await expect(standard.program.title).toContain(readBack.q)
-
-    await expect(
-      canvas.queryByRole('button', { name: 'シリーズで予約' }),
-    ).toBeNull()
-  },
-}
-
-const nameless: ProgramDetail = {
-  ...standard,
-  program: { ...standard.program, title: '' },
-}
-
-export const 名前の無い番組はシリーズにできない: Story = {
-  args: { detail: nameless },
-  parameters: { a11y: { context: { include: '[data-program-detail]' } } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await expect(
-      canvas.queryByRole('link', { name: 'シリーズで予約' }),
-    ).toBeNull()
-    await expect(
-      canvas.getByRole('button', { name: 'シリーズで予約' }),
-    ).toBeDisabled()
-  },
-}
-
-export const リレーあり: Story = {
-  args: { detail: PROGRAM_DETAIL_FIXTURES.relayed },
-  play: async ({ canvasElement }) => {
-    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.relayed)
-  },
-}
-
-export const 同時放送の重複: Story = {
-  args: { detail: PROGRAM_DETAIL_FIXTURES.simulcast },
-  play: async ({ canvasElement }) => {
-    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.simulcast)
-  },
-}
-
-export const 終了未定: Story = {
-  args: { detail: PROGRAM_DETAIL_FIXTURES.undecided },
-  play: async ({ canvasElement }) => {
-    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.undecided)
-    await expect(
-      canvasElement.querySelector('[data-program-detail]')?.textContent,
-    ).toContain('終了未定')
-  },
-}
-
-export const 情報最小: Story = {
-  args: { detail: PROGRAM_DETAIL_FIXTURES.minimal },
-  play: async ({ canvasElement }) => {
-    const detail = PROGRAM_DETAIL_FIXTURES.minimal
-
-    await reads(canvasElement, detail)
-    await expect(detail.program.description).toBeUndefined()
-    await expect(detail.program.items ?? []).toHaveLength(0)
-    await expect(
-      canvasElement.querySelectorAll('[data-program-detail] h2'),
-    ).toHaveLength(0)
-    await expect(
-      canvasElement.querySelector('[data-program-detail] dl dd')?.textContent,
-    ).toBe('なし')
-  },
-}
-
-export const 改行を含む本文: Story = {
-  args: { detail: PROGRAM_DETAIL_FIXTURES.multiline },
-  play: async ({ canvasElement }) => {
-    await reads(canvasElement, PROGRAM_DETAIL_FIXTURES.multiline)
   },
 }
 
@@ -391,60 +355,28 @@ export const 放送前は録画予約が主のボタン: Story = {
   },
 }
 
-async function liveLeadsOnAPhone(
-  canvasElement: HTMLElement,
-  width: number,
-): Promise<void> {
-  await liveLeads(canvasElement)
-
-  const { live, reserve, series } = actionsIn(canvasElement)
-  const first = live!.getBoundingClientRect()
-
-  for (const other of [reserve!, series!]) {
-    const box = other.getBoundingClientRect()
-
-    await expect(Math.round(box.top)).toBeGreaterThanOrEqual(
-      Math.round(first.top),
-    )
-    await expect(box.right).toBeLessThanOrEqual(width)
-  }
-
-  await sideBySide(live!, reserve!)
-  await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
-    width,
-  )
-}
-
-export const 電話でも放送中はライブ視聴が先頭: Story = {
-  args: { detail: { ...standard, nowMin: NOW_MIN } },
-  parameters: { screen: PHONE },
+export const 録画中: Story = {
+  args: { detail: { ...beingRecorded, nowMin: NOW_MIN } },
   play: async ({ canvasElement }) => {
-    await liveLeadsOnAPhone(canvasElement, PHONE.width)
+    const canvas = within(canvasElement)
+
+    await reads(canvasElement, beingRecorded)
+
+    await expect(canvas.getByText('録画中')).toBeVisible()
+    await expect(canvas.queryByText('確保済み')).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '予約を取り消し' }),
+    ).toBeNull()
+    await expect(
+      canvas.queryByRole('button', { name: '予約を変更' }),
+    ).toBeNull()
+    await expect(canvas.queryByRole('button', { name: '録画予約' })).toBeNull()
   },
 }
-
-export const 狭い電話でも放送中はライブ視聴が先頭: Story = {
-  args: { detail: { ...standard, nowMin: NOW_MIN } },
-  parameters: { screen: NARROW_PHONE },
-  play: async ({ canvasElement }) => {
-    await liveLeadsOnAPhone(canvasElement, NARROW_PHONE.width)
-  },
-}
-
-const BOOKING = PROGRAM_FIXTURES.find((program) => program.booking)!.booking!
 
 const booked: ProgramDetail = {
   ...standard,
   program: { ...standard.program, booked: true, booking: BOOKING },
-}
-
-const beingRecorded: ProgramDetail = {
-  ...standard,
-  program: {
-    ...standard.program,
-    booked: true,
-    booking: { ...BOOKING, standing: 'recording' },
-  },
 }
 
 export const 予約済み: Story = {
@@ -486,6 +418,53 @@ export const 放送中に予約済みならライブ視聴の下に予約の面:
     await expect(card!.getBoundingClientRect().left).toBe(
       live!.getBoundingClientRect().left,
     )
+  },
+}
+
+export const シリーズはルールの下書きへ渡す: Story = {
+  args: { detail: standard },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const asked = new URL(
+      canvas
+        .getByRole('link', { name: 'シリーズで予約' })
+        .getAttribute('href')!,
+      'http://vela.invalid',
+    )
+    const readBack = searchTermsOf(
+      searchConditionOfQuery(asked.searchParams.toString()),
+    )
+
+    await expect(asked.pathname).toBe('/reservations/rules')
+    await expect(asked.searchParams.get('rule')).toBe('new')
+    await expect(readBack.fields).toBe('title')
+    await expect(readBack.channels).toEqual([standard.program.channelId])
+    await expect(readBack.q).toBeTruthy()
+    await expect(standard.program.title).toContain(readBack.q)
+
+    await expect(
+      canvas.queryByRole('button', { name: 'シリーズで予約' }),
+    ).toBeNull()
+  },
+}
+
+const nameless: ProgramDetail = {
+  ...standard,
+  program: { ...standard.program, title: '' },
+}
+
+export const 名前の無い番組はシリーズにできない: Story = {
+  args: { detail: nameless },
+  parameters: { a11y: { context: { include: '[data-program-detail]' } } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.queryByRole('link', { name: 'シリーズで予約' }),
+    ).toBeNull()
+    await expect(
+      canvas.getByRole('button', { name: 'シリーズで予約' }),
+    ).toBeDisabled()
   },
 }
 
@@ -584,25 +563,6 @@ export const 取り消しを断られたとき: Story = {
   },
 }
 
-export const 録画中: Story = {
-  args: { detail: { ...beingRecorded, nowMin: NOW_MIN } },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await reads(canvasElement, beingRecorded)
-
-    await expect(canvas.getByText('録画中')).toBeVisible()
-    await expect(canvas.queryByText('確保済み')).toBeNull()
-    await expect(
-      canvas.queryByRole('button', { name: '予約を取り消し' }),
-    ).toBeNull()
-    await expect(
-      canvas.queryByRole('button', { name: '予約を変更' }),
-    ).toBeNull()
-    await expect(canvas.queryByRole('button', { name: '録画予約' })).toBeNull()
-  },
-}
-
 const MOVED =
   'この番組の放送枠は 中央テレビ1 の 08/08(金) 21:00 からに移動しているため、予約できませんでした。移動先の番組を予約してください。'
 
@@ -626,5 +586,45 @@ export const 移動した放送の元の枠を予約しようとしたとき: St
     await expect(
       within(refused).getByRole('link', { name: '移動先へ' }),
     ).toHaveAttribute('href', '/guide/programs/131-1310-50001')
+  },
+}
+
+async function liveLeadsOnAPhone(
+  canvasElement: HTMLElement,
+  width: number,
+): Promise<void> {
+  await liveLeads(canvasElement)
+
+  const { live, reserve, series } = actionsIn(canvasElement)
+  const first = live!.getBoundingClientRect()
+
+  for (const other of [reserve!, series!]) {
+    const box = other.getBoundingClientRect()
+
+    await expect(Math.round(box.top)).toBeGreaterThanOrEqual(
+      Math.round(first.top),
+    )
+    await expect(box.right).toBeLessThanOrEqual(width)
+  }
+
+  await sideBySide(live!, reserve!)
+  await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+    width,
+  )
+}
+
+export const 電話でも放送中はライブ視聴が先頭: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN } },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await liveLeadsOnAPhone(canvasElement, PHONE.width)
+  },
+}
+
+export const 狭い電話でも放送中はライブ視聴が先頭: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN } },
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    await liveLeadsOnAPhone(canvasElement, NARROW_PHONE.width)
   },
 }

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
 const meta = {
-  title: 'Foundations/Typography',
+  title: 'Foundations/文字',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -51,7 +51,7 @@ const STEPS: { className: string; spec: string; sample: string }[] = [
   },
 ]
 
-export const Scale: Story = {
+export const 一覧: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] px-10 py-8">
       {STEPS.map((step) => (

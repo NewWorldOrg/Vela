@@ -57,7 +57,7 @@ const ONLY_THE_OPEN_LAYER = {
 }
 
 const meta = {
-  title: 'Components/ProgramPanel',
+  title: 'Components/番組と局/番組の面',
   component: ProgramPanel,
   parameters: { layout: 'fullscreen', ...ONLY_THE_OPEN_LAYER },
   args: {

@@ -20,7 +20,7 @@ import { MarkDots, MarkPill, SignalIcon } from '@/components/vela/icons'
 import { TermTip } from '@/components/vela/term-tip'
 
 const meta = {
-  title: 'Components/Status',
+  title: 'Components/状態と知らせ/状態の表示',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -34,7 +34,7 @@ const BASE: [string, string, string, string][] = [
   ['off', '停止', '無効化済みの状態。エラーではない', 'ink-3'],
 ]
 
-export const DotAndText: Story = {
+export const 点と文字: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>ドット+テキスト(基本形)</SectionHeading>
@@ -60,7 +60,7 @@ export const DotAndText: Story = {
   ),
 }
 
-export const Chips: Story = {
+export const チップ: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>チップ型バッジ</SectionHeading>
@@ -135,7 +135,7 @@ export const 録画中: Story = {
   },
 }
 
-export const InUse: Story = {
+export const 適用例: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>適用例</SectionHeading>

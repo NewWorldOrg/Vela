@@ -18,7 +18,7 @@ import { Button } from '@/components/ui/button'
 import { ListIcon, MarkStar } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Table',
+  title: 'Components/一覧と表/表',
   component: Table,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof Table>
@@ -65,7 +65,7 @@ const ROWS = [
   },
 ]
 
-export const Default: Story = {
+export const 通常: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <SectionHeading>チャンネル一覧</SectionHeading>
@@ -118,7 +118,7 @@ export const Default: Story = {
   ),
 }
 
-export const Empty: Story = {
+export const 空: Story = {
   render: () => (
     <div className="mx-auto max-w-[760px] p-6">
       <SectionHeading>空状態</SectionHeading>

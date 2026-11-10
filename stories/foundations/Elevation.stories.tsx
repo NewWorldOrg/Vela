@@ -4,14 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/vela/surface'
 
 const meta = {
-  title: 'Foundations/Elevation',
+  title: 'Foundations/面と影',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const SurfacesAndShadows: Story = {
+export const 一覧: Story = {
   render: () => (
     <div className="mx-auto grid max-w-[760px] gap-6 px-10 py-8">
       <Surface>

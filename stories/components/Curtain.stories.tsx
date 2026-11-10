@@ -25,7 +25,7 @@ function FromTheServer() {
 }
 
 const meta = {
-  title: 'Components/幕',
+  title: 'Components/枠組み/幕',
   component: Curtain,
   parameters: { layout: 'fullscreen' },
   render: () => <FromTheServer />,

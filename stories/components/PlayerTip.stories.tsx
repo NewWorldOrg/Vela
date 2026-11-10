@@ -30,7 +30,7 @@ function OpensADialog() {
 }
 
 const meta = {
-  title: 'Components/操作子の名札',
+  title: 'Components/プレイヤー/操作子の名札',
   component: OpensADialog,
 } satisfies Meta<typeof OpensADialog>
 

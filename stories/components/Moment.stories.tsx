@@ -51,7 +51,7 @@ function Rows({ rows }: { rows: [string, string][] }) {
 }
 
 const meta = {
-  title: 'Components/Moment',
+  title: 'Components/見出しと文字/日時の書き方',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

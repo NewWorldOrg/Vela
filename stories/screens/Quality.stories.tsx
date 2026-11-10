@@ -59,7 +59,7 @@ const retyped = async (input: HTMLElement, text: string) => {
 }
 
 const meta = {
-  title: 'Screens/設定・品質',
+  title: 'Screens/設定/録る/品質',
   component: QualityView,
   parameters: {
     nextjs: {
@@ -420,14 +420,6 @@ export const 収まらないほどのチューナー: Story = {
   },
 }
 
-export const 狭い幅で収まらないほどのチューナー: Story = {
-  args: { result: MORE_TUNERS_THAN_FIT },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チューナー')
-  },
-}
-
 export const 推移: Story = {
   args: { result: QUALITY },
   play: async ({ canvasElement }) => {
@@ -626,6 +618,14 @@ export const 選局の失敗が続く衛星チューナー: Story = {
   },
 }
 
+export const 狭い幅で収まらないほどのチューナー: Story = {
+  args: { result: MORE_TUNERS_THAN_FIT },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'チューナー')
+  },
+}
+
 export const 電話の幅では一行をカードに組む: Story = {
   args: 通常.args,
   parameters: { screen: PHONE },
@@ -635,6 +635,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 通常.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

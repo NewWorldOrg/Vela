@@ -78,7 +78,7 @@ import {
 import { DRAWN_FRAME } from '@/stories/fixtures/frames'
 
 const meta = {
-  title: 'Components/DataBroadcast',
+  title: 'Components/データ放送/BML',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -1294,6 +1294,7 @@ export const 帯_PC_全画面_数字: Story = {
 }
 
 export const 帯_iPad_窓: Story = {
+  name: '帯 iPad 窓',
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band place="under" numbers={false} />,
   play: async ({ canvasElement }) => {
@@ -1306,6 +1307,7 @@ export const 帯_iPad_窓: Story = {
 }
 
 export const 帯_iPad_窓_数字: Story = {
+  name: '帯 iPad 窓 数字',
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band place="under" numbers />,
   play: async ({ canvasElement }) => {
@@ -1327,6 +1329,7 @@ export const 帯_iPad_窓_数字: Story = {
 }
 
 export const 帯_iPad_全画面: Story = {
+  name: '帯 iPad 全画面',
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band place="over" numbers={false} />,
   play: async ({ canvasElement }) => {
@@ -1338,6 +1341,7 @@ export const 帯_iPad_全画面: Story = {
 }
 
 export const 帯_iPad_全画面_数字: Story = {
+  name: '帯 iPad 全画面 数字',
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band place="over" numbers />,
   play: async ({ canvasElement }) => {
@@ -1354,6 +1358,7 @@ export const 帯_iPad_全画面_数字: Story = {
 const STATION = 'みなと総合1'
 
 export const 帯_iPad_窓_局名: Story = {
+  name: '帯 iPad 窓 局名',
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band place="under" numbers={false} watching={STATION} />,
   play: async ({ canvasElement }) => {
@@ -1637,6 +1642,7 @@ export const 帯_Hybridcast_PC: Story = {
 }
 
 export const 帯_Hybridcast_iPad_窓: Story = {
+  name: '帯 Hybridcast iPad 窓',
   parameters: { screen: { width: 820, height: 1180 } },
   render: () => <Band place="under" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
@@ -1646,6 +1652,7 @@ export const 帯_Hybridcast_iPad_窓: Story = {
 }
 
 export const 帯_Hybridcast_iPad_全画面: Story = {
+  name: '帯 Hybridcast iPad 全画面',
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band place="over" numbers={false} station={STATION} />,
   play: async ({ canvasElement }) => {
@@ -1688,6 +1695,7 @@ export const 帯_Hybridcast_長い局名: Story = {
 }
 
 export const 帯_Hybridcast_長い局名_iPad_全画面: Story = {
+  name: '帯 Hybridcast 長い局名 iPad 全画面',
   parameters: { screen: { width: 1180, height: 820 } },
   render: () => <Band place="over" numbers={false} station={LONG_STATION} />,
   play: async ({ canvasElement }) => {

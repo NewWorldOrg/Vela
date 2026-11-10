@@ -6,7 +6,7 @@ import AppError from '@/app/(app)/error'
 import { inTheApp } from '@/stories/frames'
 
 const meta = {
-  title: 'Screens/表示できなかった画面',
+  title: 'Screens/エラー/表示できなかった画面',
   component: AppError,
   parameters: {
     nextjs: {

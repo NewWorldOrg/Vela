@@ -53,7 +53,7 @@ const tooSoon = async (): Promise<SweepWrite> => ({
 })
 
 const meta = {
-  title: 'Screens/整合性チェック',
+  title: 'Screens/設定/管理/整合性チェック',
   component: IntegrityView,
   parameters: {
     nextjs: {
@@ -155,16 +155,6 @@ export const 届かないルートがある: Story = {
 
 export const 収まらないほどの食い違い: Story = {
   args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
-      pageStays: true,
-    })
-  },
-}
-
-export const 狭い幅で収まらないほどの食い違い: Story = {
-  args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
-  parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
       pageStays: true,
@@ -340,6 +330,16 @@ export const 指標タイルの面: Story = {
   },
 }
 
+export const 狭い幅で収まらないほどの食い違い: Story = {
+  args: { result: INTEGRITY_MORE_THAN_FIT_FIXTURE },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, 'ファイル', {
+      pageStays: true,
+    })
+  },
+}
+
 export const 電話の幅では一行をカードに組む: Story = {
   args: 食い違いあり.args,
   parameters: { screen: PHONE },
@@ -349,6 +349,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 食い違いあり.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

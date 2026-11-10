@@ -43,7 +43,7 @@ const refuse = answering({
 })
 
 const meta = {
-  title: 'Screens/設定・チャンネル',
+  title: 'Screens/設定/機器/チャンネル',
   component: ChannelsView,
   parameters: {
     nextjs: {
@@ -544,14 +544,6 @@ export const 収まらないほどのサービスと履歴: Story = {
   },
 }
 
-export const 狭い幅で収まらないほどのサービスと履歴: Story = {
-  args: { result: { state: 'ok', result: MORE_CHANNELS_THAN_FIT } },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await bothListsScrollInside(canvasElement)
-  },
-}
-
 export const スキャン中に収まらないほどの走査結果: Story = {
   args: {
     result: {
@@ -562,22 +554,6 @@ export const スキャン中に収まらないほどの走査結果: Story = {
       },
     },
   },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
-  },
-}
-
-export const 狭い幅でスキャン中に収まらないほどの走査結果: Story = {
-  args: {
-    result: {
-      state: 'ok',
-      result: {
-        ...CHANNELS,
-        running: { state: 'read', progress: MORE_ATTEMPTS_THAN_FIT },
-      },
-    },
-  },
-  parameters: { screen: { width: 768, height: 1024 } },
   play: async ({ canvasElement }) => {
     await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
   },
@@ -624,6 +600,30 @@ export const 受信できるチューナーのない種別は受信不可: Story
   },
 }
 
+export const 狭い幅で収まらないほどのサービスと履歴: Story = {
+  args: { result: { state: 'ok', result: MORE_CHANNELS_THAN_FIT } },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await bothListsScrollInside(canvasElement)
+  },
+}
+
+export const 狭い幅でスキャン中に収まらないほどの走査結果: Story = {
+  args: {
+    result: {
+      state: 'ok',
+      result: {
+        ...CHANNELS,
+        running: { state: 'read', progress: MORE_ATTEMPTS_THAN_FIT },
+      },
+    },
+  },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '物理ch')
+  },
+}
+
 export const 電話の幅では一行をカードに組む: Story = {
   args: 通常.args,
   parameters: { screen: PHONE },
@@ -633,6 +633,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 通常.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
@@ -649,6 +650,7 @@ export const 電話の幅では一行をカードに組む_スキャン中: Stor
 }
 
 export const 幅600pxからは表のまま_スキャン中: Story = {
+  name: '幅600pxからは表のまま スキャン中',
   args: スキャン中.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

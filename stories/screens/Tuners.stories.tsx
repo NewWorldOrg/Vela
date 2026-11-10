@@ -32,7 +32,7 @@ function lineOf(canvasElement: HTMLElement, id: string): HTMLElement {
 }
 
 const meta = {
-  title: 'Screens/設定・チューナー',
+  title: 'Screens/設定/機器/チューナー',
   component: TunersView,
   parameters: {
     nextjs: {
@@ -131,6 +131,7 @@ export const 未設定から検出: Story = {
 }
 
 export const driver未接続: Story = {
+  name: 'driver未接続',
   args: {
     result: {
       state: 'ok',
@@ -140,6 +141,7 @@ export const driver未接続: Story = {
 }
 
 export const driver状態不明: Story = {
+  name: 'driver状態不明',
   args: {
     result: {
       state: 'ok',
@@ -454,39 +456,6 @@ export const サービスが0件の種別を最上部で言う: Story = {
   },
 }
 
-function placeOfParts(line: HTMLElement) {
-  const [what, state] = Array.from(
-    line.firstElementChild?.children ?? [],
-  ) as HTMLElement[]
-
-  return {
-    what: what.getBoundingClientRect(),
-    state: state.getBoundingClientRect(),
-  }
-}
-
-export const 電話の幅では状態を名前の下に置く: Story = {
-  args: 通常.args,
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
-
-    await expect(state.top).toBeGreaterThanOrEqual(what.bottom - 1)
-  },
-}
-
-export const 広い面では状態を名前の右に置く: Story = {
-  args: 通常.args,
-  parameters: { screen: WIDE },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
-
-    await expect(state.left).toBeGreaterThanOrEqual(what.right)
-  },
-}
-
 const A_LONG_TITLE = {
   result: {
     state: 'ok',
@@ -524,23 +493,6 @@ export const 番組名が長ければ番組名を省き終わる時刻は分け�
   args: A_LONG_TITLE,
   parameters: { screen: WIDE },
   play: async ({ canvasElement }) => untilStaysWhole(canvasElement),
-}
-
-export const 電話の幅でも番組名を省き終わる時刻は分けない: Story = {
-  args: A_LONG_TITLE,
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => untilStaysWhole(canvasElement),
-}
-
-export const 横向きの電話でも面が狭ければ状態を名前の下に置く: Story = {
-  args: 通常.args,
-  parameters: { screen: LANDSCAPE_PHONE },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
-
-    await expect(state.top).toBeGreaterThanOrEqual(what.bottom - 1)
-  },
 }
 
 export const 機械ごとに組を分けカードリーダーをその下に置く: Story = {
@@ -688,5 +640,55 @@ export const pcscdが止まっている: Story = {
         ],
       },
     },
+  },
+}
+
+function placeOfParts(line: HTMLElement) {
+  const [what, state] = Array.from(
+    line.firstElementChild?.children ?? [],
+  ) as HTMLElement[]
+
+  return {
+    what: what.getBoundingClientRect(),
+    state: state.getBoundingClientRect(),
+  }
+}
+
+export const 電話の幅では状態を名前の下に置く: Story = {
+  args: 通常.args,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
+
+    await expect(state.top).toBeGreaterThanOrEqual(what.bottom - 1)
+  },
+}
+
+export const 広い面では状態を名前の右に置く: Story = {
+  args: 通常.args,
+  parameters: { screen: WIDE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
+
+    await expect(state.left).toBeGreaterThanOrEqual(what.right)
+  },
+}
+
+export const 電話の幅でも番組名を省き終わる時刻は分けない: Story = {
+  args: A_LONG_TITLE,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => untilStaysWhole(canvasElement),
+}
+
+export const 横向きの電話でも面が狭ければ状態を名前の下に置く: Story = {
+  args: 通常.args,
+  parameters: { screen: LANDSCAPE_PHONE },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+    const { what, state } = placeOfParts(lineOf(canvasElement, 'adapter1'))
+
+    await expect(state.top).toBeGreaterThanOrEqual(what.bottom - 1)
   },
 }

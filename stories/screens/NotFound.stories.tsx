@@ -4,7 +4,7 @@ import { expect, within } from 'storybook/test'
 import NotFound from '@/app/not-found'
 
 const meta = {
-  title: 'Screens/見つからない画面',
+  title: 'Screens/エラー/見つからない画面',
   component: NotFound,
   parameters: {
     nextjs: {

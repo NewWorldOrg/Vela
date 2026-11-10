@@ -10,7 +10,7 @@ const PHONE = { width: 390, height: 844 }
 const NARROW_PHONE = { width: 360, height: 800 }
 
 const meta = {
-  title: 'Screens/設定・入口',
+  title: 'Screens/設定/入口',
   component: SettingsEntranceView,
   parameters: {
     nextjs: {
@@ -83,7 +83,7 @@ async function everySettingIsOnePressAway(
   }
 }
 
-export const OnAPhone: Story = {
+export const 通常: Story = {
   play: async ({ canvasElement }) => {
     await everySettingIsOnePressAway(canvasElement)
 
@@ -112,14 +112,7 @@ export const OnAPhone: Story = {
   },
 }
 
-export const OnANarrowPhone: Story = {
-  parameters: { screen: NARROW_PHONE },
-  play: async ({ canvasElement }) => {
-    await everySettingIsOnePressAway(canvasElement)
-  },
-}
-
-export const WithoutAMigration: Story = {
+export const 移行記録が無い: Story = {
   args: { hasMigration: false, values: {} },
   play: async ({ canvasElement }) => {
     const keeping = within(
@@ -131,7 +124,7 @@ export const WithoutAMigration: Story = {
   },
 }
 
-export const WhenTheApiCannotBeReached: Story = {
+export const APIに届かない: Story = {
   args: {
     status: {
       ...SYSTEM_STATUS,
@@ -146,5 +139,12 @@ export const WhenTheApiCannotBeReached: Story = {
     })
 
     await expect(system).not.toHaveTextContent('チューナー')
+  },
+}
+
+export const 狭い電話: Story = {
+  parameters: { screen: NARROW_PHONE },
+  play: async ({ canvasElement }) => {
+    await everySettingIsOnePressAway(canvasElement)
   },
 }

@@ -8,7 +8,7 @@ import { askedForLessMotion } from '@/stories/asked-for-less-motion'
 import { inTheSettings } from '@/stories/frames'
 
 const meta = {
-  title: 'Screens/設定・表示',
+  title: 'Screens/設定/観る/表示',
   component: DisplayView,
   parameters: {
     nextjs: {

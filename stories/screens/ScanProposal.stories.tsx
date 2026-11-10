@@ -48,7 +48,7 @@ function applying(refusal: string) {
 }
 
 const meta = {
-  title: 'Screens/設定・スキャン結果',
+  title: 'Screens/設定/機器/スキャン結果',
   component: ScanProposalView,
   parameters: {
     nextjs: {
@@ -177,6 +177,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 通常.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
