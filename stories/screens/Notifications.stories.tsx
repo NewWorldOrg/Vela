@@ -81,7 +81,7 @@ const ACTIONS: NotificationActions = {
 }
 
 const meta = {
-  title: 'Screens/設定・通知',
+  title: 'Screens/設定/管理/通知',
   component: NotificationsView,
   parameters: {
     nextjs: {
@@ -101,6 +101,7 @@ const meta = {
 } satisfies Meta<typeof NotificationsView>
 
 export default meta
+
 type Story = StoryObj<typeof meta>
 
 /** Opens a row's `…` and picks one of its items. */
@@ -145,6 +146,26 @@ async function openTheBrowserForm(canvasElement: HTMLElement) {
   )
 
   return dialog
+}
+
+/** The log narrowed to one destination, as the page would answer the URL it is given. */
+function NarrowedLog(args: Story['args']) {
+  const [only, setOnly] = useState<string>()
+
+  return (
+    <NotificationsView
+      {...meta.args}
+      {...args}
+      screen={{
+        ...NOTIFICATIONS_SCREEN,
+        deliveriesFor: only,
+        deliveries: NOTIFICATIONS_SCREEN.deliveries.filter(
+          (delivery) => only === undefined || delivery.destinationId === only,
+        ),
+      }}
+      actions={{ ...ACTIONS, onShowDeliveriesFor: setOnly }}
+    />
+  )
 }
 
 export const 通常: Story = {
@@ -217,6 +238,54 @@ export const 何もない: Story = {
   },
 }
 
+export const 送り先が多い: Story = {
+  args: {
+    screen: {
+      ...NOTIFICATIONS_SCREEN,
+      destinations: [
+        ...DESTINATIONS,
+        {
+          ...HOME_SLACK,
+          id: 'dest-slack-2',
+          name: '実家のリビングの Slack のお知らせ用チャンネル',
+          urlTail: 'c3d4',
+          enabled: false,
+          lastResult: {
+            state: 'givenUp',
+            at: '2026-11-08T12:03:00Z',
+            failure: 'rejected',
+          },
+        },
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('switch', {
+        name: '実家のリビングの Slack のお知らせ用チャンネル を有効にする',
+      }),
+    ).not.toBeChecked()
+    await expect(canvas.getByText('届かなかった · 断られた')).toBeVisible()
+  },
+}
+
+export const ルールセットが上限: Story = {
+  args: {
+    screen: { ...NOTIFICATIONS_SCREEN, ruleSets: TWENTY_RULE_SETS },
+  },
+  play: async ({ canvasElement }) => {
+    const ruleSets = within(canvasElement).getByRole('heading', {
+      name: 'ルールセット',
+    }).parentElement as HTMLElement
+
+    await expect(
+      within(ruleSets).getByRole('button', { name: '追加' }),
+    ).toBeDisabled()
+  },
+}
+
 export const テスト送信: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -253,7 +322,7 @@ export const 操作のメニュー: Story = {
   },
 }
 
-export const 操作のメニュー_ブラウザ: Story = {
+export const 操作のメニュー_このブラウザ: Story = {
   play: async ({ canvasElement }) => {
     await userEvent.click(
       within(canvasElement).getByRole('button', {
@@ -330,26 +399,6 @@ export const 単発の通知の既定を変える: Story = {
   },
 }
 
-/** The log narrowed to one destination, as the page would answer the URL it is given. */
-function NarrowedLog(args: Story['args']) {
-  const [only, setOnly] = useState<string>()
-
-  return (
-    <NotificationsView
-      {...meta.args}
-      {...args}
-      screen={{
-        ...NOTIFICATIONS_SCREEN,
-        deliveriesFor: only,
-        deliveries: NOTIFICATIONS_SCREEN.deliveries.filter(
-          (delivery) => only === undefined || delivery.destinationId === only,
-        ),
-      }}
-      actions={{ ...ACTIONS, onShowDeliveriesFor: setOnly }}
-    />
-  )
-}
-
 export const 配送を送り先で絞る: Story = {
   render: (args) => <NarrowedLog {...args} />,
   play: async ({ canvasElement }) => {
@@ -401,28 +450,6 @@ export const 送り先を追加_Slack: Story = {
       dialog.getByText('保存したあとは末尾だけが見えます'),
     ).toBeVisible()
     await expect(add).toBeEnabled()
-  },
-}
-
-export const 送り先を追加する: Story = {
-  play: async ({ canvasElement }) => {
-    const dialog = within(await openTheWebhookForm(canvasElement))
-
-    addWebhook.mockClear()
-
-    await userEvent.type(dialog.getByLabelText('名前'), '家の Slack')
-    await userEvent.type(dialog.getByLabelText('Webhook の URL'), SLACK_ADDRESS)
-    await userEvent.click(dialog.getByRole('button', { name: '追加' }))
-
-    await waitFor(() =>
-      expect(addWebhook).toHaveBeenCalledWith({
-        name: '家の Slack',
-        url: SLACK_ADDRESS,
-      }),
-    )
-    await waitFor(() =>
-      expect(screen.queryByRole('dialog', { name: '送り先を追加' })).toBeNull(),
-    )
   },
 }
 
@@ -497,6 +524,28 @@ export const 送り先を追加_通知を拒否している: Story = {
     await expect(
       dialog.getByRole('button', { name: '許可して追加' }),
     ).toBeDisabled()
+  },
+}
+
+export const 送り先を追加する: Story = {
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheWebhookForm(canvasElement))
+
+    addWebhook.mockClear()
+
+    await userEvent.type(dialog.getByLabelText('名前'), '家の Slack')
+    await userEvent.type(dialog.getByLabelText('Webhook の URL'), SLACK_ADDRESS)
+    await userEvent.click(dialog.getByRole('button', { name: '追加' }))
+
+    await waitFor(() =>
+      expect(addWebhook).toHaveBeenCalledWith({
+        name: '家の Slack',
+        url: SLACK_ADDRESS,
+      }),
+    )
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '送り先を追加' })).toBeNull(),
+    )
   },
 }
 
@@ -688,21 +737,6 @@ export const ルールセットを追加: Story = {
   },
 }
 
-export const ルールセットが上限: Story = {
-  args: {
-    screen: { ...NOTIFICATIONS_SCREEN, ruleSets: TWENTY_RULE_SETS },
-  },
-  play: async ({ canvasElement }) => {
-    const ruleSets = within(canvasElement).getByRole('heading', {
-      name: 'ルールセット',
-    }).parentElement as HTMLElement
-
-    await expect(
-      within(ruleSets).getByRole('button', { name: '追加' }),
-    ).toBeDisabled()
-  },
-}
-
 export const 電話: Story = {
   parameters: { screen: PHONE, coarse: true },
   play: async ({ canvasElement }) => {
@@ -766,38 +800,5 @@ export const 電話_ルールセットを変更: Story = {
         window.innerHeight,
       ),
     )
-  },
-}
-
-export const 送り先が多い: Story = {
-  args: {
-    screen: {
-      ...NOTIFICATIONS_SCREEN,
-      destinations: [
-        ...DESTINATIONS,
-        {
-          ...HOME_SLACK,
-          id: 'dest-slack-2',
-          name: '実家のリビングの Slack のお知らせ用チャンネル',
-          urlTail: 'c3d4',
-          enabled: false,
-          lastResult: {
-            state: 'givenUp',
-            at: '2026-11-08T12:03:00Z',
-            failure: 'rejected',
-          },
-        },
-      ],
-    },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await expect(
-      canvas.getByRole('switch', {
-        name: '実家のリビングの Slack のお知らせ用チャンネル を有効にする',
-      }),
-    ).not.toBeChecked()
-    await expect(canvas.getByText('届かなかった · 断られた')).toBeVisible()
   },
 }

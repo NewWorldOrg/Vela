@@ -123,7 +123,7 @@ function DetailWithTheNotice({ watching }: { watching: boolean }) {
 }
 
 const meta = {
-  title: 'Components/単発の通知',
+  title: 'Components/番組と局/単発の通知',
   component: DetailWithTheNotice,
   parameters: { layout: 'centered' },
   args: { watching: false },
@@ -137,101 +137,8 @@ const meta = {
 } satisfies Meta<typeof DetailWithTheNotice>
 
 export default meta
+
 type Story = StoryObj<typeof meta>
-
-export const 押す前: Story = {
-  play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).getByRole('button', { name: NOTIFY_START }),
-    ).toBeVisible()
-  },
-}
-
-export const 押すと知らせが出る: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
-
-    await expect(
-      await screen.findByText('開始の 3 分前に通知します'),
-    ).toBeVisible()
-    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
-  },
-}
-
-export const 知らせから取り消す: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
-
-    await expect(
-      await screen.findByText('開始の 3 分前に通知します'),
-    ).toBeVisible()
-    await expect(
-      canvas.getByRole('button', { name: STOP_NOTIFYING }),
-    ).toBeVisible()
-    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
-
-    await userEvent.click(screen.getByRole('button', { name: '取り消す' }))
-
-    await waitFor(() =>
-      expect(canvas.getByRole('button', { name: NOTIFY_START })).toBeVisible(),
-    )
-  },
-}
-
-export const 押したあと: Story = {
-  args: { watching: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await expect(
-      canvas.getByRole('button', { name: STOP_NOTIFYING }),
-    ).toBeVisible()
-    await expect(
-      canvas.getByRole('button', { name: /開始 3 分前に通知/ }),
-    ).toHaveAttribute('aria-expanded', 'false')
-  },
-}
-
-export const 札を押して分を選ぶ: Story = {
-  args: { watching: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await userEvent.click(
-      canvas.getByRole('button', { name: /開始 3 分前に通知/ }),
-    )
-
-    const leads = within(await screen.findByRole('group', { name: '何分前' }))
-
-    await expect(leads.getByRole('button', { name: '3 分前' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    )
-
-    await userEvent.click(leads.getByRole('button', { name: '開始時' }))
-
-    await expect(
-      await canvas.findByRole('button', { name: /開始時に通知/ }),
-    ).toBeVisible()
-  },
-}
-
-export const 札を開いたまま: Story = {
-  render: () => (
-    <div className="flex h-[calc(160rem/16)] items-start pt-2">
-      <NotifyLeadChip leadMinutes={3} onChangeLead={() => {}} defaultOpen />
-    </div>
-  ),
-  play: async () => {
-    await expect(
-      await screen.findByRole('group', { name: '何分前' }),
-    ).toBeVisible()
-  },
-}
 
 /** Cells of the guide the way the bell sits in one: at the corner, the title leaving room for it. */
 function GuideCells() {
@@ -280,15 +187,6 @@ function GuideCells() {
   )
 }
 
-export const 番組表のベル: Story = {
-  render: () => <GuideCells />,
-  play: async ({ canvasElement }) => {
-    await expect(
-      within(canvasElement).getAllByText('放送開始を通知'),
-    ).toHaveLength(2)
-  },
-}
-
 /** Two single notices among the reservation list's rows, one of them open. */
 function ReservationRows({ firstOpen }: { firstOpen: boolean }) {
   const [open, setOpen] = useState<string | undefined>(
@@ -309,6 +207,109 @@ function ReservationRows({ firstOpen }: { firstOpen: boolean }) {
       ))}
     </ul>
   )
+}
+
+export const 通常: Story = {
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getByRole('button', { name: NOTIFY_START }),
+    ).toBeVisible()
+  },
+}
+
+export const 押したあと: Story = {
+  args: { watching: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(
+      canvas.getByRole('button', { name: STOP_NOTIFYING }),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: /開始 3 分前に通知/ }),
+    ).toHaveAttribute('aria-expanded', 'false')
+  },
+}
+
+export const 札を開いたまま: Story = {
+  render: () => (
+    <div className="flex h-[calc(160rem/16)] items-start pt-2">
+      <NotifyLeadChip leadMinutes={3} onChangeLead={() => {}} defaultOpen />
+    </div>
+  ),
+  play: async () => {
+    await expect(
+      await screen.findByRole('group', { name: '何分前' }),
+    ).toBeVisible()
+  },
+}
+
+export const 番組表のベル: Story = {
+  render: () => <GuideCells />,
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).getAllByText('放送開始を通知'),
+    ).toHaveLength(2)
+  },
+}
+
+export const 押すと知らせが出る: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
+
+    await expect(
+      await screen.findByText('開始の 3 分前に通知します'),
+    ).toBeVisible()
+    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
+  },
+}
+
+export const 知らせから取り消す: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: NOTIFY_START }))
+
+    await expect(
+      await screen.findByText('開始の 3 分前に通知します'),
+    ).toBeVisible()
+    await expect(
+      canvas.getByRole('button', { name: STOP_NOTIFYING }),
+    ).toBeVisible()
+    await expect(canvas.getByText('開始 3 分前に通知')).toBeVisible()
+
+    await userEvent.click(screen.getByRole('button', { name: '取り消す' }))
+
+    await waitFor(() =>
+      expect(canvas.getByRole('button', { name: NOTIFY_START })).toBeVisible(),
+    )
+  },
+}
+
+export const 札を押して分を選ぶ: Story = {
+  args: { watching: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(
+      canvas.getByRole('button', { name: /開始 3 分前に通知/ }),
+    )
+
+    const leads = within(await screen.findByRole('group', { name: '何分前' }))
+
+    await expect(leads.getByRole('button', { name: '3 分前' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    await userEvent.click(leads.getByRole('button', { name: '開始時' }))
+
+    await expect(
+      await canvas.findByRole('button', { name: /開始時に通知/ }),
+    ).toBeVisible()
+  },
 }
 
 export const 予約一覧の行: Story = {
