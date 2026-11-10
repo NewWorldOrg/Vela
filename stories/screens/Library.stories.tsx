@@ -1341,9 +1341,16 @@ async function pressAndSinks(
     ].find((one) => one.getClientRects().length > 0)
   const before = barOf()?.textContent ?? ''
   const said = new Set<string>()
-  const from = performance.now()
+  let from = performance.now()
   let gone: number | undefined
 
+  target.addEventListener(
+    'click',
+    () => {
+      from = performance.now()
+    },
+    { once: true, capture: true },
+  )
   await expect(before).toContain('件を選択')
   await userEvent.click(target)
 

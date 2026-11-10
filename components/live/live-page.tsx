@@ -141,6 +141,7 @@ export function LiveView({
   askSignedOut,
   askBacklog,
   startupDeadlineMs,
+  restsMs,
   takeCapture,
   channelsFolded = false,
   subChannelsFolded = false,
@@ -164,6 +165,8 @@ export function LiveView({
   askSignedOut?: () => Promise<boolean>
   askBacklog?: AskBacklog
   startupDeadlineMs?: number
+  /** How long the player's controls stay up after they were last stirred; the player's own when not given. */
+  restsMs?: number
   takeCapture?: TakeCapture
   channelsFolded?: boolean
   autoOpensDataBroadcast?: boolean
@@ -475,6 +478,7 @@ export function LiveView({
           askSignedOut={askSignedOut}
           askBacklog={askBacklog}
           startupDeadlineMs={startupDeadlineMs}
+          restsMs={restsMs}
           takeCapture={takeCapture}
           autoOpensDataBroadcast={autoOpensDataBroadcast}
           captionStyle={captionStyle}
@@ -559,7 +563,7 @@ export function LiveView({
         )}
       >
         {openMode && motion.shown ? (
-          <div className={COLUMN_BODY}>
+          <div className={COLUMN_BODY} data-swap={swap}>
             <ColumnSwitch
               shows={shows}
               onShows={switchTo}

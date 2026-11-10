@@ -184,6 +184,7 @@ const meta = {
     openSocket: carrying(CATALOG, ...modules()),
     askSignedOut: async () => false,
     askBacklog: async () => undefined,
+    restsMs: 1000,
   },
   decorators: [inTheApp],
   beforeEach: () => {
@@ -500,12 +501,18 @@ function theColumn(canvasElement: HTMLElement): HTMLElement {
   return found
 }
 
-/** Waits for the column to come to rest after it swapped or folded. */
+/** Waits for the column to come to rest after it swapped or folded: nothing moving, and the swap between the remote and the channels over, since a press on the switch before then is not taken. */
 async function columnAtRest(canvasElement: HTMLElement) {
   const column = theColumn(canvasElement)
 
   await waitFor(
-    () => expect(column.getAnimations({ subtree: true }).length).toBe(0),
+    () => {
+      expect(column.getAnimations({ subtree: true }).length).toBe(0)
+      expect(
+        column.querySelector('[data-swap]')?.getAttribute('data-swap') ??
+          'still',
+      ).toBe('still')
+    },
     { timeout: 6000 },
   )
 }
