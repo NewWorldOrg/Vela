@@ -61,7 +61,7 @@ test('an address Carina refuses has no kind', () => {
     'https://hooks.slack.com.evil.example/services/T000',
     'https://user:secret@hooks.slack.com/services/T000',
     'https://127.0.0.1/services/T000',
-    'https://[::ffff:10.0.0.3]/api/webhooks/1',
+    'https://[::ffff:10.1.2.3]/api/webhooks/1',
     'https://discord.com/channels/1234',
     'https://hook.example.jp/carina',
   ]) {
