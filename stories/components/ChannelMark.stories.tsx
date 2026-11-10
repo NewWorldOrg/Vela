@@ -17,7 +17,7 @@ import { MarkPill } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
 
 const meta = {
-  title: 'Components/ChannelMark',
+  title: 'Components/番組と局/局のロゴ',
   component: ChannelMark,
   parameters: { layout: 'fullscreen' },
 } satisfies Meta<typeof ChannelMark>
@@ -61,7 +61,7 @@ function Row({
   )
 }
 
-export const States: Story = {
+export const 状態: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
       <SectionHeading>読み取れている局</SectionHeading>
@@ -102,7 +102,7 @@ const LOGO_AT: Partial<Record<number, StationLogo>> = {
   9: LOGO_NONE_BROADCAST,
 }
 
-export const ManyMissing: Story = {
+export const 多くが欠ける: Story = {
   render: () => (
     <div className="mx-auto max-w-[520px] p-6">
       <SectionHeading>27 列のうち 3 局</SectionHeading>

@@ -79,7 +79,7 @@ async function theStream(): Promise<TestStream> {
 }
 
 const meta = {
-  title: 'Components/セッション切れ',
+  title: 'Components/状態と知らせ/セッション切れ',
   component: RefreshOnSignal,
   args: { events: [PROGRAMS_EVENT, EPG_COLLECTION_EVENT] },
   parameters: {

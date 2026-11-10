@@ -15,7 +15,7 @@ const answering = (result: CollectNowResult) => async () => result
 const rebuilt: RebuildResult = { state: 'ok', discarded: 3521 }
 
 const meta = {
-  title: 'Screens/番組表 収集状態',
+  title: 'Screens/番組表/収集状態',
   component: CollectionDrawer,
   parameters: { layout: 'fullscreen' },
   args: {

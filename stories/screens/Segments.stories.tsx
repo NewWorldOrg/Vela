@@ -60,7 +60,7 @@ const ACTIONS = {
 }
 
 const meta = {
-  title: 'Screens/設定・CM・OP・ED の検出',
+  title: 'Screens/設定/録る/CM・OP・ED の検出',
   component: SegmentsView,
   parameters: {
     nextjs: {
@@ -816,23 +816,6 @@ export const サインインが切れている: Story = {
   },
 }
 
-export const 狭い幅: Story = {
-  args: { status: DETECTION_BY_HAND },
-  parameters: { screen: { width: 390, height: 844 } },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
-    const page = canvasElement.ownerDocument.documentElement
-
-    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
-    await expect(
-      within(versions(canvasElement)).getByRole('button', {
-        name: BACK_TO_AUTOMATIC,
-      }),
-    ).toBeVisible()
-  },
-}
-
 async function theNavNameFits(canvasElement: HTMLElement): Promise<void> {
   await afterTheArrival(canvasElement)
   await canvasElement.ownerDocument.fonts.ready
@@ -866,6 +849,23 @@ export const ナビの名前が収まる: Story = {
   },
 }
 
+export const 狭い幅: Story = {
+  args: { status: DETECTION_BY_HAND },
+  parameters: { screen: { width: 390, height: 844 } },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const page = canvasElement.ownerDocument.documentElement
+
+    await expect(page.scrollWidth).toBeLessThanOrEqual(page.clientWidth)
+    await expect(
+      within(versions(canvasElement)).getByRole('button', {
+        name: BACK_TO_AUTOMATIC,
+      }),
+    ).toBeVisible()
+  },
+}
+
 export const ナビの名前が名前の出る最も狭い幅でも収まる: Story = {
   parameters: { screen: { width: 901, height: 900 } },
   play: async ({ canvasElement }) => {
@@ -882,6 +882,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 人が選んだ版.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

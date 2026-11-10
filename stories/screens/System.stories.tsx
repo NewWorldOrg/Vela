@@ -11,7 +11,7 @@ import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
 
 const meta = {
-  title: 'Screens/設定・システム',
+  title: 'Screens/設定/システム',
   component: SystemView,
   parameters: {
     nextjs: {
@@ -198,6 +198,7 @@ export const 停止準備中: Story = {
 }
 
 export const driver未接続: Story = {
+  name: 'driver未接続',
   args: {
     status: {
       ...SYSTEM_CENSUS,

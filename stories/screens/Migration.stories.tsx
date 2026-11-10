@@ -18,7 +18,7 @@ import {
 } from '@/stories/rows-as-cards'
 
 const meta = {
-  title: 'Screens/設定・移行記録',
+  title: 'Screens/設定/管理/移行記録',
   component: MigrationView,
   parameters: {
     nextjs: {
@@ -129,6 +129,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: 通常.args,
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {

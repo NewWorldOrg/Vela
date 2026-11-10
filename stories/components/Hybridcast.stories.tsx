@@ -24,7 +24,7 @@ import {
 } from '@/components/recordings/player-palette'
 
 const meta = {
-  title: 'Components/Hybridcast',
+  title: 'Components/データ放送/Hybridcast',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -246,8 +246,10 @@ export const 受信機の関数: Story = {
       expect(app.getAttribute('data-heard')).toContain('greg'),
     )
     await expect(app.getAttribute('data-heard')).toContain('keySet')
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')).toContain('videoRect:over'),
+    )
     await expect(app).toHaveAttribute('data-rect', '960,120,800,450')
-    await expect(app.getAttribute('data-heard')).toContain('videoRect:over')
   },
 }
 
@@ -521,6 +523,7 @@ async function movedBy(canvasElement: HTMLElement, label: string, key: string) {
 }
 
 export const 局の場所の_href_で移る: Story = {
+  name: '局の場所の href で移る',
   render: () => <Harness label="href で移る" />,
   play: async ({ canvasElement }) => movedBy(canvasElement, 'href で移る', '3'),
 }

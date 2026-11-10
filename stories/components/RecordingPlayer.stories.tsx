@@ -471,7 +471,7 @@ async function keepingThePosition(id: string, positionSec: number) {
 }
 
 const meta = {
-  title: 'Components/録画プレイヤー',
+  title: 'Components/プレイヤー/録画プレイヤー',
   component: Player,
   parameters: { layout: 'fullscreen' },
   args: {
@@ -680,6 +680,7 @@ export const 再生できない_外部プレイヤーは渡すものを選べる
 }
 
 export const エンコード済みがある録画は_AirPlay_を置く: Story = {
+  name: 'エンコード済みがある録画は AirPlay を置く',
   args: { detail: detail('1274'), plan: WITH_AN_ARTEFACT },
   play: async ({ canvasElement }) => {
     await expect(
@@ -689,6 +690,7 @@ export const エンコード済みがある録画は_AirPlay_を置く: Story = 
 }
 
 export const 元のままを再生しているあいだは_AirPlay_を置かない: Story = {
+  name: '元のままを再生しているあいだは AirPlay を置かない',
   args: { detail: detail('1274'), plan: THE_RECORDING_ITSELF },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -812,6 +814,7 @@ export const 止めているあいだに受け取りが切れたら_次の再生
   }
 
 export const エンコード済みが無い録画は_AirPlay_を置かない: Story = {
+  name: 'エンコード済みが無い録画は AirPlay を置かない',
   args: { detail: detail('1266'), plan: NOTHING_WAS_ENCODED },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -836,6 +839,7 @@ export const 読み込み中: Story = {
 }
 
 export const 機械が1080p60と答える: Story = {
+  name: '機械が1080p60と答える',
   args: {
     detail: detail('1266'),
     startAt: 0,
@@ -857,6 +861,7 @@ export const 機械が1080p60と答える: Story = {
 }
 
 export const 機械が720p30と答える: Story = {
+  name: '機械が720p30と答える',
   args: {
     detail: detail('1266'),
     startAt: 0,
@@ -6044,6 +6049,7 @@ export const 電話の幅では歯車が映像のすぐ下に開く: Story = {
 }
 
 export const iPad_の縦では一行に収めキャプチャを歯車に移す: Story = {
+  name: 'iPad の縦では一行に収めキャプチャを歯車に移す',
   args: {
     detail: detail('1266'),
     plan: THEMED,

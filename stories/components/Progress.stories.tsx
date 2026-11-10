@@ -7,14 +7,14 @@ import { Button } from '@/components/ui/button'
 import { EncodeIcon, SearchIcon, TunerIcon } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Progress',
+  title: 'Components/状態と知らせ/進み具合',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const ScanProgress: Story = {
+export const スキャンの進み具合: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>スキャン進捗</SectionHeading>
@@ -45,7 +45,7 @@ export const ScanProgress: Story = {
   ),
 }
 
-export const Meters: Story = {
+export const 信号品質のメーター: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>信号品質メーター(CNR)</SectionHeading>
@@ -80,7 +80,7 @@ export const Meters: Story = {
   ),
 }
 
-export const BarAndSpinner: Story = {
+export const 細いバーとスピナー: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>細プログレスとスピナー</SectionHeading>

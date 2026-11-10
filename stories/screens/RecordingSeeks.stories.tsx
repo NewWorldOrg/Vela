@@ -128,7 +128,7 @@ function longerThanStepsAreJoined() {
 }
 
 const meta = {
-  title: 'Screens/録画詳細/シークを送る',
+  title: 'Screens/ライブラリ/録画詳細/シークを送る',
   component: RecordingDetailView,
   parameters: {
     nextjs: {

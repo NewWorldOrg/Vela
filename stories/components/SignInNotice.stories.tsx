@@ -44,7 +44,7 @@ function signingIn(notice: string) {
 }
 
 const meta = {
-  title: 'Components/SignInNotice',
+  title: 'Components/状態と知らせ/サインインの断り',
   component: LocalSignIn,
   parameters: { layout: 'centered' },
   args: { returnPath: '/', placement: 'lead' },

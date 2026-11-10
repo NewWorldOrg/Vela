@@ -10,7 +10,7 @@ import { Surface } from '@/components/vela/surface'
 import { MarkDots, MarkStar } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Foundations/Marks',
+  title: 'Foundations/ロゴと案内役',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 

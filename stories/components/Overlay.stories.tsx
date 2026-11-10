@@ -53,7 +53,7 @@ import {
 } from '@/components/vela/icons'
 
 const meta = {
-  title: 'Components/Overlay',
+  title: 'Components/重なり/ダイアログとメニュー',
   parameters: { layout: 'fullscreen' },
 } satisfies Meta
 
@@ -64,7 +64,7 @@ const ONLY_THE_OPEN_LAYER = (slot: string) => ({
   a11y: { context: { include: `[data-slot="${slot}"]` } },
 })
 
-export const ConfirmDialog: Story = {
+export const 確認の対話: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dialog-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
@@ -118,7 +118,7 @@ export const ConfirmDialog: Story = {
   },
 }
 
-export const DeleteRecording: Story = {
+export const 録画の削除: Story = {
   parameters: ONLY_THE_OPEN_LAYER('alert-dialog-content'),
   render: function DeleteRecordingStory() {
     const [target, setTarget] = useState<Recording | null>(null)
@@ -157,7 +157,7 @@ export const DeleteRecording: Story = {
   },
 }
 
-export const SidePanel: Story = {
+export const 右の面: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>右サイドパネル(番組詳細)</SectionHeading>
@@ -198,7 +198,7 @@ export const SidePanel: Story = {
   ),
 }
 
-export const BottomSheet: Story = {
+export const ボトムシート: Story = {
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
       <SectionHeading>ボトムシート(モバイル)</SectionHeading>
@@ -229,7 +229,7 @@ export const BottomSheet: Story = {
   ),
 }
 
-export const OpenList: Story = {
+export const 開いた選択肢: Story = {
   parameters: ONLY_THE_OPEN_LAYER('select-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">
@@ -275,7 +275,7 @@ export const OpenList: Story = {
   },
 }
 
-export const OpenMenu: Story = {
+export const 開いたメニュー: Story = {
   parameters: ONLY_THE_OPEN_LAYER('dropdown-menu-content'),
   render: () => (
     <div className="mx-auto max-w-[620px] p-6">

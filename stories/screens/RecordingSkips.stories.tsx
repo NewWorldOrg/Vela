@@ -140,7 +140,7 @@ function forgetWhatWasSent() {
 }
 
 const meta = {
-  title: 'Screens/録画詳細/CM・OP・ED を飛ばす操作',
+  title: 'Screens/ライブラリ/録画詳細/CM・OP・ED を飛ばす操作',
   component: RecordingDetailView,
   parameters: {
     nextjs: {

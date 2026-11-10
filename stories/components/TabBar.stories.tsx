@@ -13,7 +13,7 @@ const PHONE = { width: 390, height: 844 }
 const HOME_BAR = 34
 
 const meta = {
-  title: 'Components/TabBar',
+  title: 'Components/ナビゲーション/タブバー',
   parameters: {
     layout: 'fullscreen',
     nextjs: {
@@ -90,7 +90,7 @@ async function showsTheTopBar(canvasElement: HTMLElement): Promise<void> {
   ).toBeVisible()
 }
 
-export const OnAPhone: Story = {
+export const 電話: Story = {
   render: () => <Shell />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -120,7 +120,7 @@ export const OnAPhone: Story = {
   },
 }
 
-export const OnAPhoneWithAHomeBar: Story = {
+export const ホームバーのある電話: Story = {
   render: () => <Shell homeBar={HOME_BAR} />,
   parameters: { screen: PHONE },
   play: async ({ canvasElement }) => {
@@ -147,234 +147,9 @@ export const OnAPhoneWithAHomeBar: Story = {
   },
 }
 
-export const JustBelowSixHundred: Story = {
-  render: () => <Shell />,
-  parameters: { screen: { width: 599, height: 900 } },
-  play: async ({ canvasElement }) => {
-    await showsTheTabs(canvasElement)
-  },
-}
-
-export const AtSixHundred: Story = {
-  render: () => <Shell />,
-  parameters: { screen: { width: 600, height: 900 } },
-  play: async ({ canvasElement }) => {
-    await showsTheTopBar(canvasElement)
-  },
-}
-
-export const OnAWideWindow: Story = {
-  render: () => <Shell />,
-  parameters: { screen: { width: 1280, height: 800 } },
-  play: async ({ canvasElement }) => {
-    await showsTheTopBar(canvasElement)
-    await expect(
-      within(canvasElement).getByRole('link', { current: 'page' }),
-    ).toHaveTextContent('ライブラリ')
-  },
-}
-
-export const InTheSettingsOnAPhone: Story = {
-  render: () => <Shell />,
-  parameters: {
-    screen: PHONE,
-    nextjs: {
-      appDirectory: true,
-      navigation: { pathname: '/settings/tuners' },
-    },
-  },
-  play: async ({ canvasElement }) => {
-    await expect(
-      within(tabBarOf(canvasElement)).getByRole('link', { current: 'page' }),
-    ).toHaveTextContent('設定')
-    await expect(
-      canvasElement.querySelector('[data-slot="phone-bar-title"]'),
-    ).toHaveTextContent('チューナー')
-    await expect(
-      within(canvasElement).getByRole('link', { name: '設定へ' }),
-    ).toHaveAttribute('href', '/settings')
-  },
-}
-
-export const TheBarSaysTheScreenOnAPhone: Story = {
-  render: () => <Shell />,
-  parameters: {
-    screen: PHONE,
-    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
-  },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const title = canvasElement.querySelector('[data-slot="phone-bar-title"]')
-
-    await expect(title).toHaveTextContent('ライブラリ')
-    await expect(parseFloat(getComputedStyle(title!).fontSize)).toBe(22)
-    await expect(
-      canvasElement.querySelector('[data-slot="brand"]'),
-    ).not.toBeVisible()
-    await expect(
-      canvasElement.querySelector('[data-slot="phone-bar-back"]'),
-    ).toBeNull()
-
-    const theme = canvas.getByRole('button', { name: 'テーマ' })
-    const box = theme.getBoundingClientRect()
-
-    await expect(box.width).toBeGreaterThanOrEqual(40)
-    await expect(box.right).toBeLessThanOrEqual(window.innerWidth - 12)
-  },
-}
-
-export const TheOpenTabPressedAgainGoesToTheTop: Story = {
-  render: () => <Shell />,
-  parameters: {
-    screen: PHONE,
-    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
-  },
-  play: async ({ canvasElement }) => {
-    window.scrollTo(0, 600)
-    await expect(window.scrollY).toBeGreaterThan(0)
-
-    await userEvent.click(
-      within(tabBarOf(canvasElement)).getByRole('link', { name: 'ライブラリ' }),
-    )
-
-    await expect(window.scrollY).toBe(0)
-  },
-}
-
-export const TheReservationsTabCountsTheConflicts: Story = {
-  render: () => <Shell conflicts={2} />,
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => {
-    const bar = within(tabBarOf(canvasElement))
-    const reservations = bar.getByRole('link', { name: /予約/ })
-    const badge = reservations.querySelector('[data-slot="tab-badge"]')
-
-    await expect(reservations).toHaveAccessibleName('予約 競合 2 件')
-    await expect(badge).toBeVisible()
-
-    const icon = reservations.querySelector('svg')!.getBoundingClientRect()
-    const mark = badge!.getBoundingClientRect()
-
-    await expect(mark.left).toBeGreaterThan(icon.left)
-    await expect(mark.bottom).toBeLessThanOrEqual(
-      reservations.getBoundingClientRect().top + icon.height + 10,
-    )
-  },
-}
-
-export const GoneWhileThePlayerFillsTheWindow: Story = {
-  render: () => (
-    <>
-      <Shell />
-      <div
-        data-fill="true"
-        className="fixed inset-0 z-[60] bg-[#0f0e12]"
-        aria-hidden="true"
-      />
-    </>
-  ),
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => {
-    await expect(getComputedStyle(tabBarOf(canvasElement)).display).toBe('none')
-  },
-}
-
-function Fields() {
-  return (
-    <div className="grid gap-3 p-4">
-      <Input aria-label="番組名" defaultValue="忍たま乱太郎" />
-      <Textarea aria-label="メモ" defaultValue="毎日 18:50" />
-      <label className="text-sub">
-        並び
-        <select className="ml-2 h-11 text-sub" defaultValue="new">
-          <option value="new">新しい順</option>
-          <option value="old">古い順</option>
-        </select>
-      </label>
-    </div>
-  )
-}
-
-async function fieldSizes(canvasElement: HTMLElement): Promise<number[]> {
-  return [...canvasElement.querySelectorAll('input, textarea, select')].map(
-    (field) => parseFloat(getComputedStyle(field).fontSize),
-  )
-}
-
-export const FieldsOnAPhone: Story = {
-  render: () => <Fields />,
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => {
-    for (const size of await fieldSizes(canvasElement)) {
-      await expect(size).toBeGreaterThanOrEqual(16)
-    }
-  },
-}
-
-export const FieldsOnAPhoneHeldSideways: Story = {
-  render: () => <Fields />,
-  parameters: { screen: { width: 844, height: 390 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    for (const size of await fieldSizes(canvasElement)) {
-      await expect(size).toBeGreaterThanOrEqual(16)
-    }
-  },
-}
-
-export const FieldsOnAWideWindow: Story = {
-  render: () => <Fields />,
-  parameters: { screen: { width: 1280, height: 800 } },
-  play: async ({ canvasElement }) => {
-    for (const size of await fieldSizes(canvasElement)) {
-      await expect(size).toBeLessThan(16)
-    }
-  },
-}
-
-function Steps() {
-  return (
-    <div className="grid gap-1 p-4 text-ink">
-      <p data-step="body" className="text-body">
-        本文
-      </p>
-      <p data-step="micro" className="text-micro">
-        札
-      </p>
-    </div>
-  )
-}
-
-function stepSize(canvasElement: HTMLElement, step: string): number {
-  const found = canvasElement.querySelector(`[data-step="${step}"]`)
-
-  if (!(found instanceof HTMLElement)) {
-    throw new Error(`${step} is not drawn`)
-  }
-
-  return parseFloat(getComputedStyle(found).fontSize)
-}
-
-export const TextOnAPhone: Story = {
-  render: () => <Steps />,
-  parameters: { screen: PHONE },
-  play: async ({ canvasElement }) => {
-    await expect(stepSize(canvasElement, 'body')).toBe(14)
-    await expect(stepSize(canvasElement, 'micro')).toBe(11)
-  },
-}
-
-export const TextOnAWideWindow: Story = {
-  render: () => <Steps />,
-  parameters: { screen: { width: 1280, height: 800 } },
-  play: async ({ canvasElement }) => {
-    await expect(stepSize(canvasElement, 'body')).toBe(14)
-    await expect(stepSize(canvasElement, 'micro')).toBe(11)
-  },
-}
-
 const SIDEWAYS = { width: 844, height: 390 }
 
-export const OnAPhoneHeldSideways: Story = {
+export const 横向きの電話: Story = {
   render: () => <Shell />,
   parameters: {
     screen: SIDEWAYS,
@@ -419,5 +194,230 @@ export const OnAPhoneHeldSideways: Story = {
       .getBoundingClientRect()
 
     await expect(bar.left).toBeGreaterThanOrEqual(box.right - 1)
+  },
+}
+
+export const 幅599: Story = {
+  render: () => <Shell />,
+  parameters: { screen: { width: 599, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await showsTheTabs(canvasElement)
+  },
+}
+
+export const 幅600: Story = {
+  render: () => <Shell />,
+  parameters: { screen: { width: 600, height: 900 } },
+  play: async ({ canvasElement }) => {
+    await showsTheTopBar(canvasElement)
+  },
+}
+
+export const 広い窓: Story = {
+  render: () => <Shell />,
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    await showsTheTopBar(canvasElement)
+    await expect(
+      within(canvasElement).getByRole('link', { current: 'page' }),
+    ).toHaveTextContent('ライブラリ')
+  },
+}
+
+export const 電話の設定の中: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: PHONE,
+    nextjs: {
+      appDirectory: true,
+      navigation: { pathname: '/settings/tuners' },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(tabBarOf(canvasElement)).getByRole('link', { current: 'page' }),
+    ).toHaveTextContent('設定')
+    await expect(
+      canvasElement.querySelector('[data-slot="phone-bar-title"]'),
+    ).toHaveTextContent('チューナー')
+    await expect(
+      within(canvasElement).getByRole('link', { name: '設定へ' }),
+    ).toHaveAttribute('href', '/settings')
+  },
+}
+
+export const 電話では上の帯が画面の名前を言う: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: PHONE,
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const title = canvasElement.querySelector('[data-slot="phone-bar-title"]')
+
+    await expect(title).toHaveTextContent('ライブラリ')
+    await expect(parseFloat(getComputedStyle(title!).fontSize)).toBe(22)
+    await expect(
+      canvasElement.querySelector('[data-slot="brand"]'),
+    ).not.toBeVisible()
+    await expect(
+      canvasElement.querySelector('[data-slot="phone-bar-back"]'),
+    ).toBeNull()
+
+    const theme = canvas.getByRole('button', { name: 'テーマ' })
+    const box = theme.getBoundingClientRect()
+
+    await expect(box.width).toBeGreaterThanOrEqual(40)
+    await expect(box.right).toBeLessThanOrEqual(window.innerWidth - 12)
+  },
+}
+
+export const 開いているタブをもう一度押すと上へ戻る: Story = {
+  render: () => <Shell />,
+  parameters: {
+    screen: PHONE,
+    nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
+  },
+  play: async ({ canvasElement }) => {
+    window.scrollTo(0, 600)
+    await expect(window.scrollY).toBeGreaterThan(0)
+
+    await userEvent.click(
+      within(tabBarOf(canvasElement)).getByRole('link', { name: 'ライブラリ' }),
+    )
+
+    await expect(window.scrollY).toBe(0)
+  },
+}
+
+export const 予約のタブは競合を数える: Story = {
+  render: () => <Shell conflicts={2} />,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const bar = within(tabBarOf(canvasElement))
+    const reservations = bar.getByRole('link', { name: /予約/ })
+    const badge = reservations.querySelector('[data-slot="tab-badge"]')
+
+    await expect(reservations).toHaveAccessibleName('予約 競合 2 件')
+    await expect(badge).toBeVisible()
+
+    const icon = reservations.querySelector('svg')!.getBoundingClientRect()
+    const mark = badge!.getBoundingClientRect()
+
+    await expect(mark.left).toBeGreaterThan(icon.left)
+    await expect(mark.bottom).toBeLessThanOrEqual(
+      reservations.getBoundingClientRect().top + icon.height + 10,
+    )
+  },
+}
+
+export const プレイヤーが窓いっぱいのあいだは消える: Story = {
+  render: () => (
+    <>
+      <Shell />
+      <div
+        data-fill="true"
+        className="fixed inset-0 z-[60] bg-[#0f0e12]"
+        aria-hidden="true"
+      />
+    </>
+  ),
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await expect(getComputedStyle(tabBarOf(canvasElement)).display).toBe('none')
+  },
+}
+
+function Fields() {
+  return (
+    <div className="grid gap-3 p-4">
+      <Input aria-label="番組名" defaultValue="忍たま乱太郎" />
+      <Textarea aria-label="メモ" defaultValue="毎日 18:50" />
+      <label className="text-sub">
+        並び
+        <select className="ml-2 h-11 text-sub" defaultValue="new">
+          <option value="new">新しい順</option>
+          <option value="old">古い順</option>
+        </select>
+      </label>
+    </div>
+  )
+}
+
+async function fieldSizes(canvasElement: HTMLElement): Promise<number[]> {
+  return [...canvasElement.querySelectorAll('input, textarea, select')].map(
+    (field) => parseFloat(getComputedStyle(field).fontSize),
+  )
+}
+
+export const 電話の入力欄: Story = {
+  render: () => <Fields />,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    for (const size of await fieldSizes(canvasElement)) {
+      await expect(size).toBeGreaterThanOrEqual(16)
+    }
+  },
+}
+
+export const 横向きの電話の入力欄: Story = {
+  render: () => <Fields />,
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    for (const size of await fieldSizes(canvasElement)) {
+      await expect(size).toBeGreaterThanOrEqual(16)
+    }
+  },
+}
+
+export const 広い窓の入力欄: Story = {
+  render: () => <Fields />,
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    for (const size of await fieldSizes(canvasElement)) {
+      await expect(size).toBeLessThan(16)
+    }
+  },
+}
+
+function Steps() {
+  return (
+    <div className="grid gap-1 p-4 text-ink">
+      <p data-step="body" className="text-body">
+        本文
+      </p>
+      <p data-step="micro" className="text-micro">
+        札
+      </p>
+    </div>
+  )
+}
+
+function stepSize(canvasElement: HTMLElement, step: string): number {
+  const found = canvasElement.querySelector(`[data-step="${step}"]`)
+
+  if (!(found instanceof HTMLElement)) {
+    throw new Error(`${step} is not drawn`)
+  }
+
+  return parseFloat(getComputedStyle(found).fontSize)
+}
+
+export const 電話の文字の段: Story = {
+  render: () => <Steps />,
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    await expect(stepSize(canvasElement, 'body')).toBe(14)
+    await expect(stepSize(canvasElement, 'micro')).toBe(11)
+  },
+}
+
+export const 広い窓の文字の段: Story = {
+  render: () => <Steps />,
+  parameters: { screen: { width: 1280, height: 800 } },
+  play: async ({ canvasElement }) => {
+    await expect(stepSize(canvasElement, 'body')).toBe(14)
+    await expect(stepSize(canvasElement, 'micro')).toBe(11)
   },
 }

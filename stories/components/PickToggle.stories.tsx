@@ -4,7 +4,7 @@ import { expect, fn, userEvent, within } from 'storybook/test'
 import { PickToggle } from '@/components/library/picking'
 
 const meta = {
-  title: 'Components/PickToggle',
+  title: 'Components/ボタンとフォーム/選ぶボタン',
   component: PickToggle,
   parameters: { layout: 'centered' },
   args: { pressed: false, onPress: fn() },

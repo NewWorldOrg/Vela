@@ -97,7 +97,7 @@ async function remakingAllButTheSecond(
 }
 
 const meta = {
-  title: 'Screens/ライブラリ',
+  title: 'Screens/ライブラリ/ライブラリ',
   component: LibraryView,
   parameters: {
     nextjs: { appDirectory: true, navigation: { pathname: '/library' } },
@@ -231,765 +231,6 @@ function topOf(element: Element | null): number {
   }
 
   return Math.round(element.getBoundingClientRect().top)
-}
-
-export const 複数を選んで削除する: Story = {
-  args: { result, filter: {} },
-  parameters: { coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-    const [first, second] = result.items.filter(
-      (one) => one.outcome !== 'recording',
-    )
-
-    thrownAway.length = 0
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await userEvent.click(pickOf(canvasElement, second))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
-    await expect(window.location.pathname).not.toMatch(/\/recordings\//)
-
-    await userEvent.click(
-      within(pickingRow(canvasElement)).getByRole('button', { name: '削除' }),
-    )
-
-    const dialog = within(await screen.findByRole('alertdialog'))
-
-    await expect(dialog.getByText(first.title)).toBeVisible()
-    await expect(dialog.getByText(second.title)).toBeVisible()
-    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
-
-    await waitFor(() => expect(thrownAway).toEqual([[first.id, second.id]]))
-    await stopsChoosing(canvasElement)
-  },
-}
-
-/** Sees the library leave choosing: the bar or band gone, no checks drawn, and `選ぶ` no longer pressed where it is drawn. */
-async function stopsChoosing(canvasElement: HTMLElement): Promise<void> {
-  const canvas = within(canvasElement)
-
-  await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
-  await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual([])
-  for (const toggle of canvas.queryAllByRole('button', { name: '選ぶ' })) {
-    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
-  }
-}
-
-const BAR_ABOVE_THE_FOOT = 24
-
-/** Where the bar stands once it has risen in: fixed, its foot 24px over the window's, in the middle of the window. */
-async function floatsAtTheFoot(bar: HTMLElement): Promise<void> {
-  const { clientWidth, clientHeight } = document.documentElement
-
-  await expect(getComputedStyle(bar).position).toBe('fixed')
-  await waitFor(() => {
-    const box = bar.getBoundingClientRect()
-
-    expect(
-      Math.abs(clientHeight - box.bottom - BAR_ABOVE_THE_FOOT),
-    ).toBeLessThan(1.5)
-    expect(Math.abs(box.left - (clientWidth - box.right))).toBeLessThan(1.5)
-  })
-  await expect(getComputedStyle(bar).boxShadow).not.toBe('none')
-}
-
-export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await afterTheArrival(canvasElement)
-
-    const genres = canvas.getByRole('group', { name: 'ジャンル' })
-    const shelves = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="library-shelves"]',
-    )!
-    const heading = canvas.getByRole('heading', {
-      level: 1,
-      name: 'ライブラリ',
-    })
-    const filtersAt = topOf(genres)
-    const shelvesAt = topOf(shelves)
-    const headingAt = topOf(heading)
-
-    await expect(canvas.queryByRole('toolbar')).toBeNull()
-    await startChoosing(canvasElement)
-
-    const bar = pickingRow(canvasElement)
-    const row = within(bar)
-
-    await floatsAtTheFoot(bar)
-    await expect(row.getByText('録画を選ぶ')).toBeVisible()
-    await expect(row.getByRole('button', { name: '閉じる' })).toBeVisible()
-    await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
-    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
-
-    await expect(
-      canvas.getByRole('heading', { level: 1, name: 'ライブラリ' }),
-    ).toBeVisible()
-    await expect(topOf(heading)).toBe(headingAt)
-    await expect(topOf(genres)).toBe(filtersAt)
-    await expect(topOf(shelves)).toBe(shelvesAt)
-
-    const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
-
-    await expect(pick).toHaveAttribute('aria-pressed', 'true')
-    await expect(pick.className).toMatch(/\bbg-accent-tint\b/)
-
-    const [first] = LIBRARY_SHELF
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await expect(row.getByText('件を選択', { exact: false })).toHaveTextContent(
-      '1 件を選択',
-    )
-    await expect(row.getByRole('button', { name: '削除' })).toBeEnabled()
-    await floatsAtTheFoot(bar)
-  },
-}
-
-export const 選ぶをもう一度押すか閉じるで帯が消える: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    await afterTheArrival(canvasElement)
-
-    const shelves = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="library-shelves"]',
-    )!
-    const shelvesAt = topOf(shelves)
-
-    await startChoosing(canvasElement)
-    await userEvent.click(pickOf(canvasElement, LIBRARY_SHELF[0]))
-
-    const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
-
-    await userEvent.click(pick)
-    await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
-    await expect(pick).toHaveAttribute('aria-pressed', 'false')
-    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
-    await expect(topOf(shelves)).toBe(shelvesAt)
-
-    await startChoosing(canvasElement)
-    await userEvent.click(
-      within(pickingRow(canvasElement)).getByRole('button', { name: '閉じる' }),
-    )
-    await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
-    await waitFor(() =>
-      expect(
-        canvasElement.querySelector('[data-slot="picking-bar"]'),
-      ).toBeNull(),
-    )
-  },
-}
-
-/** Scrolls the list the recordings are in to its end, and sees the bar float where it did and the last recording clear of it. */
-async function leavesTheLastOneClear(canvasElement: HTMLElement) {
-  await startChoosing(canvasElement)
-
-  const bar = pickingRow(canvasElement)
-  const shelves = canvasElement.querySelector<HTMLElement>(
-    '[data-slot="library-shelves"]',
-  )!
-  const last = [
-    ...shelves.querySelectorAll<HTMLElement>('[data-recording]'),
-  ].at(-1)!
-  const scroller =
-    last.closest<HTMLElement>('[data-slot="table-container"]') ?? shelves
-
-  await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight)
-  await floatsAtTheFoot(bar)
-
-  scroller.scrollTop = scroller.scrollHeight
-  await waitFor(() =>
-    expect(
-      Math.abs(
-        scroller.scrollTop + scroller.clientHeight - scroller.scrollHeight,
-      ),
-    ).toBeLessThan(2),
-  )
-  await floatsAtTheFoot(bar)
-  await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
-    bar.getBoundingClientRect().top,
-  )
-}
-
-export const 選ぶ帯はスクロールしても窓の下にとどまり最後の行を隠さない: Story =
-  {
-    args: {
-      result: resultOf(MORE_RECORDINGS_THAN_FIT),
-      filter: {},
-      view: GRID,
-    },
-    parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-    play: async ({ canvasElement }) => {
-      await leavesTheLastOneClear(canvasElement)
-    },
-  }
-
-export const 表でも選ぶ帯は最後の行を隠さない: Story = {
-  args: {
-    result: resultOf(MORE_RECORDINGS_THAN_FIT),
-    filter: {},
-    view: TABLE,
-  },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await leavesTheLastOneClear(canvasElement)
-  },
-}
-
-export const iPadでも選ぶ帯は窓の下に浮かぶ: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-    await floatsAtTheFoot(pickingRow(canvasElement))
-    await expect(
-      within(canvasElement).getByRole('heading', {
-        level: 1,
-        name: 'ライブラリ',
-      }),
-    ).toBeVisible()
-  },
-}
-
-export const すべて選ぶとすべて外す: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-
-    const row = within(pickingRow(canvasElement))
-
-    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
-    await expect(pickingRow(canvasElement)).toHaveTextContent(
-      `${LIBRARY_SHELF.length} 件を選択`,
-    )
-    for (const one of LIBRARY_SHELF) {
-      await expect(pickOf(canvasElement, one)).toBeChecked()
-    }
-
-    await pressAndSinks(
-      canvasElement,
-      row.getByRole('button', { name: 'すべて外す' }),
-    )
-  },
-}
-
-const CARTOONS = LIBRARY_SHELF.filter(
-  (one) => one.genre === LIBRARY_SHELF[0].genre,
-)
-
-export const すべて選ぶは絞り込みに従う: Story = {
-  args: {
-    result: { ...resultOf(CARTOONS), total: LIBRARY_SHELF.length },
-    filter: { genre: LIBRARY_SHELF[0].genre },
-    view: GRID,
-  },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    thrownAway.length = 0
-    await expect(CARTOONS.length).toBeLessThan(LIBRARY_SHELF.length)
-    await startChoosing(canvasElement)
-
-    const row = within(pickingRow(canvasElement))
-
-    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
-    await expect(pickingRow(canvasElement)).toHaveTextContent(
-      `${CARTOONS.length} 件を選択`,
-    )
-    await userEvent.click(row.getByRole('button', { name: '削除' }))
-    await userEvent.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: '削除する',
-      }),
-    )
-    await waitFor(() =>
-      expect(thrownAway).toEqual([CARTOONS.map((one) => one.id)]),
-    )
-  },
-}
-
-export const Shiftを押しながら押すと範囲で選ぶ: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const [, second, third, fourth, fifth] = LIBRARY_SHELF
-
-    await startWithTheCheck(canvasElement, second)
-    await pressWithShift(pickOf(canvasElement, fifth))
-
-    await expect(pickingRow(canvasElement)).toHaveTextContent('4 件を選択')
-    for (const one of [second, third, fourth, fifth]) {
-      await expect(pickOf(canvasElement, one)).toBeChecked()
-    }
-    await expect(pickOf(canvasElement, LIBRARY_SHELF[0])).not.toBeChecked()
-    await expect(document.getSelection()?.toString() ?? '').toBe('')
-  },
-}
-
-export const 表でもShiftで範囲を選ぶ: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const [first, , third] = LIBRARY_SHELF
-
-    await startWithTheCheck(canvasElement, third)
-    await pressWithShift(placeOf(canvasElement, first))
-
-    await expect(pickingRow(canvasElement)).toHaveTextContent('3 件を選択')
-  },
-}
-
-export const Escで選ぶのをやめる: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first] = LIBRARY_SHELF
-
-    await startWithTheCheck(canvasElement, first)
-    await userEvent.keyboard('{Escape}')
-
-    await expect(canvas.queryByRole('toolbar')).toBeNull()
-    await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual(
-      [],
-    )
-    await expect(pickOf(canvasElement, first)).toHaveFocus()
-
-    await startWithTheCheck(canvasElement, first)
-    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-  },
-}
-
-/** Takes the one recording in from its check and leaves it out again, and sees the library stop choosing with it. */
-async function leavesTheOnlyOneOut(
-  canvasElement: HTMLElement,
-  recording: Recording,
-) {
-  await startWithTheCheck(canvasElement, recording)
-  await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-
-  await pressAndSinks(canvasElement, pickOf(canvasElement, recording))
-  await expect(
-    canvasElement.querySelector('[data-slot="pick-mark"][data-taken]'),
-  ).toBeNull()
-}
-
-const SINKS_WITHIN = 500
-
-/** Presses what leaves the last picked recording out, and sees the bar start sinking at once and be gone within half a second, saying what it said before all the while. */
-async function pressAndSinks(
-  canvasElement: HTMLElement,
-  target: HTMLElement,
-): Promise<void> {
-  const barOf = () =>
-    [
-      ...canvasElement.querySelectorAll<HTMLElement>(
-        '[data-slot="picking-bar"], [data-slot="picking-band"]',
-      ),
-    ].find((one) => one.getClientRects().length > 0)
-  const before = barOf()?.textContent ?? ''
-  const said = new Set<string>()
-  const from = performance.now()
-  let gone: number | undefined
-
-  await expect(before).toContain('件を選択')
-  await userEvent.click(target)
-
-  while (performance.now() - from < SINKS_WITHIN * 3) {
-    const bar = barOf()
-
-    if (!bar) {
-      gone = performance.now() - from
-      break
-    }
-
-    said.add(bar.textContent ?? '')
-    await new Promise((tick) => setTimeout(tick, 10))
-  }
-
-  await expect(gone).toBeLessThan(SINKS_WITHIN)
-  await expect([...said].filter((one) => one !== before)).toEqual([])
-  await stopsChoosing(canvasElement)
-}
-
-export const 選んだ1件を外すと選ぶのをやめる: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    await leavesTheOnlyOneOut(canvasElement, LIBRARY_SHELF[0])
-  },
-}
-
-export const 表でも選んだ1件を外すと選ぶのをやめる: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    await leavesTheOnlyOneOut(canvasElement, LIBRARY_SHELF[1])
-  },
-}
-
-export const 削除して0件になると選ぶのをやめる: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const [first] = LIBRARY_SHELF
-
-    thrownAway.length = 0
-    await startWithTheCheck(canvasElement, first)
-    await userEvent.click(
-      within(pickingRow(canvasElement)).getByRole('button', { name: '削除' }),
-    )
-    await userEvent.click(
-      within(await screen.findByRole('alertdialog')).getByRole('button', {
-        name: '削除する',
-      }),
-    )
-
-    await waitFor(() => expect(thrownAway).toEqual([[first.id]]))
-    await stopsChoosing(canvasElement)
-  },
-}
-
-/** On a finger's screen, presses `選ぶ`, sees the bar wait at none picked, and sees it go once the one taken in is left out. */
-async function waitsAtNoneThenLeaves(canvasElement: HTMLElement) {
-  const canvas = within(canvasElement)
-  const [first] = LIBRARY_SHELF
-
-  await startChoosing(canvasElement)
-
-  const row = within(pickingRow(canvasElement))
-
-  await expect(row.getByText('録画を選ぶ')).toBeVisible()
-  await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
-
-  await userEvent.click(pickOf(canvasElement, first))
-  await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-  await expect(canvas.getByRole('toolbar')).toBeVisible()
-
-  await pressAndSinks(canvasElement, pickOf(canvasElement, first))
-}
-
-export const iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await waitsAtNoneThenLeaves(canvasElement)
-  },
-}
-
-export const 表_iPadでも選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await waitsAtNoneThenLeaves(canvasElement)
-  },
-}
-
-export const マウスの画面では上に選ぶが無く絵に乗せるとチェックが出る: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first, second] = LIBRARY_SHELF
-
-    await afterTheArrival(canvasElement)
-    await expect(canvas.queryAllByRole('button', { name: '選ぶ' })).toEqual([])
-    await expect(shownOf(pickOf(canvasElement, first))).toBe(false)
-
-    await hoverOn(canvasElement, first)
-    await waitFor(() =>
-      expect(shownOf(pickOf(canvasElement, first))).toBe(true),
-    )
-    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
-    await expect(pickOf(canvasElement, first)).not.toBeChecked()
-
-    const mark = pickOf(canvasElement, first).getBoundingClientRect()
-    const picture = placeOf(canvasElement, first)
-      .querySelector('[data-thumbnail]')!
-      .getBoundingClientRect()
-
-    await expect(Math.round(mark.width)).toBe(22)
-    await expect(mark.left - picture.left).toBeGreaterThan(0)
-    await expect(mark.left - picture.left).toBeLessThan(16)
-    await expect(mark.top - picture.top).toBeGreaterThan(0)
-    await expect(mark.top - picture.top).toBeLessThan(16)
-
-    await userEvent.unhover(pictureOf(canvasElement, first))
-    await waitFor(() =>
-      expect(shownOf(pickOf(canvasElement, first))).toBe(false),
-    )
-    await expect(canvas.queryByRole('toolbar')).toBeNull()
-  },
-}
-
-export const マウスの画面ではチェックを押すと選び始めてその1件を選ぶ: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first, second] = LIBRARY_SHELF
-
-    await afterTheArrival(canvasElement)
-    await startWithTheCheck(canvasElement, first)
-
-    const bar = pickingRow(canvasElement)
-
-    await floatsAtTheFoot(bar)
-    await expect(bar).toHaveTextContent('1 件を選択')
-    await expect(pickOf(canvasElement, first)).toBeChecked()
-    await expect(pickOf(canvasElement, second)).not.toBeChecked()
-    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
-      LIBRARY_SHELF.length,
-    )
-    for (const one of LIBRARY_SHELF) {
-      await expect(shownOf(pickOf(canvasElement, one))).toBe(true)
-    }
-
-    await userEvent.click(pickOf(canvasElement, second))
-    await expect(bar).toHaveTextContent('2 件を選択')
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await expect(bar).toHaveTextContent('1 件を選択')
-
-    await pressAndSinks(canvasElement, pickOf(canvasElement, second))
-    await expect(pickOf(canvasElement, first)).toHaveFocus()
-  },
-}
-
-export const 表ではマウスを乗せた行の絵にチェックが出る: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first, second] = LIBRARY_SHELF
-
-    await afterTheArrival(canvasElement)
-    await expect(canvas.queryAllByRole('button', { name: '選ぶ' })).toEqual([])
-    await expect(shownOf(pickOf(canvasElement, first))).toBe(false)
-
-    await hoverOn(canvasElement, first)
-    await waitFor(() =>
-      expect(shownOf(pickOf(canvasElement, first))).toBe(true),
-    )
-    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
-    await expect(
-      Math.round(pickOf(canvasElement, first).getBoundingClientRect().width),
-    ).toBe(18)
-
-    getRouter().push.mockClear()
-    await userEvent.click(pickOf(canvasElement, first))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-    await expect(placeOf(canvasElement, first)).toHaveAttribute(
-      'data-state',
-      'selected',
-    )
-    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
-      LIBRARY_SHELF.length,
-    )
-    await expect(getRouter().push).not.toHaveBeenCalled()
-  },
-}
-
-export const マウスの画面でチェック以外を押すと録画を開く: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first] = LIBRARY_SHELF
-    const link = within(placeOf(canvasElement, first)).getByRole('link')
-
-    await afterTheArrival(canvasElement)
-    await hoverOn(canvasElement, first)
-    link.addEventListener('click', (event) => event.preventDefault(), {
-      once: true,
-    })
-
-    let opened = false
-
-    link.addEventListener('click', () => {
-      opened = true
-    })
-    await userEvent.click(pictureOf(canvasElement, first))
-
-    await expect(opened).toBe(true)
-    await expect(link).toHaveAttribute('href', `/recordings/${first.id}`)
-    await expect(canvas.queryByRole('toolbar')).toBeNull()
-  },
-}
-
-export const 表でマウスの画面でチェック以外を押すと録画を開く: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first] = LIBRARY_SHELF
-    const row = placeOf(canvasElement, first)
-
-    await afterTheArrival(canvasElement)
-    await hoverOn(canvasElement, first)
-    getRouter().push.mockClear()
-    await userEvent.click(within(row).getByText(first.channel))
-
-    await expect(getRouter().push).toHaveBeenCalledWith(
-      `/recordings/${first.id}`,
-    )
-    await expect(canvas.queryByRole('toolbar')).toBeNull()
-  },
-}
-
-export const Tabでチェックに焦点が来ると見える: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const [first] = LIBRARY_SHELF
-    const link = within(placeOf(canvasElement, first)).getByRole('link')
-
-    await afterTheArrival(canvasElement)
-    link.focus()
-    await userEvent.tab()
-
-    const check = pickOf(canvasElement, first)
-
-    await expect(check).toHaveFocus()
-    await waitFor(() => expect(shownOf(check)).toBe(true))
-
-    await userEvent.keyboard('{Enter}')
-    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-    await expect(pickOf(canvasElement, first)).toBeChecked()
-    await expect(pickOf(canvasElement, first)).toHaveFocus()
-  },
-}
-
-export const iPadでは上に選ぶがありチェックは出ない: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const [first] = LIBRARY_SHELF
-
-    await afterTheArrival(canvasElement)
-    await expect(
-      drawnOf(canvas.getAllByRole('button', { name: '選ぶ' })),
-    ).toBeVisible()
-    await hoverOn(canvasElement, first)
-    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
-
-    await startChoosing(canvasElement)
-    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
-    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
-      LIBRARY_SHELF.length,
-    )
-  },
-}
-
-export const 表_iPadでは上に選ぶがありチェックは出ない: Story = {
-  ...iPadでは上に選ぶがありチェックは出ない,
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-}
-
-export const 表では絵の上に印を置き列はずれない: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
-    const table = await waitFor(() => within(canvasElement).getByRole('table'))
-    const head = within(table).getByRole('columnheader', { name: '番組' })
-    const thumb = table.querySelector('[data-thumbnail]')!
-    const headAt = head.getBoundingClientRect().left
-    const thumbAt = thumb.getBoundingClientRect().left
-    const tableAt = topOf(table)
-
-    await startChoosing(canvasElement)
-
-    const [first] = LIBRARY_SHELF
-    const mark = placeOf(canvasElement, first).querySelector(
-      '[data-slot="pick-mark"]',
-    )!
-    const picture = placeOf(canvasElement, first)
-      .querySelector('[data-thumbnail]')!
-      .getBoundingClientRect()
-
-    await expect(head.getBoundingClientRect().left).toBe(headAt)
-    await expect(thumb.getBoundingClientRect().left).toBe(thumbAt)
-    await expect(topOf(table)).toBe(tableAt)
-    await expect(mark.getBoundingClientRect().left).toBeGreaterThan(
-      picture.left,
-    )
-    await expect(mark.getBoundingClientRect().right).toBeLessThan(picture.right)
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await expect(placeOf(canvasElement, first)).toHaveAttribute(
-      'data-state',
-      'selected',
-    )
-  },
-}
-
-export const 選ぶあいだ続きからは薄く押せない: Story = {
-  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
-  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
-  play: async ({ canvasElement }) => {
-    await afterTheArrival(canvasElement)
-
-    const going = await waitFor(() => {
-      const found = canvasElement.querySelector<HTMLElement>(
-        '[data-slot="continue-row"]',
-      )
-
-      expect(found).not.toBeNull()
-
-      return found!
-    })
-
-    await expect(getComputedStyle(going).opacity).toBe('1')
-    await startChoosing(canvasElement)
-    await waitFor(() => expect(getComputedStyle(going).opacity).toBe('0.4'))
-    await expect(within(going).queryAllByRole('link')).toEqual([])
-    await expect(going).toHaveTextContent(LIBRARY_SHELF[3].title)
-  },
-}
-
-export const 録画中を含むと削除できない: Story = {
-  args: { result, filter: {} },
-  parameters: { coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-    const recording = result.items.find((one) => one.outcome === 'recording')
-
-    await expect(recording).toBeDefined()
-
-    const row = within(pickingRow(canvasElement))
-
-    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
-    await expect(pickingRow(canvasElement)).toHaveTextContent(
-      `${result.items.length} 件を選択`,
-    )
-    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
-  },
-}
-
-export const 絞りを変えると選択を外す: Story = {
-  args: { result, filter: {} },
-  parameters: { coarse: true },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-
-    await startChoosing(canvasElement)
-    const [first] = result.items
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-
-    await userEvent.click(
-      drawnOf(canvas.getAllByRole('button', { name: result.genres[0] })),
-    )
-
-    await stopsChoosing(canvasElement)
-  },
 }
 
 export const 通常: Story = {
@@ -1369,16 +610,6 @@ export const 収まらないほどの録画: Story = {
   },
 }
 
-export const 狭い幅で収まらないほどの録画: Story = {
-  args: { result: resultOf(MORE_RECORDINGS_THAN_FIT), filter: {} },
-  parameters: { screen: { width: 768, height: 1024 } },
-  play: async ({ canvasElement }) => {
-    await scrollsInsideWithItsHeaderHeld(canvasElement, '番組', {
-      pageStays: true,
-    })
-  },
-}
-
 const LONG_AND_SHORT: Recording[] = [
   {
     ...ENDED[0],
@@ -1496,6 +727,1054 @@ export const 絞りの帯: Story = {
     await expect(
       drawnOf(canvas.getAllByPlaceholderText('番組名・概要・出演者で検索')),
     ).toBeVisible()
+  },
+}
+
+const shelf = resultOf(LIBRARY_SHELF)
+
+export const 日付の格子: Story = {
+  args: { result: shelf, filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const going = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="continue-row"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const shown = [...going.querySelectorAll('li')].filter(
+      (one) => one.getBoundingClientRect().width > 0,
+    )
+
+    await expect(shown).toHaveLength(4)
+    await expect(within(shown[0]).getByRole('link')).toHaveAttribute(
+      'href',
+      '/recordings/2098?play=1',
+    )
+
+    const grid = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="date-grid"]',
+    )!
+    const tiles = [...grid.querySelectorAll<HTMLElement>(':scope > li')]
+
+    await expect(tiles).toHaveLength(LIBRARY_SHELF.length)
+    await expect(
+      new Set(tiles.map((one) => Math.round(one.getBoundingClientRect().top)))
+        .size,
+    ).toBe(2)
+    await expect(
+      grid.querySelectorAll('[data-slot="unwatched-dot"]'),
+    ).toHaveLength(
+      LIBRARY_SHELF.filter((one) => one.watchedSec === undefined).length,
+    )
+    await expect(within(tiles[0]).getByRole('link')).toHaveAttribute(
+      'href',
+      '/recordings/2101',
+    )
+    await expect(tiles[4].querySelector('p')).toHaveClass('invisible')
+    await expect(
+      tiles[3].querySelector('[data-slot="watched-bar"]'),
+    ).not.toBeNull()
+  },
+}
+
+export const シリーズ: Story = {
+  args: {
+    result: shelf,
+    filter: {},
+    view: { by: 'series', as: 'grid' },
+  },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const grid = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="series-grid"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const cards = within(grid).getAllByRole('button', { expanded: false })
+    const open = within(grid).getByRole('button', { expanded: true })
+
+    await expect(open).toHaveTextContent('となりの発明王')
+    await expect(open).toHaveTextContent('7 話')
+    await expect(open).toHaveTextContent('未視聴 3')
+    await expect(cards).toHaveLength(2)
+
+    const episodes = grid.querySelector<HTMLElement>(
+      '[data-slot="series-open"]',
+    )!
+
+    await expect(episodes.querySelectorAll('li')).toHaveLength(7)
+    await expect(episodes).toHaveTextContent('「空飛ぶ傘の巻」')
+
+    await userEvent.click(cards[1])
+    await waitFor(() =>
+      expect(
+        grid.querySelector('[data-slot="series-open"]'),
+      ).toHaveAccessibleName('国会の窓'),
+    )
+  },
+}
+
+export const 表: Story = {
+  args: {
+    result: shelf,
+    filter: {},
+    view: { by: 'date', as: 'table' },
+  },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const table = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('table')
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+    const going = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="continue-row"]',
+    )!
+    const resumes = [...going.querySelectorAll('li')].filter(
+      (one) => one.getBoundingClientRect().width > 0,
+    )
+
+    await expect(resumes).toHaveLength(window.innerWidth >= 1300 ? 4 : 3)
+    await expect(within(resumes[0]).getByRole('link')).toHaveAttribute(
+      'href',
+      '/recordings/2098?play=1',
+    )
+    await expect(going.getBoundingClientRect().bottom).toBeLessThan(
+      table.getBoundingClientRect().top,
+    )
+    await expect(going.getBoundingClientRect().height).toBeLessThan(110)
+
+    const sorted = within(table).getByRole('columnheader', {
+      name: /録画日時/,
+    })
+
+    await expect(sorted).toHaveAttribute('aria-sort', 'descending')
+    await expect(within(table).getAllByRole('row').length).toBe(
+      LIBRARY_SHELF.length + 1,
+    )
+    await expect(table).toHaveTextContent('未視聴')
+    await expect(table).toHaveTextContent('視聴済み')
+    await expect(table).toHaveTextContent('40%')
+    await expect(table).toHaveTextContent('欠け 3 秒')
+  },
+}
+
+export const シリーズの表: Story = {
+  args: {
+    result: shelf,
+    filter: {},
+    view: { by: 'series', as: 'table' },
+  },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const table = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>('table')
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(
+      within(table)
+        .getAllByRole('rowheader')
+        .map((one) => one.textContent),
+    ).toEqual(['となりの発明王7 話', 'コメット急行2 話', '国会の窓3 話'])
+  },
+}
+
+export const 並べ方を選ぶとこの端末に残る: Story = {
+  args: { result, filter: {} },
+  play: async ({ canvasElement }) => {
+    document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
+    await afterTheArrival(canvasElement)
+    const layout = within(canvasElement).getByRole('group', { name: '並べ方' })
+
+    await userEvent.click(within(layout).getByRole('link', { name: '表' }))
+    await expect(cookieIn(document.cookie, LIBRARY_LAYOUT_COOKIE)).toBe('table')
+    await expect(
+      within(layout).getByRole('link', { name: '表' }),
+    ).toHaveAttribute('href', expect.stringContaining('as=table'))
+
+    await userEvent.click(within(layout).getByRole('link', { name: '格子' }))
+    await expect(cookieIn(document.cookie, LIBRARY_LAYOUT_COOKIE)).toBe('grid')
+    await expect(
+      within(layout).getByRole('link', { name: '格子' }),
+    ).toHaveAttribute('href', expect.stringContaining('as=grid'))
+
+    document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
+  },
+}
+
+export const 複数を選んでサムネイルを再生成する: Story = {
+  args: { result, filter: {}, onRemakeThumbnails: remakingAllButTheSecond },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const [first, second] = result.items.filter(
+      (one) => one.outcome !== 'recording',
+    )
+
+    remade.length = 0
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
+
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', {
+        name: 'サムネイルを再生成',
+      }),
+    )
+
+    await waitFor(() => expect(remade).toEqual([[first.id, second.id]]))
+    await expect(
+      await screen.findByText(
+        '1 件のサムネイルを作り直します、1 件はできませんでした。',
+      ),
+    ).toBeVisible()
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(pickOf(canvasElement, first)).not.toBeChecked()
+    await expect(pickOf(canvasElement, second)).toBeChecked()
+    await expect(
+      within(placeOf(canvasElement, second)).getByText(STILL_RECORDING_SAID),
+    ).toBeVisible()
+    await expect(
+      within(placeOf(canvasElement, first)).queryByRole('status'),
+    ).toBeNull()
+  },
+}
+
+export const サムネイルがすべて再生成に回ると選ぶのをやめる: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const [first] = result.items.filter((one) => one.outcome !== 'recording')
+
+    remade.length = 0
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', {
+        name: 'サムネイルを再生成',
+      }),
+    )
+
+    await waitFor(() => expect(remade).toEqual([[first.id]]))
+    await expect(
+      await screen.findByText('1 件のサムネイルを作り直します。'),
+    ).toBeVisible()
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const 録画中を選ぶとサムネイルの再生成も削除も押せない: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const recording = result.items.find((one) => one.outcome === 'recording')!
+
+    await userEvent.click(pickOf(canvasElement, recording))
+
+    const row = within(pickingRow(canvasElement))
+
+    await expect(
+      row.getByRole('button', { name: 'サムネイルを再生成' }),
+    ).toBeDisabled()
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+  },
+}
+
+export const 複数を選んで削除する: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const [first, second] = result.items.filter(
+      (one) => one.outcome !== 'recording',
+    )
+
+    thrownAway.length = 0
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
+    await expect(window.location.pathname).not.toMatch(/\/recordings\//)
+
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', { name: '削除' }),
+    )
+
+    const dialog = within(await screen.findByRole('alertdialog'))
+
+    await expect(dialog.getByText(first.title)).toBeVisible()
+    await expect(dialog.getByText(second.title)).toBeVisible()
+    await userEvent.click(dialog.getByRole('button', { name: '削除する' }))
+
+    await waitFor(() => expect(thrownAway).toEqual([[first.id, second.id]]))
+    await stopsChoosing(canvasElement)
+  },
+}
+
+/** Sees the library leave choosing: the bar or band gone, no checks drawn, and `選ぶ` no longer pressed where it is drawn. */
+async function stopsChoosing(canvasElement: HTMLElement): Promise<void> {
+  const canvas = within(canvasElement)
+
+  await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
+  await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual([])
+  for (const toggle of canvas.queryAllByRole('button', { name: '選ぶ' })) {
+    await expect(toggle).toHaveAttribute('aria-pressed', 'false')
+  }
+}
+
+const BAR_ABOVE_THE_FOOT = 24
+
+/** Where the bar stands once it has risen in: fixed, its foot 24px over the window's, in the middle of the window. */
+async function floatsAtTheFoot(bar: HTMLElement): Promise<void> {
+  const { clientWidth, clientHeight } = document.documentElement
+
+  await expect(getComputedStyle(bar).position).toBe('fixed')
+  await waitFor(() => {
+    const box = bar.getBoundingClientRect()
+
+    expect(
+      Math.abs(clientHeight - box.bottom - BAR_ABOVE_THE_FOOT),
+    ).toBeLessThan(1.5)
+    expect(Math.abs(box.left - (clientWidth - box.right))).toBeLessThan(1.5)
+  })
+  await expect(getComputedStyle(bar).boxShadow).not.toBe('none')
+}
+
+export const 選ぶを押すと窓の下に選ぶ帯が浮かぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await afterTheArrival(canvasElement)
+
+    const genres = canvas.getByRole('group', { name: 'ジャンル' })
+    const shelves = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="library-shelves"]',
+    )!
+    const heading = canvas.getByRole('heading', {
+      level: 1,
+      name: 'ライブラリ',
+    })
+    const filtersAt = topOf(genres)
+    const shelvesAt = topOf(shelves)
+    const headingAt = topOf(heading)
+
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await startChoosing(canvasElement)
+
+    const bar = pickingRow(canvasElement)
+    const row = within(bar)
+
+    await floatsAtTheFoot(bar)
+    await expect(row.getByText('録画を選ぶ')).toBeVisible()
+    await expect(row.getByRole('button', { name: '閉じる' })).toBeVisible()
+    await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+
+    await expect(
+      canvas.getByRole('heading', { level: 1, name: 'ライブラリ' }),
+    ).toBeVisible()
+    await expect(topOf(heading)).toBe(headingAt)
+    await expect(topOf(genres)).toBe(filtersAt)
+    await expect(topOf(shelves)).toBe(shelvesAt)
+
+    const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
+
+    await expect(pick).toHaveAttribute('aria-pressed', 'true')
+    await expect(pick.className).toMatch(/\bbg-accent-tint\b/)
+
+    const [first] = LIBRARY_SHELF
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(row.getByText('件を選択', { exact: false })).toHaveTextContent(
+      '1 件を選択',
+    )
+    await expect(row.getByRole('button', { name: '削除' })).toBeEnabled()
+    await floatsAtTheFoot(bar)
+  },
+}
+
+export const 選ぶをもう一度押すか閉じるで帯が消える: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    await afterTheArrival(canvasElement)
+
+    const shelves = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="library-shelves"]',
+    )!
+    const shelvesAt = topOf(shelves)
+
+    await startChoosing(canvasElement)
+    await userEvent.click(pickOf(canvasElement, LIBRARY_SHELF[0]))
+
+    const pick = drawnOf(canvas.getAllByRole('button', { name: '選ぶ' }))
+
+    await userEvent.click(pick)
+    await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
+    await expect(pick).toHaveAttribute('aria-pressed', 'false')
+    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
+    await expect(topOf(shelves)).toBe(shelvesAt)
+
+    await startChoosing(canvasElement)
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', { name: '閉じる' }),
+    )
+    await waitFor(() => expect(canvas.queryByRole('toolbar')).toBeNull())
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector('[data-slot="picking-bar"]'),
+      ).toBeNull(),
+    )
+  },
+}
+
+/** Scrolls the list the recordings are in to its end, and sees the bar float where it did and the last recording clear of it. */
+async function leavesTheLastOneClear(canvasElement: HTMLElement) {
+  await startChoosing(canvasElement)
+
+  const bar = pickingRow(canvasElement)
+  const shelves = canvasElement.querySelector<HTMLElement>(
+    '[data-slot="library-shelves"]',
+  )!
+  const last = [
+    ...shelves.querySelectorAll<HTMLElement>('[data-recording]'),
+  ].at(-1)!
+  const scroller =
+    last.closest<HTMLElement>('[data-slot="table-container"]') ?? shelves
+
+  await expect(scroller.scrollHeight).toBeGreaterThan(scroller.clientHeight)
+  await floatsAtTheFoot(bar)
+
+  scroller.scrollTop = scroller.scrollHeight
+  await waitFor(() =>
+    expect(
+      Math.abs(
+        scroller.scrollTop + scroller.clientHeight - scroller.scrollHeight,
+      ),
+    ).toBeLessThan(2),
+  )
+  await floatsAtTheFoot(bar)
+  await expect(last.getBoundingClientRect().bottom).toBeLessThanOrEqual(
+    bar.getBoundingClientRect().top,
+  )
+}
+
+export const 選ぶ帯はスクロールしても窓の下にとどまり最後の行を隠さない: Story =
+  {
+    args: {
+      result: resultOf(MORE_RECORDINGS_THAN_FIT),
+      filter: {},
+      view: GRID,
+    },
+    parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+    play: async ({ canvasElement }) => {
+      await leavesTheLastOneClear(canvasElement)
+    },
+  }
+
+export const 表でも選ぶ帯は最後の行を隠さない: Story = {
+  args: {
+    result: resultOf(MORE_RECORDINGS_THAN_FIT),
+    filter: {},
+    view: TABLE,
+  },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await leavesTheLastOneClear(canvasElement)
+  },
+}
+
+export const すべて選ぶとすべて外す: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+
+    const row = within(pickingRow(canvasElement))
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${LIBRARY_SHELF.length} 件を選択`,
+    )
+    for (const one of LIBRARY_SHELF) {
+      await expect(pickOf(canvasElement, one)).toBeChecked()
+    }
+
+    await pressAndSinks(
+      canvasElement,
+      row.getByRole('button', { name: 'すべて外す' }),
+    )
+  },
+}
+
+const CARTOONS = LIBRARY_SHELF.filter(
+  (one) => one.genre === LIBRARY_SHELF[0].genre,
+)
+
+export const すべて選ぶは絞り込みに従う: Story = {
+  args: {
+    result: { ...resultOf(CARTOONS), total: LIBRARY_SHELF.length },
+    filter: { genre: LIBRARY_SHELF[0].genre },
+    view: GRID,
+  },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    thrownAway.length = 0
+    await expect(CARTOONS.length).toBeLessThan(LIBRARY_SHELF.length)
+    await startChoosing(canvasElement)
+
+    const row = within(pickingRow(canvasElement))
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${CARTOONS.length} 件を選択`,
+    )
+    await userEvent.click(row.getByRole('button', { name: '削除' }))
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+    await waitFor(() =>
+      expect(thrownAway).toEqual([CARTOONS.map((one) => one.id)]),
+    )
+  },
+}
+
+export const Shiftを押しながら押すと範囲で選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const [, second, third, fourth, fifth] = LIBRARY_SHELF
+
+    await startWithTheCheck(canvasElement, second)
+    await pressWithShift(pickOf(canvasElement, fifth))
+
+    await expect(pickingRow(canvasElement)).toHaveTextContent('4 件を選択')
+    for (const one of [second, third, fourth, fifth]) {
+      await expect(pickOf(canvasElement, one)).toBeChecked()
+    }
+    await expect(pickOf(canvasElement, LIBRARY_SHELF[0])).not.toBeChecked()
+    await expect(document.getSelection()?.toString() ?? '').toBe('')
+  },
+}
+
+export const 表でもShiftで範囲を選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const [first, , third] = LIBRARY_SHELF
+
+    await startWithTheCheck(canvasElement, third)
+    await pressWithShift(placeOf(canvasElement, first))
+
+    await expect(pickingRow(canvasElement)).toHaveTextContent('3 件を選択')
+  },
+}
+
+export const Escで選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+
+    await startWithTheCheck(canvasElement, first)
+    await userEvent.keyboard('{Escape}')
+
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+    await expect(canvas.queryAllByRole('checkbox', { checked: true })).toEqual(
+      [],
+    )
+    await expect(pickOf(canvasElement, first)).toHaveFocus()
+
+    await startWithTheCheck(canvasElement, first)
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+  },
+}
+
+/** Takes the one recording in from its check and leaves it out again, and sees the library stop choosing with it. */
+async function leavesTheOnlyOneOut(
+  canvasElement: HTMLElement,
+  recording: Recording,
+) {
+  await startWithTheCheck(canvasElement, recording)
+  await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+
+  await pressAndSinks(canvasElement, pickOf(canvasElement, recording))
+  await expect(
+    canvasElement.querySelector('[data-slot="pick-mark"][data-taken]'),
+  ).toBeNull()
+}
+
+const SINKS_WITHIN = 500
+
+/** Presses what leaves the last picked recording out, and sees the bar start sinking at once and be gone within half a second, saying what it said before all the while. */
+async function pressAndSinks(
+  canvasElement: HTMLElement,
+  target: HTMLElement,
+): Promise<void> {
+  const barOf = () =>
+    [
+      ...canvasElement.querySelectorAll<HTMLElement>(
+        '[data-slot="picking-bar"], [data-slot="picking-band"]',
+      ),
+    ].find((one) => one.getClientRects().length > 0)
+  const before = barOf()?.textContent ?? ''
+  const said = new Set<string>()
+  let from = performance.now()
+  let gone: number | undefined
+
+  target.addEventListener(
+    'click',
+    () => {
+      from = performance.now()
+    },
+    { once: true, capture: true },
+  )
+  await expect(before).toContain('件を選択')
+  await userEvent.click(target)
+
+  while (performance.now() - from < SINKS_WITHIN * 3) {
+    const bar = barOf()
+
+    if (!bar) {
+      gone = performance.now() - from
+      break
+    }
+
+    said.add(bar.textContent ?? '')
+    await new Promise((tick) => setTimeout(tick, 10))
+  }
+
+  await expect(gone).toBeLessThan(SINKS_WITHIN)
+  await expect([...said].filter((one) => one !== before)).toEqual([])
+  await stopsChoosing(canvasElement)
+}
+
+export const 選んだ1件を外すと選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    await leavesTheOnlyOneOut(canvasElement, LIBRARY_SHELF[0])
+  },
+}
+
+export const 表でも選んだ1件を外すと選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    await leavesTheOnlyOneOut(canvasElement, LIBRARY_SHELF[1])
+  },
+}
+
+export const 削除して0件になると選ぶのをやめる: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const [first] = LIBRARY_SHELF
+
+    thrownAway.length = 0
+    await startWithTheCheck(canvasElement, first)
+    await userEvent.click(
+      within(pickingRow(canvasElement)).getByRole('button', { name: '削除' }),
+    )
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+
+    await waitFor(() => expect(thrownAway).toEqual([[first.id]]))
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const マウスの画面では上に選ぶが無く絵に乗せるとチェックが出る: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await expect(canvas.queryAllByRole('button', { name: '選ぶ' })).toEqual([])
+    await expect(shownOf(pickOf(canvasElement, first))).toBe(false)
+
+    await hoverOn(canvasElement, first)
+    await waitFor(() =>
+      expect(shownOf(pickOf(canvasElement, first))).toBe(true),
+    )
+    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
+    await expect(pickOf(canvasElement, first)).not.toBeChecked()
+
+    const mark = pickOf(canvasElement, first).getBoundingClientRect()
+    const picture = placeOf(canvasElement, first)
+      .querySelector('[data-thumbnail]')!
+      .getBoundingClientRect()
+
+    await expect(Math.round(mark.width)).toBe(22)
+    await expect(mark.left - picture.left).toBeGreaterThan(0)
+    await expect(mark.left - picture.left).toBeLessThan(16)
+    await expect(mark.top - picture.top).toBeGreaterThan(0)
+    await expect(mark.top - picture.top).toBeLessThan(16)
+
+    await userEvent.unhover(pictureOf(canvasElement, first))
+    await waitFor(() =>
+      expect(shownOf(pickOf(canvasElement, first))).toBe(false),
+    )
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+  },
+}
+
+export const マウスの画面ではチェックを押すと選び始めてその1件を選ぶ: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await startWithTheCheck(canvasElement, first)
+
+    const bar = pickingRow(canvasElement)
+
+    await floatsAtTheFoot(bar)
+    await expect(bar).toHaveTextContent('1 件を選択')
+    await expect(pickOf(canvasElement, first)).toBeChecked()
+    await expect(pickOf(canvasElement, second)).not.toBeChecked()
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      LIBRARY_SHELF.length,
+    )
+    for (const one of LIBRARY_SHELF) {
+      await expect(shownOf(pickOf(canvasElement, one))).toBe(true)
+    }
+
+    await userEvent.click(pickOf(canvasElement, second))
+    await expect(bar).toHaveTextContent('2 件を選択')
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(bar).toHaveTextContent('1 件を選択')
+
+    await pressAndSinks(canvasElement, pickOf(canvasElement, second))
+    await expect(pickOf(canvasElement, first)).toHaveFocus()
+  },
+}
+
+export const 表ではマウスを乗せた行の絵にチェックが出る: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first, second] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await expect(canvas.queryAllByRole('button', { name: '選ぶ' })).toEqual([])
+    await expect(shownOf(pickOf(canvasElement, first))).toBe(false)
+
+    await hoverOn(canvasElement, first)
+    await waitFor(() =>
+      expect(shownOf(pickOf(canvasElement, first))).toBe(true),
+    )
+    await expect(shownOf(pickOf(canvasElement, second))).toBe(false)
+    await expect(
+      Math.round(pickOf(canvasElement, first).getBoundingClientRect().width),
+    ).toBe(18)
+
+    getRouter().push.mockClear()
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(placeOf(canvasElement, first)).toHaveAttribute(
+      'data-state',
+      'selected',
+    )
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      LIBRARY_SHELF.length,
+    )
+    await expect(getRouter().push).not.toHaveBeenCalled()
+  },
+}
+
+export const マウスの画面でチェック以外を押すと録画を開く: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+    const link = within(placeOf(canvasElement, first)).getByRole('link')
+
+    await afterTheArrival(canvasElement)
+    await hoverOn(canvasElement, first)
+    link.addEventListener('click', (event) => event.preventDefault(), {
+      once: true,
+    })
+
+    let opened = false
+
+    link.addEventListener('click', () => {
+      opened = true
+    })
+    await userEvent.click(pictureOf(canvasElement, first))
+
+    await expect(opened).toBe(true)
+    await expect(link).toHaveAttribute('href', `/recordings/${first.id}`)
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+  },
+}
+
+export const 表でマウスの画面でチェック以外を押すと録画を開く: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+    const row = placeOf(canvasElement, first)
+
+    await afterTheArrival(canvasElement)
+    await hoverOn(canvasElement, first)
+    getRouter().push.mockClear()
+    await userEvent.click(within(row).getByText(first.channel))
+
+    await expect(getRouter().push).toHaveBeenCalledWith(
+      `/recordings/${first.id}`,
+    )
+    await expect(canvas.queryByRole('toolbar')).toBeNull()
+  },
+}
+
+export const Tabでチェックに焦点が来ると見える: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: A_DESKTOP },
+  play: async ({ canvasElement }) => {
+    const [first] = LIBRARY_SHELF
+    const link = within(placeOf(canvasElement, first)).getByRole('link')
+
+    await afterTheArrival(canvasElement)
+    link.focus()
+    await userEvent.tab()
+
+    const check = pickOf(canvasElement, first)
+
+    await expect(check).toHaveFocus()
+    await waitFor(() => expect(shownOf(check)).toBe(true))
+
+    await userEvent.keyboard('{Enter}')
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+    await expect(pickOf(canvasElement, first)).toBeChecked()
+    await expect(pickOf(canvasElement, first)).toHaveFocus()
+  },
+}
+
+export const 表では絵の上に印を置き列はずれない: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const table = await waitFor(() => within(canvasElement).getByRole('table'))
+    const head = within(table).getByRole('columnheader', { name: '番組' })
+    const thumb = table.querySelector('[data-thumbnail]')!
+    const headAt = head.getBoundingClientRect().left
+    const thumbAt = thumb.getBoundingClientRect().left
+    const tableAt = topOf(table)
+
+    await startChoosing(canvasElement)
+
+    const [first] = LIBRARY_SHELF
+    const mark = placeOf(canvasElement, first).querySelector(
+      '[data-slot="pick-mark"]',
+    )!
+    const picture = placeOf(canvasElement, first)
+      .querySelector('[data-thumbnail]')!
+      .getBoundingClientRect()
+
+    await expect(head.getBoundingClientRect().left).toBe(headAt)
+    await expect(thumb.getBoundingClientRect().left).toBe(thumbAt)
+    await expect(topOf(table)).toBe(tableAt)
+    await expect(mark.getBoundingClientRect().left).toBeGreaterThan(
+      picture.left,
+    )
+    await expect(mark.getBoundingClientRect().right).toBeLessThan(picture.right)
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(placeOf(canvasElement, first)).toHaveAttribute(
+      'data-state',
+      'selected',
+    )
+  },
+}
+
+export const 選ぶあいだ続きからは薄く押せない: Story = {
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1440, height: 900 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const going = await waitFor(() => {
+      const found = canvasElement.querySelector<HTMLElement>(
+        '[data-slot="continue-row"]',
+      )
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(getComputedStyle(going).opacity).toBe('1')
+    await startChoosing(canvasElement)
+    await waitFor(() => expect(getComputedStyle(going).opacity).toBe('0.4'))
+    await expect(within(going).queryAllByRole('link')).toEqual([])
+    await expect(going).toHaveTextContent(LIBRARY_SHELF[3].title)
+  },
+}
+
+export const 録画中を含むと削除できない: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    const recording = result.items.find((one) => one.outcome === 'recording')
+
+    await expect(recording).toBeDefined()
+
+    const row = within(pickingRow(canvasElement))
+
+    await userEvent.click(row.getByRole('button', { name: 'すべて選ぶ' }))
+    await expect(pickingRow(canvasElement)).toHaveTextContent(
+      `${result.items.length} 件を選択`,
+    )
+    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
+  },
+}
+
+export const 絞りを変えると選択を外す: Story = {
+  args: { result, filter: {} },
+  parameters: { coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await startChoosing(canvasElement)
+    const [first] = result.items
+
+    await userEvent.click(pickOf(canvasElement, first))
+    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+
+    await userEvent.click(
+      drawnOf(canvas.getAllByRole('button', { name: result.genres[0] })),
+    )
+
+    await stopsChoosing(canvasElement)
+  },
+}
+
+export const iPadでも選ぶ帯は窓の下に浮かぶ: Story = {
+  name: 'iPadでも選ぶ帯は窓の下に浮かぶ',
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await startChoosing(canvasElement)
+    await floatsAtTheFoot(pickingRow(canvasElement))
+    await expect(
+      within(canvasElement).getByRole('heading', {
+        level: 1,
+        name: 'ライブラリ',
+      }),
+    ).toBeVisible()
+  },
+}
+
+/** On a finger's screen, presses `選ぶ`, sees the bar wait at none picked, and sees it go once the one taken in is left out. */
+async function waitsAtNoneThenLeaves(canvasElement: HTMLElement) {
+  const canvas = within(canvasElement)
+  const [first] = LIBRARY_SHELF
+
+  await startChoosing(canvasElement)
+
+  const row = within(pickingRow(canvasElement))
+
+  await expect(row.getByText('録画を選ぶ')).toBeVisible()
+  await expect(row.getByRole('button', { name: 'すべて選ぶ' })).toBeVisible()
+
+  await userEvent.click(pickOf(canvasElement, first))
+  await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
+  await expect(canvas.getByRole('toolbar')).toBeVisible()
+
+  await pressAndSinks(canvasElement, pickOf(canvasElement, first))
+}
+
+export const iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  name: 'iPadでは選ぶ直後の0件は帯が待ち1件選んで外すとやめる',
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await waitsAtNoneThenLeaves(canvasElement)
+  },
+}
+
+export const 表_iPadでも選ぶ直後の0件は帯が待ち1件選んで外すとやめる: Story = {
+  name: '表 iPadでも選ぶ直後の0件は帯が待ち1件選んで外すとやめる',
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    await waitsAtNoneThenLeaves(canvasElement)
+  },
+}
+
+export const iPadでは上に選ぶがありチェックは出ない: Story = {
+  name: 'iPadでは上に選ぶがありチェックは出ない',
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: GRID },
+  parameters: { screen: { width: 1180, height: 820 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const [first] = LIBRARY_SHELF
+
+    await afterTheArrival(canvasElement)
+    await expect(
+      drawnOf(canvas.getAllByRole('button', { name: '選ぶ' })),
+    ).toBeVisible()
+    await hoverOn(canvasElement, first)
+    await expect(canvas.queryAllByRole('checkbox')).toEqual([])
+
+    await startChoosing(canvasElement)
+    await expect(pickingRow(canvasElement)).toHaveTextContent('録画を選ぶ')
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(
+      LIBRARY_SHELF.length,
+    )
+  },
+}
+
+export const 表_iPadでは上に選ぶがありチェックは出ない: Story = {
+  name: '表 iPadでは上に選ぶがありチェックは出ない',
+  ...iPadでは上に選ぶがありチェックは出ない,
+  args: { result: resultOf(LIBRARY_SHELF), filter: {}, view: TABLE },
+}
+
+export const 狭い幅で収まらないほどの録画: Story = {
+  args: { result: resultOf(MORE_RECORDINGS_THAN_FIT), filter: {} },
+  parameters: { screen: { width: 768, height: 1024 } },
+  play: async ({ canvasElement }) => {
+    await scrollsInsideWithItsHeaderHeld(canvasElement, '番組', {
+      pageStays: true,
+    })
   },
 }
 
@@ -1730,6 +2009,7 @@ export const 電話の幅では絞りの数をボタンで言う: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: { result: resultOf(LONG_AND_SHORT), filter: {} },
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
@@ -1774,58 +2054,8 @@ export const 横向きの電話は検索の欄を上の帯に置く: Story = {
   },
 }
 
-const shelf = resultOf(LIBRARY_SHELF)
-
-export const 日付の格子: Story = {
-  args: { result: shelf, filter: {}, view: GRID },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const going = await waitFor(() => {
-      const found = canvasElement.querySelector<HTMLElement>(
-        '[data-slot="continue-row"]',
-      )
-
-      expect(found).not.toBeNull()
-
-      return found!
-    })
-    const shown = [...going.querySelectorAll('li')].filter(
-      (one) => one.getBoundingClientRect().width > 0,
-    )
-
-    await expect(shown).toHaveLength(4)
-    await expect(within(shown[0]).getByRole('link')).toHaveAttribute(
-      'href',
-      '/recordings/2098?play=1',
-    )
-
-    const grid = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="date-grid"]',
-    )!
-    const tiles = [...grid.querySelectorAll<HTMLElement>(':scope > li')]
-
-    await expect(tiles).toHaveLength(LIBRARY_SHELF.length)
-    await expect(
-      new Set(tiles.map((one) => Math.round(one.getBoundingClientRect().top)))
-        .size,
-    ).toBe(2)
-    await expect(
-      grid.querySelectorAll('[data-slot="unwatched-dot"]'),
-    ).toHaveLength(
-      LIBRARY_SHELF.filter((one) => one.watchedSec === undefined).length,
-    )
-    await expect(within(tiles[0]).getByRole('link')).toHaveAttribute(
-      'href',
-      '/recordings/2101',
-    )
-    await expect(tiles[4].querySelector('p')).toHaveClass('invisible')
-    await expect(
-      tiles[3].querySelector('[data-slot="watched-bar"]'),
-    ).not.toBeNull()
-  },
-}
-
 export const 日付の格子_iPad: Story = {
+  name: '日付の格子 iPad',
   args: { result: shelf, filter: {}, view: GRID },
   parameters: { screen: { width: 1180, height: 820 } },
   play: async ({ canvasElement }) => {
@@ -1847,121 +2077,10 @@ export const 日付の格子_iPad: Story = {
   },
 }
 
-export const シリーズ: Story = {
-  args: {
-    result: shelf,
-    filter: {},
-    view: { by: 'series', as: 'grid' },
-  },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const grid = await waitFor(() => {
-      const found = canvasElement.querySelector<HTMLElement>(
-        '[data-slot="series-grid"]',
-      )
-
-      expect(found).not.toBeNull()
-
-      return found!
-    })
-    const cards = within(grid).getAllByRole('button', { expanded: false })
-    const open = within(grid).getByRole('button', { expanded: true })
-
-    await expect(open).toHaveTextContent('となりの発明王')
-    await expect(open).toHaveTextContent('7 話')
-    await expect(open).toHaveTextContent('未視聴 3')
-    await expect(cards).toHaveLength(2)
-
-    const episodes = grid.querySelector<HTMLElement>(
-      '[data-slot="series-open"]',
-    )!
-
-    await expect(episodes.querySelectorAll('li')).toHaveLength(7)
-    await expect(episodes).toHaveTextContent('「空飛ぶ傘の巻」')
-
-    await userEvent.click(cards[1])
-    await waitFor(() =>
-      expect(
-        grid.querySelector('[data-slot="series-open"]'),
-      ).toHaveAccessibleName('国会の窓'),
-    )
-  },
-}
-
-export const 表: Story = {
-  args: {
-    result: shelf,
-    filter: {},
-    view: { by: 'date', as: 'table' },
-  },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const table = await waitFor(() => {
-      const found = canvasElement.querySelector<HTMLElement>('table')
-
-      expect(found).not.toBeNull()
-
-      return found!
-    })
-    const going = canvasElement.querySelector<HTMLElement>(
-      '[data-slot="continue-row"]',
-    )!
-    const resumes = [...going.querySelectorAll('li')].filter(
-      (one) => one.getBoundingClientRect().width > 0,
-    )
-
-    await expect(resumes).toHaveLength(window.innerWidth >= 1300 ? 4 : 3)
-    await expect(within(resumes[0]).getByRole('link')).toHaveAttribute(
-      'href',
-      '/recordings/2098?play=1',
-    )
-    await expect(going.getBoundingClientRect().bottom).toBeLessThan(
-      table.getBoundingClientRect().top,
-    )
-    await expect(going.getBoundingClientRect().height).toBeLessThan(110)
-
-    const sorted = within(table).getByRole('columnheader', {
-      name: /録画日時/,
-    })
-
-    await expect(sorted).toHaveAttribute('aria-sort', 'descending')
-    await expect(within(table).getAllByRole('row').length).toBe(
-      LIBRARY_SHELF.length + 1,
-    )
-    await expect(table).toHaveTextContent('未視聴')
-    await expect(table).toHaveTextContent('視聴済み')
-    await expect(table).toHaveTextContent('40%')
-    await expect(table).toHaveTextContent('欠け 3 秒')
-  },
-}
-
 export const 表_iPad: Story = {
+  name: '表 iPad',
   ...表,
   parameters: { screen: { width: 1180, height: 820 } },
-}
-
-export const シリーズの表: Story = {
-  args: {
-    result: shelf,
-    filter: {},
-    view: { by: 'series', as: 'table' },
-  },
-  parameters: { screen: A_DESKTOP },
-  play: async ({ canvasElement }) => {
-    const table = await waitFor(() => {
-      const found = canvasElement.querySelector<HTMLElement>('table')
-
-      expect(found).not.toBeNull()
-
-      return found!
-    })
-
-    await expect(
-      within(table)
-        .getAllByRole('rowheader')
-        .map((one) => one.textContent),
-    ).toEqual(['となりの発明王7 話', 'コメット急行2 話', '国会の窓3 話'])
-  },
 }
 
 export const 電話の棚: Story = {
@@ -1981,110 +2100,6 @@ export const 電話の棚: Story = {
 export const 横向きの電話の棚: Story = {
   args: { result: shelf, filter: {}, view: GRID },
   parameters: { screen: { width: 844, height: 390 }, coarse: true },
-}
-
-export const 並べ方を選ぶとこの端末に残る: Story = {
-  args: { result, filter: {} },
-  play: async ({ canvasElement }) => {
-    document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
-    await afterTheArrival(canvasElement)
-    const layout = within(canvasElement).getByRole('group', { name: '並べ方' })
-
-    await userEvent.click(within(layout).getByRole('link', { name: '表' }))
-    await expect(cookieIn(document.cookie, LIBRARY_LAYOUT_COOKIE)).toBe('table')
-    await expect(
-      within(layout).getByRole('link', { name: '表' }),
-    ).toHaveAttribute('href', expect.stringContaining('as=table'))
-
-    await userEvent.click(within(layout).getByRole('link', { name: '格子' }))
-    await expect(cookieIn(document.cookie, LIBRARY_LAYOUT_COOKIE)).toBe('grid')
-    await expect(
-      within(layout).getByRole('link', { name: '格子' }),
-    ).toHaveAttribute('href', expect.stringContaining('as=grid'))
-
-    document.cookie = forgettingCookie(LIBRARY_LAYOUT_COOKIE)
-  },
-}
-
-export const 複数を選んでサムネイルを再生成する: Story = {
-  args: { result, filter: {}, onRemakeThumbnails: remakingAllButTheSecond },
-  parameters: { coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-    const [first, second] = result.items.filter(
-      (one) => one.outcome !== 'recording',
-    )
-
-    remade.length = 0
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await userEvent.click(pickOf(canvasElement, second))
-    await expect(pickingRow(canvasElement)).toHaveTextContent('2 件を選択')
-
-    await userEvent.click(
-      within(pickingRow(canvasElement)).getByRole('button', {
-        name: 'サムネイルを再生成',
-      }),
-    )
-
-    await waitFor(() => expect(remade).toEqual([[first.id, second.id]]))
-    await expect(
-      await screen.findByText(
-        '1 件のサムネイルを作り直します、1 件はできませんでした。',
-      ),
-    ).toBeVisible()
-    await expect(pickingRow(canvasElement)).toHaveTextContent('1 件を選択')
-    await expect(pickOf(canvasElement, first)).not.toBeChecked()
-    await expect(pickOf(canvasElement, second)).toBeChecked()
-    await expect(
-      within(placeOf(canvasElement, second)).getByText(STILL_RECORDING_SAID),
-    ).toBeVisible()
-    await expect(
-      within(placeOf(canvasElement, first)).queryByRole('status'),
-    ).toBeNull()
-  },
-}
-
-export const サムネイルがすべて再生成に回ると選ぶのをやめる: Story = {
-  args: { result, filter: {} },
-  parameters: { coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-    const [first] = result.items.filter((one) => one.outcome !== 'recording')
-
-    remade.length = 0
-
-    await userEvent.click(pickOf(canvasElement, first))
-    await userEvent.click(
-      within(pickingRow(canvasElement)).getByRole('button', {
-        name: 'サムネイルを再生成',
-      }),
-    )
-
-    await waitFor(() => expect(remade).toEqual([[first.id]]))
-    await expect(
-      await screen.findByText('1 件のサムネイルを作り直します。'),
-    ).toBeVisible()
-    await stopsChoosing(canvasElement)
-  },
-}
-
-export const 録画中を選ぶとサムネイルの再生成も削除も押せない: Story = {
-  args: { result, filter: {} },
-  parameters: { coarse: true },
-  play: async ({ canvasElement }) => {
-    await startChoosing(canvasElement)
-    const recording = result.items.find((one) => one.outcome === 'recording')!
-
-    await userEvent.click(pickOf(canvasElement, recording))
-
-    const row = within(pickingRow(canvasElement))
-
-    await expect(
-      row.getByRole('button', { name: 'サムネイルを再生成' }),
-    ).toBeDisabled()
-    await expect(row.getByRole('button', { name: '削除' })).toBeDisabled()
-  },
 }
 
 export const 電話の帯にはサムネイルの再生成と削除が並ぶ: Story = {

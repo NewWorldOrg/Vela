@@ -184,6 +184,7 @@ const meta = {
     openSocket: carrying(CATALOG, ...modules()),
     askSignedOut: async () => false,
     askBacklog: async () => undefined,
+    restsMs: 1000,
   },
   decorators: [inTheApp],
   beforeEach: () => {
@@ -500,12 +501,18 @@ function theColumn(canvasElement: HTMLElement): HTMLElement {
   return found
 }
 
-/** Waits for the column to come to rest after it swapped or folded. */
+/** Waits for the column to come to rest after it swapped or folded: nothing moving, and the swap between the remote and the channels over, since a press on the switch before then is not taken. */
 async function columnAtRest(canvasElement: HTMLElement) {
   const column = theColumn(canvasElement)
 
   await waitFor(
-    () => expect(column.getAnimations({ subtree: true }).length).toBe(0),
+    () => {
+      expect(column.getAnimations({ subtree: true }).length).toBe(0)
+      expect(
+        column.querySelector('[data-swap]')?.getAttribute('data-swap') ??
+          'still',
+      ).toBe('still')
+    },
     { timeout: 6000 },
   )
 }
@@ -795,6 +802,7 @@ export const 開いている_PC_全画面: Story = {
 }
 
 export const 開いている_縦の_iPad: Story = {
+  name: '開いている 縦の iPad',
   parameters: { screen: { width: 820, height: 1180 }, coarse: true },
   play: async ({ canvasElement }) => {
     await opened(canvasElement)
@@ -803,6 +811,7 @@ export const 開いている_縦の_iPad: Story = {
 }
 
 export const 開いている_横の_iPad_全画面: Story = {
+  name: '開いている 横の iPad 全画面',
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1544,6 +1553,7 @@ export const Hybridcast_キー: Story = {
 }
 
 export const Hybridcast_d_をアプリが取る: Story = {
+  name: 'Hybridcast d をアプリが取る',
   parameters: { screen: { width: 1600, height: 1000 } },
   args: {
     openSocket: carrying(...HYBRIDCAST),
@@ -1701,6 +1711,7 @@ export const Hybridcast_起動中_PC: Story = {
 }
 
 export const Hybridcast_iPad: Story = {
+  name: 'Hybridcast iPad',
   parameters: { screen: { width: 820, height: 1180 }, coarse: true },
   args: {
     openSocket: carrying(...HYBRIDCAST),

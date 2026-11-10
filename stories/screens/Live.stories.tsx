@@ -552,7 +552,7 @@ function Choosing({
 }
 
 const meta = {
-  title: 'Screens/ライブ',
+  title: 'Screens/ライブ/ライブ',
   component: LiveView,
   parameters: {
     layout: 'fullscreen',
@@ -1287,6 +1287,7 @@ export const 形式は_Carina_が出せてブラウザが再生できるもの�
 }
 
 export const 自動はハードウェアで再生できない_AV1_を選ばない: Story = {
+  name: '自動はハードウェアで再生できない AV1 を選ばない',
   args: { screen: ON_A_CARD, askBrowser: PLAYS_AV1_IN_SOFTWARE },
   play: async ({ canvasElement }) => {
     const formats = await theFormats(canvasElement)
@@ -1297,6 +1298,7 @@ export const 自動はハードウェアで再生できない_AV1_を選ばな�
 }
 
 export const 聞く手立ての無いブラウザは_AV1_を自動で選ばない: Story = {
+  name: '聞く手立ての無いブラウザは AV1 を自動で選ばない',
   args: { screen: ON_A_CARD, askBrowser: TAKES_EVERY_TYPE },
   play: async ({ canvasElement }) => {
     const formats = await theFormats(canvasElement)
@@ -1357,6 +1359,7 @@ export const 覚えた形式が使えなくなっていたら黙って自動で�
 }
 
 export const H264_しか出せない機械に形式の行は無い: Story = {
+  name: 'H.264 しか出せない機械に形式の行は無い',
   args: { askBrowser: PLAYS_EVERY_FORMAT_LIGHTLY, formatChoice: 'h265' },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1370,6 +1373,7 @@ export const H264_しか出せない機械に形式の行は無い: Story = {
 }
 
 export const H264_しか再生できないブラウザに形式の行は無い: Story = {
+  name: 'H.264 しか再生できないブラウザに形式の行は無い',
   args: { screen: ON_A_CARD, askBrowser: PLAYS_ONLY_H264 },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -3501,35 +3505,6 @@ export const 外部プレイヤーへ渡す: Story = {
   },
 }
 
-export const iPad_では外部プレイヤーのアプリで開く: Story = {
-  args: { openSocket: withAPicture },
-  beforeEach: browsingAs(AN_IPAD),
-  play: async ({ canvasElement }) => {
-    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
-    await expect(whatIsHanded()).toEqual([])
-    await expect(waysToHandOver()).toEqual([
-      'VLC で再生',
-      'Infuse で再生',
-      'URL をコピー',
-    ])
-
-    const left = await whereItLeftFor(async (sent) => {
-      await pressInTheHandoverMenu(canvasElement, 'VLC で再生')
-      await waitFor(() => expect(sent).toHaveLength(1))
-
-      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
-      await waitFor(() => expect(sent).toHaveLength(2))
-    })
-
-    await expect(
-      handedTo('vlc-x-callback://x-callback-url/stream?url=', left[0]),
-    ).toMatch(THE_CHANNEL_BY_TICKET)
-    await expect(
-      handedTo('infuse://x-callback-url/play?url=', left[1]),
-    ).toMatch(THE_CHANNEL_NAMED_BY_WHAT_IS_ON)
-  },
-}
-
 export const 外部プレイヤーの札を断られたらその場で言う: Story = {
   args: { openSocket: withAPicture, onTakeTicket: refusingTheTicket },
   play: async ({ canvasElement }) => {
@@ -3597,6 +3572,7 @@ export const 札を頼む通信が落ちたらその場で言う: Story = {
 }
 
 export const AirPlay_はライブに描かない: Story = {
+  name: 'AirPlay はライブに描かない',
   args: { openSocket: withAPicture },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -3608,6 +3584,59 @@ export const AirPlay_はライブに描かない: Story = {
     await expect(
       canvas.getByRole('button', { name: '外部プレイヤーで再生' }),
     ).toBeVisible()
+  },
+}
+
+export const 観ている番組の説明を読める: Story = {
+  args: { screen: LONG_WORDS, openSocket: withAPicture },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const panel = canvasElement.querySelector('[data-slot="now-next"]')
+
+    await expect(panel).toBeVisible()
+    await expect(
+      canvas.getByText(
+        /いまも変わらず回り続ける灯りの下で夜明けまで見届ける。/,
+      ),
+    ).toBeVisible()
+    await expect(canvas.getByText('出演')).toBeVisible()
+  },
+}
+
+export const 選局の一覧は見切れた題名を全文で言う: Story = {
+  args: { screen: LONG_WORDS_UNCHOSEN, openSocket: nothingToWatch },
+  parameters: {
+    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
+  },
+}
+
+export const iPad_では外部プレイヤーのアプリで開く: Story = {
+  name: 'iPad では外部プレイヤーのアプリで開く',
+  args: { openSocket: withAPicture },
+  beforeEach: browsingAs(AN_IPAD),
+  play: async ({ canvasElement }) => {
+    await expect(await openTheHandoverMenu(canvasElement)).toBeVisible()
+    await expect(whatIsHanded()).toEqual([])
+    await expect(waysToHandOver()).toEqual([
+      'VLC で再生',
+      'Infuse で再生',
+      'URL をコピー',
+    ])
+
+    const left = await whereItLeftFor(async (sent) => {
+      await pressInTheHandoverMenu(canvasElement, 'VLC で再生')
+      await waitFor(() => expect(sent).toHaveLength(1))
+
+      await pressInTheHandoverMenu(canvasElement, 'Infuse で再生')
+      await waitFor(() => expect(sent).toHaveLength(2))
+    })
+
+    await expect(
+      handedTo('vlc-x-callback://x-callback-url/stream?url=', left[0]),
+    ).toMatch(THE_CHANNEL_BY_TICKET)
+    await expect(
+      handedTo('infuse://x-callback-url/play?url=', left[1]),
+    ).toMatch(THE_CHANNEL_NAMED_BY_WHAT_IS_ON)
   },
 }
 
@@ -3634,29 +3663,6 @@ export const 広い画面では番組の右から録画し次の番組も1回で
     await expect(
       panel.getByRole('button', { name: /外部プレイヤーで再生/ }),
     ).toBeVisible()
-  },
-}
-
-export const 観ている番組の説明を読める: Story = {
-  args: { screen: LONG_WORDS, openSocket: withAPicture },
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement)
-    const panel = canvasElement.querySelector('[data-slot="now-next"]')
-
-    await expect(panel).toBeVisible()
-    await expect(
-      canvas.getByText(
-        /いまも変わらず回り続ける灯りの下で夜明けまで見届ける。/,
-      ),
-    ).toBeVisible()
-    await expect(canvas.getByText('出演')).toBeVisible()
-  },
-}
-
-export const 選局の一覧は見切れた題名を全文で言う: Story = {
-  args: { screen: LONG_WORDS_UNCHOSEN, openSocket: nothingToWatch },
-  parameters: {
-    nextjs: { appDirectory: true, navigation: { pathname: '/live' } },
   },
 }
 

@@ -44,7 +44,7 @@ const FAILURES: [string, string][] = [
 const KIND_COLUMN = 5
 
 const meta = {
-  title: 'Screens/失敗台帳',
+  title: 'Screens/予約/失敗台帳',
   component: OutcomeLedgerView,
   parameters: {
     nextjs: {
@@ -376,6 +376,7 @@ export const 電話の幅では一行をカードに組む: Story = {
 }
 
 export const 幅600pxからは表のまま: Story = {
+  name: '幅600pxからは表のまま',
   args: { result: outcomeLedger(EVERY_KIND_FIXTURES) },
   parameters: { screen: FROM_600 },
   play: async ({ canvasElement }) => {
