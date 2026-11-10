@@ -248,6 +248,7 @@ export function LivePlayer({
   openPlaylist = openThePlaylist,
   playlistHref = livePlaylistHref,
   startupDeadlineMs = STARTUP_DEADLINE_MS,
+  restsMs = RESTS,
   takeCapture = takeItNow,
   autoOpensDataBroadcast = false,
   lineRelayOf = liveLineRelay,
@@ -288,6 +289,8 @@ export function LivePlayer({
     sound: SoundTrack,
   ) => string
   startupDeadlineMs?: number
+  /** How long the controls stay up after the pointer or a key last stirred them. */
+  restsMs?: number
   takeCapture?: TakeCapture
   autoOpensDataBroadcast?: boolean
   lineRelayOf?: (channel: string) => LineRelay
@@ -846,7 +849,7 @@ export function LivePlayer({
     }
 
     setStirred(true)
-    settling.current = setTimeout(() => setStirred(false), RESTS)
+    settling.current = setTimeout(() => setStirred(false), restsMs)
   }
 
   const showOrHide = (wasUp: boolean) => {

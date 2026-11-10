@@ -246,8 +246,10 @@ export const 受信機の関数: Story = {
       expect(app.getAttribute('data-heard')).toContain('greg'),
     )
     await expect(app.getAttribute('data-heard')).toContain('keySet')
+    await waitFor(() =>
+      expect(app.getAttribute('data-heard')).toContain('videoRect:over'),
+    )
     await expect(app).toHaveAttribute('data-rect', '960,120,800,450')
-    await expect(app.getAttribute('data-heard')).toContain('videoRect:over')
   },
 }
 
