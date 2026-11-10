@@ -795,7 +795,6 @@ export const 開いている_PC_全画面: Story = {
 }
 
 export const 開いている_縦の_iPad: Story = {
-  name: '開いている 縦の iPad',
   parameters: { screen: { width: 820, height: 1180 }, coarse: true },
   play: async ({ canvasElement }) => {
     await opened(canvasElement)
@@ -804,7 +803,6 @@ export const 開いている_縦の_iPad: Story = {
 }
 
 export const 開いている_横の_iPad_全画面: Story = {
-  name: '開いている 横の iPad 全画面',
   parameters: { screen: { width: 1180, height: 820 }, coarse: true },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement)
@@ -1546,7 +1544,6 @@ export const Hybridcast_キー: Story = {
 }
 
 export const Hybridcast_d_をアプリが取る: Story = {
-  name: 'Hybridcast d をアプリが取る',
   parameters: { screen: { width: 1600, height: 1000 } },
   args: {
     openSocket: carrying(...HYBRIDCAST),
@@ -1700,6 +1697,33 @@ export const Hybridcast_起動中_PC: Story = {
     await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
     await expect(close.bottom).toBeLessThan(disc.top)
     await shrunkTo(canvasElement, IN_THE_APPLICATION)
+  },
+}
+
+export const Hybridcast_iPad: Story = {
+  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
+  args: {
+    openSocket: carrying(...HYBRIDCAST),
+    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
+  },
+  beforeEach: lineSetTo(true, false, true),
+  play: async ({ canvasElement }) => {
+    await openedOnTheLine(canvasElement)
+
+    const group = await runningOnTheBand(canvasElement)
+    const close = within(group)
+      .getByRole('button', { name: 'Hybridcast を閉じる' })
+      .getBoundingClientRect()
+    const back = within(canvasElement)
+      .getByRole('button', { name: '戻る' })
+      .getBoundingClientRect()
+
+    const name = group.querySelector('b') as HTMLElement
+
+    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
+    await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
+    await expect(close.right).toBeLessThanOrEqual(back.left)
+    await expect(Math.abs(close.top - back.top)).toBeLessThan(1)
   },
 }
 
@@ -1982,34 +2006,6 @@ export const Hybridcast_効果音: Story = {
         { sound: 5, gain: romSoundGain(true, 1) },
       ]),
     )
-  },
-}
-
-export const Hybridcast_iPad: Story = {
-  name: 'Hybridcast iPad',
-  parameters: { screen: { width: 820, height: 1180 }, coarse: true },
-  args: {
-    openSocket: carrying(...HYBRIDCAST),
-    lineRelayOf: relayAnswering({ result: 1, status: 200, body: '1' }),
-  },
-  beforeEach: lineSetTo(true, false, true),
-  play: async ({ canvasElement }) => {
-    await openedOnTheLine(canvasElement)
-
-    const group = await runningOnTheBand(canvasElement)
-    const close = within(group)
-      .getByRole('button', { name: 'Hybridcast を閉じる' })
-      .getBoundingClientRect()
-    const back = within(canvasElement)
-      .getByRole('button', { name: '戻る' })
-      .getBoundingClientRect()
-
-    const name = group.querySelector('b') as HTMLElement
-
-    await expect(name.scrollWidth).toBeLessThanOrEqual(name.clientWidth)
-    await expect(Math.min(close.width, close.height)).toBeGreaterThanOrEqual(44)
-    await expect(close.right).toBeLessThanOrEqual(back.left)
-    await expect(Math.abs(close.top - back.top)).toBeLessThan(1)
   },
 }
 
