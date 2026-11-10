@@ -2803,6 +2803,30 @@
   }
 }
 
+/* The bell of a programme whose start is to be told sits in the cell's top
+   right corner, and in the middle of a cell of one line. */
+@utility guide-cell-bell {
+  @apply pointer-events-none absolute right-2 text-warn;
+  top: calc(7rem / 16);
+  width: calc(15rem / 16);
+  height: calc(15rem / 16);
+
+  & svg {
+    stroke-width: 1.9;
+  }
+
+  @container (height < 2.5rem) {
+    top: 50%;
+    width: min(calc(15rem / 16), 80cqh);
+    height: min(calc(15rem / 16), 80cqh);
+    translate: 0 -50%;
+  }
+
+  @container (height < 0.75rem) {
+    display: none;
+  }
+}
+
 @utility guide-cell-desc {
   @apply mt-0.5 block text-note text-ink-2;
   line-height: var(--guide-pitch);

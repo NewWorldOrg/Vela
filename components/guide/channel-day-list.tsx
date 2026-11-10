@@ -18,6 +18,8 @@ import {
   groundOf,
 } from '@/components/guide/guide-metrics'
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
+import { WATCHED_SAYS } from '@/components/guide/program-cell'
+import { NotifyBell } from '@/components/notifications/programme-notice'
 import { pressable } from '@/components/vela/tactile'
 
 const ROOM_ABOVE_NOW_PX = 48
@@ -255,6 +257,12 @@ export function ChannelDayList({
                         )}
                       />
                       {mark && <BookingGlyph mark={mark} />}
+                      {p.watch && (
+                        <NotifyBell
+                          label={WATCHED_SAYS}
+                          className="mr-1.5 align-[-2px]"
+                        />
+                      )}
                       {halfWidthOf(p.title)}
                     </span>
                     <span
