@@ -160,6 +160,7 @@ const store: {
   writeStatus: number
   writeMessage: string
   down: 'nothing' | 'writes' | 'everything'
+  unread: string
 } = {
   destinations: [],
   rules: [],
@@ -174,6 +175,7 @@ const store: {
   writeStatus: 200,
   writeMessage: '',
   down: 'nothing',
+  unread: '',
 }
 
 const NOT_THERE = 'the API is not there'
@@ -235,6 +237,10 @@ const client = () => ({
       throw new Error(NOT_THERE)
     }
 
+    if (store.unread === path) {
+      return refusal(503, '')
+    }
+
     if (store.readStatus >= 400) {
       return refusal(store.readStatus, store.readMessage)
     }
@@ -284,6 +290,7 @@ const {
   getWatchOffer,
   listWatchedProgrammes,
   listWatches,
+  readSingleNotices,
   registerDestination,
   removeDestination,
   removeRuleSet,
@@ -311,6 +318,7 @@ beforeEach(() => {
   store.writeStatus = 200
   store.writeMessage = ''
   store.down = 'nothing'
+  store.unread = ''
 })
 
 test('the screen is read from the destinations, the rule sets and the settings', async () => {
@@ -1028,4 +1036,36 @@ test('what is read stays an error while Carina is not there', async () => {
   await assert.rejects(listWatches(), /the API is not there/)
   await assert.rejects(getWatchOffer(), /the API is not there/)
   await assert.rejects(listWatchedProgrammes(), /the API is not there/)
+})
+
+test('the single notices are read as those waiting and what a new one starts from', async () => {
+  store.watches = [watch(WATCH_ONE)]
+
+  const { watches, offer } = readSingleNotices()
+
+  assert.deepEqual([...(await watches).keys()], [DOCUMENTARY])
+  assert.deepEqual(await offer, {
+    leadMinutes: 3,
+    destinations: [{ id: HOME, name: '見本の送り先 1' }],
+  })
+})
+
+test('while the notices waiting cannot be read none is marked, and no new one is offered, since one may already be set', async () => {
+  store.watches = [watch(WATCH_ONE)]
+  store.unread = '/api/notifications/watches'
+
+  const { watches, offer } = readSingleNotices()
+
+  assert.equal((await watches).size, 0)
+  assert.equal(await offer, undefined)
+})
+
+test('while what a new one starts from cannot be read, the notices waiting are still marked', async () => {
+  store.watches = [watch(WATCH_ONE)]
+  store.unread = '/api/notifications/settings'
+
+  const { watches, offer } = readSingleNotices()
+
+  assert.deepEqual([...(await watches).keys()], [DOCUMENTARY])
+  assert.equal(await offer, undefined)
 })

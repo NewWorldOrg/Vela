@@ -384,6 +384,28 @@ export async function getWatchOffer(): Promise<WatchOffer | undefined> {
     : undefined
 }
 
+/** The single notices as a programme's detail needs them, each still on its way. */
+export interface SingleNotices {
+  watches: Promise<Map<string, ProgrammeWatch>>
+  offer: Promise<WatchOffer | undefined>
+}
+
+/** The notices waiting and what a new one starts from. While those waiting cannot be read none is marked and no new one is offered, since one may already be set. */
+export function readSingleNotices(): SingleNotices {
+  const waiting: Promise<Map<string, ProgrammeWatch> | undefined> =
+    listWatches().catch(() => undefined)
+  const offered: Promise<WatchOffer | undefined> = getWatchOffer().catch(
+    () => undefined,
+  )
+
+  return {
+    watches: waiting.then((watches) => watches ?? new Map()),
+    offer: Promise.all([waiting, offered]).then(([watches, offer]) =>
+      watches ? offer : undefined,
+    ),
+  }
+}
+
 export async function listWatchedProgrammes(): Promise<WatchedProgramme[]> {
   const [waiting, destinations] = await Promise.all([
     fetchWaitingWatches(),

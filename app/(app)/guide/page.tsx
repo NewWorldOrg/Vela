@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 
 import { forTheGrid, getGuideInTwo } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
-import { getWatchOffer, listWatches } from '@/repository/notifications'
+import { readSingleNotices } from '@/repository/notifications'
 import {
   coverageDaysOf,
   epgHealthOf,
@@ -43,15 +43,16 @@ export default async function Page({
 }) {
   const params = await searchParams
   const jar = await cookies()
+  const notices = readSingleNotices()
   const [{ guide, rest }, collection, offer] = await Promise.all([
     getGuideInTwo(
       typeof params.kind === 'string' ? params.kind : undefined,
       typeof params.date === 'string' ? params.date : undefined,
       listBookings(),
-      listWatches().catch(() => new Map()),
+      notices.watches,
     ),
     getCollectionStatus(),
-    getWatchOffer().catch(() => undefined),
+    notices.offer,
   ])
   const opening = guide.programs.length > 0 ? guide.programs : await rest
   const later =

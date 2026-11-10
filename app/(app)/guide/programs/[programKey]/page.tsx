@@ -4,7 +4,7 @@ import { notFound, redirect } from 'next/navigation'
 import { PROGRAMS_EVENT, RESERVATIONS_EVENT } from '@/repository/events'
 import { getProgram, primaryProgramKeyOf } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
-import { getWatchOffer, listWatches } from '@/repository/notifications'
+import { readSingleNotices } from '@/repository/notifications'
 import { RefreshOnSignal } from '@/components/vela/app-signals'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
 import {
@@ -31,14 +31,10 @@ export default async function Page({
   params: Promise<{ programKey: string }>
 }) {
   const { programKey } = await params
+  const notices = readSingleNotices()
   const [detail, offer] = await Promise.all([
-    getProgram(
-      programKey,
-      new Date(),
-      listBookings(),
-      listWatches().catch(() => new Map()),
-    ),
-    getWatchOffer().catch(() => undefined),
+    getProgram(programKey, new Date(), listBookings(), notices.watches),
+    notices.offer,
   ])
   if (!detail) {
     const primary = await primaryProgramKeyOf(programKey)
