@@ -15,6 +15,8 @@ import {
   HYBRIDCAST_SANDBOX,
   HybridcastFace,
   OPENED_WITHIN_MS,
+} from '@/components/data-broadcast/hybridcast-face'
+import {
   type AppHeard,
   type SendToApp,
 } from '@/components/data-broadcast/hybridcast-frame'

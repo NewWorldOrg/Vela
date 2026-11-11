@@ -134,14 +134,12 @@ import {
   type PlayerBezel,
 } from '@/components/recordings/player-center'
 
-import {
-  DataBroadcastBand,
-  DataBroadcastFace,
-  DataBroadcastToggle,
-  DataBroadcastRemote,
-  widestColumn,
-} from '@/components/data-broadcast/data-broadcast-player'
-import { HybridcastFace } from '@/components/data-broadcast/hybridcast-frame'
+import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
+import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
+import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
+import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
+import { widestColumn } from '@/components/data-broadcast/data-broadcast-player'
+import { HybridcastFace } from '@/components/data-broadcast/hybridcast-face'
 import { eventInformationOf } from '@/lib/hybridcast/event-information'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'

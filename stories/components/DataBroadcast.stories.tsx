@@ -32,14 +32,14 @@ import { RUNTIME_SCRIPT } from '@/components/data-broadcast/runtime-script.gener
 import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
-  DataBroadcastBand,
-  DataBroadcastFace,
-  DataBroadcastRemote,
   DATA_BROADCAST_NAME,
   REMOTE_GROUP_GAP,
   REMOTE_UNDER_THE_DISC,
   columnOverTheBand,
 } from '@/components/data-broadcast/data-broadcast-player'
+import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
+import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
+import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
 import {
   PLAYER_BOARD,
   PLAYER_FACE,

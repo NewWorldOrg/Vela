@@ -213,13 +213,11 @@ import {
   type ReadDataBroadcast,
   type ReadDataBroadcastModule,
 } from '@/components/recordings/read-data-broadcast'
-import {
-  DataBroadcastBand,
-  DataBroadcastFace,
-  DataBroadcastRemote,
-  DataBroadcastToggle,
-  widestColumn,
-} from '@/components/data-broadcast/data-broadcast-player'
+import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
+import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
+import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
+import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
+import { widestColumn } from '@/components/data-broadcast/data-broadcast-player'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
 import {
   useSeekEvents,
