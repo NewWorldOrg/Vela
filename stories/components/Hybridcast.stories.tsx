@@ -10,13 +10,11 @@ import type { EventInformation } from '@/lib/hybridcast/event-information'
 import { KEY_SET_UNTIL_TOLD } from '@/lib/hybridcast/keys'
 import type { OwnedApplication } from '@/lib/hybridcast/messages'
 import { cn } from '@/lib/utils'
+import { HybridcastFace } from '@/components/data-broadcast/hybridcast-face'
 import {
   HYBRIDCAST_FRAME_TITLE,
   HYBRIDCAST_SANDBOX,
-  HybridcastFace,
   OPENED_WITHIN_MS,
-} from '@/components/data-broadcast/hybridcast-face'
-import {
   type AppHeard,
   type SendToApp,
 } from '@/components/data-broadcast/hybridcast-frame'
