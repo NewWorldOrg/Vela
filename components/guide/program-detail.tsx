@@ -29,10 +29,8 @@ import { GenrePill } from '@/components/vela/genre-pill'
 import { Button } from '@/components/ui/button'
 import { LiveIcon, RelayIcon } from '@/components/vela/icons'
 import { ChannelMark } from '@/components/vela/channel-mark'
-import {
-  ProgramDescription,
-  ProgramExtended,
-} from '@/components/guide/program-description'
+import { ProgramDescription } from '@/components/guide/program-description'
+import { ProgramExtended } from '@/components/guide/program-extended'
 import { ReservationArea } from '@/components/guide/reservation-area'
 import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
 import { NotifyStartButton } from '@/components/notifications/notify-start-button'

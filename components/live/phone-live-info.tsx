@@ -9,10 +9,8 @@ import { ProgressBar } from '@/components/vela/progress'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
-import {
-  ProgramDescription,
-  ProgramExtended,
-} from '@/components/guide/program-description'
+import { ProgramDescription } from '@/components/guide/program-description'
+import { ProgramExtended } from '@/components/guide/program-extended'
 
 /** The programme on now, under the picture on a phone held upright: its title, its progress and what is left of it, the way out to another player and the reservation; its description unfolds under the chevron. */
 export function PhoneLiveInfo({

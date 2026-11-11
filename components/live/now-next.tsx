@@ -11,10 +11,8 @@ import { saysSubtitled } from '@/lib/program-title'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ProgressBar } from '@/components/vela/progress'
 import { pressable } from '@/components/vela/tactile'
-import {
-  ProgramDescription,
-  ProgramExtended,
-} from '@/components/guide/program-description'
+import { ProgramDescription } from '@/components/guide/program-description'
+import { ProgramExtended } from '@/components/guide/program-extended'
 import { ReserveRing } from '@/components/live/reserve-ring'
 import { useRecordInOnePress } from '@/components/live/record-this-button'
 
