@@ -1,8 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
-import { AppTabBar } from '@/app/(app)/_shell/tab-bar'
-import { AppTopBar } from '@/app/(app)/_shell/top-bar'
+import { AppTabBar } from '@/app/(app)/_shell/app-tab-bar'
+import { AppTopBar } from '@/app/(app)/_shell/app-top-bar'
 import { AppFrame } from '@/components/vela/app-frame'
 import { ScreenMain } from '@/components/vela/screen-main'
 import { TabBadge } from '@/components/vela/tab-bar'

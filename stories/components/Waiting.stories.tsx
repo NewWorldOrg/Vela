@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { SectionHeading } from '@/components/vela/section-heading'
 import { MarkDots } from '@/components/vela/icons'
-import { WaitingRows } from '@/components/vela/waiting'
+import { WaitingRows } from '@/components/vela/waiting-rows'
 
 const meta = {
   title: 'Components/状態と知らせ/読み込み中',

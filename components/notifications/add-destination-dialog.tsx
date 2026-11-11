@@ -28,7 +28,7 @@ import {
   NoticeDialogFooter,
   NoticeDialogHeader,
   NoticeLabel,
-} from '@/components/notifications/notice-dialog'
+} from '@/components/notifications/notice-dialog-content'
 import { WebhookField } from '@/components/notifications/webhook-field'
 
 export interface BrowserDraft {

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getSegmentStatus } from '@/repository/segment-status'
-import { SegmentsView } from '@/components/segments/segments-page'
+import { SegmentsView } from '@/components/segments/segments-view'
 import {
   chooseTheVersion,
   leaveTheVersionToLearning,

@@ -23,7 +23,7 @@ import {
   NoticeDialogFooter,
   NoticeDialogHeader,
   NoticeLabel,
-} from '@/components/notifications/notice-dialog'
+} from '@/components/notifications/notice-dialog-content'
 import { WebhookField } from '@/components/notifications/webhook-field'
 
 const SIGNED_OUT = signedOut('変更')

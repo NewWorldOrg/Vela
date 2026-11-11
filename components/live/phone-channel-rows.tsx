@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import type { LiveChannel } from '@/repository/live'
-import { ProgressBar } from '@/components/vela/progress'
+import { ProgressBar } from '@/components/vela/progress-bar'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { pressable } from '@/components/vela/tactile'
 

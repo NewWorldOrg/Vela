@@ -14,8 +14,8 @@ import {
 } from '@/lib/notifications'
 import { Banner } from '@/components/vela/banner'
 import { PageHeading } from '@/components/vela/page-heading'
-import { SettingsGroup } from '@/components/vela/settings-rows'
-import { useToast } from '@/components/vela/toast'
+import { SettingsGroup } from '@/components/vela/settings-group'
+import { useToast } from '@/components/vela/toasts'
 import {
   AddDestinationDialog,
   type BrowserChoice,

@@ -1,7 +1,7 @@
 import { useId, type ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import { star, maskIdOf } from '@/components/vela/marks'
+import { star, maskIdOf } from '@/components/vela/vela-mark'
 
 export type UsherMood = 'plain' | 'glad' | 'troubled'
 

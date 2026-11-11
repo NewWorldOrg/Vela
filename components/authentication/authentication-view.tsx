@@ -16,7 +16,7 @@ import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/page-heading'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { OidcSettings } from '@/components/authentication/oidc-settings'
-import { ChangePassword } from '@/components/authentication/password-change'
+import { ChangePassword } from '@/components/authentication/change-password'
 import { SessionTable } from '@/components/authentication/session-table'
 
 export type AuthenticationNotice =

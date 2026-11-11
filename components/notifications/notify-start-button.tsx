@@ -11,8 +11,8 @@ import {
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { BellIcon, BellOffIcon } from '@/components/vela/icons'
-import { useToast } from '@/components/vela/toast'
-import { NoticeDialogContent } from '@/components/notifications/notice-dialog'
+import { useToast } from '@/components/vela/toasts'
+import { NoticeDialogContent } from '@/components/notifications/notice-dialog-content'
 import {
   refusalOf,
   STOP_NOTIFYING,

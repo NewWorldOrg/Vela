@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { InlineAlert } from '@/components/vela/inline-alert'
-import { SettingsGroup } from '@/components/vela/settings-rows'
+import { SettingsGroup } from '@/components/vela/settings-group'
 import { TermTip } from '@/components/vela/term-tip'
 
 const SIGNED_OUT = signedOut('保存')

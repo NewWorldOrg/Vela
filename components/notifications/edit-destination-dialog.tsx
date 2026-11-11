@@ -6,7 +6,7 @@ import {
   type NotificationWrite,
 } from '@/lib/notifications'
 import { Dialog } from '@/components/ui/dialog'
-import { NoticeDialogContent } from '@/components/notifications/notice-dialog'
+import { NoticeDialogContent } from '@/components/notifications/notice-dialog-content'
 import { EditDestinationForm } from '@/components/notifications/edit-destination-form'
 
 export function EditDestinationDialog({

@@ -26,7 +26,7 @@ const THE_EMPTY_VALUE = 'lib/empty-value.ts'
 
 const THE_KINDS = 'lib/broadcast-terms.ts'
 
-const THE_WAITING = 'components/vela/waiting.tsx'
+const THE_WAITING = 'components/vela/waiting-rows.tsx'
 
 const A_VALUE_A_READER_READS =
   /(?<![=$])\{\s*([A-Za-z_$][\w$]*(?:[.?]+[\w$]+)+)\s*\}/g
@@ -249,11 +249,11 @@ test('the kinds of broadcast are spelt from the one table', async () => {
 })
 
 const THE_LISTS_THAT_SWAP = [
-  'components/library/library-page.tsx',
-  'components/reservations/reservations-page.tsx',
-  'components/reservations/outcomes-page.tsx',
+  'components/library/library-view.tsx',
+  'components/reservations/reservations-view.tsx',
+  'components/reservations/outcome-ledger-view.tsx',
   'components/search/search-screen.tsx',
-  'components/encode/jobs-navigation.tsx',
+  'components/encode/jobs-list.tsx',
 ]
 
 test('a list that is being swapped dims and stops in the one shape', async () => {

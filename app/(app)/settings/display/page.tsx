@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { headers } from 'next/headers'
 
 import { MOTION_HEADER, motionOf } from '@/lib/motion'
-import { DisplayView } from '@/components/display/display-page'
+import { DisplayView } from '@/components/display/display-view'
 
 export const metadata: Metadata = { title: '表示' }
 

@@ -8,8 +8,8 @@ import {
 } from '@/repository/events'
 import { listRecordings, type RecordingsFilter } from '@/repository/recordings'
 import { LIBRARY_LAYOUT_COOKIE, libraryViewOf } from '@/lib/library-view'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { LibraryView } from '@/components/library/library-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { LibraryView } from '@/components/library/library-view'
 import {
   throwRecordingAway,
   throwRecordingsAway,

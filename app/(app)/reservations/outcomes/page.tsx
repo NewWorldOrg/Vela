@@ -3,8 +3,8 @@ import type { Metadata } from 'next'
 import { RESERVATIONS_EVENT } from '@/repository/events'
 import type { ReservationOutcomeKind } from '@/repository/reservation-outcomes'
 import { listReservationOutcomes } from '@/repository/reservation-outcomes'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { OutcomeLedgerView } from '@/components/reservations/outcome-ledger-view'
 
 export const metadata: Metadata = { title: '失敗台帳' }
 

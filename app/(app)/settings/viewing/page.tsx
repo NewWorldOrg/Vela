@@ -3,7 +3,7 @@ import { cookies } from 'next/headers'
 
 import { viewingSettingsOf } from '@/lib/viewing'
 import { getResidence } from '@/repository/data-broadcast-settings'
-import { ViewingView } from '@/components/viewing/viewing-page'
+import { ViewingView } from '@/components/viewing/viewing-view'
 import { settleTheResidence } from './actions'
 
 export const metadata: Metadata = { title: '視聴' }

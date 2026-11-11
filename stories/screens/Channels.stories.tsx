@@ -12,7 +12,7 @@ import {
   SCAN_RUNNING_ON_A_LATER_BUILD,
 } from '@/repository/services.fixtures'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
-import { ChannelsView } from '@/components/channels/channels-page'
+import { ChannelsView } from '@/components/channels/channels-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { rowsOfTheTableHeaded, tipIn } from '@/stories/pills-in-a-column'

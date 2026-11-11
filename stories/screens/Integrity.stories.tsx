@@ -11,7 +11,7 @@ import {
   INTEGRITY_THUMBNAIL_MISSING_FIXTURE,
 } from '@/stories/fixtures/integrity'
 import { afterTheArrival } from '@/stories/after-the-arrival'
-import { IntegrityView } from '@/components/integrity/integrity-page'
+import { IntegrityView } from '@/components/integrity/integrity-view'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheApp } from '@/stories/frames'
 import {

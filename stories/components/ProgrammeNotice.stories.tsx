@@ -24,7 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListIcon, RecordIcon } from '@/components/vela/icons'
-import { Toasts } from '@/components/vela/toast'
+import { Toasts } from '@/components/vela/toasts'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { PHONE } from '@/stories/rows-as-cards'
 import {

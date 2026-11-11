@@ -12,7 +12,7 @@ import {
   PROGRAM_DETAIL_FIXTURES,
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
-import { ProgramDetailView } from '@/components/guide/program-detail-page'
+import { ProgramDetailView } from '@/components/guide/program-detail-view'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 

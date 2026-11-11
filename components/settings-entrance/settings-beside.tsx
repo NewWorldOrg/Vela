@@ -7,7 +7,7 @@ import { usePhoneOnItsSide } from '@/hooks/usePhone'
 import {
   SettingsEntranceView,
   type SettingsEntranceValues,
-} from '@/components/settings-entrance/settings-entrance-page'
+} from '@/components/settings-entrance/settings-entrance-view'
 
 /** The settings' entrance at the left of the setting open, on a phone held on its side: the same list an upright phone opens first, the open setting marked in it. It stays under the bar while the page sends the setting past, and scrolls on its own. Drawn nowhere else. */
 export function SettingsBeside({

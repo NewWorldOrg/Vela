@@ -9,7 +9,7 @@ import type {
 } from '@/repository/encode'
 import type { EncodeDestinationDraft } from '@/repository/encode-terms'
 import { DestinationDialog } from '@/components/encode/destination-dialog'
-import { ChangeButton } from '@/components/encode/change-definition-button'
+import { ChangeButton } from '@/components/encode/change-button'
 
 export function ChangeDestinationButton({
   destination,

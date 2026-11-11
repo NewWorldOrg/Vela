@@ -36,7 +36,7 @@ import { ScreenMain } from '@/components/vela/screen-main'
 import type {
   RuleEditing,
   RuleActions,
-} from '@/components/reservations/rules-page'
+} from '@/components/reservations/rules-view'
 import { RuleRow } from '@/components/reservations/rules/rule-row'
 import { RuleEditor } from '@/components/reservations/rules/rule-editor'
 import { Count } from '@/components/reservations/rules/count'

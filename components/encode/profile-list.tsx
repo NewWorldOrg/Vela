@@ -38,7 +38,7 @@ import {
   DefinitionName,
   RETIRED_ROW,
   STICKY_HEAD,
-} from '@/components/encode/definition-list'
+} from '@/components/encode/definition-name'
 import { RemovalNotice } from '@/components/encode/removal-notice'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 

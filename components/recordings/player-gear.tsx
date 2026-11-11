@@ -19,7 +19,7 @@ import { DockFace } from '@/components/recordings/dock-face'
 import {
   gearWidth,
   type GearPanel,
-} from '@/components/recordings/caption-style-controls'
+} from '@/components/recordings/caption-style-entry'
 
 const FACE = 'bg-(--pl-bg) text-(--pl-ink)'
 

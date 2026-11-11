@@ -23,7 +23,7 @@ import {
   RESERVATION_FIXTURES,
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
-import { ReservationsView } from '@/components/reservations/reservations-page'
+import { ReservationsView } from '@/components/reservations/reservations-view'
 import { NOTIFY_ONLY } from '@/components/notifications/notify-only-row'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { tipIn } from '@/stories/pills-in-a-column'

@@ -59,7 +59,7 @@ import { GuideGrid } from '@/components/guide/guide-grid'
 import { glyphLoadsOf } from '@/lib/arrival'
 import { ProgramPanel } from '@/components/guide/program-panel'
 import { ProgramBooking } from '@/components/guide/program-booking'
-import { ProgramDetailBody } from '@/components/guide/program-detail'
+import { ProgramDetailBody } from '@/components/guide/program-detail-body'
 import { ChannelStrip } from '@/components/guide/channel-strip'
 import { ChannelDayList } from '@/components/guide/channel-day-list'
 import { usePhoneUpright } from '@/hooks/usePhone'
@@ -67,7 +67,7 @@ import { ScreenMain } from '@/components/vela/screen-main'
 import {
   FilterFoldButton,
   foldedFiltersOf,
-} from '@/components/vela/filter-fold'
+} from '@/components/vela/filter-fold-button'
 
 export function GuideView({
   guide,

@@ -6,7 +6,7 @@ import type { LiveChannel } from '@/repository/live'
 import { Spinner } from '@/components/vela/spinner'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { pressable } from '@/components/vela/tactile'
-import { ROW } from '@/components/live/phone-live'
+import { ROW } from '@/components/live/phone-channel-rows'
 
 function Watching() {
   return (

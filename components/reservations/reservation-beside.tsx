@@ -4,7 +4,10 @@ import type { Reservation } from '@/repository/reservations'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { whereFrom } from '@/components/reservations/reservation-row'
-import { spanOf, clockOf } from '@/components/reservations/phone-reservations'
+import {
+  spanOf,
+  clockOf,
+} from '@/components/reservations/phone-reservation-rows'
 import { ReservationChange } from '@/components/reservations/reservation-change'
 
 /** One reservation beside the list on a phone held on its side: its title, channel, time and where it came from, a chip for what needs attention, and its change under them. */

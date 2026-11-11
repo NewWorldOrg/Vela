@@ -13,7 +13,7 @@ import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { Badge } from '@/components/ui/badge'
 import { IconButton } from '@/components/vela/icon-button'
 import { CloseIcon } from '@/components/vela/icons'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import {
   PICKING_GRID,
   ROW_GRID,

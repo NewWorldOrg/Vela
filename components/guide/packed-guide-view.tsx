@@ -6,7 +6,7 @@ import { wholeDayOf } from '@/lib/guide'
 import { rowsOf, type PackedRows } from '@/lib/packed-rows'
 import type { GridProgram, GuideResult } from '@/repository/programs'
 import { useSettledKept } from '@/hooks/useSettled'
-import { GuideView } from '@/components/guide/guide-page'
+import { GuideView } from '@/components/guide/guide-view'
 
 export type PackedGuide = Omit<GuideResult, 'programs'> & {
   programs: PackedRows<GridProgram>

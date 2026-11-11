@@ -5,7 +5,7 @@ import { useState } from 'react'
 import type { EncodeProfile, EncodeWrite } from '@/repository/encode'
 import type { EncodeProfileDraft } from '@/repository/encode-terms'
 import { ProfileDialog } from '@/components/encode/profile-dialog'
-import { ChangeButton } from '@/components/encode/change-definition-button'
+import { ChangeButton } from '@/components/encode/change-button'
 
 export function ChangeProfileButton({
   profile,

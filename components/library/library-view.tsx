@@ -33,7 +33,7 @@ import { GridIcon, RowsIcon, SearchIcon } from '@/components/vela/icons'
 import {
   FilterFoldButton,
   foldedFiltersOf,
-} from '@/components/vela/filter-fold'
+} from '@/components/vela/filter-fold-button'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FilterChips } from '@/components/vela/filter-chips'
 import { RecordingsTable } from '@/components/library/recordings-table'
@@ -72,7 +72,7 @@ import { SeriesGrid } from '@/components/library/series-grid'
 import { type Picking } from '@/components/library/library-cards'
 import { useHeldDeletions } from '@/components/recordings/held-deletions'
 import { PhoneContinue } from '@/components/library/phone-continue'
-import { PhoneRecordingRows } from '@/components/library/phone-library'
+import { PhoneRecordingRows } from '@/components/library/phone-recording-rows'
 
 const EVERY_CHANNEL = ''
 

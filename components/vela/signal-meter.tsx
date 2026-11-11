@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
 import { InFull } from '@/components/vela/in-full'
-import { type MeterTone, ProgressBar } from '@/components/vela/progress'
+import { type MeterTone, ProgressBar } from '@/components/vela/progress-bar'
 
 const TEXT_TONE: Record<MeterTone, string> = {
   brand: 'text-brand',

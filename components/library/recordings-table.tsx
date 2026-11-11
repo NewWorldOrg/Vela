@@ -11,7 +11,7 @@ import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
 import type { Picking, PickStarting } from '@/components/library/library-cards'
 import { ChevronDownIcon } from '@/components/vela/icons'
-import { waitsWhile } from '@/components/vela/waiting'
+import { waitsWhile } from '@/components/vela/waiting-rows'
 
 const TABLE_MIN = '60rem'
 

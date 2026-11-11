@@ -9,7 +9,7 @@ import type {
 import type { TicketWrite } from '@/repository/tickets'
 import type { EncodeWrite } from '@/repository/encode'
 import { ENCODE_CHOICES } from '@/repository/encode.fixtures'
-import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
+import { RecordingDetailView } from '@/components/recordings/recording-detail-view'
 import { skipNoted } from '@/stories/noted-skips'
 import { seekNoted } from '@/stories/noted-seeks'
 import type { FeedRecording } from '@/components/recordings/recording-feed'

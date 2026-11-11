@@ -39,9 +39,9 @@ import {
 } from '@/repository/encode.fixtures'
 import { PROFILE_DRAFT_DEFAULTS } from '@/repository/encode-terms'
 import type { EncodeJob } from '@/repository/encode'
-import type { EncodeActions } from '@/components/encode/encode-page'
+import type { EncodeActions } from '@/components/encode/encode-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
-import { EncodeView } from '@/components/encode/encode-page'
+import { EncodeView } from '@/components/encode/encode-view'
 import {
   cellOf,
   rowsOfTheTableHeaded,

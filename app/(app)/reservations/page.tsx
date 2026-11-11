@@ -5,8 +5,8 @@ import type { EpgDriftKind } from '@/repository/reservations'
 import { listReservations } from '@/repository/reservations'
 import { getTuners } from '@/repository/tuners'
 import { listWatchedProgrammes } from '@/repository/notifications'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { ReservationsView } from '@/components/reservations/reservations-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { ReservationsView } from '@/components/reservations/reservations-view'
 import {
   bringBackReservation,
   dropReservation,

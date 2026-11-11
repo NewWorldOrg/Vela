@@ -19,7 +19,7 @@ import { ServiceId } from '@/components/channels/service-id'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/page-heading'
-import { ApplyScanAction } from '@/components/scan/apply-scan-button'
+import { ApplyScanAction } from '@/components/scan/apply-scan-action'
 import { ScanAttemptsTable } from '@/components/scan/scan-attempts-table'
 import { FailureLegend } from '@/components/scan/failure-legend'
 

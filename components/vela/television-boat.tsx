@@ -1,5 +1,5 @@
 import { cn } from '@/lib/utils'
-import { star } from '@/components/vela/marks'
+import { star } from '@/components/vela/vela-mark'
 
 const MAST = { x: 9.5, y: 18.5, width: 45, height: 8, rx: 4 }
 

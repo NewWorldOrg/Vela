@@ -40,7 +40,7 @@ import {
   WAITING_LABEL,
   WaitingRows,
   waitsWhile,
-} from '@/components/vela/waiting'
+} from '@/components/vela/waiting-rows'
 import { IconButton } from '@/components/vela/icon-button'
 import { Pager } from '@/components/vela/pager'
 import {
@@ -63,9 +63,9 @@ import {
   type SearchDraft,
 } from '@/components/search/search-draft'
 import { SidewaysPanes } from '@/components/vela/sideways-panes'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'
-import type { Reserving } from '@/components/search/search-page'
+import type { Reserving } from '@/components/search/search-view'
 
 function insteadOfHits(
   waiting: boolean,

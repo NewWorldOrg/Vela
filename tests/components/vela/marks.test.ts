@@ -14,7 +14,7 @@ const ROOT = path.resolve(
 const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
 
 const THE_DRAWINGS = [
-  'components/vela/marks.tsx',
+  'components/vela/vela-mark.tsx',
   'components/vela/usher.tsx',
   'components/vela/television-boat.tsx',
 ]

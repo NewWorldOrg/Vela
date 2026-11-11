@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
-import { Setting } from '@/components/recordings/player-setting'
+import { Setting } from '@/components/recordings/setting'
 
 /** Which face of the gear is open: its own rows, or the caption's. */
 export type GearPanel = 'main' | 'captions'

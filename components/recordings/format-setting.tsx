@@ -2,7 +2,7 @@
 
 import { formatLabel, type FormatChoice } from '@/lib/playback-format'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
-import { Setting } from '@/components/recordings/player-setting'
+import { Setting } from '@/components/recordings/setting'
 
 export interface FormatSettingProps {
   choices: readonly FormatChoice[]

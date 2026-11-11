@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getIntegrity } from '@/repository/integrity'
-import { IntegrityView } from '@/components/integrity/integrity-page'
+import { IntegrityView } from '@/components/integrity/integrity-view'
 import {
   redrawMissingThumbnail,
   sweepForIntegrity,

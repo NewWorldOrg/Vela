@@ -34,7 +34,7 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { ChevronDownIcon } from '@/components/vela/icons'
-import { SubgenrePicks } from '@/components/search/condition-picks'
+import { SubgenrePicks } from '@/components/search/subgenre-picks'
 import type { SearchDraft } from '@/components/search/search-draft'
 
 const EVERY = 'すべて'

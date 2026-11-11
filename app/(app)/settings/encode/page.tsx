@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 
 import { getEncodeScreen } from '@/repository/encode'
 import { ENCODE_JOBS_EVENT } from '@/repository/events'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { EncodeView } from '@/components/encode/encode-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { EncodeView } from '@/components/encode/encode-view'
 import {
   addDestination,
   addProfile,

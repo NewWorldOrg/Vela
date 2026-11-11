@@ -14,13 +14,13 @@ import type { PlaybackPlan } from '@/repository/videos'
 import { Button } from '@/components/ui/button'
 import { ActionRow } from '@/components/vela/action-row'
 import { TrashIcon } from '@/components/vela/icons'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import { useOnAPhone } from '@/hooks/usePhone'
 import {
   holdDeletion,
   releaseDeletion,
 } from '@/components/recordings/held-deletions'
-import { ExternalPlayerOpener } from '@/components/recordings/external-player'
+import { ExternalPlayerOpener } from '@/components/recordings/external-player-opener'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'
 import {

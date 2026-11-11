@@ -24,7 +24,7 @@ import {
   NoticeDialogHeader,
   NoticeGroupLabel,
   NoticeLabel,
-} from '@/components/notifications/notice-dialog'
+} from '@/components/notifications/notice-dialog-content'
 import { PickChip, PickChips } from '@/components/notifications/pick-chip'
 import { RemoveButton } from '@/components/notifications/remove-button'
 

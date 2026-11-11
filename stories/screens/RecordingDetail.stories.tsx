@@ -24,7 +24,7 @@ import {
 } from '@/repository/encode.fixtures'
 import type { EncodeStanding } from '@/repository/encode-terms'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
-import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
+import { RecordingDetailView } from '@/components/recordings/recording-detail-view'
 import { skipNoted } from '@/stories/noted-skips'
 import { seekNoted } from '@/stories/noted-seeks'
 import { afterTheArrival } from '@/stories/after-the-arrival'

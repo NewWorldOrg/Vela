@@ -37,8 +37,8 @@ import {
   theHoldAsked,
   theSourceAsked,
 } from '@/lib/playback-source'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { RecordingDetailView } from '@/components/recordings/recording-detail-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { RecordingDetailView } from '@/components/recordings/recording-detail-view'
 import { throwRecordingAway } from '@/app/(app)/library/actions'
 import { callOffJob } from '@/app/(app)/settings/encode/actions'
 import {

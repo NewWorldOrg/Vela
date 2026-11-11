@@ -148,7 +148,7 @@ test('a moment in a table sits at the left, the same as its heading', async () =
 })
 
 test('the integrity table heads each column on the side its values sit', async () => {
-  const source = await read('components/integrity/integrity-page.tsx')
+  const source = await read('components/integrity/integrity-view.tsx')
 
   assert.match(source, /label: 'サイズ',[^}]*right: true/)
   assert.doesNotMatch(source, /label: '検出',[^}]*right: true/)
@@ -534,7 +534,7 @@ const A_CORNER_OFF_THE_STEPS = new Map([
   ['components/library/pick-mark.tsx', 6],
   ['components/ui/checkbox.tsx', 6],
   ['components/vela/channel-mark.tsx', 6],
-  ['components/vela/toast.tsx', 14],
+  ['components/vela/toasts.tsx', 14],
 ])
 
 test('a corner off the steps is written only where a step would change the shape', async () => {
@@ -632,10 +632,10 @@ test('a spinner is one of two sizes, chosen by name and declared once', async ()
 })
 
 const NOTHING_IS_WRONG = [
-  'components/integrity/integrity-page.tsx',
+  'components/integrity/integrity-view.tsx',
   'components/quality/anomaly-list.tsx',
-  'components/quality/quality-page.tsx',
-  'components/reservations/outcomes-page.tsx',
+  'components/quality/quality-view.tsx',
+  'components/reservations/outcome-ledger-view.tsx',
 ]
 
 const NOTHING_TO_SHOW = ['app/(app)/error.tsx', 'app/not-found.tsx']

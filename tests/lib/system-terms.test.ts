@@ -12,7 +12,7 @@ const ROOT = path.resolve(
   '..',
 )
 
-const SCREEN = 'components/system/system-page.tsx'
+const SCREEN = 'components/system/system-view.tsx'
 
 const COINED = /版|観測/
 

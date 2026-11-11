@@ -9,7 +9,7 @@ import {
   type SignInOptions,
 } from '@/repository/auth'
 import { onwardIfSignedIn } from '@/repository/sessions'
-import { LoginView } from '@/components/login/login-page'
+import { LoginView } from '@/components/login/login-view'
 
 export const metadata: Metadata = { title: 'サインイン' }
 

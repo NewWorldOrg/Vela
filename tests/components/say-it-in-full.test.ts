@@ -151,7 +151,7 @@ test('the live panel shows the programme with the part the guide uses', async ()
 })
 
 test('the guide draws the description with the same part', async () => {
-  const source = await read('components/guide/program-detail.tsx')
+  const source = await read('components/guide/program-detail-body.tsx')
 
   assert.match(
     source,

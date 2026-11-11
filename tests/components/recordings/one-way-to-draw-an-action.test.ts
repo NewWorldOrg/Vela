@@ -5,7 +5,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const WHERE_THE_ACTIONS_ARE = [
-  'components/library/phone-library.tsx',
+  'components/library/phone-recording-rows.tsx',
   'components/recordings/recording-actions.tsx',
   'components/recordings/handover-menu.tsx',
   'components/recordings/recording-handover-list.tsx',
@@ -155,7 +155,7 @@ test("a recording's actions stand in one row under its title, not in a column be
   const page = (
     await Promise.all(
       [
-        'components/recordings/recording-detail-page.tsx',
+        'components/recordings/recording-detail-view.tsx',
         'components/recordings/recording-info.tsx',
       ].map((file) => readFile(path.join(ROOT, file), 'utf8')),
     )

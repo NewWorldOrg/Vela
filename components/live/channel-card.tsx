@@ -3,7 +3,7 @@
 import { cn } from '@/lib/utils'
 import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
-import { ProgressBar } from '@/components/vela/progress'
+import { ProgressBar } from '@/components/vela/progress-bar'
 import { Tile } from '@/components/vela/tile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 

@@ -186,7 +186,7 @@ import {
   faultOnTheFace,
   PlaybackFaultNotice,
   type PlaybackFault,
-} from '@/components/recordings/playback-fault'
+} from '@/components/recordings/playback-fault-notice'
 import { still } from '@/components/vela/tactile'
 import { RecordingCaptions } from '@/components/recordings/recording-captions'
 import { clearanceOf } from '@/components/recordings/caption-clearance'

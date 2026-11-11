@@ -16,7 +16,7 @@ import {
   NoticeDialogFooter,
   NoticeDialogHeader,
   NoticeGroupLabel,
-} from '@/components/notifications/notice-dialog'
+} from '@/components/notifications/notice-dialog-content'
 import { PickChip, PickChips } from '@/components/notifications/pick-chip'
 import {
   refusalOf,

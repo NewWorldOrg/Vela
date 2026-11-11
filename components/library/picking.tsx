@@ -22,7 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { RebuildIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 
 const SIGNED_OUT = signedOut('操作')
 

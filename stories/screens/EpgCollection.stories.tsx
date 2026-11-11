@@ -8,7 +8,7 @@ import {
   COLLECTION_TROUBLED,
 } from '@/repository/collection.fixtures'
 import { CollectionDrawer } from '@/components/guide/collection-drawer'
-import { RebuildEpgDialog } from '@/components/guide/rebuild-dialog'
+import { RebuildEpgDialog } from '@/components/guide/rebuild-epg-dialog'
 
 const answering = (result: CollectNowResult) => async () => result
 

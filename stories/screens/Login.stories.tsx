@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
 import { oidcStartHref } from '@/repository/auth'
-import { LoginView } from '@/components/login/login-page'
+import { LoginView } from '@/components/login/login-view'
 import { groundOf } from '@/stories/ground-of'
 
 const meta = {

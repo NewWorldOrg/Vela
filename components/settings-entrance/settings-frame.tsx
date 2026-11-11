@@ -8,7 +8,7 @@ import { AdminMain } from '@/components/vela/admin-main'
 import {
   SettingsEntranceView,
   type SettingsEntranceValues,
-} from '@/components/settings-entrance/settings-entrance-page'
+} from '@/components/settings-entrance/settings-entrance-view'
 import { SettingsBeside } from '@/components/settings-entrance/settings-beside'
 
 /** The page heading of a setting, at the size of the frame's second level, under the frame's own `設定`. */

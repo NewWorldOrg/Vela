@@ -79,7 +79,7 @@ test('the library draws none of what it put away', async () => {
   }
 
   assert.ok(
-    files.includes('components/library/library-page.tsx') &&
+    files.includes('components/library/library-view.tsx') &&
       files.includes('app/(app)/library/page.tsx'),
     `the walk found ${files.join(', ')}, so it is not reading the library`,
   )

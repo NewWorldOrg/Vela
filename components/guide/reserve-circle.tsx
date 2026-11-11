@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import { cn } from '@/lib/utils'
 import type { ProgramBooking } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import { pressable } from '@/components/vela/tactile'
 
 export type CircleMark = 'none' | 'booked' | 'recording'

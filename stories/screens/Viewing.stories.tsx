@@ -32,7 +32,7 @@ import {
   forgettingCookie,
   storingCookie,
 } from '@/lib/stored-flag'
-import { ViewingView } from '@/components/viewing/viewing-page'
+import { ViewingView } from '@/components/viewing/viewing-view'
 import { inTheSettings } from '@/stories/frames'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 

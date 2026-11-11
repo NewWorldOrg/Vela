@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { ChevronRightIcon, type IconProps } from '@/components/vela/icons'
-import { StatusDot, type StatusTone } from '@/components/vela/status'
+import { StatusDot, type StatusTone } from '@/components/vela/status-dot'
 import { pressable, still } from '@/components/vela/tactile'
 
 export const HEAD_TONE: Record<StatusTone, string> = {

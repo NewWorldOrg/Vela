@@ -4,7 +4,7 @@ import { useTransition } from 'react'
 
 import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import { ReserveRing } from '@/components/live/reserve-ring'
 
 /** Reserves a programme in one press, and puts up a toast whose press takes the reservation back. */

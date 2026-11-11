@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { ProgressBar } from '@/components/vela/progress'
+import { ProgressBar } from '@/components/vela/progress-bar'
 import { SignalMeter } from '@/components/vela/signal-meter'
 import { Spinner } from '@/components/vela/spinner'
 import { SectionHeading } from '@/components/vela/section-heading'

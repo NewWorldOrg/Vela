@@ -39,7 +39,7 @@ import {
 } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { ChipDot } from '@/components/vela/chip-dot'
-import { RebuildEpgDialog } from '@/components/guide/rebuild-dialog'
+import { RebuildEpgDialog } from '@/components/guide/rebuild-epg-dialog'
 import { Figure } from '@/components/guide/figure'
 import { LatestVisit } from '@/components/guide/latest-visit'
 import { VisitDetail } from '@/components/guide/visit-detail'

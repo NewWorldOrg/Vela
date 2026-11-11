@@ -164,7 +164,10 @@ import {
   type AskBacklog,
   type OpenSocket,
 } from '@/components/live/live-session'
-import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
+import {
+  LiveFaultNotice,
+  type LiveFault,
+} from '@/components/live/live-fault-notice'
 import {
   holdWireFormat,
   holdWireProfile,
@@ -178,7 +181,7 @@ import {
   type SideColumn,
 } from '@/components/recordings/player-dock'
 import { PlayerStrip } from '@/components/recordings/player-strip'
-import { LiveStartupSteps } from '@/components/live/live-startup'
+import { LiveStartupSteps } from '@/components/live/live-startup-steps'
 
 const RESTS = 3000
 

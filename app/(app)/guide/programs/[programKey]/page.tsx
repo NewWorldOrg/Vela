@@ -5,8 +5,8 @@ import { PROGRAMS_EVENT, RESERVATIONS_EVENT } from '@/repository/events'
 import { getProgram, primaryProgramKeyOf } from '@/repository/programs'
 import { listBookings } from '@/repository/reservations'
 import { readSingleNotices } from '@/repository/notifications'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { ProgramDetailView } from '@/components/guide/program-detail-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { ProgramDetailView } from '@/components/guide/program-detail-view'
 import {
   dropProgrammeReservation,
   reserveProgramme,

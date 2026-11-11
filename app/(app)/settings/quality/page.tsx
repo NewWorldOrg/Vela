@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 
 import { QUALITY_EVENT } from '@/repository/events'
 import { getQuality } from '@/repository/quality'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { QualityView } from '@/components/quality/quality-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { QualityView } from '@/components/quality/quality-view'
 import { changeThresholds } from './actions'
 
 export const metadata: Metadata = { title: '品質' }

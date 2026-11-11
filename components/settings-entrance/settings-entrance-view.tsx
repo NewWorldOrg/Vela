@@ -4,7 +4,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import type { SystemStatus } from '@/repository/system'
-import { VelaMark } from '@/components/vela/marks'
+import { VelaMark } from '@/components/vela/vela-mark'
 import {
   BellIcon,
   ChannelIcon,

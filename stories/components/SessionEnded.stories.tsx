@@ -3,7 +3,7 @@ import { expect, waitFor, within } from 'storybook/test'
 
 import { RECONNECT_MS } from '@/lib/app-signals'
 import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
 
 const ENDED = 'セッションが切れました。'
 

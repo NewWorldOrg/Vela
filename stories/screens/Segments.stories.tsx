@@ -30,7 +30,7 @@ import type {
   SegmentVersionWrite,
   SkipThresholdWrite,
 } from '@/repository/segments'
-import { SegmentsView } from '@/components/segments/segments-page'
+import { SegmentsView } from '@/components/segments/segments-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
 import {

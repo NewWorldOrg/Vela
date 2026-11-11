@@ -23,7 +23,7 @@ import {
 } from '@/components/vela/icons'
 import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
-import { ExternalPlayerOpener } from '@/components/recordings/external-player'
+import { ExternalPlayerOpener } from '@/components/recordings/external-player-opener'
 
 export type PlaybackFault =
   { kind: PlainFault } | { kind: 'refused'; said: string }

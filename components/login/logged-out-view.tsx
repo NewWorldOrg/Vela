@@ -4,8 +4,8 @@ import type { AuthMethod } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/theme/ThemeToggle'
 import { SignInIcon, SuccessIcon } from '@/components/vela/icons'
-import { VelaMark } from '@/components/vela/marks'
-import { SIGN_IN_COLUMN, SIGN_IN_GROUND } from '@/components/login/login-page'
+import { VelaMark } from '@/components/vela/vela-mark'
+import { SIGN_IN_COLUMN, SIGN_IN_GROUND } from '@/components/login/login-view'
 
 export function LoggedOutView({ method }: { method: AuthMethod }) {
   return (

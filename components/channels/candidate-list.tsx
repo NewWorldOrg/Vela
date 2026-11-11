@@ -29,7 +29,7 @@ import {
   TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { ProgressBar } from '@/components/vela/progress'
+import { ProgressBar } from '@/components/vela/progress-bar'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { TermTip } from '@/components/vela/term-tip'
 import { useHeldWhileClosing } from '@/hooks/useHeldWhileClosing'

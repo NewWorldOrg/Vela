@@ -81,7 +81,7 @@ import {
 } from '@/components/live/live-wire-ahead'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
-import { PhoneChannelRows } from '@/components/live/phone-live'
+import { PhoneChannelRows } from '@/components/live/phone-channel-rows'
 import { PhoneKinds } from '@/components/live/phone-kinds'
 import { PhoneLiveInfo } from '@/components/live/phone-live-info'
 import { PhoneWatchedRows } from '@/components/live/phone-watched-rows'

@@ -37,7 +37,7 @@ import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,
   SettingsRow,
-} from '@/components/vela/settings-rows'
+} from '@/components/vela/settings-group'
 
 export const RESIDENCE_SLOT = 'residence'
 

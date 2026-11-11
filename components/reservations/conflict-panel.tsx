@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { GenreDot } from '@/components/reservations/genre-dot'
 import { DisplacedNotice } from '@/components/reservations/displaced-notice'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 
 function clockOf(at: string): string {

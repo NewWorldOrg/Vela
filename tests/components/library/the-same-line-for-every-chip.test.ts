@@ -6,7 +6,7 @@ import { test } from 'node:test'
 
 const THE_ROW = 'components/library/recording-row.tsx'
 
-const THE_PHONE_ROWS = 'components/library/phone-library.tsx'
+const THE_PHONE_ROWS = 'components/library/phone-recording-rows.tsx'
 
 const THE_CHIPS = 'components/library/attention-chips.tsx'
 

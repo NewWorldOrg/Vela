@@ -23,7 +23,7 @@ const THE_SHEET = 'app/globals.css'
 const THE_VOLUME = 'components/recordings/player-volume.tsx'
 
 const THE_RULES = [
-  'components/reservations/rules-page.tsx',
+  'components/reservations/rules-view.tsx',
   'components/reservations/rules/rules-screen.tsx',
   'components/reservations/rules/rule-row.tsx',
   'components/reservations/rules/rule-editor.tsx',

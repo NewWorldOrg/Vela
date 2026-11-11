@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { VelaMark } from '@/components/vela/marks'
+import { VelaMark } from '@/components/vela/vela-mark'
 
 export function Brand({ className, ...props }: ComponentProps<'div'>) {
   return (

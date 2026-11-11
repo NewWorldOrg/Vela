@@ -37,8 +37,8 @@ import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,
   SettingsRow,
-} from '@/components/vela/settings-rows'
-import { type StatusTone } from '@/components/vela/status'
+} from '@/components/vela/settings-group'
+import { type StatusTone } from '@/components/vela/status-dot'
 import { Part, HEAD_TONE } from '@/components/system/part'
 
 const API_TROUBLE: Record<Exclude<ApiHealthResult['state'], 'ok'>, string> = {

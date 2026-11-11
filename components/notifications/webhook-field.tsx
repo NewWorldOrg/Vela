@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field, FieldHint } from '@/components/vela/field'
 import { CheckIcon } from '@/components/vela/icons'
-import { NoticeLabel } from '@/components/notifications/notice-dialog'
+import { NoticeLabel } from '@/components/notifications/notice-dialog-content'
 
 export const REFUSED_ADDRESS = 'この URL は受け付けられません'
 

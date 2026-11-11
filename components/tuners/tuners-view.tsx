@@ -21,7 +21,7 @@ import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,
   SettingsRow,
-} from '@/components/vela/settings-rows'
+} from '@/components/vela/settings-group'
 import { SearchIcon } from '@/components/vela/icons'
 import { TunerEnableSwitch } from '@/components/tuners/tuner-enable-switch'
 import { DriverRestartBanner } from '@/components/tuners/driver-restart-banner'

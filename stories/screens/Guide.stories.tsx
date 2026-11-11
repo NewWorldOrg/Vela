@@ -49,7 +49,7 @@ import {
 } from '@/stories/fixtures/a-full-day'
 import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
 import { HOUR_REM, hourPxIn } from '@/components/guide/guide-metrics'
-import { GuideView } from '@/components/guide/guide-page'
+import { GuideView } from '@/components/guide/guide-view'
 import {
   NOTIFY_START,
   STOP_NOTIFYING,

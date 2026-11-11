@@ -35,7 +35,7 @@ import {
   SEARCH_CHANNEL_FIXTURES,
   SEARCH_HIT_FIXTURES,
 } from '@/repository/search.fixtures'
-import { SearchView } from '@/components/search/search-page'
+import { SearchView } from '@/components/search/search-view'
 import {
   NOTIFY_START,
   STOP_NOTIFYING,

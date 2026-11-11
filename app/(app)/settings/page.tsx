@@ -6,7 +6,7 @@ import { THEME_COOKIE, THEME_LABEL, themeOf } from '@/lib/theme'
 import { AUTO_OPEN_LABEL, viewingSettingsOf } from '@/lib/viewing'
 import { getSystemStatus } from '@/repository/system'
 import { hasMigrationRecord } from '@/repository/migration'
-import { SettingsEntranceView } from '@/components/settings-entrance/settings-entrance-page'
+import { SettingsEntranceView } from '@/components/settings-entrance/settings-entrance-view'
 import { WideGoesToTheSystem } from '@/components/settings-entrance/wide-goes-to-the-system'
 
 export const metadata: Metadata = { title: '設定' }

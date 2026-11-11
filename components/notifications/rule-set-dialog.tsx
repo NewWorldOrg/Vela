@@ -7,7 +7,7 @@ import {
   type RuleSetDraft,
 } from '@/lib/notifications'
 import { Dialog } from '@/components/ui/dialog'
-import { NoticeDialogContent } from '@/components/notifications/notice-dialog'
+import { NoticeDialogContent } from '@/components/notifications/notice-dialog-content'
 import { RuleSetForm } from '@/components/notifications/rule-set-form'
 
 /** The editor of a rule set: its name, whether it is on, the events it sends, and where it sends them. `削除` stands only for a rule set that already is. */

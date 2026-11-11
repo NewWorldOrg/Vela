@@ -19,7 +19,7 @@ import { ServiceTable } from '@/components/channels/service-table'
 import { UnfoldingServices } from '@/components/channels/unfolding-services'
 import { ScanBar } from '@/components/channels/scan-bar'
 import { ScanRunPanel } from '@/components/scan/scan-run-panel'
-import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis'
+import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis-panel'
 import { ScanHistory } from '@/components/channels/scan-history'
 
 function GroupHeading({ title, stat }: { title: string; stat: string }) {

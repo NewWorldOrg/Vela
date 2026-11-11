@@ -14,7 +14,7 @@ import {
   RECORDING_FIXTURES,
 } from '@/stories/fixtures/recordings'
 import { inProgressFirst } from '@/lib/recordings'
-import { LibraryView } from '@/components/library/library-page'
+import { LibraryView } from '@/components/library/library-view'
 import { LIBRARY_LAYOUT_COOKIE } from '@/lib/library-view'
 import { cookieIn, forgettingCookie } from '@/lib/stored-flag'
 import { heightOf } from '@/stories/pills-in-a-column'

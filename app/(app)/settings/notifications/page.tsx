@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getNotificationsScreen } from '@/repository/notifications'
-import { NotificationsView } from '@/components/notifications/notifications-page'
+import { NotificationsView } from '@/components/notifications/notifications-view'
 import {
   addDestination,
   addRuleSet,

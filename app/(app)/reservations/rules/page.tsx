@@ -11,9 +11,9 @@ import { listPickableChannels } from '@/repository/programs'
 import type { Rule } from '@/repository/rules'
 import { listRules } from '@/repository/rules'
 import { countAheadByRule } from '@/repository/reservations'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import type { RuleEditing } from '@/components/reservations/rules-page'
-import { RulesView } from '@/components/reservations/rules-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import type { RuleEditing } from '@/components/reservations/rules-view'
+import { RulesView } from '@/components/reservations/rules-view'
 import {
   applyRules,
   dropRule,

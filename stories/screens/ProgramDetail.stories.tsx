@@ -16,7 +16,7 @@ import {
   PROGRAM_FIXTURES,
 } from '@/repository/programs.fixtures'
 import type { ReservationWrite } from '@/repository/reservations'
-import { ProgramDetailView } from '@/components/guide/program-detail-page'
+import { ProgramDetailView } from '@/components/guide/program-detail-view'
 import {
   NOTIFY_START,
   STOP_NOTIFYING,

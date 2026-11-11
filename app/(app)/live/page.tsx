@@ -13,8 +13,8 @@ import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
 import { FORMAT_COOKIE, formatChoiceOf } from '@/lib/playback-format'
 import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
 import { getLiveScreen } from '@/repository/live'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { LiveView } from '@/components/live/live-page'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { LiveView } from '@/components/live/live-view'
 import { recordTheProgramme, takeTheRecordingBack, takeTicket } from './actions'
 
 export const metadata: Metadata = { title: 'ライブ' }
