@@ -1,0 +1,346 @@
+'use client'
+
+import { cn } from '@/lib/utils'
+import { useState, useTransition } from 'react'
+import Link from 'next/link'
+
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
+import { PageHeading } from '@/components/vela/page-heading'
+
+import { shapeFor } from '@/lib/not-yet-in-this-build'
+
+import type {
+  FindingDiscarded,
+  IntegrityFault,
+  IntegrityFinding,
+  IntegrityResult,
+  SweepWrite,
+} from '@/repository/integrity'
+import type { ThumbnailWrite } from '@/repository/recordings'
+import { remadeSaying } from '@/components/recordings/thumbnail-button'
+import { noteThumbnailRedrawn } from '@/hooks/useRedrawnThumbnail'
+import { Spinner } from '@/components/vela/spinner'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableColumns,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { cardPlace } from '@/components/ui/table-cards'
+import { Banner } from '@/components/vela/banner'
+import { EmptyState } from '@/components/vela/empty-state'
+import { RebuildIcon, TrashIcon } from '@/components/vela/icons'
+import { ActionRow } from '@/components/vela/action-row'
+import { SectionHeading } from '@/components/vela/section-heading'
+import { DetailStat } from '@/components/recordings/detail-stat'
+import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
+import { RunCheckButton } from '@/components/integrity/run-check-button'
+import { ScreenMain } from '@/components/vela/screen-main'
+
+const COLUMNS: {
+  label: string
+  width: string
+  hidden?: boolean
+  right?: boolean
+}[] = [
+  { label: 'ファイル', width: 'calc(360rem/16)' },
+  { label: '理由', width: 'calc(240rem/16)' },
+  { label: 'サイズ', width: 'calc(112rem/16)', right: true },
+  { label: '検出', width: 'calc(122rem/16)' },
+  { label: '操作', width: 'calc(112rem/16)', hidden: true },
+]
+
+const OWNED_BY_NO_RECORDING: readonly IntegrityFault[] = ['noLedgerRow']
+
+const NOT_YET_KNOWN_TONE = 'text-ink-2'
+
+const REASON_TONE: Record<IntegrityFault, string> = {
+  noLedgerRow: 'text-ink-2',
+  sizeDisagrees: 'text-lemon',
+  fileMissing: 'text-lemon',
+  fileEmpty: 'text-coral',
+  emptyThoughComplete: 'text-coral',
+  thumbnailMissing: 'text-lemon',
+}
+
+const REDRAWS_ITS_PICTURE: readonly IntegrityFault[] = ['thumbnailMissing']
+
+export function IntegrityView({
+  result,
+  onRun,
+  onDelete,
+  onRemake,
+}: {
+  result: IntegrityResult
+  onRun: () => Promise<SweepWrite>
+  onDelete: (findingId: string) => Promise<FindingDiscarded>
+  onRemake: (recordingId: string) => Promise<ThumbnailWrite>
+}) {
+  const { check, findings, roots } = result
+  const [asked, setAsked] = useState<IntegrityFinding | null>(null)
+  const ranAt = check?.ranAt ?? ''
+  const [thrownAway, setThrownAway] = useState<{
+    ranAt: string
+    path: string
+  }>()
+  const discarded = thrownAway?.ranAt === ranAt ? thrownAway.path : undefined
+  const [redrawing, startRedrawing] = useTransition()
+  const [redrawnFor, setRedrawnFor] = useState<string>()
+  const [redrawn, setRedrawn] = useState<{
+    ranAt: string
+    path: string
+    drew: boolean
+    text: string
+  }>()
+  const redrawSaid = redrawn?.ranAt === ranAt ? redrawn : undefined
+
+  const redraw = (finding: IntegrityFinding) => {
+    const recordingId = finding.recordingId
+
+    if (redrawing || recordingId === undefined) {
+      return
+    }
+
+    setRedrawnFor(finding.key)
+    startRedrawing(async () => {
+      setRedrawn(undefined)
+
+      const said = remadeSaying(await onRemake(recordingId))
+
+      if (said.drew) {
+        noteThumbnailRedrawn(recordingId)
+      }
+
+      setRedrawn({ ranAt, path: finding.path, ...said })
+    })
+  }
+
+  const throwAway = async (findingId: string): Promise<FindingDiscarded> => {
+    const thrown = await onDelete(findingId)
+
+    if (thrown.state === 'ok') {
+      const gone = findings.find((one) => one.id === findingId)
+
+      if (gone) {
+        setThrownAway({ ranAt, path: gone.path })
+      }
+    }
+
+    return thrown
+  }
+
+  return (
+    <ScreenMain
+      scroll="within"
+      className="flex flex-col px-3.5 pt-6 pb-6 phone:pt-2 min-[701px]:px-5 min-[1061px]:px-[calc(30rem/16)]"
+    >
+      <Crumb>
+        設定 / <CrumbCurrent>整合性チェック</CrumbCurrent>
+      </Crumb>
+
+      <div className="mb-4 flex flex-wrap items-baseline gap-3.5">
+        <PageHeading>整合性チェック</PageHeading>
+        <span className="ml-auto">
+          <RunCheckButton asOf={`${ranAt}/${findings.length}`} onRun={onRun} />
+        </span>
+      </div>
+
+      {result.storageProblem && (
+        <Banner tone="warn" className="mb-3.5">
+          {result.storageProblem}
+        </Banner>
+      )}
+
+      {check && (
+        <section className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
+          <SectionHeading>
+            <span>最終実行</span>
+            <span className="font-code font-medium">{check.ranAt}</span>
+          </SectionHeading>
+          <div className="grid grid-cols-[repeat(auto-fit,minmax(calc(150rem/16),1fr))] gap-2.5">
+            <DetailStat
+              label="確認したルート"
+              value={String(check.rootsWalked)}
+            />
+            <DetailStat label="読込ファイル" value={String(check.filesRead)} />
+            <DetailStat
+              label="判定済みの録画"
+              value={String(check.ledgerRowsJudged)}
+              unit={`/ ${check.ledgerRowsRead}`}
+            />
+            <DetailStat
+              label="判定保留(書き込み中)"
+              value={String(check.ledgerRowsStillWriting)}
+            />
+          </div>
+          {(check.rootsOutOfReach > 0 ||
+            check.ledgerRowsInRootsOutOfReach > 0) && (
+            <p className="mt-2.5 text-note leading-relaxed text-ink-2">
+              届かなかったルートが {check.rootsOutOfReach} 件あり、そこにある
+              録画の記録 {check.ledgerRowsInRootsOutOfReach}{' '}
+              行は判定していません。
+            </p>
+          )}
+        </section>
+      )}
+
+      {roots.length > 0 && (
+        <section className="mb-3.5 rounded-lg bg-surface px-4 py-3.5">
+          <SectionHeading>保存先</SectionHeading>
+          {roots.map((root) => (
+            <div
+              key={root.name}
+              className="flex flex-wrap items-baseline gap-x-3.5 gap-y-1 border-b border-dashed border-line py-[calc(9rem/16)] text-ui last:border-b-0"
+            >
+              <b className="font-code text-[calc(13rem/16)] font-medium">
+                {root.name}
+              </b>
+              {!root.writable && <Badge variant="err">書込不可</Badge>}
+              <span className="text-ink-2">
+                空き <span className="font-code">{root.free}</span> / 全体{' '}
+                <span className="font-code">{root.total}</span>
+              </span>
+              {root.recordingsInFlight > 0 && (
+                <span className="text-note text-ink-2">
+                  進行中の録画 {root.recordingsInFlight} 件
+                </span>
+              )}
+            </div>
+          ))}
+        </section>
+      )}
+
+      {discarded !== undefined && (
+        <Banner tone="success" className="mb-3.5">
+          {discarded} を削除しました。
+        </Banner>
+      )}
+
+      {redrawSaid && (
+        <Banner tone={redrawSaid.drew ? 'success' : 'warn'} className="mb-3.5">
+          {redrawSaid.drew
+            ? `${redrawSaid.path} のサムネイルを再生成しました。`
+            : redrawSaid.text}
+        </Banner>
+      )}
+
+      {findings.length === 0 ? (
+        <EmptyState usher="glad" title="食い違いがありません" titleLevel={2} />
+      ) : (
+        <Table
+          cards
+          className="table-fixed min-w-[calc(760rem/16)]"
+          containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
+        >
+          <TableColumns widths={COLUMNS.map((column) => column.width)} />
+          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
+            <TableRow>
+              {COLUMNS.map((column) => (
+                <TableHead
+                  key={column.label}
+                  className={column.right ? 'text-right' : undefined}
+                >
+                  {column.hidden ? (
+                    <span className="sr-only">{column.label}</span>
+                  ) : (
+                    column.label
+                  )}
+                </TableHead>
+              ))}
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {findings.map((finding) => (
+              <TableRow key={finding.key}>
+                <TableCell
+                  {...cardPlace('lead')}
+                  className="align-top whitespace-normal"
+                >
+                  <b className="block font-code text-sub font-medium break-all">
+                    {finding.path}
+                  </b>
+                  <span className="text-note text-ink-2">{finding.root}</span>
+                </TableCell>
+                <TableCell
+                  {...cardPlace('field', '理由')}
+                  className="align-top whitespace-normal"
+                >
+                  <span
+                    className={cn(
+                      'text-ui',
+                      shapeFor(REASON_TONE, finding.fault, NOT_YET_KNOWN_TONE),
+                    )}
+                  >
+                    {finding.reason}
+                  </span>
+                </TableCell>
+                <TableCell
+                  {...cardPlace('meta')}
+                  className="align-top text-right"
+                >
+                  <span className="font-code tabular-nums">{finding.size}</span>
+                  {finding.sizeNote && (
+                    <small className="block text-micro text-ink-2">
+                      {finding.sizeNote}
+                    </small>
+                  )}
+                </TableCell>
+                <TableCell
+                  {...cardPlace('field', '検出')}
+                  className="align-top font-code tabular-nums text-ink-2"
+                >
+                  {finding.noticedAt}
+                </TableCell>
+                <TableCell
+                  {...cardPlace('actions')}
+                  className="align-top text-right"
+                >
+                  {REDRAWS_ITS_PICTURE.includes(finding.fault) &&
+                    finding.recordingId !== undefined && (
+                      <ActionRow>
+                        <Button
+                          variant="redo"
+                          size="sm"
+                          aria-disabled={redrawing}
+                          onClick={() => redraw(finding)}
+                        >
+                          {redrawing && redrawnFor === finding.key ? (
+                            <Spinner size="control" />
+                          ) : (
+                            <RebuildIcon />
+                          )}
+                          再生成
+                        </Button>
+                      </ActionRow>
+                    )}
+                  {OWNED_BY_NO_RECORDING.includes(finding.fault) && (
+                    <ActionRow>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => setAsked(finding)}
+                      >
+                        <TrashIcon />
+                        削除
+                      </Button>
+                    </ActionRow>
+                  )}
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      )}
+      <DeleteFindingDialog
+        finding={asked}
+        onOpenChange={(open) => !open && setAsked(null)}
+        onDelete={throwAway}
+      />
+    </ScreenMain>
+  )
+}

@@ -1,7 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { headers } from 'next/headers'
 import './globals.css'
-import { ThemeProvider } from '@/components/theme/ThemeProvider'
+import { ThemeProvider } from '@/components/theme/theme-provider'
 import { DecodingProbe } from '@/components/vela/decoding-probe'
 import { statusBarColours } from '@/lib/app-colours'
 import { MOTION_HEADER, motionOf } from '@/lib/motion'

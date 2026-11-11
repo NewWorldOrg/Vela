@@ -1,0 +1,211 @@
+import type { Route } from 'next'
+import { EMPTY_VALUE } from '@/lib/empty-value'
+import Link from 'next/link'
+
+import {
+  type ChannelsScreenResult,
+  type ScanScope,
+  type ServiceGroup,
+  type StartScanResult,
+  type WriteResult,
+} from '@/repository/services'
+import { Button } from '@/components/ui/button'
+import { Banner } from '@/components/vela/banner'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
+import { EmptyState } from '@/components/vela/empty-state'
+import { PageHeading } from '@/components/vela/page-heading'
+import type { CandidateActions } from '@/components/channels/service-table'
+import { ServiceTable } from '@/components/channels/service-table'
+import { UnfoldingServices } from '@/components/channels/unfolding-services'
+import { ScanBar } from '@/components/channels/scan-bar'
+import { ScanRunPanel } from '@/components/scan/scan-run-panel'
+import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis-panel'
+import { ScanHistory } from '@/components/channels/scan-history'
+
+function GroupHeading({ title, stat }: { title: string; stat: string }) {
+  return (
+    <div className="mb-2 flex flex-wrap items-baseline gap-2.5 px-0.5">
+      <h2 className="heading text-heading">{title}</h2>
+      <span className="text-note tabular-nums text-ink-2">{stat}</span>
+    </div>
+  )
+}
+
+function ServiceGroupSection({
+  group,
+  actions,
+}: {
+  group: ServiceGroup
+  actions: CandidateActions
+}) {
+  return (
+    <section id={`system-${group.system}`} className="mt-9">
+      <GroupHeading
+        title={group.label}
+        stat={group.walk === 'never' ? '未スキャン' : group.stat}
+      />
+
+      {group.services.length === 0 ? (
+        group.diagnosis ? (
+          <ZeroDiagnosisPanel label={group.label} diagnosis={group.diagnosis} />
+        ) : (
+          <EmptyState className="max-w-[calc(520rem/16)]">
+            {group.walk === 'never'
+              ? `${group.label}はまだスキャンされていません。`
+              : group.walk === 'unknown'
+                ? `${group.label}のサービスは 0 件です。直近のスキャンを読み取れなかったため、スキャン済みかどうかは分かりません。`
+                : `${group.label}のサービスは 0 件です。直近のスキャンでは受信できたサービスがありませんでした。`}
+          </EmptyState>
+        )
+      ) : (
+        <ServiceTable services={group.services} actions={actions} />
+      )}
+    </section>
+  )
+}
+
+export function ChannelsView({
+  result,
+  onStart,
+  onCancel,
+  onSelect,
+  onAdd,
+  onDelete,
+}: {
+  result: ChannelsScreenResult
+  onStart: (scope: ScanScope) => Promise<StartScanResult>
+  onCancel: (scanId: string) => Promise<WriteResult>
+} & CandidateActions) {
+  const actions = { onSelect, onAdd, onDelete }
+
+  const heading = (
+    <>
+      <Crumb>
+        設定 / <CrumbCurrent>チャンネル</CrumbCurrent>
+      </Crumb>
+      <PageHeading
+        action={
+          <Button variant="tone" size="sm" asChild>
+            <Link href={'/settings/channels#scan-history' as Route}>
+              スキャン履歴へ
+            </Link>
+          </Button>
+        }
+      >
+        チャンネル
+      </PageHeading>
+    </>
+  )
+
+  if (result.state !== 'ok') {
+    return (
+      <>
+        {heading}
+        {result.state === 'unauthenticated' ? (
+          <EmptyState
+            titleLevel={2}
+            title="サインインしないと見られません"
+            className="mt-4"
+          />
+        ) : (
+          <EmptyState
+            titleLevel={2}
+            title="一覧を取得できませんでした"
+            className="mt-4"
+          />
+        )}
+      </>
+    )
+  }
+
+  const { result: channels } = result
+  const zero = channels.groups.find(
+    (group) => group.diagnosis !== undefined && group.services.length === 0,
+  )
+  const lastFinished = channels.history.find((run) => run.state !== 'running')
+  const neverScanned =
+    channels.history.length === 0 &&
+    channels.unattributed.length === 0 &&
+    channels.groups.every((group) => group.services.length === 0)
+
+  return (
+    <>
+      {heading}
+
+      {zero && (
+        <Banner
+          tone="danger"
+          className="mt-4"
+          actions={[
+            {
+              label: '失敗内訳へ',
+              href: `/settings/channels#system-${zero.system}` as Route,
+            },
+          ]}
+        >
+          <b className="block font-bold">
+            {zero.label} のサービスが 0 件です。
+          </b>
+        </Banner>
+      )}
+
+      {channels.proposal && !channels.proposal.empty && (
+        <Banner
+          tone="info"
+          className="mt-2"
+          actions={[
+            {
+              label: 'スキャン結果へ',
+              href: `/settings/channels/scan/${channels.proposal.run.id}` as Route,
+            },
+          ]}
+        >
+          直近のスキャンの結果がまだ適用されていません。
+        </Banner>
+      )}
+
+      {channels.running ? (
+        <ScanRunPanel running={channels.running} onCancel={onCancel} />
+      ) : (
+        <ScanBar
+          lastScan={
+            lastFinished
+              ? `前回: ${lastFinished.startedAt} · ${lastFinished.took ?? EMPTY_VALUE} · ${lastFinished.stateLabel}`
+              : '前回: なし'
+          }
+          onStart={onStart}
+        />
+      )}
+
+      <UnfoldingServices>
+        {neverScanned ? (
+          <EmptyState
+            titleLevel={2}
+            title="まだスキャン結果がありません"
+            className="mt-9"
+          />
+        ) : (
+          channels.groups.map((group) => (
+            <ServiceGroupSection
+              key={group.system}
+              group={group}
+              actions={actions}
+            />
+          ))
+        )}
+
+        {channels.unattributed.length > 0 && (
+          <section className="mt-9">
+            <GroupHeading
+              title="種別を特定できないサービス"
+              stat={`${channels.unattributed.length} サービス`}
+            />
+            <ServiceTable services={channels.unattributed} actions={actions} />
+          </section>
+        )}
+      </UnfoldingServices>
+
+      <ScanHistory history={channels.history} />
+    </>
+  )
+}

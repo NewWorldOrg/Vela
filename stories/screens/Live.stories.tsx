@@ -77,7 +77,7 @@ import type {
   LiveSocket,
   OpenSocket,
 } from '@/components/live/live-session'
-import { LiveView } from '@/components/live/live-page'
+import { LiveView } from '@/components/live/live-view'
 import type { OpenPlaylist } from '@/components/live/live-playlist'
 import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'
 import type { TakeCapture } from '@/components/recordings/take-capture'

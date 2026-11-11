@@ -46,6 +46,20 @@ const SAYS_IT_AS_A_COLUMN = /(^|\s)say(\s|$|=)/
 
 const THE_CELL = 'components/recordings/status-cell.tsx'
 
+const THE_CELL_PARTS = [
+  THE_CELL,
+  'components/recordings/state-say.tsx',
+  'components/recordings/able-say.tsx',
+]
+
+async function readTheCell(): Promise<string> {
+  return (
+    await Promise.all(
+      THE_CELL_PARTS.map((file) => readFile(path.join(ROOT, file), 'utf8')),
+    )
+  ).join('\n')
+}
+
 const THE_PILL = 'components/ui/badge.tsx'
 
 const THE_ROW = 'components/vela/action-row.tsx'
@@ -183,7 +197,7 @@ test('what is not a state is not drawn as a pill', async () => {
 })
 
 test('the dot a state is said with is one size, declared once', async () => {
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+  const cell = await readTheCell()
 
   assert.match(cell, /export function StateSay\(/)
   assert.match(
@@ -199,7 +213,7 @@ test('the dot a state is said with is one size, declared once', async () => {
 })
 
 test('a state cell holds one state and nothing under it', async () => {
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+  const cell = await readTheCell()
 
   assert.doesNotMatch(
     cell,
@@ -243,13 +257,13 @@ test('a width is measured for the two-word pill and for nothing else', async () 
 
   assert.deepEqual(
     measuring,
-    [THE_CELL],
+    ['components/recordings/able-say.tsx', THE_CELL],
     'a pill is measured somewhere other than the one cell that draws the ' +
       'two words of a yes-or-no column; every column with four words or ' +
       'more says its state as a dot and a word, which has no width of its own',
   )
 
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+  const cell = await readTheCell()
 
   assert.match(
     cell,
@@ -340,7 +354,7 @@ test('an action carries an icon beside its word', async () => {
     'components/library/recording-row.tsx',
     'components/recordings/recording-actions.tsx',
     'components/channels/candidate-list.tsx',
-    'components/integrity/integrity-page.tsx',
+    'components/integrity/integrity-view.tsx',
     'components/guide/program-panel.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
@@ -409,7 +423,7 @@ test('an action named after what it does carries an icon beside its word', async
   const drawn: string[] = []
 
   for (const file of [
-    'components/encode/change-definition-button.tsx',
+    'components/encode/change-button.tsx',
     'components/encode/remove-definition-button.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
@@ -474,10 +488,10 @@ test('the controls in a filter band are one height and one size of word', async 
   assert.match(band, /export const BAND_CONTROL = '[^']+'/)
 
   for (const file of [
-    'components/library/library-page.tsx',
+    'components/library/library-view.tsx',
     'components/vela/filter-select.tsx',
     'components/vela/sub-channel-toggle.tsx',
-    'components/guide/guide-page.tsx',
+    'components/guide/guide-view.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
@@ -514,10 +528,13 @@ test('every state in the encode column is said the same way', async () => {
 })
 
 test('the system screen says a state as a noun, from the one table', async () => {
-  const source = await readFile(
-    path.join(ROOT, 'components/system/system-page.tsx'),
-    'utf8',
-  )
+  const source = (
+    await Promise.all(
+      ['components/system/system-view.tsx', 'components/system/part.tsx'].map(
+        (file) => readFile(path.join(ROOT, file), 'utf8'),
+      ),
+    )
+  ).join('\n')
 
   for (const head of source.matchAll(/head="([^"]+)"/g)) {
     assert.fail(
@@ -544,9 +561,9 @@ test('the system screen says a state as a noun, from the one table', async () =>
 
 test('a table surface stops at its last row instead of filling the screen', async () => {
   for (const file of [
-    'components/reservations/reservations-page.tsx',
-    'components/reservations/outcomes-page.tsx',
-    'components/integrity/integrity-page.tsx',
+    'components/reservations/reservations-view.tsx',
+    'components/reservations/outcome-ledger-view.tsx',
+    'components/integrity/integrity-view.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
@@ -571,8 +588,8 @@ test('the sub-channel switch is one part, wherever a screen puts it', async () =
   )
 
   for (const file of [
-    'components/guide/guide-page.tsx',
-    'components/live/live-page.tsx',
+    'components/guide/guide-view.tsx',
+    'components/live/live-view.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')
 
@@ -582,13 +599,13 @@ test('the sub-channel switch is one part, wherever a screen puts it', async () =
 
 test('every pick-one group is the one segmented part, its heading outside', async () => {
   for (const file of [
-    'components/library/library-page.tsx',
-    'components/reservations/reservations-page.tsx',
-    'components/guide/guide-page.tsx',
+    'components/library/library-view.tsx',
+    'components/reservations/reservations-view.tsx',
+    'components/guide/guide-view.tsx',
     'components/live/channel-kinds.tsx',
-    'components/quality/quality-page.tsx',
-    'components/quality/quality-trend.tsx',
-    'components/encode/jobs-navigation.tsx',
+    'components/quality/quality-view.tsx',
+    'components/quality/quality-trend-panel.tsx',
+    'components/encode/jobs-list.tsx',
     'components/channels/scan-bar.tsx',
   ]) {
     const source = await readFile(path.join(ROOT, file), 'utf8')

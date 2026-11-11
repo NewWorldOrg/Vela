@@ -38,8 +38,11 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { ChipDot } from '@/components/vela/status'
-import { RebuildEpgDialog } from '@/components/guide/rebuild-dialog'
+import { ChipDot } from '@/components/vela/chip-dot'
+import { RebuildEpgDialog } from '@/components/guide/rebuild-epg-dialog'
+import { Figure } from '@/components/guide/figure'
+import { LatestVisit } from '@/components/guide/latest-visit'
+import { VisitDetail } from '@/components/guide/visit-detail'
 
 type CollectRange = 'all' | 'stream' | 'service'
 
@@ -109,135 +112,6 @@ function OutcomeChip({ outcome }: { outcome: StreamVisitRow['outcome'] }) {
       <ChipDot />
       {wordFor(STREAM_OUTCOME_LABEL, outcome)}
     </Badge>
-  )
-}
-
-function Figure({ children }: { children: React.ReactNode }) {
-  return <span className="font-code text-ink tabular-nums">{children}</span>
-}
-
-function VisitDetail({ row }: { row: StreamVisitRow }) {
-  if (row.outcome === 'noLock' || row.outcome === 'noBytes') {
-    return (
-      <>
-        <span>
-          {row.outcome === 'noLock' ? '信号を掴めない' : 'データが来ない'}
-        </span>
-      </>
-    )
-  }
-
-  if (row.outcome === 'interrupted') {
-    return (
-      <>
-        <span>収集中に中断されました</span>
-      </>
-    )
-  }
-
-  if (row.outcome === 'neverVisited') {
-    return <span className="text-ink-2">まだ訪問していません</span>
-  }
-
-  if (row.outcome === 'incomplete') {
-    return (
-      <>
-        <span className="font-bold text-lemon">収集不調</span>
-        <span>
-          連続 <Figure>{row.consecutiveIncomplete}</Figure> 回
-        </span>
-        {row.durationLabel && (
-          <span>
-            前回 <Figure>{row.durationLabel}</Figure>で打ち切り
-          </span>
-        )}
-        {row.notBeforeLabel && (
-          <span>
-            次の訪問 <Figure>{row.notBeforeLabel}</Figure> 以降
-          </span>
-        )}
-      </>
-    )
-  }
-
-  return (
-    <>
-      {row.lastCompletedLabel && (
-        <span>
-          最終完了 <Figure>{row.lastCompletedLabel}</Figure>
-        </span>
-      )}
-      {row.durationLabel && (
-        <span>
-          所要 <Figure>{row.durationLabel}</Figure>
-        </span>
-      )}
-      {row.outcome === 'basicOnly' && (
-        <span className="text-ink-2">詳細は次回に持ち越し</span>
-      )}
-    </>
-  )
-}
-
-function LatestVisit({ status }: { status: CollectionStatus }) {
-  const rows = status.streams
-
-  if (rows.length > 0 && rows.every((row) => row.outcome === 'complete')) {
-    return (
-      <div className="flex items-start gap-[calc(11rem/16)] rounded-xl bg-surface-2 px-3.5 py-3">
-        <span className="relative mt-0.5 shrink-0">
-          <AntennaIcon
-            className="size-[calc(30rem/16)] text-mint"
-            strokeWidth={1.5}
-          />
-          <SuccessIcon className="absolute -right-1 -bottom-0.5 size-3.5 text-mint" />
-        </span>
-        <div className="min-w-0">
-          <b className="block text-sub font-bold text-mint">
-            巡回は完了しています
-          </b>
-          <span className="block text-note leading-[1.7] text-ink-2">
-            全 <Figure>{rows.length}</Figure> TS が
-            {STREAM_OUTCOME_LABEL.complete}。
-          </span>
-        </div>
-      </div>
-    )
-  }
-
-  const latest = rows
-    .filter((row) => row.lastAttemptedAt !== undefined)
-    .sort((a, b) => (a.lastAttemptedAt! < b.lastAttemptedAt! ? 1 : -1))[0]
-
-  if (!latest) {
-    return (
-      <div className="rounded-xl bg-surface-2 px-3.5 py-3 text-note leading-[1.7] text-ink-2">
-        まだどの TS も訪問していません。
-      </div>
-    )
-  }
-
-  return (
-    <div className="rounded-xl bg-surface-2 px-3.5 py-3">
-      <b className="block text-sub font-bold">
-        最終訪問 —{' '}
-        <span className="font-code font-medium tabular-nums">
-          {streamLabel(latest)}
-          {latest.channelLabel ? `(${latest.channelLabel})` : ''}
-        </span>
-        {latest.name}
-      </b>
-      <span className="mt-0.5 flex flex-wrap gap-x-3.5 text-note leading-[1.7] text-ink-2">
-        <span>
-          結果 {wordFor(STREAM_OUTCOME_LABEL, latest.outcome)}
-          {latest.lastAttemptedLabel && (
-            <>
-              ・<Figure>{latest.lastAttemptedLabel}</Figure>
-            </>
-          )}
-        </span>
-      </span>
-    </div>
   )
 }
 

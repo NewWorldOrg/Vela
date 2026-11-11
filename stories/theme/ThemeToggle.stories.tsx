@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 
 const meta = {
   title: 'Theme/テーマの切り替え',

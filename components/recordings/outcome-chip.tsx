@@ -5,14 +5,14 @@ import {
 } from '@/lib/state-terms'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { Badge } from '@/components/ui/badge'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   alsoSays,
   stateColumnFor,
   toneOf,
 } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { TermTip } from '@/components/vela/term-tip'
 
 type SettledOutcome = Exclude<RecordingOutcome, 'recording'>

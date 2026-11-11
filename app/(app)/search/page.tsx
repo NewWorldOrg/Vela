@@ -10,7 +10,7 @@ import {
   unwatchProgramme,
   watchProgramme,
 } from '../guide/actions'
-import { SearchView } from '@/components/search/search-page'
+import { SearchView } from '@/components/search/search-view'
 
 export const metadata: Metadata = { title: '番組検索' }
 

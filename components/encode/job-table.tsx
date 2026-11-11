@@ -27,9 +27,10 @@ import {
 import { cardPlace, READABLE_LINE } from '@/components/ui/table-cards'
 import { StatusCell } from '@/components/recordings/status-cell'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { InFull } from '@/components/vela/in-full'
-import { PickMark, ROOM_FOR_THE_BAR } from '@/components/library/picking'
+import { PickMark } from '@/components/library/pick-mark'
+import { ROOM_FOR_THE_BAR } from '@/components/library/picked-actions'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import {
   JOB_STATUS_COLUMN,

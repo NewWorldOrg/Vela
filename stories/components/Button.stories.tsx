@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 
 import { Button } from '@/components/ui/button'
 import { Surface } from '@/components/vela/surface'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import {
   DevicePlayerIcon,
   EditIcon,

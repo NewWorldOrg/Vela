@@ -14,7 +14,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { useHeldWhileClosing } from '@/hooks/useHeldWhileClosing'
 

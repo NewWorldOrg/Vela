@@ -20,8 +20,8 @@ import {
   flagOf,
 } from '@/lib/stored-flag'
 import { packedRowsOf } from '@/lib/packed-rows'
-import { RefreshOnSignal } from '@/components/vela/app-signals'
-import { PackedGuideView } from '@/components/guide/packed-guide'
+import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
+import { PackedGuideView } from '@/components/guide/packed-guide-view'
 import {
   boostCollection,
   discardAndRebuildEpg,

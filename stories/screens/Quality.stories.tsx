@@ -13,7 +13,7 @@ import {
   SATELLITES_THAT_CANNOT_LOCK,
   TWO_BROADCAST_DAYS,
 } from '@/repository/quality.fixtures'
-import { QualityView } from '@/components/quality/quality-page'
+import { QualityView } from '@/components/quality/quality-view'
 import type { QualitySaveThresholds } from '@/components/quality/threshold-panel'
 import {
   rowsOfTheTableHeaded,

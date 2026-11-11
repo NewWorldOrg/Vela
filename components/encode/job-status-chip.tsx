@@ -6,12 +6,9 @@ import {
   STATUS_LABEL,
 } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
-import {
-  StateSay,
-  stateColumnFor,
-  toneOf,
-} from '@/components/recordings/status-cell'
-import { ChipDot } from '@/components/vela/status'
+import { StateSay } from '@/components/recordings/state-say'
+import { stateColumnFor, toneOf } from '@/components/recordings/status-cell'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 type JobTone = 'secondary' | 'info' | 'warn' | 'ok' | 'err' | 'mute'
 

@@ -5,9 +5,9 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const WAIVED = [
-  'components/data-broadcast/data-broadcast-player.tsx',
+  'components/data-broadcast/disc.tsx',
   'components/guide/program-cell.tsx',
-  'components/guide/reserve-circle.tsx',
+  'components/guide/reserve-plus.tsx',
 ]
 
 const NAMES_IT = [

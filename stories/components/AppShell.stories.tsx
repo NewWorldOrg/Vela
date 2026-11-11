@@ -1,22 +1,20 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
+import { AdminBody } from '@/components/vela/admin-body'
+import { AdminMain } from '@/components/vela/admin-main'
 import {
-  AdminBody,
-  AdminMain,
   AdminSideNav,
   AdminSideNavItem,
-  AppFrame,
-  AppShell,
-  Brand,
-  Crumb,
-  CrumbCurrent,
-  GlobalNav,
-  GlobalNavItem,
-  SettingsLink,
-  TopBar,
-} from '@/components/vela/app-shell'
-import { PageHeading } from '@/components/vela/section-heading'
-import { TintPanel } from '@/components/vela/surface'
+} from '@/components/vela/admin-side-nav'
+import { AppFrame } from '@/components/vela/app-frame'
+import { AppShell } from '@/components/vela/app-shell'
+import { Brand } from '@/components/vela/brand'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
+import { GlobalNav, GlobalNavItem } from '@/components/vela/global-nav'
+import { SettingsLink } from '@/components/vela/settings-link'
+import { TopBar } from '@/components/vela/top-bar'
+import { PageHeading } from '@/components/vela/page-heading'
+import { TintPanel } from '@/components/vela/tint-panel'
 import { Button } from '@/components/ui/button'
 import {
   ChannelIcon,

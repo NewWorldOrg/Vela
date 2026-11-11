@@ -1,0 +1,65 @@
+import Link from 'next/link'
+
+import { isOnAir } from '@/lib/guide'
+import { yetToStart, type Noticing } from '@/lib/notifications'
+import type { ProgramDetail } from '@/repository/programs'
+import type { ReservationWrite } from '@/repository/reservations'
+import { Button } from '@/components/ui/button'
+import { ChevronLeftIcon } from '@/components/vela/icons'
+import type { ProgramBookingActions } from '@/components/guide/program-booking'
+import { ProgramBooking } from '@/components/guide/program-booking'
+import { ProgramDetailBody } from '@/components/guide/program-detail-body'
+import { ScreenMain } from '@/components/vela/screen-main'
+
+export function ProgramDetailView({
+  detail,
+  onReserve,
+  onCancel,
+  onRevise,
+  noticing,
+}: {
+  detail: ProgramDetail
+  onReserve: (programmeId: string) => Promise<ReservationWrite>
+  noticing?: Noticing
+} & ProgramBookingActions) {
+  const { program, channel, day, nowMin } = detail
+
+  return (
+    <ScreenMain className="pb-16">
+      <div className="mx-auto max-w-[calc(780rem/16)] px-6 pt-[calc(22rem/16)] max-[700px]:px-3.5">
+        <Button variant="tone" size="sm" className="mb-3.5" asChild>
+          <Link href="/guide">
+            <ChevronLeftIcon />
+            番組表へ
+          </Link>
+        </Button>
+
+        <section className="rounded-xl bg-surface px-[calc(30rem/16)] pt-[calc(26rem/16)] pb-[calc(22rem/16)] max-[700px]:px-[calc(18rem/16)] max-[700px]:pt-[calc(22rem/16)]">
+          <h1 className="heading mb-[calc(13rem/16)] text-[calc(23rem/16)] leading-normal">
+            {program.title}
+          </h1>
+          <ProgramDetailBody
+            program={program}
+            channel={channel}
+            dayLabel={day.label}
+            onAir={isOnAir(program, nowMin)}
+            ahead={yetToStart(program, nowMin, day.date, detail.today)}
+            noticing={noticing}
+            onReserve={onReserve}
+            reservation={
+              program.booking && (
+                <ProgramBooking
+                  booking={program.booking}
+                  title={program.title}
+                  channel={channel}
+                  onCancel={onCancel}
+                  onRevise={onRevise}
+                />
+              )
+            }
+          />
+        </section>
+      </div>
+    </ScreenMain>
+  )
+}

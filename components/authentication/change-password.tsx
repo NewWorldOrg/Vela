@@ -1,0 +1,136 @@
+'use client'
+
+import { useId, useState, useTransition } from 'react'
+import type { Route } from 'next'
+import { useRouter } from 'next/navigation'
+
+import type { PasswordChange, PasswordResult } from '@/repository/sessions'
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { InlineAlert } from '@/components/vela/inline-alert'
+import { Field, FieldLabel } from '@/components/vela/field'
+import { LockIcon } from '@/components/vela/icons'
+import { PasswordInput } from '@/components/vela/password-input'
+import { passwordChangedHref } from '@/components/authentication/wording'
+
+export function ChangePassword({
+  username,
+  onChangePassword,
+}: {
+  username?: string
+  onChangePassword: (change: PasswordChange) => Promise<PasswordResult>
+}) {
+  const router = useRouter()
+  const [open, setOpen] = useState(false)
+  const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const currentId = useId()
+  const newId = useId()
+
+  const close = () => {
+    setOpen(false)
+    setCurrentPassword('')
+    setNewPassword('')
+  }
+
+  const run = () =>
+    startTransition(async () => {
+      setRefusal(undefined)
+
+      const result = await onChangePassword({ currentPassword, newPassword })
+
+      if (result.state === 'refused') {
+        setRefusal(result.message)
+
+        return
+      }
+
+      close()
+      router.replace(passwordChangedHref(result.sessionsEnded) as Route)
+    })
+
+  const ready = currentPassword.length > 0 && newPassword.length > 0
+
+  return (
+    <>
+      <Button
+        variant="tone"
+        onClick={() => {
+          setRefusal(undefined)
+          setOpen(true)
+        }}
+      >
+        <LockIcon />
+        パスワードを変更
+      </Button>
+
+      <AlertDialog
+        open={open}
+        onOpenChange={(next) => (next ? setOpen(true) : close())}
+      >
+        <AlertDialogContent className="sm:max-w-[calc(520rem/16)]">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-[calc(9rem/16)]">
+              <LockIcon className="size-[calc(19rem/16)] text-rec-text" />
+              ローカルアカウントのパスワードを変更します
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              {username && `ユーザー名 ${username} のパスワードを変更します。`}
+              ほかの端末のセッションは失効します。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+
+          <div className="flex flex-col gap-3.5">
+            <Field>
+              <FieldLabel htmlFor={currentId}>いまのパスワード</FieldLabel>
+              <PasswordInput
+                id={currentId}
+                autoComplete="current-password"
+                value={currentPassword}
+                disabled={pending}
+                onChange={(event) => setCurrentPassword(event.target.value)}
+              />
+            </Field>
+            <Field>
+              <FieldLabel htmlFor={newId}>新しいパスワード</FieldLabel>
+              <PasswordInput
+                id={newId}
+                autoComplete="new-password"
+                value={newPassword}
+                disabled={pending}
+                onChange={(event) => setNewPassword(event.target.value)}
+              />
+            </Field>
+          </div>
+
+          <span aria-live="polite">
+            {refusal && (
+              <InlineAlert tone="danger">
+                変更できませんでした。{refusal}
+              </InlineAlert>
+            )}
+          </span>
+
+          <AlertDialogFooter>
+            <Button variant="tone" disabled={pending} onClick={close}>
+              キャンセル
+            </Button>
+            <Button variant="danger" disabled={pending || !ready} onClick={run}>
+              <LockIcon />
+              変更する
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </>
+  )
+}

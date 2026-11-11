@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { SIGNED_OUT_METHOD_KEY, signedOutMethod } from '@/repository/auth'
-import { LoggedOutView } from '@/components/login/logged-out-page'
+import { LoggedOutView } from '@/components/login/logged-out-view'
 
 export const metadata: Metadata = { title: 'サインアウトしました' }
 

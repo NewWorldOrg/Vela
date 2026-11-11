@@ -1,0 +1,402 @@
+import type { ComponentType, ReactNode } from 'react'
+
+import { EMPTY_VALUE } from '@/lib/empty-value'
+import { cn } from '@/lib/utils'
+import { formatBytes, formatMoment } from '@/lib/format'
+import { NOT_YET_IN_THIS_BUILD, shapeFor } from '@/lib/not-yet-in-this-build'
+import { SYSTEM_DETAIL_LABELS, SYSTEM_STATE_LABELS } from '@/lib/system-terms'
+import type {
+  ApiHealthResult,
+  CollectionCensus,
+  DriverConnection,
+  DriverStatus,
+  DriverStatusResult,
+  LiveCensus,
+  Reading,
+  StorageCensus,
+  SystemStatus,
+  TunerCensus,
+} from '@/repository/system'
+import { capabilityLabel } from '@/repository/driver-capabilities'
+import { Badge } from '@/components/ui/badge'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
+import { Banner } from '@/components/vela/banner'
+import { InFull } from '@/components/vela/in-full'
+import {
+  LiveIcon,
+  MarkDoubleCircle,
+  MarkPanel,
+  MarkSplit,
+  ProgramGuideIcon,
+  TunerIcon,
+  WarningIcon,
+  type IconProps,
+} from '@/components/vela/icons'
+import { PageHeading } from '@/components/vela/page-heading'
+import {
+  SETTINGS_GROUP_TITLE,
+  SettingsGroup,
+  SettingsRow,
+} from '@/components/vela/settings-group'
+import { type StatusTone } from '@/components/vela/status-dot'
+import { Part, HEAD_TONE } from '@/components/system/part'
+
+const API_TROUBLE: Record<Exclude<ApiHealthResult['state'], 'ok'>, string> = {
+  unconfigured: 'API の接続先が設定されていません',
+  unreachable: 'API に接続できません',
+  failed: 'API が想定した応答を返しませんでした',
+}
+
+const CONNECTION: Record<
+  DriverConnection,
+  { label: string; tone: StatusTone }
+> = {
+  connected: { label: '接続中', tone: 'ok' },
+  notConnected: { label: '未接続', tone: 'err' },
+  draining: { label: '停止準備中', tone: 'warn' },
+}
+
+const NOT_YET_KNOWN_CONNECTION: (typeof CONNECTION)[DriverConnection] = {
+  label: NOT_YET_IN_THIS_BUILD,
+  tone: 'off',
+}
+
+const DEGRADED_LABEL: Record<string, string> = {
+  oidc: 'ID プロバイダー',
+}
+
+function Figure({ children }: { children: ReactNode }) {
+  return <span className="tabular-nums">{children}</span>
+}
+
+function Fact({
+  label,
+  value,
+  names,
+}: {
+  label: string
+  value?: ReactNode
+  names?: { key: string; label: string }[]
+}) {
+  return (
+    <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1.5">
+      {label}
+      {names !== undefined ? (
+        names.length > 0 ? (
+          names.map((name) => (
+            <Badge key={name.key} variant="err" className="font-bold">
+              {name.label}
+            </Badge>
+          ))
+        ) : (
+          <b className="font-medium text-ink-2">なし</b>
+        )
+      ) : (
+        <b className="font-medium text-ink-2">{value}</b>
+      )}
+    </span>
+  )
+}
+
+function Unread({
+  name,
+  mark,
+  reading,
+}: {
+  name: string
+  mark: ComponentType<IconProps>
+  reading: Exclude<Reading<unknown>, { state: 'ok' }>
+}) {
+  return (
+    <Part
+      name={name}
+      mark={mark}
+      tone="off"
+      head={
+        reading.state === 'unauthenticated'
+          ? SYSTEM_STATE_LABELS.signedOut
+          : SYSTEM_STATE_LABELS.unknown
+      }
+    />
+  )
+}
+
+function DetailRow({
+  label,
+  children,
+}: {
+  label: string
+  children: ReactNode
+}) {
+  return (
+    <SettingsRow name={label}>
+      <span className="min-w-0 truncate">{children}</span>
+    </SettingsRow>
+  )
+}
+
+const NOTHING = <span className="text-ink-2">{EMPTY_VALUE}</span>
+
+export function SystemView({
+  status,
+  velaVersion,
+}: {
+  status: SystemStatus
+  velaVersion: string
+}) {
+  const { api, driver } = status
+  const trouble = api.state === 'ok' ? null : API_TROUBLE[api.state]
+  const reading = driver.state === 'ok' ? driver.status : null
+  const degraded =
+    api.state === 'ok'
+      ? api.degraded.map((key) => ({ key, label: DEGRADED_LABEL[key] ?? key }))
+      : []
+
+  return (
+    <>
+      <Crumb>
+        設定 / <CrumbCurrent>システム</CrumbCurrent>
+      </Crumb>
+      <PageHeading>システム</PageHeading>
+
+      {trouble && (
+        <Banner tone="danger" className="mt-3.5">
+          {api.state === 'failed' ? (
+            <InFull says={`HTTP ${api.httpStatus}`} wraps="inline-block">
+              <b>{trouble}</b>
+            </InFull>
+          ) : (
+            <b>{trouble}</b>
+          )}
+        </Banner>
+      )}
+
+      <SettingsGroup className="mt-[calc(18rem/16)]">
+        <Part
+          name="API"
+          mark={MarkDoubleCircle}
+          tone={
+            api.state !== 'ok' ? 'err' : degraded.length > 0 ? 'warn' : 'ok'
+          }
+          head={
+            api.state === 'ok'
+              ? SYSTEM_STATE_LABELS.responding
+              : SYSTEM_STATE_LABELS.notResponding
+          }
+        >
+          {api.state === 'ok' && <Fact label="機能低下" names={degraded} />}
+        </Part>
+
+        <DriverPart result={driver} />
+        <TunerPart reading={status.tuners} />
+        <StoragePart reading={status.storage} />
+        <CollectionPart reading={status.collection} />
+        <LivePart reading={status.live} />
+      </SettingsGroup>
+
+      <section>
+        <h2 className={SETTINGS_GROUP_TITLE}>詳細</h2>
+        <SettingsGroup>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.observedAt}>
+            {reading ? (
+              <span className="tabular-nums">
+                {formatMoment(reading.observedAt)}
+              </span>
+            ) : (
+              NOTHING
+            )}
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.health}>
+            {api.state === 'ok' ? <span>{api.status}</span> : NOTHING}
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.apiVersion}>
+            <span>Carina {status.carinaVersion ?? EMPTY_VALUE}</span>
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.driverVersion}>
+            <span>Puppis {reading?.hello?.version ?? EMPTY_VALUE}</span>
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.screenVersion}>
+            <span>Vela {velaVersion}</span>
+          </DetailRow>
+          <DetailRow label={SYSTEM_DETAIL_LABELS.protocolVersion}>
+            <span>
+              driver {reading?.hello?.protocolVersion ?? EMPTY_VALUE} / API{' '}
+              {reading?.appProtocolVersion ?? EMPTY_VALUE}
+            </span>
+          </DetailRow>
+        </SettingsGroup>
+      </section>
+    </>
+  )
+}
+
+function DriverPart({ result }: { result: DriverStatusResult }) {
+  if (result.state === 'ok') {
+    return <DriverReading status={result.status} />
+  }
+
+  if (result.state === 'unauthenticated') {
+    return (
+      <Part
+        name="driver"
+        mark={MarkSplit}
+        tone="off"
+        head={SYSTEM_STATE_LABELS.signedOut}
+      />
+    )
+  }
+
+  if (result.state === 'unavailable') {
+    return (
+      <Part
+        name="driver"
+        mark={MarkSplit}
+        tone="err"
+        head={SYSTEM_STATE_LABELS.unreadable}
+      >
+        {result.message}
+      </Part>
+    )
+  }
+
+  return (
+    <Part
+      name="driver"
+      mark={MarkSplit}
+      tone="off"
+      head={SYSTEM_STATE_LABELS.unknown}
+    >
+      API に接続できないため、driver が動いているかどうかも分かりません。
+    </Part>
+  )
+}
+
+function DriverReading({ status }: { status: DriverStatus }) {
+  const connection = shapeFor(
+    CONNECTION,
+    status.connection,
+    NOT_YET_KNOWN_CONNECTION,
+  )
+  const missing = status.missingCapabilities.map((key) => ({
+    key,
+    label: capabilityLabel(key),
+  }))
+  const degraded = missing.length > 0 || status.driverUpdateRequired
+  const tone = connection.tone === 'ok' && degraded ? 'warn' : connection.tone
+
+  return (
+    <Part name="driver" mark={MarkSplit} tone={tone} head={connection.label}>
+      <Fact label="機能不足" names={missing} />
+      {status.driverUpdateRequired && (
+        <span
+          className={cn(
+            'flex items-center gap-1.5 text-sub font-semibold',
+            HEAD_TONE[tone],
+          )}
+        >
+          <WarningIcon className="size-3.5 text-warn" />
+          driver の更新が必要です。
+        </span>
+      )}
+    </Part>
+  )
+}
+
+function TunerPart({ reading }: { reading: Reading<TunerCensus> }) {
+  if (reading.state !== 'ok') {
+    return <Unread name="チューナー" mark={TunerIcon} reading={reading} />
+  }
+
+  const census = reading.value
+  const tone =
+    census.faulted > 0
+      ? 'err'
+      : census.disabled > 0 || census.drifted
+        ? 'warn'
+        : 'ok'
+
+  return (
+    <Part
+      name="チューナー"
+      mark={TunerIcon}
+      tone={tone}
+      href="/settings/tuners"
+      head={
+        <Figure>
+          {census.busy} / {census.total}
+        </Figure>
+      }
+      unit="本 使用中"
+    >
+      <Fact label="異常" value={<Figure>{census.faulted} 本</Figure>} />
+    </Part>
+  )
+}
+
+function StoragePart({ reading }: { reading: Reading<StorageCensus> }) {
+  if (reading.state !== 'ok') {
+    return <Unread name="保存先" mark={MarkPanel} reading={reading} />
+  }
+
+  const census = reading.value
+  const tone = census.unwritable > 0 ? 'err' : census.short ? 'warn' : 'ok'
+
+  return (
+    <Part
+      name="保存先"
+      mark={MarkPanel}
+      tone={tone}
+      href="/settings/integrity"
+      head={<Figure>{formatBytes(census.freeBytes)}</Figure>}
+      unit={`空き / ${formatBytes(census.totalBytes)}`}
+    >
+      <Fact label="録画中" value={<Figure>{census.inFlight} 件</Figure>} />
+    </Part>
+  )
+}
+
+function CollectionPart({ reading }: { reading: Reading<CollectionCensus> }) {
+  if (reading.state !== 'ok') {
+    return <Unread name="番組表" mark={ProgramGuideIcon} reading={reading} />
+  }
+
+  const census = reading.value
+
+  return (
+    <Part
+      name="番組表"
+      mark={ProgramGuideIcon}
+      tone={census.troubled > 0 ? 'warn' : 'ok'}
+      href="/guide"
+      head={
+        <Figure>
+          {census.streams - census.troubled} / {census.streams}
+        </Figure>
+      }
+      unit="TS 収集済み"
+    >
+      <Fact label="収集不調" value={<Figure>{census.troubled} TS</Figure>} />
+    </Part>
+  )
+}
+
+function LivePart({ reading }: { reading: Reading<LiveCensus> }) {
+  if (reading.state !== 'ok') {
+    return <Unread name="ライブ" mark={LiveIcon} reading={reading} />
+  }
+
+  const census = reading.value
+
+  return (
+    <Part
+      name="ライブ"
+      mark={LiveIcon}
+      tone="ok"
+      href="/live"
+      head={<Figure>{census.sessions}</Figure>}
+      unit="本 配信中"
+    >
+      <Fact label="視聴者" value={<Figure>{census.viewers} 人</Figure>} />
+    </Part>
+  )
+}

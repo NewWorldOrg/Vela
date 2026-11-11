@@ -14,8 +14,8 @@ import {
 } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ProgressBar } from '@/components/vela/progress'
-import { ChipDot } from '@/components/vela/status'
+import { ProgressBar } from '@/components/vela/progress-bar'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { Surface } from '@/components/vela/surface'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 

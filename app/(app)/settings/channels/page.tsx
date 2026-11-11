@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 
 import { getChannels } from '@/repository/services'
-import { ChannelsView } from '@/components/channels/channels-page'
+import { ChannelsView } from '@/components/channels/channels-view'
 import {
   addCandidate,
   beginScan,

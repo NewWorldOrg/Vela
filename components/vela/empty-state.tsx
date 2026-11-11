@@ -2,7 +2,7 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 import { AnsweringUsher } from '@/components/vela/answering-usher'
-import type { UsherMood } from '@/components/vela/marks'
+import type { UsherMood } from '@/components/vela/usher'
 
 export function EmptyState({
   usher = 'plain',

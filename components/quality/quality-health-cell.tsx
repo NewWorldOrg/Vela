@@ -3,7 +3,7 @@ import type { QualityLevel } from '@/lib/quality'
 import { TableCell } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
 import { StatusCell } from '@/components/recordings/status-cell'
-import { QualityChip } from '@/components/quality/signal-quality-chip'
+import { QualityChip } from '@/components/quality/quality-chip'
 import { InFull } from '@/components/vela/in-full'
 
 export function QualityHealthCell({

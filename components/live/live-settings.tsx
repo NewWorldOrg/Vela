@@ -6,20 +6,20 @@ import type { LiveProfile } from '@/repository/live'
 import { soundLabel, type SoundTrack } from '@/repository/sounds'
 import {
   GearActions,
-  PlayerGear,
   type GearAction,
-} from '@/components/recordings/player-gear'
+} from '@/components/recordings/gear-actions'
+import { PlayerGear } from '@/components/recordings/player-gear'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
-import { Setting } from '@/components/recordings/player-setting'
+import { Setting } from '@/components/recordings/setting'
 import {
   FormatSetting,
   type FormatSettingProps,
 } from '@/components/recordings/format-setting'
 import {
   CaptionStyleEntry,
-  CaptionStylePanel,
   useGearPanel,
-} from '@/components/recordings/caption-style-controls'
+} from '@/components/recordings/caption-style-entry'
+import { CaptionStylePanel } from '@/components/recordings/caption-style-panel'
 import type { CaptionStyle } from '@/lib/caption-style'
 
 function Figure({ children }: { children: ReactNode }) {

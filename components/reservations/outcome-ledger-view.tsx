@@ -1,0 +1,240 @@
+'use client'
+
+import { useCallback, useState, useTransition } from 'react'
+import type { Route } from 'next'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+
+import { addressWith } from '@/lib/path'
+import type { OutcomeLedgerResult } from '@/repository/reservation-outcomes'
+import { cn } from '@/lib/utils'
+import { OUTCOME_KINDS, OUTCOME_SPANS } from '@/lib/reservation-outcomes'
+import {
+  NOT_YET_IN_THIS_BUILD_TERM,
+  RESERVATION_OUTCOME_KIND_TERMS,
+} from '@/lib/state-terms'
+import { shapeFor } from '@/lib/not-yet-in-this-build'
+import { Button } from '@/components/ui/button'
+import {
+  Table,
+  TableBody,
+  TableColumns,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table'
+import { OUTCOME_KIND_COLUMN } from '@/components/reservations/outcome-kind-chip'
+import { ScreenMain } from '@/components/vela/screen-main'
+import { EmptyState } from '@/components/vela/empty-state'
+import { FilterSelect } from '@/components/vela/filter-select'
+import { Pager } from '@/components/vela/pager'
+import { SegmentedControl } from '@/components/vela/segmented-control'
+import { OutcomeRow } from '@/components/reservations/outcome-row'
+import { unfoldShows, useUnfolding } from '@/components/vela/unfold'
+import { ReservationTabs } from '@/components/reservations/reservation-tabs'
+import { WHEN_LABELS } from '@/lib/when-terms'
+import { useArrived } from '@/hooks/useArrived'
+
+const COLUMNS: {
+  label: string
+  width: string | undefined
+  hidden?: boolean
+  narrow?: boolean
+}[] = [
+  {
+    label: '代わりに録られた予約の開閉',
+    width: 'calc(34rem/16)',
+    hidden: true,
+    narrow: true,
+  },
+  { label: '番組', width: undefined },
+  { label: 'チャンネル', width: 'calc(168rem/16)' },
+  { label: WHEN_LABELS.broadcast, width: 'calc(160rem/16)' },
+  { label: '優先度', width: 'calc(76rem/16)' },
+  { label: '分類', width: OUTCOME_KIND_COLUMN },
+  { label: WHEN_LABELS.taken, width: 'calc(160rem/16)' },
+]
+
+const EVERY = '__every__'
+
+const KIND_OPTIONS = [
+  { value: EVERY, label: 'すべて' },
+  ...OUTCOME_KINDS.map((kind) => ({
+    value: kind,
+    label: shapeFor(
+      RESERVATION_OUTCOME_KIND_TERMS,
+      kind,
+      NOT_YET_IN_THIS_BUILD_TERM,
+    ).label,
+  })),
+]
+
+export function OutcomeLedgerView({ result }: { result: OutcomeLedgerResult }) {
+  const { items, total, page, lastPage, filter, channels, rules } = result
+  const unfolded = useUnfolding()
+  const router = useRouter()
+  const [waiting, startWaiting] = useTransition()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
+  const change = useCallback(
+    (patch: Record<string, string | null>) => {
+      startWaiting(() =>
+        router.replace(
+          addressWith(pathname, searchParams.toString(), {
+            ...patch,
+            page: null,
+          }) as Route,
+          { scroll: false },
+        ),
+      )
+    },
+    [router, pathname, searchParams],
+  )
+  const onPage = useCallback(
+    (next: number) => {
+      startWaiting(() =>
+        router.replace(
+          addressWith(pathname, searchParams.toString(), {
+            page: next > 1 ? String(next) : null,
+          }) as Route,
+          { scroll: false },
+        ),
+      )
+    },
+    [router, pathname, searchParams],
+  )
+  const arrived = useArrived()
+  const emptyLedger =
+    total === 0 && !(filter.kind || filter.days || filter.ch || filter.rule)
+
+  return (
+    <ScreenMain
+      scroll="within"
+      className="flex flex-col px-3.5 pt-3.5 pb-6 phone:pt-1 min-[701px]:px-6 min-[1366px]:px-10"
+    >
+      <ReservationTabs
+        current="outcomes"
+        count={
+          <>
+            <span className="font-code">{total}</span> 件
+          </>
+        }
+      />
+
+      <div className="mt-4 mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-3 phone:mt-1">
+        <SegmentedControl
+          label="分類"
+          options={KIND_OPTIONS}
+          value={filter.kind ?? EVERY}
+          onValueChange={(next) =>
+            change({ kind: next === EVERY ? null : next })
+          }
+        />
+        <div className="ml-auto flex flex-wrap items-center gap-x-2.5 gap-y-3 max-[900px]:ml-0">
+          <FilterSelect
+            label="期間"
+            value={filter.days}
+            options={OUTCOME_SPANS}
+            onChange={(next) => change({ days: next })}
+          />
+          <FilterSelect
+            label="チャンネル"
+            value={filter.ch}
+            options={channels}
+            onChange={(next) => change({ ch: next })}
+          />
+          <FilterSelect
+            label="ルール"
+            value={filter.rule}
+            options={rules}
+            onChange={(next) => change({ rule: next })}
+          />
+        </div>
+        <span className="hidden text-sub whitespace-nowrap text-ink-2 phone:inline">
+          全 <span className="font-code">{total}</span> 件
+        </span>
+      </div>
+
+      {items.length > 0 ? (
+        <>
+          <Table
+            cards
+            className="table-fixed min-w-[calc(900rem/16)]"
+            waiting={waiting}
+            containerClassName="min-h-0 flex-initial overflow-y-auto pb-1"
+          >
+            <TableColumns widths={COLUMNS.map((column) => column.width)} />
+            <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
+              <TableRow>
+                {COLUMNS.map((column) => (
+                  <TableHead
+                    key={column.label}
+                    className={cn(
+                      column.narrow && 'w-8',
+                      column.label === '優先度' && 'text-right',
+                    )}
+                  >
+                    {column.hidden ? (
+                      <span className="sr-only">{column.label}</span>
+                    ) : (
+                      column.label
+                    )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            </TableHeader>
+            <TableBody {...arrived}>
+              {items.map((outcome, nth) => (
+                <OutcomeRow
+                  key={outcome.id}
+                  nth={nth}
+                  outcome={outcome}
+                  expanded={unfolded.open === outcome.id}
+                  shown={unfoldShows(unfolded, outcome.id)}
+                  onToggle={() => unfolded.toggle(outcome.id)}
+                />
+              ))}
+            </TableBody>
+          </Table>
+          {lastPage > 1 && (
+            <Pager
+              total={total}
+              page={page}
+              lastPage={lastPage}
+              onPage={onPage}
+            />
+          )}
+        </>
+      ) : !emptyLedger ? (
+        <EmptyState
+          title="条件に合う記録がありません"
+          titleLevel={2}
+          className="mt-10 max-w-[calc(560rem/16)]"
+          action={
+            <Button
+              variant="tone"
+              size="sm"
+              onClick={() =>
+                change({ kind: null, days: null, ch: null, rule: null })
+              }
+            >
+              条件を解除
+            </Button>
+          }
+        />
+      ) : (
+        <EmptyState
+          usher="glad"
+          title="録れなかった予約がありません"
+          titleLevel={2}
+          className="mt-10 max-w-[calc(560rem/16)]"
+          action={
+            <Button variant="tone" size="sm" asChild>
+              <Link href="/reservations">予約へ</Link>
+            </Button>
+          }
+        />
+      )}
+    </ScreenMain>
+  )
+}

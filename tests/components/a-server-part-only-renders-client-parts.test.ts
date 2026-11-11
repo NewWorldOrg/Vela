@@ -219,9 +219,9 @@ test('the server reaches the screens that draw their rows as cards', () => {
   const reached = serverModules()
 
   for (const file of [
-    'components/channels/channels-page.tsx',
-    'components/tuners/tuners-page.tsx',
-    'components/quality/quality-page.tsx',
+    'components/channels/channels-view.tsx',
+    'components/tuners/tuners-view.tsx',
+    'components/quality/quality-view.tsx',
     'components/authentication/session-table.tsx',
     'components/migration/migration-report.tsx',
   ]) {

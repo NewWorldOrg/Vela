@@ -13,7 +13,7 @@ import {
 } from '@/lib/bml/memory'
 import { SHARED_REGISTERS } from '@/lib/bml/messages'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
-import type { AppEnd, HybridcastApp } from '@/lib/data-broadcast-view'
+import type { AppEnd } from '@/lib/data-broadcast-view'
 import { receiverIdHandedOver } from '@/lib/hybridcast/boundary'
 import type { EventInformation } from '@/lib/hybridcast/event-information'
 import {
@@ -78,7 +78,7 @@ export function pictureHole(rect: Rect | null): CSSProperties {
   }
 }
 
-interface FrameProps {
+export interface FrameProps {
   address: string
   application: OwnedApplication
   feed: DataBroadcastHeld
@@ -92,7 +92,7 @@ interface FrameProps {
 }
 
 /** The application's frame, at 1920x1080 scaled to the box. It is handed the state its documents read at once in its name, and talks to each document that opens on the relay over the port that document hands over: the receiver's identifier, where the whole boundary permits it, the event messages and NPT of the broadcast, the programme and the keys go to it; what it says comes back. Each load of the frame is paired with one hello, and the port of that hello is asked once the load is over whether its document loaded; a load that does not answer within a moment is not on the relay, and the frame is given up. The frame never keeps the focus: the keys are the player's, which hands them over as the remote's. */
-function HybridcastFrame({
+export function HybridcastFrame({
   address,
   application,
   feed,
@@ -339,31 +339,6 @@ function HybridcastFrame({
           width === 0 && 'invisible',
         )}
       />
-    </div>
-  )
-}
-
-/** Where the Hybridcast application the documents started runs, over the player's box in their place. Its frame opens once Carina started the application, and opens afresh for another application put in its place; until then the place stays empty over the picture, and the band says what runs and closes it back to the documents. */
-export function HybridcastFace({
-  app,
-  ...frame
-}: Omit<FrameProps, 'address' | 'application'> & { app: HybridcastApp }) {
-  const { address, application } = app
-
-  return (
-    <div
-      data-slot="hybridcast-face"
-      data-started={address === null ? 'no' : 'yes'}
-      className="pointer-events-none absolute inset-0 z-[1] overflow-hidden"
-    >
-      {address && application && (
-        <HybridcastFrame
-          key={app.nth}
-          address={address}
-          application={application}
-          {...frame}
-        />
-      )}
     </div>
   )
 }

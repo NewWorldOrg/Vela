@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/tooltip'
 import { FieldError } from '@/components/vela/field'
 import { InfoIcon } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { Surface } from '@/components/vela/surface'
 import {
   VALUE_FACE,

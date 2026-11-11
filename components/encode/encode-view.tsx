@@ -1,0 +1,182 @@
+'use client'
+
+import { useState } from 'react'
+import Link from 'next/link'
+
+import { cn } from '@/lib/utils'
+import type {
+  EncodeRemoval,
+  EncodeRerun,
+  EncodeScreen,
+  EncodeWrite,
+} from '@/repository/encode'
+import type {
+  EncodeDestinationDraft,
+  EncodeProfileDraft,
+} from '@/repository/encode-terms'
+import { Button } from '@/components/ui/button'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
+import { EmptyState } from '@/components/vela/empty-state'
+import {
+  MarkDots,
+  MarkPanel,
+  MarkPill,
+  MarkSplit,
+} from '@/components/vela/icons'
+import { PageHeading } from '@/components/vela/page-heading'
+import { SectionHeading } from '@/components/vela/section-heading'
+import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
+import { AddProfileDialog } from '@/components/encode/add-profile-dialog'
+import { AutoRunPanel } from '@/components/encode/auto-run-panel'
+import { DestinationList } from '@/components/encode/destination-list'
+import { EncodeTicker } from '@/components/encode/encode-ticker'
+import { JobCounts } from '@/components/encode/job-counts'
+import { JobsList } from '@/components/encode/jobs-list'
+import { ProfileList } from '@/components/encode/profile-list'
+import { RecentSpells } from '@/components/encode/recent-spells'
+import { RunningJob } from '@/components/encode/running-job'
+
+const PROFILES = 'プロファイル'
+
+const DESTINATIONS = '保存先'
+
+export interface EncodeActions {
+  onDefineProfile: (draft: EncodeProfileDraft) => Promise<EncodeWrite>
+  onReviseProfile: (
+    id: string,
+    draft: EncodeProfileDraft,
+  ) => Promise<EncodeWrite>
+  onRemoveProfile: (id: string) => Promise<EncodeRemoval>
+  onDefineDestination: (draft: EncodeDestinationDraft) => Promise<EncodeWrite>
+  onReviseDestination: (
+    id: string,
+    draft: EncodeDestinationDraft,
+  ) => Promise<EncodeWrite>
+  onRemoveDestination: (id: string) => Promise<EncodeRemoval>
+  onCallOff: (id: string) => Promise<EncodeWrite>
+  onRerun: (ids: string[]) => Promise<EncodeRerun>
+  onSettleAutoRun: (
+    automatically: boolean,
+    mostCores: number,
+  ) => Promise<EncodeWrite>
+}
+
+export function EncodeView({
+  screen,
+  actions,
+}: {
+  screen: EncodeScreen
+  actions: EncodeActions
+}) {
+  const { jobs, running, profiles, destinations, roots } = screen
+  const offered = profiles.filter((profile) => !profile.retired)
+  const inUse = destinations.filter((destination) => !destination.retired)
+  const [choosing, setChoosing] = useState(false)
+
+  return (
+    <>
+      <EncodeTicker active={running !== null || screen.waiting > 0} />
+      <Crumb>
+        設定 / <CrumbCurrent>エンコード</CrumbCurrent>
+      </Crumb>
+      <PageHeading>エンコード</PageHeading>
+
+      <section className="mt-5">
+        <SectionHeading>ジョブの状況</SectionHeading>
+
+        {running && <RunningJob job={running} onCallOff={actions.onCallOff} />}
+
+        <JobCounts
+          waiting={screen.waiting}
+          failed={screen.failed}
+          className={cn(
+            'flex flex-wrap items-center gap-2',
+            running && 'mt-2.5',
+          )}
+        />
+
+        <RecentSpells spells={screen.spells} className="mt-2.5" />
+
+        <div className="mt-3.5">
+          <JobsList
+            jobs={jobs}
+            onCallOff={actions.onCallOff}
+            onRerun={actions.onRerun}
+            onChoosing={setChoosing}
+          />
+        </div>
+      </section>
+
+      <section className="mt-9">
+        <SectionHeading>自動実行</SectionHeading>
+        <AutoRunPanel
+          autoRun={screen.autoRun}
+          destination={inUse.length === 1 ? inUse[0].label : undefined}
+          onSettle={actions.onSettleAutoRun}
+        />
+      </section>
+
+      <section className="mt-9">
+        {profiles.length > 0 ? (
+          <ProfileList
+            heading={PROFILES}
+            profiles={profiles}
+            defaults={screen.profileDefaults}
+            onDefine={actions.onDefineProfile}
+            onRevise={actions.onReviseProfile}
+            onRemove={actions.onRemoveProfile}
+          />
+        ) : (
+          <>
+            <SectionHeading>{PROFILES}</SectionHeading>
+            <EmptyState
+              title="プロファイルがありません"
+              action={
+                <AddProfileDialog
+                  defaults={screen.profileDefaults}
+                  onDefine={actions.onDefineProfile}
+                />
+              }
+            />
+          </>
+        )}
+      </section>
+
+      <section className="mt-9">
+        {destinations.length > 0 ? (
+          <DestinationList
+            heading={DESTINATIONS}
+            destinations={destinations}
+            profiles={offered}
+            roots={roots}
+            onDefine={actions.onDefineDestination}
+            onRevise={actions.onReviseDestination}
+            onRemove={actions.onRemoveDestination}
+          />
+        ) : (
+          <>
+            <SectionHeading>{DESTINATIONS}</SectionHeading>
+            <EmptyState
+              title="保存先がありません"
+              action={
+                <AddDestinationDialog
+                  profiles={offered}
+                  roots={roots}
+                  onDefine={actions.onDefineDestination}
+                />
+              }
+            />
+          </>
+        )}
+      </section>
+
+      {choosing && (
+        <div
+          aria-hidden="true"
+          data-slot="room-for-the-band"
+          className="hidden h-[calc(60rem/16)] phone:block"
+        />
+      )}
+    </>
+  )
+}

@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 
 import { getScanProposal } from '@/repository/services'
-import { ScanProposalView } from '@/components/scan/scan-proposal-page'
+import { ScanProposalView } from '@/components/scan/scan-proposal-view'
 import { commitScan } from '../../actions'
 
 export const metadata: Metadata = { title: 'スキャン結果' }

@@ -57,9 +57,9 @@ import {
   drawCapture,
   type TakeCapture,
 } from '@/components/recordings/take-capture'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
-import type { PlaybackFault } from '@/components/recordings/playback-fault'
+import type { PlaybackFault } from '@/components/recordings/playback-fault-notice'
 import type {
   FeedRecording,
   RecordingFeedEvents,

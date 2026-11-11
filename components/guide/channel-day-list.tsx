@@ -19,7 +19,7 @@ import {
 } from '@/components/guide/guide-metrics'
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
 import { WATCHED_SAYS } from '@/components/guide/program-cell'
-import { NotifyBell } from '@/components/notifications/programme-notice'
+import { NotifyBell } from '@/components/notifications/notify-bell'
 import { pressable } from '@/components/vela/tactile'
 
 const ROOM_ABOVE_NOW_PX = 48

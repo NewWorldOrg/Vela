@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
-import { LoggedOutView } from '@/components/login/logged-out-page'
+import { LoggedOutView } from '@/components/login/logged-out-view'
 
 const meta = {
   title: 'Screens/サインイン/サインアウト完了',

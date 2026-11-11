@@ -160,6 +160,12 @@ and colour that comes from the pictures. What that means in the code:
 - The version is `package.json`'s. `next.config.ts` hands it to the build as
   `VELA_VERSION` and `lib/version.ts` is what reads it, so it is not written
   down a second time
+- A component that another file imports lives in a file of its own, named after
+  it in kebab-case. Parts that are only ever used together with it (`TabBar` and
+  `TabBarItem`, `Field` and `FieldLabel`) may share its file. `components/ui/`
+  keeps shadcn's own layout, and `components/vela/icons.tsx` stays one file
+- A component used only inside its file may stay there while it is 60 lines or
+  shorter. Past that it moves into a file of its own beside the one that uses it
 
 ## Commands
 

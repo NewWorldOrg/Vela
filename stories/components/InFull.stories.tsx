@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, screen, userEvent, within } from 'storybook/test'
 
-import { Tile } from '@/components/vela/surface'
+import { Tile } from '@/components/vela/tile'
 import { InFull } from '@/components/vela/in-full'
 
 const meta = {

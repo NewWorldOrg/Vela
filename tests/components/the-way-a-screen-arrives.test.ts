@@ -623,7 +623,7 @@ test('each settings screen rises on its own, and the frame around it does not', 
     'utf8',
   )
   const shell = await readFile(
-    path.join(ROOT, 'components/vela/app-shell.tsx'),
+    path.join(ROOT, 'components/vela/admin-main.tsx'),
     'utf8',
   )
 
@@ -721,7 +721,8 @@ test('the spark colour is kept to the moments: the opening of the guide, the cur
   assert.deepEqual(users, [
     'components/guide/guide-opening.tsx',
     'components/vela/curtain.tsx',
-    'components/vela/marks.tsx',
+    'components/vela/television-boat.tsx',
+    'components/vela/usher.tsx',
   ])
 })
 
@@ -893,7 +894,7 @@ test('the moments keep the colours they were drawn in before v4, in both themes'
   for (const file of [
     'components/vela/curtain.tsx',
     'components/guide/guide-opening.tsx',
-    'components/vela/marks.tsx',
+    'components/vela/usher.tsx',
   ]) {
     assert.match(
       await readFile(path.join(ROOT, file), 'utf8'),

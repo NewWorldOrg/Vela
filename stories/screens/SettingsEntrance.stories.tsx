@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, within } from 'storybook/test'
 
 import { SYSTEM_STATUS } from '@/repository/system.fixtures'
-import { SettingsEntranceView } from '@/components/settings-entrance/settings-entrance-page'
+import { SettingsEntranceView } from '@/components/settings-entrance/settings-entrance-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
 

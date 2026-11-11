@@ -7,7 +7,7 @@ import {
   NO_PUBLIC_ORIGIN,
   NotificationsView,
   type NotificationActions,
-} from '@/components/notifications/notifications-page'
+} from '@/components/notifications/notifications-view'
 import {
   DENIED_HERE,
   type BrowserChoice,

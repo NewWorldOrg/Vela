@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useId, type ComponentProps, type ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
+import { ChoiceLabel } from '@/components/vela/choice-label'
 
 export interface SegmentedOption {
   value: string
@@ -13,9 +14,6 @@ export interface SegmentedOption {
   /** Drawn in place of the label, which is then only read out. */
   icon?: ReactNode
 }
-
-export const CHOICE_LABEL =
-  'text-sub font-semibold whitespace-nowrap text-ink-2'
 
 const TRACK = {
   default:
@@ -57,10 +55,6 @@ const CHOSEN = 'bg-accent-tint text-acc-text hover:text-acc-text'
 type Naming =
   | { label: string; 'aria-label'?: string }
   | { label?: undefined; 'aria-label': string }
-
-export function ChoiceLabel({ className, ...props }: ComponentProps<'span'>) {
-  return <span className={cn(CHOICE_LABEL, className)} {...props} />
-}
 
 export function SegmentedControl({
   options,

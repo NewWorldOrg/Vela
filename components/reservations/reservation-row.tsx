@@ -4,7 +4,6 @@ import Link from 'next/link'
 import { useId, useState, useTransition } from 'react'
 
 import { reservationAnchor } from '@/lib/reservations'
-import { formatClock } from '@/lib/format'
 import { signedOut } from '@/lib/signed-out'
 import type {
   ConflictEntry,
@@ -24,17 +23,18 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { IconButton } from '@/components/vela/icon-button'
 import { CloseIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { DisplacedNotice } from '@/components/reservations/displaced-notice'
 import { GenreDot } from '@/components/reservations/genre-dot'
-import { ReservationAttention } from '@/components/reservations/reservation-state-chip'
+import { ReservationAttention } from '@/components/reservations/reservation-attention'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { cn } from '@/lib/utils'
+import { RowTimes } from '@/components/reservations/row-times'
 
 export interface ReservationActions {
   onCancel: (id: string) => Promise<ReservationWrite>
@@ -62,36 +62,6 @@ export const ROW_LINE =
 
 export const ROW_GROUND =
   'rounded-md transition-[background-color] duration-[140ms] ease-toy hover:bg-surface'
-
-function clockOf(at: string): string {
-  return formatClock(new Date(at).getTime())
-}
-
-/** The start in the row's own size and the end under it, quieter. */
-export function RowTimes({
-  span,
-  whenLabel,
-}: {
-  span?: { startAt: string; endAt: string }
-  whenLabel: string
-}) {
-  if (!span) {
-    return (
-      <span className="font-code text-sub leading-[calc(18rem/16)] text-ink-2">
-        {whenLabel}
-      </span>
-    )
-  }
-
-  return (
-    <span className="flex flex-col font-code leading-[calc(18rem/16)] tabular-nums">
-      <span className="text-title font-semibold text-ink">
-        {clockOf(span.startAt)}
-      </span>
-      <span className="text-sub text-ink-2">– {clockOf(span.endAt)}</span>
-    </span>
-  )
-}
 
 /** The line under a title: the channel, then where the reservation came from, with the rule's name when a rule made it. */
 export function whereFrom(reservation: Reservation): string {

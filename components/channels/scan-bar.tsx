@@ -6,7 +6,7 @@ import type { ScanScope, StartScanResult } from '@/repository/services'
 import type { ScanSystem } from '@/repository/scan-systems'
 import { SCAN_SYSTEMS } from '@/repository/scan-systems'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import {
   TuningFields,

@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, waitFor } from 'storybook/test'
 
-import { Brand } from '@/components/vela/app-shell'
+import { Brand } from '@/components/vela/brand'
 import { AnsweringUsher } from '@/components/vela/answering-usher'
 import { EmptyState } from '@/components/vela/empty-state'
-import { Usher, VelaMark, type UsherMood } from '@/components/vela/marks'
+import { Usher, type UsherMood } from '@/components/vela/usher'
+import { VelaMark } from '@/components/vela/vela-mark'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { MarkDots, MarkStar } from '@/components/vela/icons'

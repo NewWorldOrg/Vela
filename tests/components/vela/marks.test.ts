@@ -13,15 +13,24 @@ const ROOT = path.resolve(
 
 const read = (file: string) => readFile(path.join(ROOT, file), 'utf8')
 
+const THE_DRAWINGS = [
+  'components/vela/vela-mark.tsx',
+  'components/vela/usher.tsx',
+  'components/vela/television-boat.tsx',
+]
+
+const readTheDrawings = async () =>
+  (await Promise.all(THE_DRAWINGS.map(read))).join('\n')
+
 test('the mark at the top left is drawn in its small cut', async () => {
   assert.match(
-    await read('components/vela/app-shell.tsx'),
+    await read('components/vela/brand.tsx'),
     /<VelaMark small className="size-5" \/>/,
   )
 })
 
 test('the mark is the keel and the sail crossing in the star, painted by its own tokens', async () => {
-  const source = await read('components/vela/marks.tsx')
+  const source = await readTheDrawings()
   const painted = [...source.matchAll(/(?:fill|stroke)="(#[0-9A-Fa-f]{3,6})"/g)]
 
   assert.deepEqual(
@@ -99,7 +108,7 @@ test('the usher moves once, and not for someone who stopped the motion', async (
 })
 
 test('the usher stands still until it arrives, and waits without moving', async () => {
-  const source = await read('components/vela/marks.tsx')
+  const source = await read('components/vela/usher.tsx')
   const sheet = await read('app/globals.css')
   const utility = sheet.slice(
     sheet.indexOf('@utility usher-arrives {'),
@@ -120,7 +129,7 @@ test('the drawings the usher replaced are gone', async () => {
 })
 
 test('the curtain carries the television of the app icon, rimmed in the ground colour, and not the usher', async () => {
-  const source = await read('components/vela/marks.tsx')
+  const source = await read('components/vela/television-boat.tsx')
   const curtain = await read('components/vela/curtain.tsx')
 
   assert.match(source, /edged && \(\s*<g data-edge=""/)
@@ -146,10 +155,10 @@ test('the mark keeps the colours of the app icon in both themes', async () => {
 })
 
 test('the drawings are the mark, the usher of the empty states and the television under sail of the loading curtain', async () => {
-  const source = await read('components/vela/marks.tsx')
+  const source = await readTheDrawings()
 
   assert.deepEqual(
-    [...source.matchAll(/export function (\w+)/g)].map(([, name]) => name),
+    [...source.matchAll(/export function ([A-Z]\w*)/g)].map(([, name]) => name),
     ['VelaMark', 'Usher', 'TelevisionBoat'],
   )
 })

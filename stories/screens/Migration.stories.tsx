@@ -7,7 +7,7 @@ import {
   MORE_NOT_TAKEN_THAN_FIT,
   NOTHING_LOST,
 } from '@/repository/migration.fixtures'
-import { MigrationView } from '@/components/migration/migration-page'
+import { MigrationView } from '@/components/migration/migration-view'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheSettings } from '@/stories/frames'
 import {

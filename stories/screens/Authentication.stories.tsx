@@ -15,7 +15,7 @@ import {
   SIGNED_IN_LOCALLY,
   SIGNED_IN_WITH_A_PROVIDER,
 } from '@/repository/authentication.fixtures'
-import { AuthenticationView } from '@/components/authentication/authentication-page'
+import { AuthenticationView } from '@/components/authentication/authentication-view'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { cellOf, rowsOfTheTableHeaded } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'

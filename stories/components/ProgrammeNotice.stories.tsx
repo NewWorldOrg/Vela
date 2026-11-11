@@ -12,11 +12,11 @@ import type {
 } from '@/lib/notifications'
 import {
   NOTIFY_START,
-  NotifyBell,
-  NotifyLeadChip,
-  NotifyStartButton,
   STOP_NOTIFYING,
-} from '@/components/notifications/programme-notice'
+} from '@/components/notifications/wording'
+import { NotifyBell } from '@/components/notifications/notify-bell'
+import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
+import { NotifyStartButton } from '@/components/notifications/notify-start-button'
 import {
   NOTIFY_ONLY,
   NotifyOnlyRow,
@@ -24,7 +24,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { ListIcon, RecordIcon } from '@/components/vela/icons'
-import { Toasts } from '@/components/vela/toast'
+import { Toasts } from '@/components/vela/toasts'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { PHONE } from '@/stories/rows-as-cards'
 import {

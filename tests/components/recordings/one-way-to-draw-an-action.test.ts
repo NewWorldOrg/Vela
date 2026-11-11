@@ -5,9 +5,10 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const WHERE_THE_ACTIONS_ARE = [
-  'components/library/phone-library.tsx',
+  'components/library/phone-recording-rows.tsx',
   'components/recordings/recording-actions.tsx',
-  'components/recordings/external-player.tsx',
+  'components/recordings/handover-menu.tsx',
+  'components/recordings/recording-handover-list.tsx',
   'components/recordings/thumbnail-button.tsx',
   'components/recordings/encode-button.tsx',
 ]
@@ -151,10 +152,14 @@ test("a recording's actions stand in one row under its title, not in a column be
     path.join(ROOT, 'components/recordings/recording-actions.tsx'),
     'utf8',
   )
-  const page = await readFile(
-    path.join(ROOT, 'components/recordings/recording-detail-page.tsx'),
-    'utf8',
-  )
+  const page = (
+    await Promise.all(
+      [
+        'components/recordings/recording-detail-view.tsx',
+        'components/recordings/recording-info.tsx',
+      ].map((file) => readFile(path.join(ROOT, file), 'utf8')),
+    )
+  ).join('\n')
 
   assert.doesNotMatch(actions, /'column'/)
   assert.doesNotMatch(page, /laid="column"/)

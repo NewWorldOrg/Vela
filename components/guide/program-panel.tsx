@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import type { ProgramBookingActions } from '@/components/guide/program-booking'
 import { ProgramBooking } from '@/components/guide/program-booking'
-import { ProgramDetailBody } from '@/components/guide/program-detail'
+import { ProgramDetailBody } from '@/components/guide/program-detail-body'
 
 export function ProgramPanel({
   program,

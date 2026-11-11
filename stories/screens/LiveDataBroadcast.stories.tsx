@@ -43,9 +43,9 @@ import {
   BAND_MOCK_WIDTH,
   BAND_UNDER_THE_BOX,
   DATA_BROADCAST_NAME,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
-import { LiveView } from '@/components/live/live-page'
+import { LiveView } from '@/components/live/live-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { slidOutWhole } from '@/stories/slid-out-whole'
 import { REMOTE_KEYS, compact } from '@/stories/remote-in-the-column'

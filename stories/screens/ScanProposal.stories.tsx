@@ -7,7 +7,7 @@ import {
   SCAN_PROPOSAL,
   SCAN_RUNNING_ON_A_LATER_BUILD,
 } from '@/repository/services.fixtures'
-import { ScanProposalView } from '@/components/scan/scan-proposal-page'
+import { ScanProposalView } from '@/components/scan/scan-proposal-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { scrollsInsideWithItsHeaderHeld } from '@/stories/scrolls-inside'
 import { inTheSettings } from '@/stories/frames'

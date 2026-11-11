@@ -15,10 +15,8 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { ReservationArea } from '@/components/guide/reservation-area'
 import { ProgramDescription } from '@/components/guide/program-description'
-import {
-  NotifyLeadChip,
-  NotifyStartButton,
-} from '@/components/notifications/programme-notice'
+import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
+import { NotifyStartButton } from '@/components/notifications/notify-start-button'
 import { marked } from '@/components/search/hit-parts'
 
 /** A hit beside the list on a phone held on its side: its title, when and where it is on, its genre and description, the reservation and, while it has not started, the notice of its start, as the guide's detail lays them; the whole of it is a press away. */

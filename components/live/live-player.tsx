@@ -88,7 +88,7 @@ import {
   PlayGlyph,
   VolumeIcon,
 } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import {
   PLAYER_BOARD,
   PLAYER_KEPT_AT_THE_TOP,
@@ -134,14 +134,12 @@ import {
   type PlayerBezel,
 } from '@/components/recordings/player-center'
 
-import {
-  DataBroadcastBand,
-  DataBroadcastFace,
-  DataBroadcastToggle,
-  DataBroadcastRemote,
-  widestColumn,
-} from '@/components/data-broadcast/data-broadcast-player'
-import { HybridcastFace } from '@/components/data-broadcast/hybridcast-frame'
+import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
+import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
+import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
+import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
+import { widestColumn } from '@/components/data-broadcast/data-broadcast-palette'
+import { HybridcastFace } from '@/components/data-broadcast/hybridcast-face'
 import { eventInformationOf } from '@/lib/hybridcast/event-information'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
 import { liveLineRelay } from '@/components/data-broadcast/line-relay'
@@ -166,21 +164,24 @@ import {
   type AskBacklog,
   type OpenSocket,
 } from '@/components/live/live-session'
-import { LiveFaultNotice, type LiveFault } from '@/components/live/live-notice'
+import {
+  LiveFaultNotice,
+  type LiveFault,
+} from '@/components/live/live-fault-notice'
 import {
   holdWireFormat,
   holdWireProfile,
 } from '@/components/live/live-wire-ahead'
 import { LiveSettings } from '@/components/live/live-settings'
-import type { GearAction } from '@/components/recordings/player-gear'
+import type { GearAction } from '@/components/recordings/gear-actions'
+import { DockFace } from '@/components/recordings/dock-face'
 import {
-  DockFace,
   PlayerDock,
-  PlayerStrip,
   type DockSide,
   type SideColumn,
 } from '@/components/recordings/player-dock'
-import { LiveStartupSteps } from '@/components/live/live-startup'
+import { PlayerStrip } from '@/components/recordings/player-strip'
+import { LiveStartupSteps } from '@/components/live/live-startup-steps'
 
 const RESTS = 3000
 

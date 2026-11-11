@@ -30,7 +30,7 @@ const SAYS_IT_WHOLE: { file: string; prints: RegExp; what: string }[] = [
     what: 'the title of a queued recording',
   },
   {
-    file: 'components/reservations/rules-page.tsx',
+    file: 'components/reservations/rules/rule-row.tsx',
     prints: /\{rule\.name\}/,
     what: 'the name of a rule and the conditions it stands for',
   },
@@ -44,8 +44,8 @@ const SAYS_IT_WHOLE: { file: string; prints: RegExp; what: string }[] = [
 const KEEPS_A_FIXED_BOX: string[] = [
   'components/library/recording-row.tsx',
   'components/guide/guide-grid.tsx',
-  'components/quality/quality-trend.tsx',
-  'components/vela/progress.tsx',
+  'components/quality/row.tsx',
+  'components/vela/signal-meter.tsx',
 ]
 
 const LIVE_CARDS: { file: string; prints: RegExp; what: string }[] = [
@@ -55,7 +55,7 @@ const LIVE_CARDS: { file: string; prints: RegExp; what: string }[] = [
     what: 'the programme on the channel it offers',
   },
   {
-    file: 'components/live/channel-grid.tsx',
+    file: 'components/live/channel-card.tsx',
     prints: /\{programme \? programme\.title : /,
     what: 'the programme on the channel it offers',
   },
@@ -151,7 +151,7 @@ test('the live panel shows the programme with the part the guide uses', async ()
 })
 
 test('the guide draws the description with the same part', async () => {
-  const source = await read('components/guide/program-detail.tsx')
+  const source = await read('components/guide/program-detail-body.tsx')
 
   assert.match(
     source,
@@ -161,7 +161,7 @@ test('the guide draws the description with the same part', async () => {
 })
 
 test('the signal meter lets the tip draw the box it clips', async () => {
-  const source = await read('components/vela/progress.tsx')
+  const source = await read('components/vela/signal-meter.tsx')
 
   assert.match(
     source,

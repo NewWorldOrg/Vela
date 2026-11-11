@@ -1,0 +1,124 @@
+'use client'
+
+import { useState, useTransition } from 'react'
+
+import { signedOut } from '@/lib/signed-out'
+import type { CollectionStatus, RebuildResult } from '@/repository/collection'
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
+import { InlineAlert } from '@/components/vela/inline-alert'
+import { CheckIcon, RebuildIcon } from '@/components/vela/icons'
+
+export function RebuildEpgDialog({
+  open,
+  onOpenChange,
+  kindCounts,
+  onRebuild,
+  onDiscarded,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  kindCounts: CollectionStatus['kindCounts']
+  onRebuild: () => Promise<RebuildResult>
+  onDiscarded: (discarded: number) => void
+}) {
+  const [pending, startTransition] = useTransition()
+  const [refusal, setRefusal] = useState<string>()
+
+  const run = () =>
+    startTransition(async () => {
+      setRefusal(undefined)
+
+      const result = await onRebuild()
+
+      if (result.state === 'ok') {
+        onDiscarded(result.discarded)
+        onOpenChange(false)
+
+        return
+      }
+
+      setRefusal(
+        result.state === 'unauthenticated' ? signedOut('実行') : result.message,
+      )
+    })
+
+  return (
+    <AlertDialog open={open} onOpenChange={onOpenChange}>
+      <AlertDialogContent className="sm:max-w-[calc(560rem/16)]">
+        <AlertDialogHeader>
+          <AlertDialogTitle className="flex items-center gap-2">
+            <RebuildIcon className="size-[calc(19rem/16)] text-coral" />
+            番組表を再構築します
+          </AlertDialogTitle>
+          <AlertDialogDescription>元に戻せません。</AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <dl className="grid grid-cols-[calc(96rem/16)_minmax(0,1fr)] gap-x-3.5 gap-y-2.5 text-ui max-[700px]:grid-cols-1">
+          <dt className="pt-0.5 text-sub text-ink-2">削除対象</dt>
+          <dd className="leading-[1.7]">
+            いまの番組表のデータ(未来{' '}
+            <span className="font-code tabular-nums">8</span> 日+過去{' '}
+            <span className="font-code tabular-nums">24</span> 時間)
+          </dd>
+        </dl>
+
+        <div className="rounded-xl bg-mint-soft px-3.5 py-[calc(11rem/16)]">
+          <div className="flex items-center gap-2 text-sub font-bold text-mint">
+            <CheckIcon className="size-[calc(15rem/16)]" />
+            削除対象外
+          </div>
+          <ul className="mt-1 space-y-0.5 text-sub leading-[1.75] text-ink-2">
+            <li className="flex gap-2">
+              <span
+                aria-hidden="true"
+                className="mt-[0.7em] size-[calc(5rem/16)] shrink-0 rounded-full bg-mint"
+              />
+              <span>
+                <b className="font-bold text-ink">過去番組のアーカイブ</b>
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span
+                aria-hidden="true"
+                className="mt-[0.7em] size-[calc(5rem/16)] shrink-0 rounded-full bg-mint"
+              />
+              <span>
+                <b className="font-bold text-ink">予約とチャンネル定義</b>
+              </span>
+            </li>
+            <li className="flex gap-2">
+              <span
+                aria-hidden="true"
+                className="mt-[0.7em] size-[calc(5rem/16)] shrink-0 rounded-full bg-mint"
+              />
+              <span>
+                <b className="font-bold text-ink">録画済み番組の情報</b>
+              </span>
+            </li>
+          </ul>
+        </div>
+
+        <span aria-live="polite">
+          {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+        </span>
+
+        <AlertDialogFooter>
+          <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
+          <Button variant="danger" disabled={pending} onClick={run}>
+            <RebuildIcon />
+            すべて削除して再構築する
+          </Button>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  )
+}

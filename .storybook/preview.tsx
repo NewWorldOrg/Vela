@@ -1,7 +1,7 @@
 import type { Preview } from '@storybook/nextjs'
 import { useEffect } from 'react'
 import '../app/globals.css'
-import { ThemeProvider } from '../components/theme/ThemeProvider'
+import { ThemeProvider } from '../components/theme/theme-provider'
 import type { ThemePreference } from '../lib/theme'
 import { afterTheArrival } from '../stories/after-the-arrival'
 

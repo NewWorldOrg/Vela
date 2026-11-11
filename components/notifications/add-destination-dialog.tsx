@@ -14,7 +14,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field } from '@/components/vela/field'
 import {
   BellIcon,
@@ -28,7 +28,7 @@ import {
   NoticeDialogFooter,
   NoticeDialogHeader,
   NoticeLabel,
-} from '@/components/notifications/notice-dialog'
+} from '@/components/notifications/notice-dialog-content'
 import { WebhookField } from '@/components/notifications/webhook-field'
 
 export interface BrowserDraft {

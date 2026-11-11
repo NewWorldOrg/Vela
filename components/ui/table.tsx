@@ -5,7 +5,7 @@ import * as React from 'react'
 import { useArrived } from '@/hooks/useArrived'
 
 import { cn } from '@/lib/utils'
-import { waitsWhile } from '@/components/vela/waiting'
+import { waitsWhile } from '@/components/vela/waiting-rows'
 
 function Table({
   className,

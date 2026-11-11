@@ -10,7 +10,7 @@ const ROOT = path.resolve(
   '..',
 )
 
-const THE_SHELL = 'components/vela/app-shell.tsx'
+const THE_SIDE_NAV = 'components/vela/admin-side-nav.tsx'
 
 const THE_LIBRARY_TABLE = 'components/library/recordings-table.tsx'
 
@@ -22,7 +22,16 @@ const THE_SHEET = 'app/globals.css'
 
 const THE_VOLUME = 'components/recordings/player-volume.tsx'
 
-const THE_RULES = 'components/reservations/rules-page.tsx'
+const THE_RULES = [
+  'components/reservations/rules-view.tsx',
+  'components/reservations/rules/rules-screen.tsx',
+  'components/reservations/rules/rule-row.tsx',
+  'components/reservations/rules/rule-editor.tsx',
+  'components/reservations/rules/excluded.tsx',
+  'components/reservations/rules/count.tsx',
+]
+
+const THE_RULE_EDITOR = 'components/reservations/rules/rule-editor.tsx'
 
 const THE_RULES_REFUSALS = 'repository/rules.ts'
 
@@ -39,11 +48,8 @@ async function read(file: string): Promise<string> {
 }
 
 test('the column of screens a setting sits beside is measured in letters', async () => {
-  const shell = await read(THE_SHELL)
-  const nav = shell.slice(
-    shell.indexOf('export function AdminSideNav('),
-    shell.indexOf('const SCREEN_WIDTHS'),
-  )
+  const sideNav = await read(THE_SIDE_NAV)
+  const nav = sideNav.slice(sideNav.indexOf('export function AdminSideNav('))
 
   assert.doesNotMatch(
     nav,
@@ -166,7 +172,7 @@ test('the mark on the volume sits on the line it reads against', async () => {
 })
 
 test('a rehearsal is the migration word; a rule looks at its matches', async () => {
-  for (const file of [THE_RULES, THE_RULES_REFUSALS]) {
+  for (const file of [...THE_RULES, THE_RULES_REFUSALS]) {
     assert.doesNotMatch(
       await read(file),
       /下見/,
@@ -175,7 +181,7 @@ test('a rehearsal is the migration word; a rule looks at its matches', async () 
     )
   }
 
-  assert.match(await read(THE_RULES), /この条件に一致する今後の番組/)
+  assert.match(await read(THE_RULE_EDITOR), /この条件に一致する今後の番組/)
 })
 
 async function sourcesUnder(dir: string): Promise<string[]> {

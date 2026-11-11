@@ -4,7 +4,7 @@ import { EmptyState } from '@/components/vela/empty-state'
 import { MarkDoubleCircle } from '@/components/vela/icons'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
-import { QualityChip } from '@/components/quality/signal-quality-chip'
+import { QualityChip } from '@/components/quality/quality-chip'
 
 const HEADING = '異常一覧'
 

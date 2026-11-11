@@ -5,14 +5,14 @@ import {
 import { LEFT_SCRAMBLED_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   stateColumnFor,
   tipBoxOf,
   toneOf,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 const UNMEASURED = '未計測'
 

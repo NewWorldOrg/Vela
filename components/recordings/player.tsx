@@ -108,7 +108,7 @@ import {
   SkipForwardIcon,
   VolumeIcon,
 } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import {
   PLAYER_BOARD,
   PLAYER_KEPT_AT_THE_TOP,
@@ -151,19 +151,17 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
-import type { GearAction } from '@/components/recordings/player-gear'
+import type { GearAction } from '@/components/recordings/gear-actions'
+import { DockFace } from '@/components/recordings/dock-face'
 import {
-  DockFace,
   PlayerDock,
-  PlayerStrip,
   type DockSide,
   type SideColumn,
 } from '@/components/recordings/player-dock'
+import { PlayerStrip } from '@/components/recordings/player-strip'
 import { CAPTION_GRIP } from '@/components/recordings/player-palette'
-import {
-  PlayerSkip,
-  PlayerSkipInTheRow,
-} from '@/components/recordings/player-skip'
+import { PlayerSkip } from '@/components/recordings/player-skip'
+import { PlayerSkipInTheRow } from '@/components/recordings/player-skip-in-the-row'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
@@ -182,13 +180,13 @@ import {
 } from '@/lib/player-fit'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
-import { AirPlayButton } from '@/components/recordings/external-player'
+import { AirPlayButton } from '@/components/recordings/air-play-button'
 import {
   askWhyItWouldNotPlay,
   faultOnTheFace,
   PlaybackFaultNotice,
   type PlaybackFault,
-} from '@/components/recordings/playback-fault'
+} from '@/components/recordings/playback-fault-notice'
 import { still } from '@/components/vela/tactile'
 import { RecordingCaptions } from '@/components/recordings/recording-captions'
 import { clearanceOf } from '@/components/recordings/caption-clearance'
@@ -215,13 +213,11 @@ import {
   type ReadDataBroadcast,
   type ReadDataBroadcastModule,
 } from '@/components/recordings/read-data-broadcast'
-import {
-  DataBroadcastBand,
-  DataBroadcastFace,
-  DataBroadcastRemote,
-  DataBroadcastToggle,
-  widestColumn,
-} from '@/components/data-broadcast/data-broadcast-player'
+import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
+import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
+import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
+import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
+import { widestColumn } from '@/components/data-broadcast/data-broadcast-palette'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
 import {
   useSeekEvents,

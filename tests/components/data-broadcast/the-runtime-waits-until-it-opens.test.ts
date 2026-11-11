@@ -89,7 +89,7 @@ test('a player page loads neither the data broadcast runtime nor the parser unti
     const loaded = await loadedWith(player)
 
     assert.ok(
-      loaded.has('components/data-broadcast/data-broadcast-player.tsx'),
+      loaded.has('components/data-broadcast/data-broadcast-palette.ts'),
       `${player} no longer reaches the data broadcast at all`,
     )
 

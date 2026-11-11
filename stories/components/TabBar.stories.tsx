@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, userEvent, within } from 'storybook/test'
 
-import { AppTabBar } from '@/app/(app)/_shell/tab-bar'
-import { AppTopBar } from '@/app/(app)/_shell/top-bar'
-import { AppFrame, ScreenMain, TabBadge } from '@/components/vela/app-shell'
-import { PageHeading } from '@/components/vela/section-heading'
-import { TintPanel } from '@/components/vela/surface'
+import { AppTabBar } from '@/app/(app)/_shell/app-tab-bar'
+import { AppTopBar } from '@/app/(app)/_shell/app-top-bar'
+import { AppFrame } from '@/components/vela/app-frame'
+import { ScreenMain } from '@/components/vela/screen-main'
+import { TabBadge } from '@/components/vela/tab-bar'
+import { PageHeading } from '@/components/vela/page-heading'
+import { TintPanel } from '@/components/vela/tint-panel'
 import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 

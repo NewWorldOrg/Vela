@@ -17,9 +17,9 @@ import {
   ROW_GRID,
   ROW_GROUND,
   ROW_LINE,
-  RowTimes,
   whereFrom,
 } from '@/components/reservations/reservation-row'
+import { RowTimes } from '@/components/reservations/row-times'
 import {
   ReservationStateChip,
   reservationStateLabelOf,

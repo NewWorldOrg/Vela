@@ -13,15 +13,15 @@ import { delayOf, rowArrivesIn, rowDelayMs } from '@/lib/arrival'
 import { Badge } from '@/components/ui/badge'
 import { IconButton } from '@/components/vela/icon-button'
 import { CloseIcon } from '@/components/vela/icons'
-import { useToast } from '@/components/vela/toast'
+import { useToast } from '@/components/vela/toasts'
 import {
   PICKING_GRID,
   ROW_GRID,
   ROW_GROUND,
   ROW_LINE,
-  RowTimes,
 } from '@/components/reservations/reservation-row'
-import { NotifyBell } from '@/components/notifications/programme-notice'
+import { RowTimes } from '@/components/reservations/row-times'
+import { NotifyBell } from '@/components/notifications/notify-bell'
 
 export const NOTIFY_ONLY = '通知'
 

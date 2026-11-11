@@ -20,10 +20,10 @@ import type {
   RuleWrite,
 } from '@/repository/rules'
 import { RULE_CHANNEL_FIXTURES, RULE_FIXTURES } from '@/stories/fixtures/rules'
-import type { RuleActions } from '@/components/reservations/rules-page'
+import type { RuleActions } from '@/components/reservations/rules-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
-import { RulesView } from '@/components/reservations/rules-page'
+import { RulesView } from '@/components/reservations/rules-view'
 import { inTheApp } from '@/stories/frames'
 
 interface Saved {

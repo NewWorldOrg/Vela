@@ -2,7 +2,7 @@
 
 import { useState, type PointerEvent } from 'react'
 
-import { Usher, type UsherMood } from '@/components/vela/marks'
+import { Usher, type UsherMood } from '@/components/vela/usher'
 
 const ANSWER = 'usher-answer'
 

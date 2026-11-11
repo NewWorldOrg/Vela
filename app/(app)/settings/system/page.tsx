@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 
 import { velaVersion } from '@/lib/version'
 import { getSystemStatus } from '@/repository/system'
-import { SystemView } from '@/components/system/system-page'
+import { SystemView } from '@/components/system/system-view'
 
 export const metadata: Metadata = { title: 'システム' }
 export const dynamic = 'force-dynamic'

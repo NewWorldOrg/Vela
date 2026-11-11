@@ -48,7 +48,7 @@ test('a face beside the picture takes the dark words whatever the theme', async 
 })
 
 test('choosing a theme swaps the class on html and nothing else', async () => {
-  const provider = await read('components/theme/ThemeProvider.tsx')
+  const provider = await read('components/theme/theme-provider.tsx')
 
   assert.match(provider, /classList\.toggle\('dark', preference === 'dark'\)/)
   assert.match(

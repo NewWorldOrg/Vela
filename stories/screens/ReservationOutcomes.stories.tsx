@@ -7,7 +7,7 @@ import {
   OUTCOME_FIXTURES,
   outcomeLedger,
 } from '@/stories/fixtures/reservation-outcomes'
-import { OutcomeLedgerView } from '@/components/reservations/outcomes-page'
+import { OutcomeLedgerView } from '@/components/reservations/outcome-ledger-view'
 import {
   bodyRows,
   cellOf,

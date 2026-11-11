@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { CloseIcon } from '@/components/vela/icons'
 import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
 import { WHEN_LABELS } from '@/lib/when-terms'

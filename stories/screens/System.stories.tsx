@@ -6,7 +6,7 @@ import {
   SYSTEM_STATUS,
   VELA_VERSION,
 } from '@/repository/system.fixtures'
-import { SystemView } from '@/components/system/system-page'
+import { SystemView } from '@/components/system/system-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { inTheSettings } from '@/stories/frames'
 

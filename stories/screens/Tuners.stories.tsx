@@ -10,7 +10,7 @@ import {
   DETECTION_MISMATCH_ONLY,
   TUNERS,
 } from '@/repository/tuners.fixtures'
-import { TunersView } from '@/components/tuners/tuners-page'
+import { TunersView } from '@/components/tuners/tuners-view'
 import { tipIn } from '@/stories/pills-in-a-column'
 import { inTheSettings } from '@/stories/frames'
 import { PHONE } from '@/stories/rows-as-cards'

@@ -1,5 +1,5 @@
 import { Badge } from '@/components/ui/badge'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 export function FileMissingChip() {
   return (

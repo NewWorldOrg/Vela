@@ -9,13 +9,12 @@ import { Badge } from '@/components/ui/badge'
 import { GenrePill } from '@/components/vela/genre-pill'
 import { saysSubtitled } from '@/lib/program-title'
 import { ChannelMark } from '@/components/vela/channel-mark'
-import { ProgressBar } from '@/components/vela/progress'
+import { ProgressBar } from '@/components/vela/progress-bar'
 import { pressable } from '@/components/vela/tactile'
-import {
-  ProgramDescription,
-  ProgramExtended,
-} from '@/components/guide/program-description'
-import { ReserveRing, useRecordInOnePress } from '@/components/live/phone-live'
+import { ProgramDescription } from '@/components/guide/program-description'
+import { ProgramExtended } from '@/components/guide/program-extended'
+import { ReserveRing } from '@/components/live/reserve-ring'
+import { useRecordInOnePress } from '@/components/live/record-this-button'
 
 function Dot() {
   return (

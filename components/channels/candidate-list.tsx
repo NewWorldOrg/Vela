@@ -22,14 +22,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { ActionRow } from '@/components/vela/action-row'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import {
   CheckIcon,
   PlusIcon,
   TrashIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { ProgressBar } from '@/components/vela/progress'
+import { ProgressBar } from '@/components/vela/progress-bar'
 import { AddCandidateDialog } from '@/components/channels/add-candidate-dialog'
 import { TermTip } from '@/components/vela/term-tip'
 import { useHeldWhileClosing } from '@/hooks/useHeldWhileClosing'

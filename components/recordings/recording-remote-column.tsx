@@ -8,10 +8,10 @@ import { useHeight } from '@/hooks/useHeight'
 import { useFoldingChannels, useSettled } from '@/components/live/channel-fold'
 import {
   COLUMN_BODY,
-  ColumnHead,
   PLAYER_SIDE_COLUMN,
-  RemoteSlot,
-} from '@/components/live/remote-column'
+} from '@/components/live/remote-column-palette'
+import { ColumnHead } from '@/components/live/column-head'
+import { RemoteSlot } from '@/components/live/remote-slot'
 
 /** The column's name, and its fold's: what it holds, as the recording's page has no channels to list. */
 const REMOTE = 'リモコン'

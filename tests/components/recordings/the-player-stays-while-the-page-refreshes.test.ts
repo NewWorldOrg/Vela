@@ -8,7 +8,7 @@ const ROOT = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
   '../../..',
 )
-const THE_DETAIL = 'components/recordings/recording-detail-page.tsx'
+const THE_DETAIL = 'components/recordings/recording-detail-view.tsx'
 
 test('the player is reopened only for what the address asks, never for the position the server remembers', async () => {
   const source = await readFile(path.join(ROOT, THE_DETAIL), 'utf8')

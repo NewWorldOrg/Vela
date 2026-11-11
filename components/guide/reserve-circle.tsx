@@ -1,12 +1,11 @@
 'use client'
 
-import { useState, useTransition, type CSSProperties } from 'react'
+import { useState, useTransition } from 'react'
 
 import { cn } from '@/lib/utils'
 import type { ProgramBooking } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
-import { useToast } from '@/components/vela/toast'
-import { PlusIcon } from '@/components/vela/icons'
+import { useToast } from '@/components/vela/toasts'
 import { pressable } from '@/components/vela/tactile'
 
 export type CircleMark = 'none' | 'booked' | 'recording'
@@ -148,32 +147,6 @@ export function ReserveCircle({
           className={cn('size-3.5 rounded-full', DOT[mark])}
         />
       </span>
-    </button>
-  )
-}
-
-/** The `+` a pointer finds at the top right of a programme still to come: one click reserves it. A touch screen never shows it, the programme's panel and the phone's row carrying the same press. */
-export function ReservePlus({
-  style,
-  ...reserving
-}: Parameters<typeof useOneTapReserve>[0] & { style?: CSSProperties }) {
-  const { mark, press } = useOneTapReserve(reserving)
-
-  if (mark !== 'none') {
-    return null
-  }
-
-  return (
-    <button
-      type="button"
-      data-slot="reserve-plus"
-      data-tap-exempt="a pointer's shortcut, the panel the cell opens carrying the same press"
-      aria-label={`${reserving.title}を予約`}
-      onClick={press}
-      style={style}
-      className="guide-add"
-    >
-      <PlusIcon className="size-3.5" strokeWidth={2} />
     </button>
   )
 }

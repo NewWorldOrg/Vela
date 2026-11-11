@@ -3,7 +3,7 @@ import { expect, userEvent, within } from 'storybook/test'
 
 import { MOTION_LABEL } from '@/lib/motion'
 import { THEME_COOKIE } from '@/lib/theme'
-import { DisplayView } from '@/components/display/display-page'
+import { DisplayView } from '@/components/display/display-view'
 import { askedForLessMotion } from '@/stories/asked-for-less-motion'
 import { inTheSettings } from '@/stories/frames'
 
