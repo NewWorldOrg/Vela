@@ -7,7 +7,6 @@ import {
   NOT_APPLICABLE,
   backToAutomaticRefusalOf,
   boundaryMatchOf,
-  switchRefusalOf,
   versionLabel,
 } from '@/lib/segment-detection'
 import type {
@@ -16,17 +15,6 @@ import type {
   SegmentVersionState,
 } from '@/repository/segment-status'
 import type { SegmentVersionWrite } from '@/repository/segments'
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { ActionRow } from '@/components/vela/action-row'
 import {
@@ -44,12 +32,12 @@ import {
   type StateTone,
 } from '@/components/recordings/status-cell'
 import { InlineAlert } from '@/components/vela/inline-alert'
-import { MarkAxis } from '@/components/vela/icons'
 import { InFull } from '@/components/vela/in-full'
 import { Spinner } from '@/components/vela/spinner'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { LearningRounds } from '@/components/segments/learning-rounds'
 import { VERSIONS_HEADING } from '@/components/segments/wording'
+import { SwitchVersionButton } from '@/components/segments/switch-version-button'
 
 const STATES: Record<SegmentVersionState, { word: string; tone: StateTone }> = {
   active: { word: '使用中', tone: 'ok' },
@@ -211,87 +199,5 @@ function Standing({ version }: { version: SegmentVersion }) {
     </InFull>
   ) : (
     said
-  )
-}
-
-function SwitchVersionButton({
-  number,
-  onChoose,
-}: {
-  number: number
-  onChoose: ChooseSegmentVersion
-}) {
-  const [asking, setAsking] = useState(false)
-  const [refusal, setRefusal] = useState<string>()
-  const [pending, startTransition] = useTransition()
-  const label = versionLabel(number)
-
-  const choose = () => {
-    if (pending) {
-      return
-    }
-
-    startTransition(async () => {
-      setRefusal(undefined)
-
-      const result = await onChoose(number)
-
-      if (result.state === 'ok') {
-        setAsking(false)
-
-        return
-      }
-
-      setRefusal(switchRefusalOf(result.state))
-    })
-  }
-
-  return (
-    <AlertDialog
-      open={asking}
-      onOpenChange={(open) => {
-        if (!open) {
-          setRefusal(undefined)
-        }
-
-        setAsking(open)
-      }}
-    >
-      <AlertDialogTrigger asChild>
-        <Button
-          type="button"
-          variant="tone"
-          size="sm"
-          aria-label={`${label}に切り替え`}
-        >
-          切り替え
-        </Button>
-      </AlertDialogTrigger>
-      <AlertDialogContent>
-        <AlertDialogHeader>
-          <AlertDialogTitle>{label}に切り替えます</AlertDialogTitle>
-          <AlertDialogDescription>
-            {`録画の CM・OP・ED の位置を${label}で判定し直します。自動では切り替わらなくなります。`}
-          </AlertDialogDescription>
-        </AlertDialogHeader>
-        <span aria-live="polite">
-          {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
-        </span>
-        <AlertDialogFooter>
-          <AlertDialogCancel disabled={pending}>キャンセル</AlertDialogCancel>
-          <AlertDialogAction
-            variant="default"
-            disabled={pending}
-            onClick={(event) => {
-              event.preventDefault()
-              choose()
-            }}
-          >
-            {pending && <Spinner size="control" />}
-            切り替える
-          </AlertDialogAction>
-        </AlertDialogFooter>
-      </AlertDialogContent>
-    </AlertDialog>
   )
 }

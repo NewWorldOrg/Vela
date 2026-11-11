@@ -20,8 +20,8 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/page-heading'
 import { ApplyScanAction } from '@/components/scan/apply-scan-button'
-import { ScanAttemptsTable } from '@/components/scan/scan-run-panel'
-import { FailureLegend } from '@/components/scan/failure-mark'
+import { ScanAttemptsTable } from '@/components/scan/scan-attempts-table'
+import { FailureLegend } from '@/components/scan/failure-legend'
 
 const CHANNEL_KIND_LABEL = {
   added: '追加',

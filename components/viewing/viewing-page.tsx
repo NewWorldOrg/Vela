@@ -29,7 +29,7 @@ import {
   SettingsGroup,
   SettingsRow,
 } from '@/components/vela/settings-rows'
-import { UnreadSurface } from '@/components/segments/value-rows'
+import { UnreadSurface } from '@/components/segments/unread-surface'
 import {
   ResidencePanel,
   RESIDENCE_SLOT,

@@ -28,13 +28,13 @@ import { ActionRow } from '@/components/vela/action-row'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
-import { ChangeDestinationButton } from '@/components/encode/change-definition-button'
+import { ChangeDestinationButton } from '@/components/encode/change-destination-button'
 import {
   DefinitionName,
-  RemovalNotice,
   RETIRED_ROW,
   STICKY_HEAD,
 } from '@/components/encode/definition-list'
+import { RemovalNotice } from '@/components/encode/removal-notice'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
 /** When a destination was made is said under its name, so the table fits the settings frame. */

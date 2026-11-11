@@ -19,7 +19,7 @@ import {
 } from '@/components/segments/precision-panel'
 import type { SettleSkipThreshold } from '@/components/segments/skip-threshold-panel'
 import { SkipThresholdPanel } from '@/components/segments/skip-threshold-panel'
-import { UnreadSurface } from '@/components/segments/value-rows'
+import { UnreadSurface } from '@/components/segments/unread-surface'
 import type {
   ChooseSegmentVersion,
   LeaveSegmentVersionToLearning,

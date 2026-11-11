@@ -5,7 +5,8 @@ import { Curtain } from '@/components/vela/curtain'
 import { Toasts } from '@/components/vela/toast'
 import { KeptRowsAcrossTurns } from '@/components/vela/kept-rows-across-turns'
 
-import { ConflictsBadge, ConflictsCount } from './_shell/conflicts-badge'
+import { ConflictsBadge } from './_shell/conflicts-badge'
+import { ConflictsCount } from './_shell/conflicts-count'
 import { AppTabBar } from './_shell/tab-bar'
 import { AppTopBar } from './_shell/top-bar'
 

@@ -16,10 +16,8 @@ import { TopBar } from '@/components/vela/top-bar'
 import { PhoneBarLeadSlot } from '@/components/vela/phone-bar-lead'
 import { PhoneBarToolsSlot } from '@/components/vela/phone-bar-tools'
 import { SearchIcon } from '@/components/vela/icons'
-import {
-  BarThemeButton,
-  PhoneThemeButton,
-} from '@/components/theme/ThemeToggle'
+import { BarThemeButton } from '@/components/theme/bar-theme-button'
+import { PhoneThemeButton } from '@/components/theme/phone-theme-button'
 
 const SERVICES = DESTINATIONS.filter(({ href }) => href !== SETTINGS_HREF)
 

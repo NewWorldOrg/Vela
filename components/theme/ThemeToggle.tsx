@@ -10,8 +10,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { useTheme } from '@/components/theme/ThemeProvider'
-import { cn } from '@/lib/utils'
-import { PHONE_BAR_BUTTON } from '@/components/vela/app-shell'
 import { IconButton } from '@/components/vela/icon-button'
 import { THEME_LABEL, type ThemePreference } from '@/lib/theme'
 import {
@@ -22,7 +20,7 @@ import {
   type IconProps,
 } from '@/components/vela/icons'
 
-interface ThemeToggleProps {
+export interface ThemeToggleProps {
   className?: string
 }
 
@@ -79,44 +77,5 @@ export function ThemeToggle({ className }: ThemeToggleProps) {
         })}
       </DropdownMenuContent>
     </DropdownMenu>
-  )
-}
-
-/** The theme in the bar at the top of a phone held upright: one press turns the page to the other of light and dark, from whichever it is showing, and goes back to following the device when that other is the device's theme. */
-export function PhoneThemeButton({ className }: ThemeToggleProps) {
-  const { mode, press } = useTheme()
-  const Icon = mode === 'dark' ? MoonIcon : SunIcon
-
-  return (
-    <IconButton
-      aria-label="テーマ"
-      className={cn(PHONE_BAR_BUTTON, className)}
-      onClick={press}
-    >
-      <Icon />
-    </IconButton>
-  )
-}
-
-/** The theme in the bar at the top of a wide window, beside the settings: one press turns the page to the other of light and dark, as on a phone. */
-export function BarThemeButton({ className }: ThemeToggleProps) {
-  const { mode, press } = useTheme()
-  const Icon = mode === 'dark' ? MoonIcon : SunIcon
-
-  return (
-    <button
-      type="button"
-      data-slot="bar-theme"
-      aria-label="テーマ"
-      onClick={press}
-      className={cn(
-        'tap-target relative grid size-[calc(38*var(--px))] cursor-pointer place-items-center rounded-full text-ink-2 outline-none phone:hidden [&_svg]:size-5',
-        'transition-[background-color,color,transform] duration-[140ms] ease-toy',
-        'hover:bg-surface hover:text-ink focus-visible:shadow-ring active:scale-95',
-        className,
-      )}
-    >
-      <Icon />
-    </button>
   )
 }
