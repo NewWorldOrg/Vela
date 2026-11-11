@@ -7,6 +7,8 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/(app)/guide/actions.test.ts',
+  'tests/app/(app)/settings/notifications/actions.test.ts',
   'tests/app/(app)/settings/segments/actions.test.ts',
   'tests/app/a-fold-comes-with-the-page.test.ts',
   'tests/app/the-app-goes-on-the-home-screen.test.ts',
@@ -133,6 +135,7 @@ const THE_SUITE = [
   'tests/lib/live-wire.test.ts',
   'tests/lib/motion.test.ts',
   'tests/lib/not-yet-in-this-build.test.ts',
+  'tests/lib/notifications.test.ts',
   'tests/lib/packed-rows.test.ts',
   'tests/lib/path.test.ts',
   'tests/lib/phone-bar.test.ts',
@@ -192,6 +195,7 @@ const THE_SUITE = [
   'tests/repository/live-viewers.test.ts',
   'tests/repository/live.test.ts',
   'tests/repository/migration.test.ts',
+  'tests/repository/notifications.test.ts',
   'tests/repository/oidc.test.ts',
   'tests/repository/playback-sources.test.ts',
   'tests/repository/programs.test.ts',

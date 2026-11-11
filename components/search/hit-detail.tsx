@@ -5,6 +5,7 @@ import Link from 'next/link'
 
 import { SPAN_DASH } from '@/lib/format'
 import { newRuleHref, seriesTermsOf } from '@/lib/rules'
+import type { Noticing } from '@/lib/notifications'
 import type { SearchHit } from '@/repository/search'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Badge } from '@/components/ui/badge'
@@ -14,17 +15,23 @@ import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronRightIcon } from '@/components/vela/icons'
 import { ReservationArea } from '@/components/guide/reservation-area'
 import { ProgramDescription } from '@/components/guide/program-description'
+import {
+  NotifyLeadChip,
+  NotifyStartButton,
+} from '@/components/notifications/programme-notice'
 import { marked } from '@/components/search/hit-parts'
 
-/** A hit beside the list on a phone held on its side: its title, when and where it is on, its genre and description, and the reservation, as the guide's detail lays them; the whole of it is a press away. */
+/** A hit beside the list on a phone held on its side: its title, when and where it is on, its genre and description, the reservation and, while it has not started, the notice of its start, as the guide's detail lays them; the whole of it is a press away. */
 export function HitDetail({
   hit,
   words,
   onReserve,
+  noticing,
 }: {
   hit: SearchHit
   words: readonly string[]
   onReserve?: (programmeId: string) => Promise<ReservationWrite>
+  noticing?: Noticing
 }) {
   const series = hit.channelId
     ? seriesTermsOf(hit.title, hit.channelId)
@@ -55,6 +62,7 @@ export function HitDetail({
             予約済み
           </Badge>
         )}
+        {hit.watch && <NotifyLeadChip leadMinutes={hit.watch.leadMinutes} />}
       </div>
       {hit.description && (
         <div className="mt-3.5 border-t border-dashed border-line pt-3.5">
@@ -67,6 +75,16 @@ export function HitDetail({
             programmeId={hit.id}
             seriesHref={series ? newRuleHref(series) : undefined}
             onReserve={onReserve}
+            notice={
+              hit.ahead &&
+              noticing && (
+                <NotifyStartButton
+                  programmeId={hit.id}
+                  watch={hit.watch}
+                  noticing={noticing}
+                />
+              )
+            }
           />
         )}
         <Button variant="tone" size="sm" className="mt-3" asChild>

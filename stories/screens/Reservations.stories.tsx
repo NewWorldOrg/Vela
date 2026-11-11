@@ -1,6 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, screen, userEvent, waitFor, within } from 'storybook/test'
+import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
+import type {
+  NotificationWrite,
+  WaitingNotices,
+  WatchedProgramme,
+} from '@/lib/notifications'
 import type {
   Reservation,
   ReservationBatch,
@@ -19,6 +24,7 @@ import {
   SETTLED_RESERVATION_FIXTURES,
 } from '@/stories/fixtures/reservations'
 import { ReservationsView } from '@/components/reservations/reservations-page'
+import { NOTIFY_ONLY } from '@/components/notifications/notify-only-row'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { tipIn } from '@/stories/pills-in-a-column'
 import { inTheApp } from '@/stories/frames'
@@ -1487,3 +1493,255 @@ export const 横向きの電話は予約の一覧と競合を左右に置き押�
       )
     },
   }
+
+const HARBOUR_AT_NIGHT: WatchedProgramme = {
+  id: 'watch-harbour',
+  title: 'ドキュメント 灯りの仕事「夜の港、最後の便まで」',
+  channelName: 'みなと総合1',
+  startAt: '2026-08-08T13:30:00.000Z',
+  endAt: '2026-08-08T14:15:00.000Z',
+  leadMinutes: 3,
+  destinationNames: ['家の Slack', 'iPad の Safari'],
+}
+
+const BAY_CUP: WatchedProgramme = {
+  id: 'watch-cup',
+  title: 'サッカー中継 湾岸カップ 準決勝',
+  channelName: '第一テレビ',
+  startAt: '2026-08-09T10:00:00.000Z',
+  endAt: '2026-08-09T11:30:00.000Z',
+  leadMinutes: 0,
+  destinationNames: ['家の Slack'],
+}
+
+const takenBack = fn<(id: string) => Promise<NotificationWrite>>(async () => ({
+  state: 'ok',
+}))
+
+const NOTICES: WaitingNotices = {
+  watches: [BAY_CUP, HARBOUR_AT_NIGHT],
+  onCancel: takenBack,
+}
+
+function watchRow(within_: HTMLElement, watch: WatchedProgramme): HTMLElement {
+  const row = within_.querySelector<HTMLElement>(`li[data-watch="${watch.id}"]`)
+
+  if (!row) {
+    throw new Error(`${watch.title} has no row of its own`)
+  }
+
+  return row
+}
+
+function startsOf(list: HTMLElement): string[] {
+  return [...list.querySelectorAll<HTMLElement>('li')]
+    .filter((row) => row.parentElement?.closest('li') === null)
+    .map((row) => /\d{2}:\d{2}/.exec(row.textContent ?? '')?.[0] ?? '')
+}
+
+export const 放送開始の通知は予約のあいだに開始の順で並ぶ: Story = {
+  args: { result: shown(RESERVATION_FIXTURES), notices: NOTICES },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const list = listOf(canvasElement)
+    const row = watchRow(list, HARBOUR_AT_NIGHT)
+
+    await expect(list.querySelectorAll('li[data-watch]')).toHaveLength(2)
+    await expect(within(row).getByText(NOTIFY_ONLY)).toBeVisible()
+    await expect(
+      within(row).getByText(
+        'みなと総合1 · 3 分前 · 家の Slack・iPad の Safari',
+      ),
+    ).toBeVisible()
+    await expect(
+      within(watchRow(list, BAY_CUP)).getByText(
+        '第一テレビ · 開始時 · 家の Slack',
+      ),
+    ).toBeVisible()
+    await expect(row.querySelector('[data-slot="row-chips"]')).toBeNull()
+
+    const starts = startsOf(row.parentElement!)
+    const at = starts.indexOf('22:30')
+
+    await expect(at).toBeGreaterThan(0)
+    await expect(starts[at - 1] <= '22:30').toBe(true)
+    await expect(starts[at + 1] >= '22:30').toBe(true)
+
+    const middles = [...row.firstElementChild!.children].map((one) => {
+      const box = one.getBoundingClientRect()
+
+      return Math.round(box.top + box.height / 2)
+    })
+
+    await expect(Math.max(...middles) - Math.min(...middles)).toBeLessThan(3)
+  },
+}
+
+export const 放送開始の通知は行のばつで取り消す: Story = {
+  args: { result: shown(RESERVATION_FIXTURES), notices: NOTICES },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    takenBack.mockClear()
+
+    await userEvent.click(
+      within(watchRow(listOf(canvasElement), BAY_CUP)).getByRole('button', {
+        name: `${BAY_CUP.title} の通知を取り消す`,
+      }),
+    )
+
+    await waitFor(() => expect(takenBack).toHaveBeenCalledWith(BAY_CUP.id))
+    await expect(
+      await screen.findByText(`通知を取り消しました ${BAY_CUP.title}`),
+    ).toBeVisible()
+  },
+}
+
+const NOTICE_ALREADY_SENT =
+  'この通知はもう済んでいるため、取り消せませんでした。'
+
+export const 放送開始の通知の取り消しを断られる: Story = {
+  args: {
+    result: shown(RESERVATION_FIXTURES),
+    notices: {
+      ...NOTICES,
+      onCancel: async () => ({
+        state: 'rejected',
+        message: NOTICE_ALREADY_SENT,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const cancel = within(watchRow(listOf(canvasElement), BAY_CUP)).getByRole(
+      'button',
+      { name: `${BAY_CUP.title} の通知を取り消す` },
+    )
+
+    await userEvent.click(cancel)
+
+    const said = await screen.findByText(NOTICE_ALREADY_SENT)
+
+    await expect(said.closest('[data-slot="toast"]')).toBeVisible()
+    await waitFor(() => expect(cancel).toBeEnabled())
+    await expect(
+      listOf(canvasElement).querySelectorAll('li[data-watch]'),
+    ).toHaveLength(2)
+  },
+}
+
+export const 放送開始の通知は選ぶ対象にならない: Story = {
+  args: { result: shown(RESERVATION_FIXTURES), notices: NOTICES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+    await startPicking(canvas)
+
+    const list = listOf(canvasElement)
+    const row = watchRow(list, HARBOUR_AT_NIGHT)
+
+    await expect(within(row).queryByRole('checkbox')).toBeNull()
+
+    const booked = list.querySelector<HTMLElement>('li[data-reservation]')!
+    const timeOf = (one: HTMLElement) =>
+      [...one.querySelectorAll<HTMLElement>('*')]
+        .find((part) => /^\d{2}:\d{2}/.test(part.textContent ?? ''))!
+        .getBoundingClientRect().left
+
+    await expect(Math.abs(timeOf(row) - timeOf(booked))).toBeLessThan(2)
+  },
+}
+
+export const 予約が無くても放送開始の通知は並ぶ: Story = {
+  args: { result: shown([]), notices: NOTICES },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await afterTheArrival(canvasElement)
+
+    await expect(
+      canvas.queryByRole('heading', { name: '予約がありません' }),
+    ).toBeNull()
+    await expect(
+      listOf(canvasElement).querySelectorAll('li[data-watch]'),
+    ).toHaveLength(2)
+    await expect(canvas.queryByRole('button', { name: '選ぶ' })).toBeNull()
+  },
+}
+
+export const 番組変更だけに絞ると放送開始の通知は出ない: Story = {
+  args: {
+    result: shown(
+      EPG_DRIFT_FIXTURES.filter((one) => one.epg?.diverged),
+      {
+        total: EPG_DRIFT_FIXTURES.length,
+        drift: { diverged: 2, missing: 1 },
+        filter: { epg: 'diverged' },
+      },
+    ),
+    notices: NOTICES,
+  },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    await expect(
+      listOf(canvasElement).querySelectorAll('li[data-watch]'),
+    ).toHaveLength(0)
+  },
+}
+
+export const 電話の幅でも放送開始の通知は予約のあいだに並ぶ: Story = {
+  args: { result: shown(RESERVATION_FIXTURES), notices: NOTICES },
+  parameters: { screen: PHONE, coarse: true },
+  play: async ({ canvasElement }) => {
+    await afterTheArrival(canvasElement)
+
+    const list = await waitFor(() => phoneList(canvasElement))
+    const row = watchRow(list, HARBOUR_AT_NIGHT)
+
+    await expect(list.querySelectorAll('li[data-watch]')).toHaveLength(2)
+    await expect(within(row).getByText(NOTIFY_ONLY)).toBeVisible()
+    await expect(row.previousElementSibling).not.toBeNull()
+    await expect(row.nextElementSibling).not.toBeNull()
+    await expect(row.getBoundingClientRect().right).toBeLessThanOrEqual(
+      window.innerWidth,
+    )
+
+    const takeBack = within(row).getByRole('button', {
+      name: `${HARBOUR_AT_NIGHT.title} の通知を取り消す`,
+    })
+
+    await expect(takeBack.getBoundingClientRect().width).toBeGreaterThanOrEqual(
+      44,
+    )
+
+    takenBack.mockClear()
+    await userEvent.click(takeBack)
+    await waitFor(() =>
+      expect(takenBack).toHaveBeenCalledWith(HARBOUR_AT_NIGHT.id),
+    )
+  },
+}
+
+export const 横向きの電話でも放送開始の通知は一覧に並ぶ: Story = {
+  args: { result: shown(RESERVATION_FIXTURES), notices: NOTICES },
+  parameters: { screen: { width: 844, height: 390 }, coarse: true },
+  play: async ({ canvasElement }) => {
+    const pane = await waitFor(() => {
+      const found =
+        canvasElement.querySelector<HTMLElement>('[data-pane="list"]')
+
+      expect(found).not.toBeNull()
+
+      return found!
+    })
+
+    await expect(pane.querySelectorAll('li[data-watch]')).toHaveLength(2)
+    await expect(
+      within(watchRow(pane, BAY_CUP)).getByText(NOTIFY_ONLY),
+    ).toBeVisible()
+  },
+}

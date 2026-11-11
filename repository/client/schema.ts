@@ -1053,6 +1053,150 @@ export interface paths {
     patch: operations['reviseQualityThreshold']
     trace?: never
   }
+  '/api/notifications/watches/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['cancelNotificationWatch']
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/destinations': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listNotificationDestinations']
+    put?: never
+    post: operations['createNotificationDestination']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/rules': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listNotificationRules']
+    put?: never
+    post: operations['createNotificationRule']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/watches': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listNotificationWatches']
+    put?: never
+    post: operations['createNotificationWatch']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/settings': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getNotificationSettings']
+    put: operations['putNotificationSettings']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/deliveries': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['listNotificationDeliveries']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/destinations/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['removeNotificationDestination']
+    options?: never
+    head?: never
+    patch: operations['reviseNotificationDestination']
+    trace?: never
+  }
+  '/api/notifications/rules/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post?: never
+    delete: operations['removeNotificationRule']
+    options?: never
+    head?: never
+    patch: operations['reviseNotificationRule']
+    trace?: never
+  }
+  '/api/notifications/destinations/{id}/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['testNotificationDestination']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/migration/record': {
     parameters: {
       query?: never
@@ -1984,6 +2128,56 @@ export interface components {
       message: string
       data: null | components['schemas']['MigrationRecordResponder']
     }
+    BaseResponderOfNoticeTrialResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NoticeTrialResponder']
+    }
+    BaseResponderOfNotificationDeliveryListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationDeliveryListResponder']
+    }
+    BaseResponderOfNotificationDestinationListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationDestinationListResponder']
+    }
+    BaseResponderOfNotificationDestinationResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationDestinationResponder']
+    }
+    BaseResponderOfNotificationRemovalResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationRemovalResponder']
+    }
+    BaseResponderOfNotificationRuleListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationRuleListResponder']
+    }
+    BaseResponderOfNotificationRuleResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationRuleResponder']
+    }
+    BaseResponderOfNotificationSettingsResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationSettingsResponder']
+    }
+    BaseResponderOfNotificationWatchListResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationWatchListResponder']
+    }
+    BaseResponderOfNotificationWatchResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['NotificationWatchResponder']
+    }
     BaseResponderOfOidcConfigRefusedResponder: {
       status: boolean
       message: string
@@ -2469,6 +2663,40 @@ export interface components {
       rateFactor?: null | number | string
       /** Format: int32 */
       quantiser?: null | number | string
+    }
+    CreateNotificationDestinationRequest: {
+      name?: null | string
+      url?: null | string
+    }
+    CreateNotificationRuleRequest: {
+      name?: null | string
+      enabled?: null | boolean
+      events?:
+        | null
+        | (
+            | 'recordingStarted'
+            | 'recordingCompleted'
+            | 'recordingTruncated'
+            | 'recordingFailed'
+            | 'encodeStarted'
+            | 'encodeCompleted'
+            | 'encodeFailed'
+            | 'reservationCompeting'
+            | 'reservationMissed'
+            | 'programmeMoved'
+            | 'qualityIncidentDetected'
+            | 'qualityIncidentResolved'
+            | 'deviceDisconnected'
+          )[]
+      destinations?: null | string[]
+    }
+    CreateNotificationWatchRequest: {
+      programme?: null | string
+      /** Format: date-time */
+      programmeStartsAt?: null | string
+      /** Format: int32 */
+      leadMinutes?: null | number | string
+      destinations?: null | string[]
     }
     CreateReservationRequest: {
       programme?: null | string
@@ -3215,6 +3443,152 @@ export interface components {
       /** Format: date-time */
       lastRehearsalFinishedAt: null | string
     }
+    /** @enum {null|string} */
+    NoticeFailure:
+      | 'timedOut'
+      | 'rateLimited'
+      | 'serverFailed'
+      | 'unreachable'
+      | 'rejected'
+      | 'destinationDisabled'
+      | 'unreadable'
+      | 'tooOld'
+      | 'tlsFailed'
+      | null
+    /** @enum {string} */
+    NoticeKind:
+      | 'recordingStarted'
+      | 'recordingCompleted'
+      | 'recordingTruncated'
+      | 'recordingFailed'
+      | 'encodeStarted'
+      | 'encodeCompleted'
+      | 'encodeFailed'
+      | 'reservationCompeting'
+      | 'reservationMissed'
+      | 'programmeMoved'
+      | 'qualityIncidentDetected'
+      | 'qualityIncidentResolved'
+      | 'deviceDisconnected'
+      | 'programmeStarting'
+      | 'watchedProgrammeMoved'
+      | 'watchedProgrammeGone'
+    NoticeTrialResponder: {
+      delivered: boolean
+      failure: null | components['schemas']['NoticeFailure']
+    }
+    NotificationDeliveryListResponder: {
+      /** Format: int32 */
+      perPage: number | string
+      items: components['schemas']['NotificationDeliveryResponder'][]
+    }
+    NotificationDeliveryResponder: {
+      /** Format: uuid */
+      id: string
+      kind: components['schemas']['NoticeKind']
+      title: string
+      /** Format: date-time */
+      occurredAt: string
+      state: components['schemas']['NotificationDeliveryState']
+      /** Format: int32 */
+      attempts: number | string
+      /** Format: date-time */
+      queuedAt: string
+      /** Format: date-time */
+      sentAt: null | string
+      /** Format: date-time */
+      nextAttemptAt: null | string
+      failure: null | components['schemas']['NoticeFailure']
+    }
+    /** @enum {string} */
+    NotificationDeliveryState: 'queued' | 'sent' | 'failed' | 'givenUp'
+    NotificationDestinationListResponder: {
+      items: components['schemas']['NotificationDestinationResponder'][]
+    }
+    NotificationDestinationResponder: {
+      /** Format: uuid */
+      id: string
+      name: string
+      kind: components['schemas']['WebhookTarget']
+      tail: string
+      enabled: boolean
+      readable: boolean
+      /** Format: date-time */
+      lastResultAt: null | string
+      lastFailure: null | components['schemas']['NoticeFailure']
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      changedAt: string
+    }
+    NotificationRemovalResponder: {
+      /** Format: uuid */
+      id: string
+    }
+    NotificationRuleListResponder: {
+      items: components['schemas']['NotificationRuleResponder'][]
+    }
+    NotificationRuleResponder: {
+      /** Format: uuid */
+      id: string
+      name: string
+      enabled: boolean
+      events: (
+        | 'recordingStarted'
+        | 'recordingCompleted'
+        | 'recordingTruncated'
+        | 'recordingFailed'
+        | 'encodeStarted'
+        | 'encodeCompleted'
+        | 'encodeFailed'
+        | 'reservationCompeting'
+        | 'reservationMissed'
+        | 'programmeMoved'
+        | 'qualityIncidentDetected'
+        | 'qualityIncidentResolved'
+        | 'deviceDisconnected'
+      )[]
+      destinations: string[]
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      changedAt: string
+    }
+    NotificationSettingsResponder: {
+      /** Format: int32 */
+      notifyLeadMinutes: number | string
+      publicOriginKnown: boolean
+    }
+    NotificationWatchListResponder: {
+      items: components['schemas']['NotificationWatchResponder'][]
+    }
+    NotificationWatchResponder: {
+      /** Format: uuid */
+      id: string
+      programmeId: string
+      /** Format: int32 */
+      networkId: number | string
+      /** Format: int32 */
+      serviceId: number | string
+      /** Format: int32 */
+      eventId: number | string
+      /** Format: date-time */
+      startsAt: string
+      /** Format: date-time */
+      endsAt: string
+      programmeName: string
+      stationName: null | string
+      /** Format: int32 */
+      leadMinutes: number | string
+      destinations: string[]
+      state: components['schemas']['ProgrammeWatchState']
+      /** Format: date-time */
+      notifiedAt: null | string
+      /** Format: date-time */
+      createdAt: string
+      /** Format: date-time */
+      changedAt: string
+    }
     /** @enum {string} */
     OidcConfigRefusal:
       | 'secretRequired'
@@ -3387,6 +3761,8 @@ export interface components {
     }
     /** @enum {string} */
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
+    /** @enum {string} */
+    ProgrammeWatchState: 'waiting' | 'notified' | 'skipped' | 'cancelled'
     PutDataBroadcastSettingsRequest: {
       postalCode: null | string
       /** Format: int32 */
@@ -3396,6 +3772,10 @@ export interface components {
       automatically?: null | boolean
       /** Format: int32 */
       mostCores?: null | number | string
+    }
+    PutNotificationSettingsRequest: {
+      /** Format: int32 */
+      notifyLeadMinutes?: null | number | string
     }
     PutPlaybackPositionRequest: {
       /** Format: double */
@@ -4326,6 +4706,33 @@ export interface components {
       /** Format: int32 */
       quantiser?: null | number | string
     }
+    ReviseNotificationDestinationRequest: {
+      name?: null | string
+      url?: null | string
+      enabled?: null | boolean
+    }
+    ReviseNotificationRuleRequest: {
+      name?: null | string
+      enabled?: null | boolean
+      events?:
+        | null
+        | (
+            | 'recordingStarted'
+            | 'recordingCompleted'
+            | 'recordingTruncated'
+            | 'recordingFailed'
+            | 'encodeStarted'
+            | 'encodeCompleted'
+            | 'encodeFailed'
+            | 'reservationCompeting'
+            | 'reservationMissed'
+            | 'programmeMoved'
+            | 'qualityIncidentDetected'
+            | 'qualityIncidentResolved'
+            | 'deviceDisconnected'
+          )[]
+      destinations?: null | string[]
+    }
     ReviseQualityThresholdRequest: {
       /** Format: double */
       value: null | number | string
@@ -5114,6 +5521,8 @@ export interface components {
       /** Format: int32 */
       versionChanges: number | string
     }
+    /** @enum {string} */
+    WebhookTarget: 'slack' | 'discord'
   }
   responses: never
   parameters: never
@@ -9383,6 +9792,819 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfQualityThresholdResponder']
+        }
+      }
+    }
+  }
+  cancelNotificationWatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+    }
+  }
+  listNotificationDestinations: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationListResponder']
+        }
+      }
+    }
+  }
+  createNotificationDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateNotificationDestinationRequest']
+        'application/*+json':
+          null | components['schemas']['CreateNotificationDestinationRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+    }
+  }
+  listNotificationRules: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleListResponder']
+        }
+      }
+    }
+  }
+  createNotificationRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateNotificationRuleRequest']
+        'application/*+json':
+          null | components['schemas']['CreateNotificationRuleRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+    }
+  }
+  listNotificationWatches: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchListResponder']
+        }
+      }
+    }
+  }
+  createNotificationWatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreateNotificationWatchRequest']
+        'application/*+json':
+          null | components['schemas']['CreateNotificationWatchRequest']
+      }
+    }
+    responses: {
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationWatchResponder']
+        }
+      }
+    }
+  }
+  getNotificationSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationSettingsResponder']
+        }
+      }
+    }
+  }
+  putNotificationSettings: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['PutNotificationSettingsRequest']
+        'application/*+json':
+          null | components['schemas']['PutNotificationSettingsRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationSettingsResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationSettingsResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationSettingsResponder']
+        }
+      }
+    }
+  }
+  listNotificationDeliveries: {
+    parameters: {
+      query?: {
+        destinationId?: string
+        perPage?: number | string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDeliveryListResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDeliveryListResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDeliveryListResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDeliveryListResponder']
+        }
+      }
+    }
+  }
+  removeNotificationDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+    }
+  }
+  reviseNotificationDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReviseNotificationDestinationRequest']
+        'application/*+json':
+          null | components['schemas']['ReviseNotificationDestinationRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+    }
+  }
+  removeNotificationRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRemovalResponder']
+        }
+      }
+    }
+  }
+  reviseNotificationRule: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReviseNotificationRuleRequest']
+        'application/*+json':
+          null | components['schemas']['ReviseNotificationRuleRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+    }
+  }
+  testNotificationDestination: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNoticeTrialResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNoticeTrialResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNoticeTrialResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNoticeTrialResponder']
+        }
+      }
+      /** @description Too Many Requests */
+      429: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNoticeTrialResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNoticeTrialResponder']
         }
       }
     }

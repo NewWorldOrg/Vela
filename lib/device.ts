@@ -38,6 +38,31 @@ export function describeDevice(label: string): Device {
   }
 }
 
+const MACHINE_OF: [RegExp, string][] = [
+  [/\biPad\b/, 'iPad'],
+  [/\biPhone\b|\biPod\b/, 'iPhone'],
+  [/\bAndroid\b/, 'Android'],
+  [/\bWindows NT\b/, 'Windows'],
+  [/\bMac OS X\b|\bMacintosh\b/, 'Mac'],
+  [/\bCrOS\b/, 'Chromebook'],
+  [/\bLinux\b|\bX11\b/, 'Linux'],
+]
+
+export const THIS_BROWSER = 'このブラウザ'
+
+/** The browser a page is open in, as a person names it: the machine, then the browser, `Windows の Chrome`. */
+export function browserHere(agent: string): string {
+  const browser = browserOf(agent.trim())
+
+  if (browser === undefined || !browser.aBrowser) {
+    return THIS_BROWSER
+  }
+
+  const machine = MACHINE_OF.find(([seen]) => seen.test(agent))?.[1]
+
+  return machine === undefined ? browser.name : `${machine} の ${browser.name}`
+}
+
 function platformOf(agent: string): Platform | undefined {
   if (/\biPad\b/.test(agent)) {
     return { name: `iPadOS${appleVersionOf(agent)}`, kind: 'タブレット' }

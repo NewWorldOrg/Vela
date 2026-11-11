@@ -1,6 +1,7 @@
 import { cache } from 'react'
 
 import type { GuideRelationKind, GuideService } from '@/lib/guide'
+import type { ProgrammeWatch } from '@/lib/notifications'
 import {
   DAY_STARTS_AT_HOUR,
   JST_OFFSET_MS,
@@ -69,6 +70,7 @@ export interface Program {
   video?: VideoMode
   booked?: boolean
   booking?: ProgramBooking
+  watch?: ProgrammeWatch
   endUndecided?: boolean
   items?: ProgramItem[]
   related?: RelatedProgram[]
@@ -114,9 +116,13 @@ export interface RelatedProgram {
 export interface ProgramDetail {
   program: Program
   day: GuideDay
+  /** The broadcast day the clock is in, as `day.date` is written. */
+  today: string
   channel?: Channel
   nowMin?: number
 }
+
+type Marks<T> = ReadonlyMap<string, T> | Promise<ReadonlyMap<string, T>>
 
 const PAST_DAYS = 7
 
@@ -181,12 +187,11 @@ async function programsOver(
   kind: ChannelKind,
   windowStart: Date,
   minutes: MinuteRange,
-  bookings:
-    | ReadonlyMap<string, ProgramBooking>
-    | Promise<ReadonlyMap<string, ProgramBooking>>,
+  bookings: Marks<ProgramBooking>,
+  watches: Marks<ProgrammeWatch>,
 ): Promise<{ channels: Channel[]; programs: Program[] }> {
   const at = (min: number) => new Date(windowStart.getTime() + min * 60_000)
-  const [services, guide, marked] = await Promise.all([
+  const [services, guide, marked, told] = await Promise.all([
     fetchServiceChannels(),
     fetchGuide({
       type: SYSTEM_OF_KIND[kind],
@@ -194,6 +199,7 @@ async function programsOver(
       to: at(minutes.to),
     }),
     bookings,
+    watches,
   ])
 
   const shadows = new Set(
@@ -218,16 +224,17 @@ async function programsOver(
         (program): program is Program =>
           program !== null && fallsWithin(minutes, program),
       )
-      .map((program) => booked(program, marked.get(program.id))),
+      .map((program) =>
+        watched(booked(program, marked.get(program.id)), told.get(program.id)),
+      ),
   }
 }
 
 export async function getGuide(
   rawKind: string | undefined,
   rawDate: string | undefined,
-  bookings:
-    | ReadonlyMap<string, ProgramBooking>
-    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
+  bookings: Marks<ProgramBooking> = new Map(),
+  watches: Marks<ProgrammeWatch> = new Map(),
 ): Promise<GuideResult> {
   const { kind, days, day, windowStart, now, nowMin } = guideDayOf(
     rawKind,
@@ -238,6 +245,7 @@ export async function getGuide(
     windowStart,
     { from: 0, to: WINDOW_HOURS * 60 },
     bookings,
+    watches,
   )
 
   return {
@@ -261,9 +269,8 @@ function cellKeyOf(program: Program): string {
 export async function getGuideInTwo(
   rawKind: string | undefined,
   rawDate: string | undefined,
-  bookings:
-    | ReadonlyMap<string, ProgramBooking>
-    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
+  bookings: Marks<ProgramBooking> = new Map(),
+  watches: Marks<ProgrammeWatch> = new Map(),
 ): Promise<{ guide: GuideResult; rest: Promise<Program[]> }> {
   const { kind, days, day, windowStart, now, nowMin } = guideDayOf(
     rawKind,
@@ -275,12 +282,14 @@ export async function getGuideInTwo(
     windowStart,
     minutesBeforeMeasuringOf(nowMin, windowMin),
     bookings,
+    watches,
   )
   const whole = programsOver(
     kind,
     windowStart,
     { from: 0, to: windowMin },
     bookings,
+    watches,
   )
   const rest = Promise.all([opening, whole]).then(([first, all]) => {
     const drawn = new Set(first.programs.map(cellKeyOf))
@@ -352,11 +361,14 @@ export async function extrasOf(
 export async function getProgram(
   id: string,
   now: Date = new Date(),
-  bookings:
-    | ReadonlyMap<string, ProgramBooking>
-    | Promise<ReadonlyMap<string, ProgramBooking>> = new Map(),
+  bookings: Marks<ProgramBooking> = new Map(),
+  watches: Marks<ProgrammeWatch> = new Map(),
 ): Promise<ProgramDetail | undefined> {
-  const [programme, marked] = await Promise.all([fetchProgramme(id), bookings])
+  const [programme, marked, told] = await Promise.all([
+    fetchProgramme(id),
+    bookings,
+    watches,
+  ])
 
   if (!programme || programme.isShadow) {
     return undefined
@@ -379,8 +391,12 @@ export async function getProgram(
   }
 
   return {
-    program: booked(program, marked.get(program.id)),
+    program: watched(
+      booked(program, marked.get(program.id)),
+      told.get(program.id),
+    ),
     day,
+    today: broadcastDateOf(now),
     channel: serviceOf(services, programme.networkId, programme.serviceId),
     nowMin: nowMinOf(now, windowStart),
   }
@@ -651,6 +667,10 @@ function booked(
   booking: ProgramBooking | undefined,
 ): Program {
   return booking ? { ...program, booked: true, booking } : program
+}
+
+function watched(program: Program, watch: ProgrammeWatch | undefined): Program {
+  return watch ? { ...program, watch } : program
 }
 
 function guideDays(): GuideDay[] {

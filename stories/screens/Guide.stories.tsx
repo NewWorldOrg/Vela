@@ -11,6 +11,12 @@ import {
   NOW_LINE_THICKNESS_PX,
 } from '@/lib/guide'
 import { genreWordOf, halfWidthOf } from '@/lib/guide-cell'
+import type {
+  NotificationWrite,
+  Noticing,
+  WatchDraft,
+  WatchWrite,
+} from '@/lib/notifications'
 import {
   AERIAL_CHANNEL_FIXTURES,
   CHANNEL_FIXTURES,
@@ -44,6 +50,10 @@ import {
 import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
 import { HOUR_REM, hourPxIn } from '@/components/guide/guide-metrics'
 import { GuideView } from '@/components/guide/guide-page'
+import {
+  NOTIFY_START,
+  STOP_NOTIFYING,
+} from '@/components/notifications/programme-notice'
 import { inTheApp } from '@/stories/frames'
 import { FROM_600, NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 
@@ -2976,5 +2986,245 @@ export const 電話では上の帯に日付と番組を検索と絞り込みを�
     await expect(
       within(canvasElement).queryByRole('link', { name: '番組を検索' }),
     ).toBe(bar.getByRole('link', { name: '番組を検索' }))
+  },
+}
+
+const watchIt = fn(
+  async (_programmeId: string, draft: WatchDraft): Promise<WatchWrite> => ({
+    state: 'ok',
+    watch: { id: 'watch-asked', leadMinutes: draft.leadMinutes },
+  }),
+)
+
+const unwatchIt = fn(async (_watchId: string): Promise<NotificationWrite> => ({
+  state: 'ok',
+}))
+
+const NOTICING: Noticing = {
+  offer: {
+    leadMinutes: 3,
+    destinations: [
+      { id: 'dest-slack', name: '家の Slack' },
+      { id: 'dest-ipad', name: 'iPad の Safari' },
+    ],
+  },
+  onWatch: watchIt,
+  onUnwatch: unwatchIt,
+}
+
+const TOLD_WHEN_IT_STARTS = programsOfChannel(
+  base.programs,
+  CHANNEL_FIXTURES[0].id,
+).find((program) => !program.booking && program.startMin > base.nowMin)!
+
+const WITH_A_NOTICE = {
+  ...base,
+  programs: base.programs.map((program) =>
+    program.id === TOLD_WHEN_IT_STARTS.id
+      ? { ...program, watch: { id: 'watch-told', leadMinutes: 3 as const } }
+      : program,
+  ),
+}
+
+function cellFor(canvasElement: HTMLElement, programmeId: string): HTMLElement {
+  return canvasElement.querySelectorAll<HTMLElement>(
+    '[data-opens="program-panel"]',
+  )[IN_GRID_ORDER.findIndex((one) => one.id === programmeId)]
+}
+
+async function theBellSitsInTheCorner(cell: HTMLElement): Promise<void> {
+  const bell = cell.querySelector<HTMLElement>('[data-slot="notify-bell"]')!
+  const drawn = bell.getBoundingClientRect()
+  const room = cell.getBoundingClientRect()
+
+  await expect(bell).toHaveTextContent('放送開始を通知')
+  await expect(drawn.width).toBeGreaterThan(0)
+  await expect(drawn.top).toBeGreaterThanOrEqual(room.top)
+  await expect(drawn.bottom).toBeLessThanOrEqual(room.bottom + 0.5)
+  await expect(drawn.right).toBeLessThanOrEqual(room.right)
+  await expect(drawn.left).toBeGreaterThan(room.left + room.width / 2)
+  await expect(cell.querySelector('[data-booking-mark]')).toBeNull()
+}
+
+export const 放送開始を通知する番組は札の角にベルが付く: Story = {
+  args: { guide: WITH_A_NOTICE, noticing: NOTICING },
+  parameters: { screen: A_LAPTOP },
+  beforeEach: () => {
+    unwatchIt.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const cell = cellFor(canvasElement, TOLD_WHEN_IT_STARTS.id)
+
+    await expect(
+      canvasElement.querySelectorAll(
+        '[data-opens="program-panel"] [data-slot="notify-bell"]',
+      ),
+    ).toHaveLength(1)
+    await theBellSitsInTheCorner(cell)
+    await expect(
+      cell.nextElementSibling?.matches('[data-slot="reserve-plus"]') ?? false,
+    ).toBe(false)
+
+    cell.scrollIntoView({ block: 'center' })
+    await userEvent.click(cell)
+
+    const surface = within(await openedPanel(canvasElement))
+
+    await expect(surface.getByText('開始 3 分前に通知')).toBeVisible()
+    await userEvent.click(surface.getByRole('button', { name: STOP_NOTIFYING }))
+    await waitFor(() => expect(unwatchIt).toHaveBeenCalledWith('watch-told'))
+  },
+}
+
+export const 番組の詳細から放送開始の通知を頼む: Story = {
+  args: { guide: base, noticing: NOTICING },
+  parameters: { screen: A_LAPTOP },
+  beforeEach: () => {
+    watchIt.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    const cell = cellFor(canvasElement, TOLD_WHEN_IT_STARTS.id)
+
+    cell.scrollIntoView({ block: 'center' })
+    await userEvent.click(cell)
+
+    const surface = within(await openedPanel(canvasElement))
+    const ask = surface.getByRole('button', { name: NOTIFY_START })
+
+    await expect(
+      surface.getByRole('button', { name: '録画予約' }),
+    ).toBeVisible()
+    await userEvent.click(ask)
+
+    const form = within(
+      await screen.findByRole('dialog', { name: NOTIFY_START }),
+    )
+
+    await userEvent.click(
+      within(form.getByRole('group', { name: '何分前' })).getByRole('button', {
+        name: '5 分前',
+      }),
+    )
+    await userEvent.click(form.getByRole('button', { name: '通知する' }))
+
+    await waitFor(() =>
+      expect(watchIt).toHaveBeenCalledWith(TOLD_WHEN_IT_STARTS.id, {
+        leadMinutes: 5,
+        destinations: ['dest-slack', 'dest-ipad'],
+      }),
+    )
+    await expect(
+      await screen.findByText('開始の 5 分前に通知します'),
+    ).toBeVisible()
+  },
+}
+
+export const 始まった番組には放送開始の通知を置かない: Story = {
+  args: { guide: base, noticing: NOTICING },
+  parameters: { screen: A_LAPTOP },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+
+    for (const time of ['onAir', 'ended']) {
+      const cell = canvasElement.querySelector<HTMLElement>(
+        `[data-opens="program-panel"][data-time="${time}"]`,
+      )!
+
+      cell.scrollIntoView({ block: 'center' })
+      await userEvent.click(cell)
+
+      const surface = await openedPanel(canvasElement)
+
+      await expect(
+        within(surface).queryByRole('button', { name: NOTIFY_START }),
+      ).toBeNull()
+
+      await userEvent.keyboard('{Escape}')
+      await waitFor(() =>
+        expect(
+          canvasElement.ownerDocument.querySelector(
+            '[data-slot="dialog-content"]',
+          ),
+        ).toBeNull(),
+      )
+    }
+  },
+}
+
+export const 電話では放送開始を通知する番組の行にベルが付く: Story = {
+  args: { guide: WITH_A_NOTICE, noticing: NOTICING },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const row = list.querySelector<HTMLElement>(
+      `[data-programme="${TOLD_WHEN_IT_STARTS.id}"]`,
+    )!
+
+    await expect(
+      list.querySelectorAll('[data-slot="notify-bell"]'),
+    ).toHaveLength(1)
+
+    const bell = row.querySelector<HTMLElement>('[data-slot="notify-bell"]')!
+
+    await expect(bell).toHaveTextContent('放送開始を通知')
+    await expect(bell.getBoundingClientRect().width).toBeGreaterThan(0)
+
+    row.scrollIntoView({ block: 'center' })
+    await userEvent.click(pressOf(row))
+
+    await expect(
+      await within(row).findByRole('button', { name: STOP_NOTIFYING }),
+    ).toBeVisible()
+    await expect(within(row).getByText('開始 3 分前に通知')).toBeVisible()
+  },
+}
+
+export const 電話の詳細から放送開始の通知を頼む: Story = {
+  args: { guide: base, noticing: NOTICING },
+  parameters: { screen: PHONE },
+  beforeEach: () => {
+    watchIt.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    const list = await phoneList(canvasElement)
+    const row = list.querySelector<HTMLElement>(
+      `[data-programme="${TOLD_WHEN_IT_STARTS.id}"]`,
+    )!
+
+    row.scrollIntoView({ block: 'center' })
+    await userEvent.click(pressOf(row))
+    await userEvent.click(
+      await within(row).findByRole('button', { name: NOTIFY_START }),
+    )
+
+    const form = within(
+      await screen.findByRole('dialog', { name: NOTIFY_START }),
+    )
+
+    await userEvent.click(form.getByRole('button', { name: '通知する' }))
+    await waitFor(() =>
+      expect(watchIt).toHaveBeenCalledWith(TOLD_WHEN_IT_STARTS.id, {
+        leadMinutes: 3,
+        destinations: ['dest-slack', 'dest-ipad'],
+      }),
+    )
+  },
+}
+
+export const 横向きの電話でも札の角にベルが付く: Story = {
+  args: { guide: WITH_A_NOTICE, noticing: NOTICING },
+  parameters: { screen: SIDEWAYS_PHONE, coarse: true },
+  play: async ({ canvasElement }) => {
+    await columnsFilled(canvasElement)
+    aGridIsShown(canvasElement)
+
+    const cell = cellFor(canvasElement, TOLD_WHEN_IT_STARTS.id)
+
+    cell.scrollIntoView({ block: 'center', inline: 'center' })
+    await theBellSitsInTheCorner(cell)
   },
 }

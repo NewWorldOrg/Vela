@@ -99,6 +99,8 @@ const ACTIONS: [string, ComponentType<IconProps>][] = [
   ['EyeIcon', Icons.EyeIcon],
   ['EyeOffIcon', Icons.EyeOffIcon],
   ['LinkIcon', Icons.LinkIcon],
+  ['BellIcon', Icons.BellIcon],
+  ['BellOffIcon', Icons.BellOffIcon],
   ['CopyIcon', Icons.CopyIcon],
   ['SunIcon', Icons.SunIcon],
   ['MoonIcon', Icons.MoonIcon],

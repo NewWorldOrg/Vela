@@ -2,6 +2,12 @@ import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test'
 
 import { isOnAir, relationDestinationOf } from '@/lib/guide'
+import type {
+  NotificationWrite,
+  Noticing,
+  WatchDraft,
+  WatchWrite,
+} from '@/lib/notifications'
 import { searchConditionOfQuery, searchTermsOf } from '@/lib/search-condition'
 import type { ProgramDetail } from '@/repository/programs'
 import {
@@ -11,6 +17,10 @@ import {
 } from '@/repository/programs.fixtures'
 import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-page'
+import {
+  NOTIFY_START,
+  STOP_NOTIFYING,
+} from '@/components/notifications/programme-notice'
 import { inTheApp } from '@/stories/frames'
 import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
@@ -626,5 +636,153 @@ export const 狭い電話でも放送中はライブ視聴が先頭: Story = {
   parameters: { screen: NARROW_PHONE },
   play: async ({ canvasElement }) => {
     await liveLeadsOnAPhone(canvasElement, NARROW_PHONE.width)
+  },
+}
+
+const watchIt = fn(
+  async (_programmeId: string, draft: WatchDraft): Promise<WatchWrite> => ({
+    state: 'ok',
+    watch: { id: 'watch-asked', leadMinutes: draft.leadMinutes },
+  }),
+)
+
+const unwatchIt = fn(async (_watchId: string): Promise<NotificationWrite> => ({
+  state: 'ok',
+}))
+
+const NOTICING: Noticing = {
+  offer: {
+    leadMinutes: 3,
+    destinations: [
+      { id: 'dest-slack', name: '家の Slack' },
+      { id: 'dest-ipad', name: 'iPad の Safari' },
+    ],
+  },
+  onWatch: watchIt,
+  onUnwatch: unwatchIt,
+}
+
+const ahead: ProgramDetail = {
+  ...standard,
+  nowMin: standard.program.startMin - 1,
+}
+
+export const 放送前は録画予約の隣で放送開始の通知を頼む: Story = {
+  args: { detail: ahead, noticing: NOTICING },
+  beforeEach: () => {
+    watchIt.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const { reserve } = actionsIn(canvasElement)
+    const ask = canvas.getByRole('button', { name: NOTIFY_START })
+
+    await sideBySide(reserve!, ask)
+    await expect(ask).toHaveAttribute('data-variant', 'tone')
+    await userEvent.click(ask)
+
+    const form = within(
+      await screen.findByRole('dialog', { name: NOTIFY_START }),
+    )
+
+    await userEvent.click(form.getByRole('button', { name: '通知する' }))
+    await waitFor(() =>
+      expect(watchIt).toHaveBeenCalledWith(standard.program.id, {
+        leadMinutes: 3,
+        destinations: ['dest-slack', 'dest-ipad'],
+      }),
+    )
+    await expect(
+      await screen.findByText('開始の 3 分前に通知します'),
+    ).toBeVisible()
+  },
+}
+
+export const 放送開始を通知する番組は取り消すボタンになる: Story = {
+  args: {
+    detail: {
+      ...ahead,
+      program: {
+        ...ahead.program,
+        watch: { id: 'watch-told', leadMinutes: 10 },
+      },
+    },
+    noticing: NOTICING,
+  },
+  beforeEach: () => {
+    unwatchIt.mockClear()
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(canvas.getByText('開始 10 分前に通知')).toBeVisible()
+    await expect(
+      canvas.queryByRole('button', { name: NOTIFY_START }),
+    ).toBeNull()
+    await userEvent.click(canvas.getByRole('button', { name: STOP_NOTIFYING }))
+    await waitFor(() => expect(unwatchIt).toHaveBeenCalledWith('watch-told'))
+  },
+}
+
+const NOTICE_GONE = 'この通知は残っていないため、取り消せませんでした。'
+
+export const 通知の取り消しを断られるとボタンは取り消すのまま残る: Story = {
+  args: {
+    detail: {
+      ...ahead,
+      program: {
+        ...ahead.program,
+        watch: { id: 'watch-told', leadMinutes: 10 },
+      },
+    },
+    noticing: {
+      ...NOTICING,
+      onUnwatch: async (): Promise<NotificationWrite> => ({
+        state: 'rejected',
+        message: NOTICE_GONE,
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await userEvent.click(canvas.getByRole('button', { name: STOP_NOTIFYING }))
+
+    const said = await screen.findByText(NOTICE_GONE)
+
+    await expect(said.closest('[data-slot="toast"]')).toBeVisible()
+    await waitFor(() =>
+      expect(
+        canvas.getByRole('button', { name: STOP_NOTIFYING }),
+      ).toBeEnabled(),
+    )
+    await expect(canvas.getByText('開始 10 分前に通知')).toBeVisible()
+  },
+}
+
+export const 放送中の番組には放送開始の通知を置かない: Story = {
+  args: { detail: { ...standard, nowMin: NOW_MIN }, noticing: NOTICING },
+  play: async ({ canvasElement }) => {
+    await expect(
+      within(canvasElement).queryByRole('button', { name: NOTIFY_START }),
+    ).toBeNull()
+  },
+}
+
+export const 電話でも録画予約の隣で放送開始の通知を頼む: Story = {
+  args: { detail: ahead, noticing: NOTICING },
+  parameters: { screen: PHONE },
+  play: async ({ canvasElement }) => {
+    const ask = within(canvasElement).getByRole('button', {
+      name: NOTIFY_START,
+    })
+
+    await expect(ask).toBeVisible()
+    await expect(ask.getBoundingClientRect().right).toBeLessThanOrEqual(
+      PHONE.width,
+    )
+    await expect(canvasElement.ownerDocument.documentElement.scrollWidth).toBe(
+      PHONE.width,
+    )
   },
 }

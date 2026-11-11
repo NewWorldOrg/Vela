@@ -19,19 +19,21 @@ export function useTellDisplaced(): TellDisplaced {
   return useContext(DisplacedTold)
 }
 
-/** The programme's actions in one row; `first` (watching it live while it is on air) leads as the main button, and recording it steps back to a toned one whose circle stays the recording's red. */
+/** The programme's actions in one row; `first` (watching it live while it is on air) leads as the main button, and recording it steps back to a toned one whose circle stays the recording's red. `notice` stands right after recording it, booked or not. */
 export function ReservationArea({
   programmeId,
   booked,
   seriesHref,
   onReserve,
   first,
+  notice,
 }: {
   programmeId: string
   booked?: ReactNode
   seriesHref?: string
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   first?: ReactNode
+  notice?: ReactNode
 }) {
   const [displaced, setDisplaced] = useState<ConflictEntry[]>()
 
@@ -47,9 +49,10 @@ export function ReservationArea({
 
   return (
     <DisplacedTold value={setDisplaced}>
-      {booked && first && (
+      {booked && (first || notice) && (
         <div className="mb-[calc(13rem/16)] flex flex-wrap gap-[calc(9rem/16)]">
           {first}
+          {notice}
         </div>
       )}
       {booked ?? (
@@ -63,6 +66,7 @@ export function ReservationArea({
             <RecordIcon className={first ? 'text-rec' : undefined} />
             録画予約
           </ReserveButton>
+          {notice}
           {seriesHref ? (
             <Button variant="tone" asChild>
               <Link href={seriesHref as Route}>

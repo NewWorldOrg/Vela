@@ -17,6 +17,9 @@ import {
   remOfMinutes,
   type CellTime,
 } from '@/components/guide/guide-metrics'
+import { BellIcon } from '@/components/vela/icons'
+
+export const WATCHED_SAYS = '放送開始を通知'
 
 const MARK_SAYS: Record<BookingMark, string> = {
   booked: RESERVATION_STANDING_TERMS.scheduled.label,
@@ -67,7 +70,13 @@ export const ProgramCell = memo(function ProgramCell({
     >
       <span className="guide-cell-body">
         <span className="guide-cell-text">
-          <span className={cn('guide-cell-title', ended && 'text-ink-2')}>
+          <span
+            className={cn(
+              'guide-cell-title',
+              ended && 'text-ink-2',
+              p.watch && 'pr-[calc(18rem/16)]',
+            )}
+          >
             {mark && (
               <span className="guide-cell-inline-mark">
                 <BookingMarkOf mark={mark} glyphOnly />
@@ -105,6 +114,12 @@ export const ProgramCell = memo(function ProgramCell({
         </span>
       </span>
       {mark && <span className="sr-only">{MARK_SAYS[mark]}</span>}
+      {p.watch && (
+        <span data-slot="notify-bell" className="guide-cell-bell">
+          <BellIcon aria-hidden="true" className="size-full" />
+          <span className="sr-only">{WATCHED_SAYS}</span>
+        </span>
+      )}
     </button>
   )
 })

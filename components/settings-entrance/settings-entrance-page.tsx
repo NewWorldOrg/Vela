@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils'
 import type { SystemStatus } from '@/repository/system'
 import { VelaMark } from '@/components/vela/marks'
 import {
+  BellIcon,
   ChannelIcon,
   ChevronRightIcon,
   EncodeIcon,
@@ -151,6 +152,12 @@ function groupsOf(
       href: '/settings/integrity',
       label: '整合性チェック',
       icon: QualityIcon,
+      tile: TILE.keeping,
+    },
+    {
+      href: '/settings/notifications',
+      label: '通知',
+      icon: BellIcon,
       tile: TILE.keeping,
     },
   ]

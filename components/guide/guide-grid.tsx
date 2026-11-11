@@ -186,6 +186,7 @@ const GuideColumn = memo(function GuideColumn({
               {reserving &&
                 time === 'ahead' &&
                 !p.booking &&
+                !p.watch &&
                 p.durationMin >= PLUS_MIN_DURATION && (
                   <ReservePlus
                     programmeId={p.id}

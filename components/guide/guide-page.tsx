@@ -14,6 +14,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 import { addressWith } from '@/lib/path'
 import { foldedGuideOf, foldsAColumn, isOnAir } from '@/lib/guide'
+import { yetToStart, type Noticing } from '@/lib/notifications'
 import { cn } from '@/lib/utils'
 import { useSubChannelsFolded } from '@/hooks/useSubChannelsFolded'
 import { CHANNEL_KINDS } from '@/repository/channels'
@@ -80,6 +81,7 @@ export function GuideView({
   onRestore,
   onRevise,
   onReadExtras,
+  noticing,
   subChannelsFolded = false,
 }: {
   /** Puts back a reservation the circle took back, from the toast's `元に戻す`. */
@@ -100,6 +102,7 @@ export function GuideView({
     id: string,
     channelId: string,
   ) => Promise<ProgramExtras | undefined>
+  noticing?: Noticing
   subChannelsFolded?: boolean
 }) {
   const router = useRouter()
@@ -248,6 +251,9 @@ export function GuideView({
       onRestore={onRestore}
     />
   )
+  const today = guide.days.find((day) => day.isToday)?.date
+  const aheadOf = (program: Program) =>
+    yetToStart(program, guide.nowMin, guide.day.date, today)
   const detailOf = (program: Program) => {
     const read = detailed && detailed.id === program.id ? detailed : program
 
@@ -260,6 +266,8 @@ export function GuideView({
         channel={listed}
         dayLabel={guide.day.label}
         onAir={isOnAir(program, guide.nowMin)}
+        ahead={aheadOf(program)}
+        noticing={noticing}
         onReserve={onReserve}
         reservation={
           read.booking && (
@@ -551,6 +559,8 @@ export function GuideView({
               )}
               dayLabel={guide.day.label}
               onAir={isOnAir(shown, guide.nowMin)}
+              ahead={aheadOf(shown)}
+              noticing={noticing}
               open={panelOpen}
               onClose={() => setPanelOpen(false)}
               onReserve={onReserve}

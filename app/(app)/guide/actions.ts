@@ -8,6 +8,13 @@ import type {
   RebuildResult,
 } from '@/repository/collection'
 import { collectNow, rebuildEpg } from '@/repository/collection'
+import type {
+  NotificationWrite,
+  WatchDraft,
+  WatchWrite,
+} from '@/lib/notifications'
+import { wasAnswered } from '@/lib/notifications'
+import { askForWatch, cancelWatch } from '@/repository/notifications'
 import type { ProgramExtras } from '@/repository/programs'
 import { extrasOf } from '@/repository/programs'
 import type {
@@ -96,4 +103,31 @@ export async function readProgramExtras(
   channelId: string,
 ): Promise<ProgramExtras | undefined> {
   return extrasOf(kind, date, id, channelId)
+}
+
+export async function watchProgramme(
+  programmeId: string,
+  draft: WatchDraft,
+): Promise<WatchWrite> {
+  const result = await askForWatch(programmeId, draft)
+
+  if (wasAnswered(result)) {
+    revalidatePath('/guide')
+    revalidatePath('/reservations')
+    revalidatePath('/search')
+  }
+
+  return result
+}
+
+export async function unwatchProgramme(id: string): Promise<NotificationWrite> {
+  const result = await cancelWatch(id)
+
+  if (wasAnswered(result)) {
+    revalidatePath('/guide')
+    revalidatePath('/reservations')
+    revalidatePath('/search')
+  }
+
+  return result
 }

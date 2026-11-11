@@ -20,6 +20,7 @@ export const SETTINGS_SCREENS: readonly { href: Route; label: string }[] = [
   { href: '/settings/quality', label: '品質' },
   { href: '/settings/authentication', label: '認証' },
   { href: '/settings/integrity', label: '整合性チェック' },
+  { href: '/settings/notifications', label: '通知' },
   { href: '/settings/display', label: '表示' },
   { href: '/settings/viewing', label: '視聴' },
   { href: '/settings/migration', label: '移行記録' },

@@ -2,10 +2,13 @@ import type { Metadata } from 'next'
 
 import { rawSearchConditionOf } from '@/lib/search-condition'
 import { searchPrograms } from '@/repository/search'
+import { readSingleNotices } from '@/repository/notifications'
 import {
   dropProgrammeReservation,
   reserveProgramme,
   restoreProgrammeReservation,
+  unwatchProgramme,
+  watchProgramme,
 } from '../guide/actions'
 import { SearchView } from '@/components/search/search-page'
 
@@ -17,7 +20,11 @@ export default async function Page({
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
   const params = await searchParams
-  const result = await searchPrograms(rawSearchConditionOf(params))
+  const notices = readSingleNotices()
+  const [result, offer] = await Promise.all([
+    searchPrograms(rawSearchConditionOf(params), notices.watches),
+    notices.offer,
+  ])
 
   return (
     <SearchView
@@ -25,6 +32,11 @@ export default async function Page({
       onReserve={reserveProgramme}
       onCancel={dropProgrammeReservation}
       onRestore={restoreProgrammeReservation}
+      noticing={{
+        offer,
+        onWatch: watchProgramme,
+        onUnwatch: unwatchProgramme,
+      }}
     />
   )
 }
