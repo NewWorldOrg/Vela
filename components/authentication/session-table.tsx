@@ -21,7 +21,7 @@ import {
   type IconProps,
 } from '@/components/vela/icons'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { RevokeSession } from '@/components/authentication/revoke-session'
 import { SignOut } from '@/components/authentication/sign-out'
 import { METHOD_LABEL } from '@/components/authentication/wording'

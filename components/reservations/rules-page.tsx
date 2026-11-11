@@ -101,7 +101,8 @@ import {
   SelectTrigger,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { Banner, InlineAlert } from '@/components/vela/banner'
+import { Banner } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { ActionRow } from '@/components/vela/action-row'
 import { EmptyState } from '@/components/vela/empty-state'
 import {
@@ -124,7 +125,7 @@ import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { GenreDot } from '@/components/reservations/genre-dot'
 import { Stepper } from '@/components/reservations/stepper'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import type { Genre } from '@/repository/programs'
 import {
   SEARCH_DAY_OPTIONS,

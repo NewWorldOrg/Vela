@@ -30,34 +30,3 @@ export function StatusDot({
     />
   )
 }
-
-export function StatusText({
-  tone = 'ok',
-  className,
-  children,
-  ...props
-}: ComponentProps<'span'> & { tone?: StatusTone }) {
-  return (
-    <span
-      data-slot="status-text"
-      className={cn(
-        'inline-flex items-center gap-[calc(7rem/16)] text-sub whitespace-nowrap text-ink-2',
-        className,
-      )}
-      {...props}
-    >
-      <StatusDot tone={tone} />
-      {children}
-    </span>
-  )
-}
-
-export function ChipDot({ className, ...props }: ComponentProps<'span'>) {
-  return (
-    <span
-      aria-hidden="true"
-      className={cn('size-1.5 shrink-0 rounded-full bg-current', className)}
-      {...props}
-    />
-  )
-}

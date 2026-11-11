@@ -7,7 +7,7 @@ import { usePathname, useRouter } from 'next/navigation'
 
 import { DESTINATIONS, destinationOf } from '@/lib/destinations'
 import { TabMemory, pressTab } from '@/lib/tab-memory'
-import { TabBar, TabBarItem } from '@/components/vela/app-shell'
+import { TabBar, TabBarItem } from '@/components/vela/tab-bar'
 import {
   LibraryIcon,
   LiveIcon,

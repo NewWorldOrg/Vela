@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import { usePathname } from 'next/navigation'
 
 import type { SystemStatus } from '@/repository/system'
-import { AdminMain } from '@/components/vela/app-shell'
+import { AdminMain } from '@/components/vela/admin-main'
 import {
   SettingsEntranceView,
   type SettingsEntranceValues,

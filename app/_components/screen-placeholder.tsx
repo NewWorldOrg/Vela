@@ -1,6 +1,6 @@
 import { EmptyState } from '@/components/vela/empty-state'
-import type { UsherMood } from '@/components/vela/marks'
-import { ScreenMain } from '@/components/vela/app-shell'
+import type { UsherMood } from '@/components/vela/usher'
+import { ScreenMain } from '@/components/vela/screen-main'
 
 export function ScreenPlaceholder({
   usher = 'plain',

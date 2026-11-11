@@ -25,7 +25,7 @@ import {
   toneOf,
 } from '@/components/recordings/status-cell'
 import { RecordingInProgressChip } from '@/components/vela/recording-in-progress-chip'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { TermTip } from '@/components/vela/term-tip'
 
 type SettledStanding = Exclude<ReservationStanding, 'recording'>

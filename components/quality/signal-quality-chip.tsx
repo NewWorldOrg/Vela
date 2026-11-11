@@ -14,7 +14,7 @@ import {
   toneOf,
 } from '@/components/recordings/status-cell'
 import { CloseIcon } from '@/components/vela/icons'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 export const QUALITY_LEVEL_COLUMN = stateColumnFor([
   ...Object.values(QUALITY_PILL_LABEL),

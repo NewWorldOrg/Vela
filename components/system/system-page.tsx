@@ -21,7 +21,7 @@ import type {
 } from '@/repository/system'
 import { capabilityLabel } from '@/repository/driver-capabilities'
 import { Badge } from '@/components/ui/badge'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { Banner } from '@/components/vela/banner'
 import { InFull } from '@/components/vela/in-full'
 import {
@@ -36,7 +36,7 @@ import {
   WarningIcon,
   type IconProps,
 } from '@/components/vela/icons'
-import { PageHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
 import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,

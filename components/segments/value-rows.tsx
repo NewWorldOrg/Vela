@@ -3,7 +3,7 @@ import type { ReactNode } from 'react'
 import { cn } from '@/lib/utils'
 import { SYSTEM_STATE_LABELS } from '@/lib/system-terms'
 import type { Reading } from '@/repository/system'
-import { StatusText } from '@/components/vela/status'
+import { StatusText } from '@/components/vela/status-text'
 import { Surface } from '@/components/vela/surface'
 
 /** The face a group of values sits on: as wide as a group of settings, its rows reaching its sides. */

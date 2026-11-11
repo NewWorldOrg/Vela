@@ -7,7 +7,7 @@ import { useState, useTransition } from 'react'
 import { signedOut } from '@/lib/signed-out'
 import type { WriteResult } from '@/repository/services'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 
 export function ApplyScanAction({
   scanId,

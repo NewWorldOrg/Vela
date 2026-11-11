@@ -5,7 +5,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 
 const OPENS_ITS_OWN = [
-  'components/vela/app-shell.tsx',
+  'components/vela/screen-main.tsx',
   'components/login/login-page.tsx',
   'components/login/logged-out-page.tsx',
   'tests/storybook/screen-main.test.ts',

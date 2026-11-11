@@ -8,7 +8,7 @@ import Link from 'next/link'
 import { signedOut } from '@/lib/signed-out'
 import type { ReservationWrite } from '@/repository/reservations'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 
 const SIGNED_OUT = signedOut('予約')
 

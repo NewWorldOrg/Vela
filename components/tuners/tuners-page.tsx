@@ -16,11 +16,11 @@ import { signedOut } from '@/lib/signed-out'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Banner } from '@/components/vela/banner'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PageHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
 import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,

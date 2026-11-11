@@ -11,7 +11,7 @@ import {
   stateColumnFor,
   toneOf,
 } from '@/components/recordings/status-cell'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 type JobTone = 'secondary' | 'info' | 'warn' | 'ok' | 'err' | 'mute'
 

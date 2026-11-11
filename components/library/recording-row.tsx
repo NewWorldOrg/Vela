@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { MoreIcon, TrashIcon } from '@/components/vela/icons'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { InFull } from '@/components/vela/in-full'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { RecordingThumb } from '@/components/library/recording-thumb'

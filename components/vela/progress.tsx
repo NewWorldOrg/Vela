@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { InFull } from '@/components/vela/in-full'
 
 export type MeterTone = 'brand' | 'ok' | 'warn' | 'err'
 
@@ -10,13 +9,6 @@ const FILL_TONE: Record<MeterTone, string> = {
   ok: 'bg-accent',
   warn: 'bg-lemon',
   err: 'bg-coral',
-}
-
-const TEXT_TONE: Record<MeterTone, string> = {
-  brand: 'text-brand',
-  ok: 'text-acc-text',
-  warn: 'text-lemon',
-  err: 'text-coral',
 }
 
 export function ProgressBar({
@@ -49,73 +41,5 @@ export function ProgressBar({
         style={{ width: `${value}%` }}
       />
     </div>
-  )
-}
-
-export function SignalMeter({
-  channel,
-  value,
-  status,
-  percent,
-  tone = 'ok',
-  className,
-  ...props
-}: ComponentProps<'div'> & {
-  channel: string
-  value: string
-  status: string
-  percent: number
-  tone?: MeterTone
-}) {
-  return (
-    <div data-slot="signal-meter" className={cn('', className)} {...props}>
-      <div className="mb-[calc(7rem/16)] flex items-baseline justify-between gap-3">
-        <InFull says={channel} wraps="truncate text-ui text-ink">
-          {channel}
-        </InFull>
-        <span className="flex shrink-0 items-baseline gap-[calc(9rem/16)]">
-          <b className="font-code text-ui font-medium tabular-nums">{value}</b>
-          <span className={cn('text-note font-medium', TEXT_TONE[tone])}>
-            {status}
-          </span>
-        </span>
-      </div>
-      <ProgressBar value={percent} tone={tone} label={`${channel} ${value}`} />
-    </div>
-  )
-}
-
-const SPINNER_SIZE = {
-  control: 'size-3.5',
-  status: 'size-[calc(17rem/16)]',
-} as const
-
-export function Spinner({
-  className,
-  size = 'status',
-  ...props
-}: Omit<ComponentProps<'svg'>, 'children'> & {
-  size?: keyof typeof SPINNER_SIZE
-}) {
-  return (
-    <svg
-      data-slot="spinner"
-      viewBox="0 0 24 24"
-      fill="none"
-      aria-hidden="true"
-      focusable="false"
-      className={cn(SPINNER_SIZE[size], 'shrink-0 animate-spin', className)}
-      {...props}
-    >
-      <circle
-        cx="12"
-        cy="12"
-        r="8.4"
-        stroke="currentColor"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        strokeDasharray="40 17"
-      />
-    </svg>
   )
 }

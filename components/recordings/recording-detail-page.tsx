@@ -72,7 +72,7 @@ import {
   type NoteSkip,
 } from '@/components/recordings/skip-events-seat'
 import type { SendSeekWhileLeaving } from '@/components/recordings/send-seek-while-leaving'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import { SeriesEpisodes } from '@/components/recordings/series-episodes'
 import type { CaptionStyle } from '@/lib/caption-style'
 

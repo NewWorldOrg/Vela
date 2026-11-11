@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { Badge } from '@/components/ui/badge'
-import { StatusText } from '@/components/vela/status'
+import { StatusText } from '@/components/vela/status-text'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { EmptyState } from '@/components/vela/empty-state'
 import { Button } from '@/components/ui/button'

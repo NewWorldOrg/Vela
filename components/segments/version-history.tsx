@@ -43,10 +43,10 @@ import {
   StatusCell,
   type StateTone,
 } from '@/components/recordings/status-cell'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { MarkAxis } from '@/components/vela/icons'
 import { InFull } from '@/components/vela/in-full'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { LearningRounds } from '@/components/segments/learning-rounds'
 import { VERSIONS_HEADING } from '@/components/segments/wording'

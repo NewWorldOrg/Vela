@@ -2,7 +2,8 @@ import { cache } from 'react'
 import { unstable_rethrow } from 'next/navigation'
 
 import { countConflicts } from '@/repository/reservations'
-import { NavCount, TabBadge } from '@/components/vela/app-shell'
+import { NavCount } from '@/components/vela/global-nav'
+import { TabBadge } from '@/components/vela/tab-bar'
 
 /** The count of conflicts left unsettled, read once per request for both places that show it. Nothing when they cannot be read: the reservations are still the way to them. */
 const conflictsLeft = cache(async (): Promise<number> =>

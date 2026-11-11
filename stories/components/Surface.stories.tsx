@@ -1,14 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect } from 'storybook/test'
 
-import {
-  Surface,
-  Tile,
-  TileMeta,
-  TileTitle,
-  TintMetric,
-  TintPanel,
-} from '@/components/vela/surface'
+import { Surface } from '@/components/vela/surface'
+import { Tile, TileMeta, TileTitle } from '@/components/vela/tile'
+import { TintMetric, TintPanel } from '@/components/vela/tint-panel'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { EmptyState } from '@/components/vela/empty-state'
 import { Button } from '@/components/ui/button'

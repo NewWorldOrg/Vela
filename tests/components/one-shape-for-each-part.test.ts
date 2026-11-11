@@ -602,7 +602,7 @@ test('a menu opens downwards, and turns up only where it does not fit beneath', 
 })
 
 test('a spinner is one of two sizes, chosen by name and declared once', async () => {
-  const progress = await read('components/vela/progress.tsx')
+  const progress = await read('components/vela/spinner.tsx')
   const sizes = progress.match(/const SPINNER_SIZE = \{([\s\S]*?)\} as const/)
 
   assert.ok(sizes, 'the spinner no longer names its sizes')

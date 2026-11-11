@@ -22,7 +22,7 @@ import type {
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { FieldError } from '@/components/vela/field'
 import { MarkPill } from '@/components/vela/icons'
 import { SectionHeading } from '@/components/vela/section-heading'

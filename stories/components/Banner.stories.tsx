@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 
-import { Banner, InlineAlert } from '@/components/vela/banner'
+import { Banner } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { Switch } from '@/components/ui/switch'

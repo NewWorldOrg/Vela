@@ -11,7 +11,7 @@ import {
   type Verdict,
 } from '@/lib/notifications'
 import { Badge } from '@/components/ui/badge'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 const CHIP_OF: Record<Verdict, 'ok' | 'warn' | 'err' | 'mute'> = {
   ok: 'ok',

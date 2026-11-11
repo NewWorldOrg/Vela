@@ -1,13 +1,14 @@
 import type { SegmentStatus } from '@/repository/segment-status'
 import type { Reading } from '@/repository/system'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import {
   MarkAxis,
   MarkDots,
   MarkPill,
   MarkRuler,
 } from '@/components/vela/icons'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
+import { SectionHeading } from '@/components/vela/section-heading'
 import {
   LEARNING_DATA_SLOT,
   LearningDataPanel,

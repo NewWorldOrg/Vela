@@ -45,7 +45,7 @@ const KEEPS_A_FIXED_BOX: string[] = [
   'components/library/recording-row.tsx',
   'components/guide/guide-grid.tsx',
   'components/quality/quality-trend.tsx',
-  'components/vela/progress.tsx',
+  'components/vela/signal-meter.tsx',
 ]
 
 const LIVE_CARDS: { file: string; prints: RegExp; what: string }[] = [
@@ -161,7 +161,7 @@ test('the guide draws the description with the same part', async () => {
 })
 
 test('the signal meter lets the tip draw the box it clips', async () => {
-  const source = await read('components/vela/progress.tsx')
+  const source = await read('components/vela/signal-meter.tsx')
 
   assert.match(
     source,

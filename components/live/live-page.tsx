@@ -42,7 +42,7 @@ import {
 import { useFormatAnswers } from '@/hooks/useFormatAnswers'
 import { browserProbe } from '@/components/vela/format-answers'
 import { Button } from '@/components/ui/button'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import { ChevronDownIcon, LiveIcon } from '@/components/vela/icons'
 import { EmptyState } from '@/components/vela/empty-state'
 import {
@@ -92,10 +92,8 @@ import {
 import type { Phase } from '@/components/live/live-player'
 import type { ReservationWrite } from '@/repository/reservations'
 import { PHONE_UPRIGHT } from '@/lib/phone'
-import {
-  OnAnUprightPhone,
-  OnAPhone,
-} from '@/components/vela/on-an-upright-phone'
+import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
+import { OnAPhone } from '@/components/vela/on-a-phone'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { KeptAcrossTurns } from '@/components/vela/kept-across-turns'
 import {

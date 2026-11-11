@@ -4,7 +4,7 @@ import { useState, type ReactNode } from 'react'
 
 import { readAddress, registeringAs } from '@/lib/notifications'
 import { Input } from '@/components/ui/input'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field, FieldHint } from '@/components/vela/field'
 import { CheckIcon } from '@/components/vela/icons'
 import { NoticeLabel } from '@/components/notifications/notice-dialog'

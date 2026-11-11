@@ -8,7 +8,7 @@ import {
 } from 'react'
 
 import { CURTAIN_HOLD_MS, CURTAIN_IDLE, FOLDS_ON_A_SIDE } from '@/lib/curtain'
-import { TelevisionBoat } from '@/components/vela/marks'
+import { TelevisionBoat } from '@/components/vela/television-boat'
 
 function nothingChanges(): () => void {
   return () => undefined

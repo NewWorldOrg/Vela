@@ -40,13 +40,11 @@ import { EmptyState } from '@/components/vela/empty-state'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { pressable } from '@/components/vela/tactile'
 import { DatePager } from '@/components/vela/date-pager'
-import {
-  PhoneBarButton,
-  PhoneBarLead,
-  PhoneBarLink,
-  PhoneBarTools,
-} from '@/components/vela/phone-bar-tools'
-import { OnAPhone } from '@/components/vela/on-an-upright-phone'
+import { PhoneBarButton } from '@/components/vela/phone-bar-button'
+import { PhoneBarLead } from '@/components/vela/phone-bar-lead'
+import { PhoneBarLink } from '@/components/vela/phone-bar-link'
+import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
+import { OnAPhone } from '@/components/vela/on-a-phone'
 import { ReserveCircle } from '@/components/guide/reserve-circle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { SubChannelToggle } from '@/components/vela/sub-channel-toggle'
@@ -65,7 +63,7 @@ import { ProgramDetailBody } from '@/components/guide/program-detail'
 import { ChannelStrip } from '@/components/guide/channel-strip'
 import { ChannelDayList } from '@/components/guide/channel-day-list'
 import { usePhoneUpright } from '@/hooks/usePhone'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import {
   FilterFoldButton,
   foldedFiltersOf,

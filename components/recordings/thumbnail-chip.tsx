@@ -1,7 +1,7 @@
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import type { Recording, ThumbnailState } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 const TONE: Record<ThumbnailState, 'ok' | 'err' | undefined> = {
   shot: 'ok',

@@ -40,8 +40,9 @@ import { ReservationSelection } from '@/components/reservations/reservation-sele
 import { ReservationTabs } from '@/components/reservations/reservation-tabs'
 import { ConflictPanel } from '@/components/reservations/conflict-panel'
 import { NextRecording } from '@/components/reservations/next-recording'
-import { ScreenMain } from '@/components/vela/app-shell'
-import { PhoneBarLink, PhoneBarTools } from '@/components/vela/phone-bar-tools'
+import { ScreenMain } from '@/components/vela/screen-main'
+import { PhoneBarLink } from '@/components/vela/phone-bar-link'
+import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import {
   PhoneReservationRows,

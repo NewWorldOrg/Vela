@@ -108,7 +108,7 @@ import {
   SkipForwardIcon,
   VolumeIcon,
 } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import {
   PLAYER_BOARD,
   PLAYER_KEPT_AT_THE_TOP,

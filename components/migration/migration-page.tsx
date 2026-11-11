@@ -1,7 +1,7 @@
 import type { MigrationResult } from '@/repository/migration'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PageHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
 import { MigrationReport } from '@/components/migration/migration-report'
 
 export function MigrationView({ result }: { result: MigrationResult | null }) {

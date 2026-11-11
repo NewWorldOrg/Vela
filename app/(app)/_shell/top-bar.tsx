@@ -7,19 +7,14 @@ import type { ReactNode } from 'react'
 
 import { DESTINATIONS, SETTINGS_HREF, destinationOf } from '@/lib/destinations'
 import { phoneBarOf } from '@/lib/phone-bar'
-import {
-  Brand,
-  GlobalNav,
-  GlobalNavItem,
-  PhoneBarBack,
-  PhoneBarTitle,
-  SettingsLink,
-  TopBar,
-} from '@/components/vela/app-shell'
-import {
-  PhoneBarLeadSlot,
-  PhoneBarToolsSlot,
-} from '@/components/vela/phone-bar-tools'
+import { Brand } from '@/components/vela/brand'
+import { GlobalNav, GlobalNavItem } from '@/components/vela/global-nav'
+import { PhoneBarBack } from '@/components/vela/phone-bar-back'
+import { PhoneBarTitle } from '@/components/vela/phone-bar-title'
+import { SettingsLink } from '@/components/vela/settings-link'
+import { TopBar } from '@/components/vela/top-bar'
+import { PhoneBarLeadSlot } from '@/components/vela/phone-bar-lead'
+import { PhoneBarToolsSlot } from '@/components/vela/phone-bar-tools'
 import { SearchIcon } from '@/components/vela/icons'
 import {
   BarThemeButton,

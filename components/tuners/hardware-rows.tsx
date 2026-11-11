@@ -12,7 +12,7 @@ import { EMPTY_VALUE } from '@/lib/empty-value'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { InFull } from '@/components/vela/in-full'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { tipBoxOf } from '@/components/recordings/status-cell'
 
 const CHIP_VARIANT: Record<

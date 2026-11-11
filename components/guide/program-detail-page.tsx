@@ -9,7 +9,7 @@ import { ChevronLeftIcon } from '@/components/vela/icons'
 import type { ProgramBookingActions } from '@/components/guide/program-booking'
 import { ProgramBooking } from '@/components/guide/program-booking'
 import { ProgramDetailBody } from '@/components/guide/program-detail'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 
 export function ProgramDetailView({
   detail,

@@ -54,9 +54,9 @@ import {
   pressedPick,
   withEveryShown,
 } from '@/lib/library-picking'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
-import { OnAPhone } from '@/components/vela/on-an-upright-phone'
+import { OnAPhone } from '@/components/vela/on-a-phone'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'
 import { useMouse } from '@/hooks/useMouse'
 import { goesOnFrom } from '@/lib/library-days'

@@ -23,7 +23,7 @@ import {
 } from '@/lib/stored-flag'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 import { Switch } from '@/components/ui/switch'
-import { PageHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
 import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,

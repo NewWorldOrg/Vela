@@ -19,7 +19,7 @@ import {
   SuccessIcon,
 } from '@/components/vela/icons'
 import { ActionRow } from '@/components/vela/action-row'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { useTellDisplaced } from '@/components/guide/reservation-area'
 

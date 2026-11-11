@@ -16,9 +16,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { TrashIcon } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 
 const SIGNED_OUT = signedOut('撤去')
 

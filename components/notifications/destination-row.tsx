@@ -16,7 +16,7 @@ import {
   type Verdict,
 } from '@/lib/notifications'
 import { Switch } from '@/components/ui/switch'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { StatusDot, type StatusTone } from '@/components/vela/status'
 import { useToast } from '@/components/vela/toast'
 import { EditDestinationDialog } from '@/components/notifications/edit-destination-dialog'

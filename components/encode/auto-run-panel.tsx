@@ -20,7 +20,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { SettingsGroup } from '@/components/vela/settings-rows'
 import { TermTip } from '@/components/vela/term-tip'
 

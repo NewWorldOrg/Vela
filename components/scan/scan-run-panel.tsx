@@ -16,7 +16,7 @@ import { NOT_YET_IN_THIS_BUILD, wordFor } from '@/lib/not-yet-in-this-build'
 import { NOT_YET_NAMED } from '@/repository/scan-failures'
 import { signedOut } from '@/lib/signed-out'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Button } from '@/components/ui/button'
 import {
   Table,
@@ -30,7 +30,7 @@ import {
 import { cardPlace } from '@/components/ui/table-cards'
 import { CheckIcon } from '@/components/vela/icons'
 import { SectionHeading } from '@/components/vela/section-heading'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { MarkAxis } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { FailureLabel, FailureLegend } from '@/components/scan/failure-mark'

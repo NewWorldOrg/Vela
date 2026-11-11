@@ -13,7 +13,7 @@ import { useTheme } from '@/components/theme/ThemeProvider'
 import type { ThemePreference } from '@/lib/theme'
 import { THEME_OPTIONS } from '@/components/theme/ThemeToggle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { PageHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
 import { SettingsGroup, SettingsRow } from '@/components/vela/settings-rows'
 
 const MOTION_ID = 'display-motion'

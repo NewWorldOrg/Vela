@@ -16,7 +16,7 @@ import { useNewcomers } from '@/hooks/useNewcomers'
 import { SPAN_DASH } from '@/lib/format'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress'
-import { Tile } from '@/components/vela/surface'
+import { Tile } from '@/components/vela/tile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 
 export function ChannelGrid({

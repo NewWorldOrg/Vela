@@ -13,7 +13,7 @@ import {
   type WebhookDraft,
 } from '@/lib/notifications'
 import { Banner } from '@/components/vela/banner'
-import { PageHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
 import { SettingsGroup } from '@/components/vela/settings-rows'
 import { useToast } from '@/components/vela/toast'
 import {

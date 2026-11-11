@@ -38,7 +38,7 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { RebuildEpgDialog } from '@/components/guide/rebuild-dialog'
 
 type CollectRange = 'all' | 'stream' | 'service'

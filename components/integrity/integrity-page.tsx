@@ -4,8 +4,8 @@ import { cn } from '@/lib/utils'
 import { useState, useTransition } from 'react'
 import Link from 'next/link'
 
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
-import { PageHeading } from '@/components/vela/section-heading'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
+import { PageHeading } from '@/components/vela/page-heading'
 
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 
@@ -19,7 +19,7 @@ import type {
 import type { ThumbnailWrite } from '@/repository/recordings'
 import { remadeSaying } from '@/components/recordings/thumbnail-button'
 import { noteThumbnailRedrawn } from '@/hooks/useRedrawnThumbnail'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -40,7 +40,7 @@ import { SectionHeading } from '@/components/vela/section-heading'
 import { DetailStat } from '@/components/recordings/detail-stat'
 import { DeleteFindingDialog } from '@/components/integrity/delete-finding-dialog'
 import { RunCheckButton } from '@/components/integrity/run-check-button'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 
 const COLUMNS: {
   label: string

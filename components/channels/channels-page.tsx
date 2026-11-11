@@ -30,13 +30,11 @@ import {
 } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
-import {
-  ADMIN_LIST_HEIGHT_CAP,
-  Crumb,
-  CrumbCurrent,
-} from '@/components/vela/app-shell'
+import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
+import { SectionHeading } from '@/components/vela/section-heading'
 import { MarkDots } from '@/components/vela/icons'
 import type { CandidateActions } from '@/components/channels/service-table'
 import {

@@ -36,7 +36,7 @@ import {
 import { ReservationArea } from '@/components/guide/reservation-area'
 import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
 import { NotifyStartButton } from '@/components/notifications/notify-start-button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 
 const RELATION_WORDING: Record<

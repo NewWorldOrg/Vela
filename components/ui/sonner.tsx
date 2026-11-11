@@ -6,7 +6,7 @@ import {
   SuccessIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
 import { useTheme } from '@/components/theme/ThemeProvider'
 

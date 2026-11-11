@@ -1,6 +1,6 @@
 import { LEFT_SCRAMBLED_IN_FULL } from '@/lib/state-terms'
 import { Badge } from '@/components/ui/badge'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 export function LeftScrambledChip() {
   return (

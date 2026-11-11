@@ -4,7 +4,7 @@ import { useState, useTransition } from 'react'
 
 import type { SweepWrite } from '@/repository/integrity'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { SearchIcon } from '@/components/vela/icons'
 
 export function RunCheckButton({

@@ -2,7 +2,7 @@ import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
 import { alsoSays } from '@/components/recordings/status-cell'
 import { Badge } from '@/components/ui/badge'
 import { ListIcon } from '@/components/vela/icons'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 import { TermTip } from '@/components/vela/term-tip'
 
 export type RecordingChipMark = 'dot' | 'ledger'

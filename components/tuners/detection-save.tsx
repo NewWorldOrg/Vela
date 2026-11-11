@@ -5,7 +5,7 @@ import { useState, useTransition } from 'react'
 import { signedOut } from '@/lib/signed-out'
 import type { TunerWriteResult } from '@/repository/tuners'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 
 export function DetectionSave({
   devices,

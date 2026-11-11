@@ -15,7 +15,7 @@ import type {
   EncodeProfileDraft,
 } from '@/repository/encode-terms'
 import { Button } from '@/components/ui/button'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
 import {
   MarkDots,
@@ -23,7 +23,8 @@ import {
   MarkPill,
   MarkSplit,
 } from '@/components/vela/icons'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
+import { SectionHeading } from '@/components/vela/section-heading'
 import { AddDestinationDialog } from '@/components/encode/add-destination-dialog'
 import { AddProfileDialog } from '@/components/encode/add-profile-dialog'
 import { AutoRunPanel } from '@/components/encode/auto-run-panel'

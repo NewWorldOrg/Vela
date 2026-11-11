@@ -50,10 +50,10 @@ import {
   LinkIcon,
   SearchIcon,
 } from '@/components/vela/icons'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import type { ReservationWrite } from '@/repository/reservations'
 import { pressable } from '@/components/vela/tactile'
-import { PhoneBarLead } from '@/components/vela/phone-bar-tools'
+import { PhoneBarLead } from '@/components/vela/phone-bar-lead'
 import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import { PhoneSearchHits } from '@/components/search/phone-search-hits'
 import { HitDetail } from '@/components/search/hit-detail'

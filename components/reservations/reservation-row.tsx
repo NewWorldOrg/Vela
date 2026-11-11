@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { IconButton } from '@/components/vela/icon-button'
 import { CloseIcon, TrashIcon, WarningIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'

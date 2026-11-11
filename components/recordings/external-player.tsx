@@ -17,7 +17,7 @@ import {
 import { usePlayerApps } from '@/hooks/usePlayerApps'
 import type { TicketWrite } from '@/repository/tickets'
 import type { PlaybackPlan } from '@/repository/videos'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

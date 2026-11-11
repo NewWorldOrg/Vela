@@ -23,11 +23,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
-import {
-  ADMIN_LIST_HEIGHT_CAP,
-  Crumb,
-  CrumbCurrent,
-} from '@/components/vela/app-shell'
+import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
 import {
   ChevronRightIcon,
@@ -35,7 +32,8 @@ import {
   MarkSlashes,
   MarkSplit,
 } from '@/components/vela/icons'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
+import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import type { QualitySaveThresholds } from '@/components/quality/threshold-panel'
 import { ThresholdPanel } from '@/components/quality/threshold-panel'

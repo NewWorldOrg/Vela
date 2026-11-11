@@ -2,7 +2,7 @@ import { cn } from '@/lib/utils'
 import { startupRowsOf } from '@/lib/live-startup'
 import type { LiveStartup } from '@/lib/live-wire'
 import { CheckIcon } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 
 export function LiveStartupSteps({
   startup,

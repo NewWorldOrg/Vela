@@ -43,7 +43,7 @@ import {
   WarningIcon,
 } from '@/components/vela/icons'
 import { iconButtonVariants } from '@/components/vela/icon-button'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import { useToast } from '@/components/vela/toast'
 
 const SIGNED_OUT = signedOut('操作')

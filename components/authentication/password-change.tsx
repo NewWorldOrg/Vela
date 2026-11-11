@@ -14,7 +14,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field, FieldLabel } from '@/components/vela/field'
 import { LockIcon } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'

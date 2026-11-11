@@ -16,7 +16,7 @@ import {
   toneOf,
 } from '@/components/recordings/status-cell'
 import { InFull } from '@/components/vela/in-full'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 type EncodeTone = 'secondary' | 'info' | 'ok' | 'err'
 

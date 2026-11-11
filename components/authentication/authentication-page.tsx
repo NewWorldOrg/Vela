@@ -10,10 +10,11 @@ import type {
   SessionRow,
   SignedIn,
 } from '@/repository/sessions'
-import { Crumb, CrumbCurrent } from '@/components/vela/app-shell'
+import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { Banner } from '@/components/vela/banner'
 import { EmptyState } from '@/components/vela/empty-state'
-import { PageHeading, SectionHeading } from '@/components/vela/section-heading'
+import { PageHeading } from '@/components/vela/page-heading'
+import { SectionHeading } from '@/components/vela/section-heading'
 import { OidcSettings } from '@/components/authentication/oidc-settings'
 import { ChangePassword } from '@/components/authentication/password-change'
 import { SessionTable } from '@/components/authentication/session-table'

@@ -17,7 +17,7 @@ import {
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronUpIcon, MoreIcon, TrashIcon } from '@/components/vela/icons'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
 import {

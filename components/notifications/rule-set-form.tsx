@@ -17,7 +17,7 @@ import { useTellingOfTheGone } from '@/hooks/useTellingOfTheGone'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field } from '@/components/vela/field'
 import {
   NoticeDialogFooter,

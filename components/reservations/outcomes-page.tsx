@@ -24,7 +24,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { OUTCOME_KIND_COLUMN } from '@/components/reservations/outcome-kind-chip'
-import { ScreenMain } from '@/components/vela/app-shell'
+import { ScreenMain } from '@/components/vela/screen-main'
 import { EmptyState } from '@/components/vela/empty-state'
 import { FilterSelect } from '@/components/vela/filter-select'
 import { Pager } from '@/components/vela/pager'

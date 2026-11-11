@@ -26,7 +26,7 @@ import { playingOnHref } from '@/lib/playback-source'
 import { RECORDING_IN_PROGRESS_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
 import { PlayIcon } from '@/components/vela/icons'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 import {
   PickMark,

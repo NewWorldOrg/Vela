@@ -15,7 +15,7 @@ import type {
 } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { RebuildIcon } from '@/components/vela/icons'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 
 const DREW: Record<ThumbnailRemake, { drew: boolean; text: string }> = {
   drawn: { drew: true, text: 'サムネイルを再生成しました。' },

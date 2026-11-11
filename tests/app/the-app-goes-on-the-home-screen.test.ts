@@ -126,16 +126,18 @@ test('iPad opens it on its own, below a status bar of its own', async () => {
 })
 
 test('the frame of every screen stays inside the safe area', async () => {
+  const frame = (await read('components/vela/app-frame.tsx')).toString('utf8')
+
   const shell = (await read('components/vela/app-shell.tsx')).toString('utf8')
 
   const sheet = (await read('app/globals.css')).toString('utf8')
 
   for (const side of ['right', 'left']) {
-    assert.match(shell, new RegExp(`env\\(safe-area-inset-${side}\\)`))
+    assert.match(frame, new RegExp(`env\\(safe-area-inset-${side}\\)`))
   }
   assert.match(sheet, /--safe-bottom: env\(safe-area-inset-bottom, 0px\);/)
   assert.match(
-    shell,
+    frame,
     /'pr-\[env\(safe-area-inset-right\)\] pb-\[calc\(var\(--safe-bottom\)\+var\(--tab-bar\)\)\]/,
   )
   assert.match(

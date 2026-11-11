@@ -6,9 +6,9 @@ import {
   FieldError,
   FieldHint,
   FieldLabel,
-  OptionGroup,
   RequiredMark,
 } from '@/components/vela/field'
+import { OptionGroup } from '@/components/vela/option-group'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { Input } from '@/components/ui/input'

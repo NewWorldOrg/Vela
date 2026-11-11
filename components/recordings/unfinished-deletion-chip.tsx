@@ -1,7 +1,7 @@
 import { unfinishedDeletionShapeOf } from '@/lib/recordings'
 import type { Recording } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
-import { ChipDot } from '@/components/vela/status'
+import { ChipDot } from '@/components/vela/chip-dot'
 
 export function UnfinishedDeletionChip({
   recording,

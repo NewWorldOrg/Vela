@@ -10,7 +10,7 @@ const ROOT = path.resolve(
   '..',
 )
 
-const THE_SHELL = 'components/vela/app-shell.tsx'
+const THE_SIDE_NAV = 'components/vela/admin-side-nav.tsx'
 
 const THE_LIBRARY_TABLE = 'components/library/recordings-table.tsx'
 
@@ -39,11 +39,8 @@ async function read(file: string): Promise<string> {
 }
 
 test('the column of screens a setting sits beside is measured in letters', async () => {
-  const shell = await read(THE_SHELL)
-  const nav = shell.slice(
-    shell.indexOf('export function AdminSideNav('),
-    shell.indexOf('const SCREEN_WIDTHS'),
-  )
+  const sideNav = await read(THE_SIDE_NAV)
+  const nav = sideNav.slice(sideNav.indexOf('export function AdminSideNav('))
 
   assert.doesNotMatch(
     nav,

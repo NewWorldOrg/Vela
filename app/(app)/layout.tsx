@@ -1,9 +1,9 @@
 import { Suspense } from 'react'
 
-import { AppFrame } from '@/components/vela/app-shell'
+import { AppFrame } from '@/components/vela/app-frame'
 import { Curtain } from '@/components/vela/curtain'
 import { Toasts } from '@/components/vela/toast'
-import { KeptRowsAcrossTurns } from '@/components/vela/kept-across-turns'
+import { KeptRowsAcrossTurns } from '@/components/vela/kept-rows-across-turns'
 
 import { ConflictsBadge, ConflictsCount } from './_shell/conflicts-badge'
 import { AppTabBar } from './_shell/tab-bar'

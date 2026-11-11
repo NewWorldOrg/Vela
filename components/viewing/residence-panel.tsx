@@ -32,7 +32,7 @@ import {
   SelectValue,
 } from '@/components/ui/select'
 import { FieldError } from '@/components/vela/field'
-import { Spinner } from '@/components/vela/progress'
+import { Spinner } from '@/components/vela/spinner'
 import {
   SETTINGS_GROUP_TITLE,
   SettingsGroup,

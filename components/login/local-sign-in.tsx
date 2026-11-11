@@ -6,7 +6,7 @@ import { formatClock } from '@/lib/format'
 import { signIn, type SignInResult } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field, FieldLabel } from '@/components/vela/field'
 import {
   ChevronDownIcon,

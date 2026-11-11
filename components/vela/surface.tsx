@@ -1,7 +1,6 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { pressable, still, tactile } from '@/components/vela/tactile'
 
 export function Surface({ className, ...props }: ComponentProps<'div'>) {
   return (
@@ -11,90 +10,6 @@ export function Surface({ className, ...props }: ComponentProps<'div'>) {
         'rounded-lg bg-surface px-[calc(18rem/16)] py-4',
         className,
       )}
-      {...props}
-    />
-  )
-}
-
-export type TintName =
-  'accent' | 'lavender' | 'salmon' | 'butter' | 'sage' | 'sky' | 'blush'
-
-export const TINT_CLASS: Record<TintName, string> = {
-  accent: 'bg-surface',
-  lavender: 'bg-tint-lavender',
-  salmon: 'bg-tint-salmon',
-  butter: 'bg-tint-butter',
-  sage: 'bg-tint-sage',
-  sky: 'bg-tint-sky',
-  blush: 'bg-tint-blush',
-}
-
-export function TintPanel({
-  tint = 'lavender',
-  className,
-  ...props
-}: ComponentProps<'div'> & { tint?: TintName }) {
-  return (
-    <div
-      data-slot="tint-panel"
-      data-tint={tint}
-      className={cn(
-        'rounded-lg px-[calc(15rem/16)] py-[calc(13rem/16)] text-ink',
-        TINT_CLASS[tint],
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export function TintMetric({
-  label,
-  value,
-  unit,
-}: {
-  label: string
-  value: string
-  unit?: string
-}) {
-  return (
-    <>
-      <span className="heading block text-ui">{label}</span>
-      <span className="my-px block font-code text-[calc(20rem/16)] leading-none font-medium tabular-nums">
-        {value}
-      </span>
-      {unit && <span className="text-cap text-ink-2">{unit}</span>}
-    </>
-  )
-}
-
-export function Tile({ className, ...props }: ComponentProps<'button'>) {
-  return (
-    <button
-      type="button"
-      data-slot="tile"
-      className={cn(
-        'min-w-[calc(150rem/16)] flex-1 rounded-lg border border-line bg-surface px-[calc(15rem/16)] py-[calc(13rem/16)] text-left shadow-pop outline-none',
-        'hover:shadow-pop-lg active:shadow-pop-none focus-visible:shadow-pop-ring',
-        'disabled:opacity-45 disabled:shadow-pop-none disabled:hover:shadow-pop-none',
-        tactile,
-        pressable,
-        still,
-        className,
-      )}
-      {...props}
-    />
-  )
-}
-
-export function TileTitle({ className, ...props }: ComponentProps<'span'>) {
-  return <span className={cn('heading block text-ui', className)} {...props} />
-}
-
-export function TileMeta({ className, ...props }: ComponentProps<'span'>) {
-  return (
-    <span
-      className={cn('font-code text-note tabular-nums text-ink-2', className)}
       {...props}
     />
   )

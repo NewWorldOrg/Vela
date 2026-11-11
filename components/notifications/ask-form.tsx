@@ -10,7 +10,7 @@ import {
   type WatchWrite,
 } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
-import { InlineAlert } from '@/components/vela/banner'
+import { InlineAlert } from '@/components/vela/inline-alert'
 import { LeadChoice } from '@/components/notifications/lead-choice'
 import {
   NoticeDialogFooter,
