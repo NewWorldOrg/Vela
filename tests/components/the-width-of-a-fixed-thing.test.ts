@@ -22,7 +22,16 @@ const THE_SHEET = 'app/globals.css'
 
 const THE_VOLUME = 'components/recordings/player-volume.tsx'
 
-const THE_RULES = 'components/reservations/rules-page.tsx'
+const THE_RULES = [
+  'components/reservations/rules-page.tsx',
+  'components/reservations/rules/rules-screen.tsx',
+  'components/reservations/rules/rule-row.tsx',
+  'components/reservations/rules/rule-editor.tsx',
+  'components/reservations/rules/excluded.tsx',
+  'components/reservations/rules/count.tsx',
+]
+
+const THE_RULE_EDITOR = 'components/reservations/rules/rule-editor.tsx'
 
 const THE_RULES_REFUSALS = 'repository/rules.ts'
 
@@ -163,7 +172,7 @@ test('the mark on the volume sits on the line it reads against', async () => {
 })
 
 test('a rehearsal is the migration word; a rule looks at its matches', async () => {
-  for (const file of [THE_RULES, THE_RULES_REFUSALS]) {
+  for (const file of [...THE_RULES, THE_RULES_REFUSALS]) {
     assert.doesNotMatch(
       await read(file),
       /下見/,
@@ -172,7 +181,7 @@ test('a rehearsal is the migration word; a rule looks at its matches', async () 
     )
   }
 
-  assert.match(await read(THE_RULES), /この条件に一致する今後の番組/)
+  assert.match(await read(THE_RULE_EDITOR), /この条件に一致する今後の番組/)
 })
 
 async function sourcesUnder(dir: string): Promise<string[]> {

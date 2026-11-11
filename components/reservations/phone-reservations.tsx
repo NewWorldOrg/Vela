@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useTransition } from 'react'
-import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { formatClock } from '@/lib/format'
@@ -21,7 +20,6 @@ import { CloseIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
-import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import { GenreDot } from '@/components/reservations/genre-dot'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 import { whereFrom } from '@/components/reservations/reservation-row'
@@ -30,8 +28,9 @@ import {
   takenBackWords,
 } from '@/components/notifications/notify-only-row'
 import { NotifyBell } from '@/components/notifications/notify-bell'
+import { ReservationChange } from '@/components/reservations/reservation-change'
 
-function clockOf(at: string): string {
+export function clockOf(at: string): string {
   return formatClock(new Date(at).getTime())
 }
 
@@ -45,7 +44,7 @@ function said(written: ReservationWrite): string | undefined {
     : 'サインインし直してください'
 }
 
-function spanOf(reservation: Reservation): Span | undefined {
+export function spanOf(reservation: Reservation): Span | undefined {
   return reservation.span
 }
 
@@ -309,75 +308,6 @@ export function PhoneReservationRows({
           </section>
         )
       })}
-    </div>
-  )
-}
-
-/** The change of one reservation, in the place it opens: its priority, margins and encoding, saved where it stands. */
-function ReservationChange({
-  reservation,
-  actions,
-  onDone,
-}: {
-  reservation: Reservation
-  actions: ReservationActions
-  onDone: () => void
-}) {
-  return (
-    <EditReservationDialog
-      key={reservation.id}
-      layout="stack"
-      open
-      onOpenChange={(next) => !next && onDone()}
-      onRevise={actions.onRevise}
-      booking={{
-        id: reservation.id,
-        title: reservation.title,
-        priority: reservation.priority,
-        marginBeforeSeconds: reservation.marginBeforeSeconds,
-        marginAfterSeconds: reservation.marginAfterSeconds,
-        encodeWhenRecorded: reservation.encodeWhenRecorded,
-      }}
-    />
-  )
-}
-
-/** One reservation beside the list on a phone held on its side: its title, channel, time and where it came from, a chip for what needs attention, and its change under them. */
-export function ReservationBeside({
-  reservation,
-  actions,
-  onDone,
-}: {
-  reservation: Reservation
-  actions: ReservationActions
-  onDone: () => void
-}) {
-  const span = spanOf(reservation)
-
-  return (
-    <div data-slot="reservation-beside">
-      <h2 className="text-section font-bold text-ink">{reservation.title}</h2>
-      <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sub text-ink-2">
-        {span && (
-          <span className="font-code tabular-nums">
-            {clockOf(span.startAt)} – {clockOf(span.endAt)}
-          </span>
-        )}
-        <span>{reservation.channelName}</span>
-        <span>{whereFrom(reservation)}</span>
-      </p>
-      {reservation.standing !== 'scheduled' && (
-        <p className="mt-2 flex">
-          <ReservationStateChip reservation={reservation} />
-        </p>
-      )}
-      <div className="mt-4 border-t border-hair pt-4">
-        <ReservationChange
-          reservation={reservation}
-          actions={actions}
-          onDone={onDone}
-        />
-      </div>
     </div>
   )
 }

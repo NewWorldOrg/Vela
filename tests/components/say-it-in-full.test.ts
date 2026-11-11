@@ -30,7 +30,7 @@ const SAYS_IT_WHOLE: { file: string; prints: RegExp; what: string }[] = [
     what: 'the title of a queued recording',
   },
   {
-    file: 'components/reservations/rules-page.tsx',
+    file: 'components/reservations/rules/rule-row.tsx',
     prints: /\{rule\.name\}/,
     what: 'the name of a rule and the conditions it stands for',
   },

@@ -44,10 +44,8 @@ import { ScreenMain } from '@/components/vela/screen-main'
 import { PhoneBarLink } from '@/components/vela/phone-bar-link'
 import { PhoneBarTools } from '@/components/vela/phone-bar-tools'
 import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
-import {
-  PhoneReservationRows,
-  ReservationBeside,
-} from '@/components/reservations/phone-reservations'
+import { PhoneReservationRows } from '@/components/reservations/phone-reservations'
+import { ReservationBeside } from '@/components/reservations/reservation-beside'
 import { SidewaysPanes } from '@/components/vela/sideways-panes'
 import { useOnAPhone, usePhoneOnItsSide } from '@/hooks/usePhone'
 import { cn } from '@/lib/utils'

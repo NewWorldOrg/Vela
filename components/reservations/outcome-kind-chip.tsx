@@ -12,8 +12,8 @@ import {
 } from '@/lib/state-terms'
 import { numbered } from '@/repository/scan-failures'
 import { Badge } from '@/components/ui/badge'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   alsoSays,
   stateColumnFor,
   toneOf,

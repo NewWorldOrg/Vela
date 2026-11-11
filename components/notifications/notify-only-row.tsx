@@ -19,8 +19,8 @@ import {
   ROW_GRID,
   ROW_GROUND,
   ROW_LINE,
-  RowTimes,
 } from '@/components/reservations/reservation-row'
+import { RowTimes } from '@/components/reservations/row-times'
 import { NotifyBell } from '@/components/notifications/notify-bell'
 
 export const NOTIFY_ONLY = '通知'
