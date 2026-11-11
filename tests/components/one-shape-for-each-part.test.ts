@@ -354,7 +354,7 @@ test('saving is one button of one height, and the row it sits in is that height'
 
   assert.ok(saving.length > 5, `only ${saving.length} saving buttons were read`)
 
-  const tuners = await read('components/tuners/tuners-page.tsx')
+  const tuners = await read('components/tuners/detection-panel.tsx')
   const cancel = tuners.match(/function CancelDetection\(\)[\s\S]*?\n\}/)
 
   assert.ok(cancel, 'the tuner detection no longer names its cancel')

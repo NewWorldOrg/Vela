@@ -2,50 +2,25 @@ import type { Route } from 'next'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import Link from 'next/link'
 
-import { cn } from '@/lib/utils'
 import {
-  SCAN_STATE_LABEL,
   type ChannelsScreenResult,
-  type ScanRun,
   type ScanScope,
   type ServiceGroup,
   type StartScanResult,
   type WriteResult,
 } from '@/repository/services'
-import { StateSay } from '@/components/recordings/state-say'
-import {
-  StatusCell,
-  stateColumnFor,
-  type StateTone,
-} from '@/components/recordings/status-cell'
 import { Button } from '@/components/ui/button'
-import {
-  Table,
-  TableBody,
-  TableColumns,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
 import { Banner } from '@/components/vela/banner'
-import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
 import { PageHeading } from '@/components/vela/page-heading'
-import { SectionHeading } from '@/components/vela/section-heading'
-import { MarkDots } from '@/components/vela/icons'
 import type { CandidateActions } from '@/components/channels/service-table'
-import {
-  ServiceTable,
-  UnfoldingServices,
-} from '@/components/channels/service-table'
+import { ServiceTable } from '@/components/channels/service-table'
+import { UnfoldingServices } from '@/components/channels/unfolding-services'
 import { ScanBar } from '@/components/channels/scan-bar'
 import { ScanRunPanel } from '@/components/scan/scan-run-panel'
 import { ZeroDiagnosisPanel } from '@/components/channels/zero-diagnosis'
-
-const SCAN_STATE_COLUMN = stateColumnFor(Object.values(SCAN_STATE_LABEL))
+import { ScanHistory } from '@/components/channels/scan-history'
 
 function GroupHeading({ title, stat }: { title: string; stat: string }) {
   return (
@@ -84,83 +59,6 @@ function ServiceGroupSection({
         )
       ) : (
         <ServiceTable services={group.services} actions={actions} />
-      )}
-    </section>
-  )
-}
-
-function runToneOf(state: ScanRun['state']): StateTone {
-  switch (state) {
-    case 'completed':
-      return 'ok'
-    case 'running':
-      return 'info'
-    case 'failed':
-      return 'err'
-    default:
-      return 'mute'
-  }
-}
-
-function ScanHistory({ history }: { history: ScanRun[] }) {
-  return (
-    <section id="scan-history" className="mt-10">
-      <SectionHeading>スキャン履歴</SectionHeading>
-      {history.length === 0 ? (
-        <EmptyState usher={null} title="まだスキャン履歴がありません" />
-      ) : (
-        <Table
-          cards
-          className="table-fixed min-w-[calc(560rem/16)]"
-          containerClassName={cn(ADMIN_LIST_HEIGHT_CAP, 'overflow-y-auto pb-1')}
-        >
-          <TableColumns
-            widths={[
-              'calc(180rem/16)',
-              SCAN_STATE_COLUMN,
-              'calc(112rem/16)',
-              'calc(180rem/16)',
-            ]}
-          />
-          <TableHeader className="[&>tr>th]:sticky [&>tr>th]:top-0 [&>tr>th]:z-10">
-            <TableRow>
-              {['開始', '状態', '所要', '終了'].map((column) => (
-                <TableHead key={column}>{column}</TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {history.map((run) => (
-              <TableRow key={run.id}>
-                <TableCell
-                  {...cardPlace('lead')}
-                  className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
-                >
-                  {run.startedAt}
-                </TableCell>
-                <TableCell {...cardPlace('field', '状態')}>
-                  <StatusCell>
-                    <StateSay tone={runToneOf(run.state)} bold>
-                      {run.stateLabel}
-                    </StateSay>
-                  </StatusCell>
-                </TableCell>
-                <TableCell
-                  {...cardPlace('field', '所要')}
-                  className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
-                >
-                  {run.took ?? EMPTY_VALUE}
-                </TableCell>
-                <TableCell
-                  {...cardPlace('field', '終了')}
-                  className="font-code text-sub tabular-nums whitespace-nowrap text-ink-2"
-                >
-                  {run.finishedAt ?? EMPTY_VALUE}
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
       )}
     </section>
   )
