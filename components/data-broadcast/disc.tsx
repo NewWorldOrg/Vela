@@ -13,7 +13,7 @@ import { pressable } from '@/components/vela/tactile'
 import {
   type Pressing,
   aiming,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 
 const ENTER_LOOK = cn(
   'absolute top-1/2 left-1/2 z-[1] flex size-(--ok) -translate-1/2 items-center justify-center rounded-full bg-(--pl-accent) text-[length:var(--ok-font)] leading-none font-bold tracking-[-0.02em] text-(--pl-bg) select-none hover:bg-(--pl-accent-ink) focus-visible:shadow-ring focus-visible:outline-none active:translate-[calc(-50%+1px)] active:bg-(--pl-accent)',

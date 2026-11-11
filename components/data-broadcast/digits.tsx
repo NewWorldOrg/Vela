@@ -6,7 +6,7 @@ import {
   type Pressing,
   aiming,
   KEY_LOOK,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 
 const DIGITS: BmlKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 

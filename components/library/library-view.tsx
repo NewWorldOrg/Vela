@@ -44,7 +44,7 @@ import {
   useLeaveOnEscape,
   usePickedDeletion,
   usePickedRemake,
-} from '@/components/library/picking'
+} from '@/components/library/picked-actions'
 import { PickingBand } from '@/components/library/picking-band'
 import { PickingBar } from '@/components/library/picking-bar'
 import { PickToggle } from '@/components/library/pick-toggle'
@@ -69,7 +69,7 @@ import { storeText } from '@/hooks/useStoredText'
 import { ContinueRow } from '@/components/library/continue-row'
 import { DateGrid } from '@/components/library/date-grid'
 import { SeriesGrid } from '@/components/library/series-grid'
-import { type Picking } from '@/components/library/library-cards'
+import { type Picking } from '@/components/library/library-tiles'
 import { useHeldDeletions } from '@/components/recordings/held-deletions'
 import { PhoneContinue } from '@/components/library/phone-continue'
 import { PhoneRecordingRows } from '@/components/library/phone-recording-rows'

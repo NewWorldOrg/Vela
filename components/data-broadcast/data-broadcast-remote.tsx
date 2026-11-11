@@ -12,7 +12,7 @@ import {
   DATA_BROADCAST_NAME,
   aiming,
   KEY_LOOK,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 import { StationLine } from '@/components/data-broadcast/station-line'
 import { Disc } from '@/components/data-broadcast/disc'
 import { Colours } from '@/components/data-broadcast/colours'

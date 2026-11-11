@@ -41,7 +41,7 @@ import { PickToggle } from '@/components/library/pick-toggle'
 import {
   useLeaveOnEscape,
   type PickedAction,
-} from '@/components/library/picking'
+} from '@/components/library/picked-actions'
 import { JobTable } from '@/components/encode/job-table'
 
 const STATUS_PARAM = 'status'

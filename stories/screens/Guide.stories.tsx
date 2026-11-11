@@ -53,7 +53,7 @@ import { GuideView } from '@/components/guide/guide-view'
 import {
   NOTIFY_START,
   STOP_NOTIFYING,
-} from '@/components/notifications/programme-notice'
+} from '@/components/notifications/wording'
 import { inTheApp } from '@/stories/frames'
 import { FROM_600, NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 

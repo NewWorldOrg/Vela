@@ -39,7 +39,7 @@ import { SearchView } from '@/components/search/search-view'
 import {
   NOTIFY_START,
   STOP_NOTIFYING,
-} from '@/components/notifications/programme-notice'
+} from '@/components/notifications/wording'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import { inTheApp } from '@/stories/frames'

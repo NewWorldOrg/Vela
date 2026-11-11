@@ -3,7 +3,10 @@
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Spinner } from '@/components/vela/spinner'
-import { type PickingControls, whatItDoes } from '@/components/library/picking'
+import {
+  type PickingControls,
+  whatItDoes,
+} from '@/components/library/picked-actions'
 import { PickedCount } from '@/components/library/picked-count'
 
 const BAND_PRESS = 'h-[calc(38rem/16)] px-3 text-ui'

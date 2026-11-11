@@ -138,7 +138,7 @@ import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-ba
 import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
 import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
 import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
-import { widestColumn } from '@/components/data-broadcast/data-broadcast-player'
+import { widestColumn } from '@/components/data-broadcast/data-broadcast-palette'
 import { HybridcastFace } from '@/components/data-broadcast/hybridcast-face'
 import { eventInformationOf } from '@/lib/hybridcast/event-information'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'

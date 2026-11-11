@@ -9,7 +9,7 @@ import { useFoldingChannels, useSettled } from '@/components/live/channel-fold'
 import {
   COLUMN_BODY,
   PLAYER_SIDE_COLUMN,
-} from '@/components/live/remote-column'
+} from '@/components/live/remote-column-palette'
 import { ColumnHead } from '@/components/live/column-head'
 import { RemoteSlot } from '@/components/live/remote-slot'
 

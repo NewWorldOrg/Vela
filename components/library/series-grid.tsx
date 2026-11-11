@@ -10,7 +10,7 @@ import {
   type Picking,
   type PickStarting,
   clockOf,
-} from '@/components/library/library-cards'
+} from '@/components/library/library-tiles'
 import { SeriesCard } from '@/components/library/series-card'
 import { RecordingTile } from '@/components/library/recording-tile'
 

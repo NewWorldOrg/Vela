@@ -11,7 +11,7 @@ import { InlineAlert } from '@/components/vela/inline-alert'
 import { PickMark } from '@/components/library/pick-mark'
 import { PickShade } from '@/components/library/pick-shade'
 import { PickStart, SHOWN_AT_REST } from '@/components/library/pick-start'
-import type { Picking, PickStarting } from '@/components/library/library-cards'
+import type { Picking, PickStarting } from '@/components/library/library-tiles'
 import { Picture } from '@/components/library/picture'
 
 /** Whether the pointer rests on a recording, and the handlers that follow it; only a mouse's pointer counts. */

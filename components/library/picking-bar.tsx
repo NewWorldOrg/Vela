@@ -11,7 +11,7 @@ import {
   type PickedAction,
   type PickingControls,
   whatItDoes,
-} from '@/components/library/picking'
+} from '@/components/library/picked-actions'
 import { PickedCount } from '@/components/library/picked-count'
 
 function enabledOf(actions: readonly PickedAction[]): string {

@@ -36,7 +36,7 @@ import {
   REMOTE_GROUP_GAP,
   REMOTE_UNDER_THE_DISC,
   columnOverTheBand,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
 import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
 import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'

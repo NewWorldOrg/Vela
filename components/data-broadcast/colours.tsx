@@ -6,7 +6,7 @@ import { pressable } from '@/components/vela/tactile'
 import {
   type Pressing,
   aiming,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 
 const COLOURS: { key: BmlKey; name: string; fill: string }[] = [
   { key: 'blue', name: '青', fill: 'bg-(--remote-blue)' },

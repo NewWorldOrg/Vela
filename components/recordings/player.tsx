@@ -217,7 +217,7 @@ import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-ba
 import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
 import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
 import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
-import { widestColumn } from '@/components/data-broadcast/data-broadcast-player'
+import { widestColumn } from '@/components/data-broadcast/data-broadcast-palette'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
 import {
   useSeekEvents,

@@ -5,7 +5,7 @@ import {
   REMOTE_GROUP_GAP,
   REMOTE_GROUP_GAP_SHORT,
   SHORT_WINDOW,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 
 /** Every key on the remote in the column, in the order it lays them out. */
 export const REMOTE_KEYS = [

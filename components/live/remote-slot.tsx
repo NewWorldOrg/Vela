@@ -5,7 +5,7 @@ import { useRef, type Ref } from 'react'
 import { cn } from '@/lib/utils'
 import { foldBand, type FoldMotion } from '@/lib/live-fold'
 import { useSettled } from '@/components/live/channel-fold'
-import { stepOf } from '@/components/live/remote-column'
+import { stepOf } from '@/components/live/remote-column-palette'
 
 /** Where the remote is drawn in the column, under the head: the remote stands at its own height at the top, and a window too short for it scrolls the column. It slides in from the right after the head, and out before it. */
 export function RemoteSlot({

@@ -34,7 +34,7 @@ import {
   tunerSubOf,
   tunerTitleOf,
   tunerWhyOf,
-} from '@/components/tuners/hardware-rows'
+} from '@/components/tuners/wording'
 import { DetectionPanel } from '@/components/tuners/detection-panel'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route

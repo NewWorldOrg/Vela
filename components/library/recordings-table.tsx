@@ -9,7 +9,7 @@ import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-
 import { RecordingRow } from '@/components/library/recording-row'
 import { WHEN_LABELS } from '@/lib/when-terms'
 import { TableHead } from '@/components/ui/table'
-import type { Picking, PickStarting } from '@/components/library/library-cards'
+import type { Picking, PickStarting } from '@/components/library/library-tiles'
 import { ChevronDownIcon } from '@/components/vela/icons'
 import { waitsWhile } from '@/components/vela/waiting-rows'
 

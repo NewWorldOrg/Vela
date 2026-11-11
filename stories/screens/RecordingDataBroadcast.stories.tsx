@@ -16,7 +16,7 @@ import type { FeedRecording } from '@/components/recordings/recording-feed'
 import {
   BAND_UNDER_THE_BOX,
   DATA_BROADCAST_NAME,
-} from '@/components/data-broadcast/data-broadcast-player'
+} from '@/components/data-broadcast/data-broadcast-palette'
 import { RECORDING_DETAIL_FIXTURES } from '@/stories/fixtures/recording-details'
 import { DRAWN_PICTURE, drawnFrame } from '@/stories/fixtures/frames'
 import {

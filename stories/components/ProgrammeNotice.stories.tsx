@@ -13,7 +13,7 @@ import type {
 import {
   NOTIFY_START,
   STOP_NOTIFYING,
-} from '@/components/notifications/programme-notice'
+} from '@/components/notifications/wording'
 import { NotifyBell } from '@/components/notifications/notify-bell'
 import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
 import { NotifyStartButton } from '@/components/notifications/notify-start-button'

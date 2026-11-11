@@ -30,7 +30,7 @@ import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { InlineAlert } from '@/components/vela/inline-alert'
 import { InFull } from '@/components/vela/in-full'
 import { PickMark } from '@/components/library/pick-mark'
-import { ROOM_FOR_THE_BAR } from '@/components/library/picking'
+import { ROOM_FOR_THE_BAR } from '@/components/library/picked-actions'
 import { CancelJobButton } from '@/components/encode/cancel-job-button'
 import {
   JOB_STATUS_COLUMN,

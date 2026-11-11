@@ -63,7 +63,7 @@ import {
 import {
   COLUMN_BODY,
   PLAYER_SIDE_COLUMN,
-} from '@/components/live/remote-column'
+} from '@/components/live/remote-column-palette'
 import { ColumnSwitch, type ColumnShows } from '@/components/live/column-switch'
 import { RemoteSlot } from '@/components/live/remote-slot'
 import type { LineRelay } from '@/repository/live-data-broadcast'

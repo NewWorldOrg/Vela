@@ -18,10 +18,7 @@ import {
   NoticeGroupLabel,
 } from '@/components/notifications/notice-dialog-content'
 import { PickChip, PickChips } from '@/components/notifications/pick-chip'
-import {
-  refusalOf,
-  NOTIFY_START,
-} from '@/components/notifications/programme-notice'
+import { refusalOf, NOTIFY_START } from '@/components/notifications/wording'
 
 export function AskForm({
   offer,

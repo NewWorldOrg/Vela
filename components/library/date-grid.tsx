@@ -7,7 +7,7 @@ import {
   type Picking,
   type PickStarting,
   clockOf,
-} from '@/components/library/library-cards'
+} from '@/components/library/library-tiles'
 import { RecordingTile } from '@/components/library/recording-tile'
 
 const TILE_GRID =

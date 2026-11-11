@@ -17,7 +17,7 @@ import {
   refusalOf,
   STOP_NOTIFYING,
   NOTIFY_START,
-} from '@/components/notifications/programme-notice'
+} from '@/components/notifications/wording'
 import { AskForm } from '@/components/notifications/ask-form'
 
 /** Beside `録画予約` in a programme's detail: opens a small dialog that asks for a notice when the programme starts, without recording it, and once asked takes it back. The toast it leaves offers to take it back too. Nothing where there is neither a notice nor anywhere to send one. */

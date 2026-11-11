@@ -20,7 +20,7 @@ import { ProgramDetailView } from '@/components/guide/program-detail-view'
 import {
   NOTIFY_START,
   STOP_NOTIFYING,
-} from '@/components/notifications/programme-notice'
+} from '@/components/notifications/wording'
 import { inTheApp } from '@/stories/frames'
 import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
