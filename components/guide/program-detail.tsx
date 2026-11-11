@@ -34,10 +34,8 @@ import {
   ProgramExtended,
 } from '@/components/guide/program-description'
 import { ReservationArea } from '@/components/guide/reservation-area'
-import {
-  NotifyLeadChip,
-  NotifyStartButton,
-} from '@/components/notifications/programme-notice'
+import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
+import { NotifyStartButton } from '@/components/notifications/notify-start-button'
 import { InlineAlert } from '@/components/vela/banner'
 import { WAITING_LABEL, WaitingRows } from '@/components/vela/waiting'
 

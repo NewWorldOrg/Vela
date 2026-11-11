@@ -12,11 +12,11 @@ import type {
 } from '@/lib/notifications'
 import {
   NOTIFY_START,
-  NotifyBell,
-  NotifyLeadChip,
-  NotifyStartButton,
   STOP_NOTIFYING,
 } from '@/components/notifications/programme-notice'
+import { NotifyBell } from '@/components/notifications/notify-bell'
+import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
+import { NotifyStartButton } from '@/components/notifications/notify-start-button'
 import {
   NOTIFY_ONLY,
   NotifyOnlyRow,

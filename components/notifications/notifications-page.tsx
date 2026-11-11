@@ -20,17 +20,15 @@ import {
   AddDestinationDialog,
   type BrowserChoice,
 } from '@/components/notifications/add-destination-dialog'
-import {
-  DeliveryFilter,
-  DeliveryLog,
-} from '@/components/notifications/delivery-log'
+import { DeliveryFilter } from '@/components/notifications/delivery-filter'
+import { DeliveryLog } from '@/components/notifications/delivery-log'
 import {
   DestinationList,
   type DestinationActions,
 } from '@/components/notifications/destination-list'
 import { LeadChoice } from '@/components/notifications/lead-choice'
+import { AddRuleSetButton } from '@/components/notifications/add-rule-set-button'
 import {
-  AddRuleSetButton,
   RuleSetList,
   type RuleSetActions,
 } from '@/components/notifications/rule-set-list'

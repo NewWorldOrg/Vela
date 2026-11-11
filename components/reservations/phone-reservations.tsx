@@ -29,7 +29,7 @@ import {
   NOTIFY_ONLY,
   takenBackWords,
 } from '@/components/notifications/notify-only-row'
-import { NotifyBell } from '@/components/notifications/programme-notice'
+import { NotifyBell } from '@/components/notifications/notify-bell'
 
 function clockOf(at: string): string {
   return formatClock(new Date(at).getTime())

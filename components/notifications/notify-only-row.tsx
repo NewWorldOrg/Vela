@@ -21,7 +21,7 @@ import {
   ROW_LINE,
   RowTimes,
 } from '@/components/reservations/reservation-row'
-import { NotifyBell } from '@/components/notifications/programme-notice'
+import { NotifyBell } from '@/components/notifications/notify-bell'
 
 export const NOTIFY_ONLY = '通知'
 

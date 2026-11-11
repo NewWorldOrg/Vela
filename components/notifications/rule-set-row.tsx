@@ -1,0 +1,104 @@
+'use client'
+
+import { useState } from 'react'
+
+import { cn } from '@/lib/utils'
+import { signedOut } from '@/lib/signed-out'
+import { eventsSummary, type NotificationRuleSet } from '@/lib/notifications'
+import { Badge } from '@/components/ui/badge'
+import { Switch } from '@/components/ui/switch'
+import { useToast } from '@/components/vela/toast'
+import { GROUP_ROW } from '@/components/notifications/destination-row'
+import { RemoveDialog } from '@/components/notifications/remove-dialog'
+import { RowMenu } from '@/components/notifications/row-menu'
+import type { RuleSetActions } from '@/components/notifications/rule-set-list'
+
+const SIGNED_OUT = signedOut('操作')
+
+/** The name, its events and destinations on the left; the switch and the `…` on the right, beside the name on a phone. */
+const ROW_AREAS = cn(
+  'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 px-4 py-3',
+  "[grid-template-areas:'info_sw_more']",
+  'upright:min-h-0 upright:items-start upright:gap-x-1 upright:px-3.5',
+)
+
+export function RuleSetRow({
+  ruleSet,
+  sendsTo,
+  onOpen,
+  actions,
+}: {
+  ruleSet: NotificationRuleSet
+  sendsTo: string[]
+  onOpen: () => void
+  actions: RuleSetActions
+}) {
+  const [enabled, setEnabled] = useState(ruleSet.enabled)
+  const [removing, setRemoving] = useState(false)
+  const say = useToast()
+  const { id, name } = ruleSet
+
+  const toggle = async (next: boolean) => {
+    setEnabled(next)
+
+    const result = await actions.onToggleRuleSet(id, next)
+
+    if (result.state !== 'ok') {
+      setEnabled(!next)
+      say({
+        text: result.state === 'unauthenticated' ? SIGNED_OUT : result.message,
+      })
+    }
+  }
+
+  return (
+    <li data-rule-set={id} className={cn(GROUP_ROW, ROW_AREAS)}>
+      <span className="min-w-0 pr-2 [grid-area:info] upright:pr-1">
+        <span
+          className={cn(
+            'block truncate text-title font-semibold tracking-[-0.008em]',
+            enabled ? 'text-ink' : 'text-ink-2',
+          )}
+        >
+          {name}
+        </span>
+        <span className="mt-[calc(5rem/16)] flex min-w-0 flex-wrap items-center gap-1.5 text-sub text-ink-2 upright:mt-1">
+          <span className="min-w-0 truncate upright:basis-full">
+            {eventsSummary(ruleSet.events)}
+          </span>
+          <span aria-hidden="true" className="mx-0.5 text-ink-3 upright:hidden">
+            →
+          </span>
+          {sendsTo.map((destination) => (
+            <Badge
+              key={destination}
+              variant="info"
+              className="h-[calc(22rem/16)] px-2 text-cap upright:mt-0.5"
+            >
+              {destination}
+            </Badge>
+          ))}
+        </span>
+      </span>
+      <Switch
+        checked={enabled}
+        aria-label={`${name} を有効にする`}
+        onCheckedChange={(next) => void toggle(next)}
+        className="mr-1 [grid-area:sw] upright:mr-0.5"
+      />
+      <RowMenu
+        name={name}
+        className="[grid-area:more] upright:-mt-1"
+        actions={[{ label: '変更', onSelect: onOpen }]}
+        onRemove={() => setRemoving(true)}
+      />
+      <RemoveDialog
+        what="ルールセット"
+        name={name}
+        open={removing}
+        onOpenChange={setRemoving}
+        onRemove={() => actions.onRemoveRuleSet(id)}
+      />
+    </li>
+  )
+}
