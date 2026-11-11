@@ -2,7 +2,7 @@ import Link from 'next/link'
 
 import type { AuthMethod } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { SignInIcon, SuccessIcon } from '@/components/vela/icons'
 import { VelaMark } from '@/components/vela/vela-mark'
 import { SIGN_IN_COLUMN, SIGN_IN_GROUND } from '@/components/login/login-view'

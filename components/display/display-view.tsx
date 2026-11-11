@@ -9,9 +9,9 @@ import {
   type MotionSetting,
 } from '@/lib/motion'
 import { Switch } from '@/components/ui/switch'
-import { useTheme } from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/theme-provider'
 import type { ThemePreference } from '@/lib/theme'
-import { THEME_OPTIONS } from '@/components/theme/ThemeToggle'
+import { THEME_OPTIONS } from '@/components/theme/theme-toggle'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { PageHeading } from '@/components/vela/page-heading'
 import { SettingsGroup, SettingsRow } from '@/components/vela/settings-group'

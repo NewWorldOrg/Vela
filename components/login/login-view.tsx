@@ -5,7 +5,7 @@ import {
 } from '@/repository/auth'
 import { Button } from '@/components/ui/button'
 import { Banner } from '@/components/vela/banner'
-import { ThemeToggle } from '@/components/theme/ThemeToggle'
+import { ThemeToggle } from '@/components/theme/theme-toggle'
 import { SignInIcon } from '@/components/vela/icons'
 import { VelaMark } from '@/components/vela/vela-mark'
 import {

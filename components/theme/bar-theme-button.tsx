@@ -1,9 +1,9 @@
 'use client'
 
-import { useTheme } from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/theme-provider'
 import { cn } from '@/lib/utils'
 import { MoonIcon, SunIcon } from '@/components/vela/icons'
-import type { ThemeToggleProps } from '@/components/theme/ThemeToggle'
+import type { ThemeToggleProps } from '@/components/theme/theme-toggle'
 
 /** The theme in the bar at the top of a wide window, beside the settings: one press turns the page to the other of light and dark, as on a phone. */
 export function BarThemeButton({ className }: ThemeToggleProps) {

@@ -8,7 +8,7 @@ import {
 } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/spinner'
 import { Toaster as Sonner, type ToasterProps } from 'sonner'
-import { useTheme } from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/theme-provider'
 
 const Toaster = ({ ...props }: ToasterProps) => {
   const { mode } = useTheme()

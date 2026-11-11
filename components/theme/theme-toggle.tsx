@@ -9,7 +9,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { useTheme } from '@/components/theme/ThemeProvider'
+import { useTheme } from '@/components/theme/theme-provider'
 import { IconButton } from '@/components/vela/icon-button'
 import { THEME_LABEL, type ThemePreference } from '@/lib/theme'
 import {
