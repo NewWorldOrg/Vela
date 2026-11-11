@@ -62,11 +62,10 @@ import {
 } from '@/components/live/channel-fold'
 import {
   COLUMN_BODY,
-  ColumnSwitch,
   PLAYER_SIDE_COLUMN,
-  RemoteSlot,
-  type ColumnShows,
 } from '@/components/live/remote-column'
+import { ColumnSwitch, type ColumnShows } from '@/components/live/column-switch'
+import { RemoteSlot } from '@/components/live/remote-slot'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 import { LivePlayer } from '@/components/live/live-player'
 import { LiveFeed } from '@/components/live/live-feed'
@@ -82,13 +81,11 @@ import {
 } from '@/components/live/live-wire-ahead'
 import type { TakeCapture } from '@/components/recordings/take-capture'
 import { NowNext } from '@/components/live/now-next'
-import {
-  PhoneChannelRows,
-  PhoneKinds,
-  PhoneLiveInfo,
-  PhoneWatchedRows,
-  RecordThisButton,
-} from '@/components/live/phone-live'
+import { PhoneChannelRows } from '@/components/live/phone-live'
+import { PhoneKinds } from '@/components/live/phone-kinds'
+import { PhoneLiveInfo } from '@/components/live/phone-live-info'
+import { PhoneWatchedRows } from '@/components/live/phone-watched-rows'
+import { RecordThisButton } from '@/components/live/record-this-button'
 import type { Phase } from '@/components/live/live-player'
 import type { ReservationWrite } from '@/repository/reservations'
 import { PHONE_UPRIGHT } from '@/lib/phone'

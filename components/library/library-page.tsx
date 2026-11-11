@@ -39,15 +39,15 @@ import { FilterChips } from '@/components/vela/filter-chips'
 import { RecordingsTable } from '@/components/library/recordings-table'
 import {
   deletionAction,
-  PickingBand,
-  PickingBar,
-  PickToggle,
   remakeAction,
   ROOM_FOR_THE_BAR,
   useLeaveOnEscape,
   usePickedDeletion,
   usePickedRemake,
 } from '@/components/library/picking'
+import { PickingBand } from '@/components/library/picking-band'
+import { PickingBar } from '@/components/library/picking-bar'
+import { PickToggle } from '@/components/library/pick-toggle'
 import {
   everyShownPicked,
   keepsChoosing,
@@ -66,17 +66,13 @@ import {
   type LibraryView as View,
 } from '@/lib/library-view'
 import { storeText } from '@/hooks/useStoredText'
-import {
-  ContinueRow,
-  DateGrid,
-  SeriesGrid,
-  type Picking,
-} from '@/components/library/library-cards'
+import { ContinueRow } from '@/components/library/continue-row'
+import { DateGrid } from '@/components/library/date-grid'
+import { SeriesGrid } from '@/components/library/series-grid'
+import { type Picking } from '@/components/library/library-cards'
 import { useHeldDeletions } from '@/components/recordings/held-deletions'
-import {
-  PhoneContinue,
-  PhoneRecordingRows,
-} from '@/components/library/phone-library'
+import { PhoneContinue } from '@/components/library/phone-continue'
+import { PhoneRecordingRows } from '@/components/library/phone-library'
 
 const EVERY_CHANNEL = ''
 

@@ -55,7 +55,7 @@ const LIVE_CARDS: { file: string; prints: RegExp; what: string }[] = [
     what: 'the programme on the channel it offers',
   },
   {
-    file: 'components/live/channel-grid.tsx',
+    file: 'components/live/channel-card.tsx',
     prints: /\{programme \? programme\.title : /,
     what: 'the programme on the channel it offers',
   },

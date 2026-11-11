@@ -15,7 +15,8 @@ import {
   ProgramDescription,
   ProgramExtended,
 } from '@/components/guide/program-description'
-import { ReserveRing, useRecordInOnePress } from '@/components/live/phone-live'
+import { ReserveRing } from '@/components/live/reserve-ring'
+import { useRecordInOnePress } from '@/components/live/record-this-button'
 
 function Dot() {
   return (

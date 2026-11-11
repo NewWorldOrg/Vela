@@ -6,26 +6,18 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 import { cn } from '@/lib/utils'
-import { playingOnHref } from '@/lib/playback-source'
 import { formatClock } from '@/lib/format'
-import {
-  byDay,
-  dayHeadingOf,
-  minutesLeftOf,
-  watchStateOf,
-} from '@/lib/library-days'
+import { byDay, dayHeadingOf, watchStateOf } from '@/lib/library-days'
 import type { Recording, RecordingDiscarded } from '@/repository/recordings'
 import { Button } from '@/components/ui/button'
 import { ChevronUpIcon, MoreIcon, TrashIcon } from '@/components/vela/icons'
 import { InlineAlert } from '@/components/vela/inline-alert'
 import { useToast } from '@/components/vela/toast'
 import { pressable } from '@/components/vela/tactile'
-import {
-  GoingOn,
-  Picture,
-  type Picking,
-} from '@/components/library/library-cards'
-import { PickMark, PickShade } from '@/components/library/picking'
+import { Picture } from '@/components/library/picture'
+import { type Picking } from '@/components/library/library-cards'
+import { PickMark } from '@/components/library/pick-mark'
+import { PickShade } from '@/components/library/pick-shade'
 import { AttentionChips } from '@/components/library/attention-chips'
 import {
   holdDeletion,
@@ -34,71 +26,6 @@ import {
 
 function recordingHref(id: string): Route {
   return `/recordings/${id}` as Route
-}
-
-/** The recordings left part-way, across the phone in a row that is sent sideways: each opens where it was left. */
-export function PhoneContinue({
-  recordings,
-  dimmed = false,
-}: {
-  recordings: Recording[]
-  /** While the library is choosing: drawn faint, and nothing in it can be pressed. */
-  dimmed?: boolean
-}) {
-  if (recordings.length === 0) {
-    return null
-  }
-
-  return (
-    <section
-      aria-labelledby="library-continue"
-      data-slot="phone-continue"
-      inert={dimmed}
-      className={cn(
-        'transition-opacity duration-[140ms] ease-toy',
-        dimmed && 'opacity-40',
-      )}
-    >
-      <h2
-        id="library-continue"
-        className="px-0.5 pt-3 pb-2 text-heading font-bold tracking-[-0.015em] text-ink"
-      >
-        続きから
-      </h2>
-      <ul className="-mx-3.5 flex gap-3 overflow-x-auto px-4 pb-1">
-        {recordings.map((recording) => {
-          const left = minutesLeftOf(recording)
-
-          return (
-            <li key={recording.id} className="w-[calc(232rem/16)] shrink-0">
-              <GoingOn
-                recording={recording}
-                still={dimmed}
-                className="block text-ink no-underline outline-none focus-visible:shadow-ring"
-              >
-                <Picture
-                  recording={recording}
-                  corner="rounded-md"
-                  lengthShown={false}
-                />
-                <span className="mt-2 block truncate text-ui font-bold">
-                  {recording.title}
-                </span>
-                <span className="block text-note text-ink-2">
-                  {recording.channel}
-                  {left !== undefined && (
-                    <>
-                      {' · '}残り <span className="font-code">{left}</span> 分
-                    </>
-                  )}
-                </span>
-              </GoingOn>
-            </li>
-          )
-        })}
-      </ul>
-    </section>
-  )
 }
 
 /** The recordings on a phone held upright: under the day each started on, a row each of its picture with its length and the line of how far it was watched, its title, channel and time, and only the states that need attention. Pressing the row opens it; `…` opens what can be done to it under the row. */

@@ -20,13 +20,10 @@ import { InFull } from '@/components/vela/in-full'
 import { EMPTY_VALUE } from '@/lib/empty-value'
 import { RecordingThumb } from '@/components/library/recording-thumb'
 import { AttentionChips } from '@/components/library/attention-chips'
-import {
-  PickMark,
-  PickShade,
-  PickStart,
-  SHOWN_AT_REST,
-} from '@/components/library/picking'
-import { usePointerResting } from '@/components/library/library-cards'
+import { PickMark } from '@/components/library/pick-mark'
+import { PickShade } from '@/components/library/pick-shade'
+import { PickStart, SHOWN_AT_REST } from '@/components/library/pick-start'
+import { usePointerResting } from '@/components/library/recording-tile'
 
 /** A cell of the library's table: a hairline under it from the title on, gone under a row a pointer rests on, a picked row, and the row above either. A picked row lies on the accent's tint. */
 export const CELL =

@@ -35,10 +35,10 @@ import { RebuildIcon } from '@/components/vela/icons'
 import { Pager } from '@/components/vela/pager'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { useToast } from '@/components/vela/toast'
+import { PickingBand } from '@/components/library/picking-band'
+import { PickingBar } from '@/components/library/picking-bar'
+import { PickToggle } from '@/components/library/pick-toggle'
 import {
-  PickingBand,
-  PickingBar,
-  PickToggle,
   useLeaveOnEscape,
   type PickedAction,
 } from '@/components/library/picking'

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { expect, fn, userEvent, within } from 'storybook/test'
 
-import { PickToggle } from '@/components/library/picking'
+import { PickToggle } from '@/components/library/pick-toggle'
 
 const meta = {
   title: 'Components/ボタンとフォーム/選ぶボタン',
