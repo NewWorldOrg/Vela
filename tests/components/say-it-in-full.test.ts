@@ -44,7 +44,7 @@ const SAYS_IT_WHOLE: { file: string; prints: RegExp; what: string }[] = [
 const KEEPS_A_FIXED_BOX: string[] = [
   'components/library/recording-row.tsx',
   'components/guide/guide-grid.tsx',
-  'components/quality/quality-trend.tsx',
+  'components/quality/row.tsx',
   'components/vela/signal-meter.tsx',
 ]
 

@@ -94,7 +94,7 @@ test('a wrapped child is given the same stop as an element child', () => {
 
 test('the screen that answered 500 draws its rows on the client', async () => {
   const source = await readFile(
-    path.join(ROOT, 'components/quality/quality-trend.tsx'),
+    path.join(ROOT, 'components/quality/row.tsx'),
     'utf8',
   )
 

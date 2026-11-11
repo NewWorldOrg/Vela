@@ -528,10 +528,13 @@ test('every state in the encode column is said the same way', async () => {
 })
 
 test('the system screen says a state as a noun, from the one table', async () => {
-  const source = await readFile(
-    path.join(ROOT, 'components/system/system-page.tsx'),
-    'utf8',
-  )
+  const source = (
+    await Promise.all(
+      ['components/system/system-page.tsx', 'components/system/part.tsx'].map(
+        (file) => readFile(path.join(ROOT, file), 'utf8'),
+      ),
+    )
+  ).join('\n')
 
   for (const head of source.matchAll(/head="([^"]+)"/g)) {
     assert.fail(

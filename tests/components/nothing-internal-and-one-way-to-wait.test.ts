@@ -252,7 +252,7 @@ const THE_LISTS_THAT_SWAP = [
   'components/library/library-page.tsx',
   'components/reservations/reservations-page.tsx',
   'components/reservations/outcomes-page.tsx',
-  'components/search/search-page.tsx',
+  'components/search/search-screen.tsx',
   'components/encode/jobs-navigation.tsx',
 ]
 
