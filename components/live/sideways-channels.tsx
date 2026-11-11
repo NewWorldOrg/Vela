@@ -13,7 +13,7 @@ import { pressable, still } from '@/components/vela/tactile'
 import {
   STRIP_BUTTON,
   StripFaceButton,
-} from '@/components/recordings/player-dock'
+} from '@/components/recordings/strip-face-button'
 
 /** The name of the face the column's `番組` opens. */
 export const PROGRAMME_FACE = '番組'

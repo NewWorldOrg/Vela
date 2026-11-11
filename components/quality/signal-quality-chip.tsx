@@ -8,11 +8,8 @@ import {
   TUNE_FAILING_LABEL,
 } from '@/repository/quality'
 import { Badge } from '@/components/ui/badge'
-import {
-  StateSay,
-  stateColumnFor,
-  toneOf,
-} from '@/components/recordings/status-cell'
+import { StateSay } from '@/components/recordings/state-say'
+import { stateColumnFor, toneOf } from '@/components/recordings/status-cell'
 import { CloseIcon } from '@/components/vela/icons'
 import { ChipDot } from '@/components/vela/chip-dot'
 

@@ -11,7 +11,7 @@ import {
 import { signedOut } from '@/lib/signed-out'
 import type { EncodeAutoRun, EncodeWrite } from '@/repository/encode'
 import { FEWEST_CORES, NOWHERE_SETTLED_TERMS } from '@/repository/encode-terms'
-import { StateSay } from '@/components/recordings/status-cell'
+import { StateSay } from '@/components/recordings/state-say'
 import {
   Select,
   SelectContent,

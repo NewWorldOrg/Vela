@@ -49,7 +49,7 @@ import {
   PLAYER_COLUMN,
   PLAYER_GLYPH_BUTTON,
 } from '@/components/recordings/player-palette'
-import { OpenExternally } from '@/components/recordings/external-player'
+import { OpenExternally } from '@/components/recordings/open-externally'
 import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
 import { ChannelKinds } from '@/components/live/channel-kinds'

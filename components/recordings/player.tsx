@@ -151,19 +151,17 @@ import {
   type SeekFlash,
 } from '@/components/recordings/player-seek-flash'
 import { PlayerSettings } from '@/components/recordings/player-settings'
-import type { GearAction } from '@/components/recordings/player-gear'
+import type { GearAction } from '@/components/recordings/gear-actions'
+import { DockFace } from '@/components/recordings/dock-face'
 import {
-  DockFace,
   PlayerDock,
-  PlayerStrip,
   type DockSide,
   type SideColumn,
 } from '@/components/recordings/player-dock'
+import { PlayerStrip } from '@/components/recordings/player-strip'
 import { CAPTION_GRIP } from '@/components/recordings/player-palette'
-import {
-  PlayerSkip,
-  PlayerSkipInTheRow,
-} from '@/components/recordings/player-skip'
+import { PlayerSkip } from '@/components/recordings/player-skip'
+import { PlayerSkipInTheRow } from '@/components/recordings/player-skip-in-the-row'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
@@ -182,7 +180,7 @@ import {
 } from '@/lib/player-fit'
 import { usePictureInPicture } from '@/hooks/usePictureInPicture'
 import { airPlayCanBeHanded, recordingHandover } from '@/lib/external-player'
-import { AirPlayButton } from '@/components/recordings/external-player'
+import { AirPlayButton } from '@/components/recordings/air-play-button'
 import {
   askWhyItWouldNotPlay,
   faultOnTheFace,

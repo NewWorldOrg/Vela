@@ -46,6 +46,20 @@ const SAYS_IT_AS_A_COLUMN = /(^|\s)say(\s|$|=)/
 
 const THE_CELL = 'components/recordings/status-cell.tsx'
 
+const THE_CELL_PARTS = [
+  THE_CELL,
+  'components/recordings/state-say.tsx',
+  'components/recordings/able-say.tsx',
+]
+
+async function readTheCell(): Promise<string> {
+  return (
+    await Promise.all(
+      THE_CELL_PARTS.map((file) => readFile(path.join(ROOT, file), 'utf8')),
+    )
+  ).join('\n')
+}
+
 const THE_PILL = 'components/ui/badge.tsx'
 
 const THE_ROW = 'components/vela/action-row.tsx'
@@ -183,7 +197,7 @@ test('what is not a state is not drawn as a pill', async () => {
 })
 
 test('the dot a state is said with is one size, declared once', async () => {
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+  const cell = await readTheCell()
 
   assert.match(cell, /export function StateSay\(/)
   assert.match(
@@ -199,7 +213,7 @@ test('the dot a state is said with is one size, declared once', async () => {
 })
 
 test('a state cell holds one state and nothing under it', async () => {
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+  const cell = await readTheCell()
 
   assert.doesNotMatch(
     cell,
@@ -243,13 +257,13 @@ test('a width is measured for the two-word pill and for nothing else', async () 
 
   assert.deepEqual(
     measuring,
-    [THE_CELL],
+    ['components/recordings/able-say.tsx', THE_CELL],
     'a pill is measured somewhere other than the one cell that draws the ' +
       'two words of a yes-or-no column; every column with four words or ' +
       'more says its state as a dot and a word, which has no width of its own',
   )
 
-  const cell = await readFile(path.join(ROOT, THE_CELL), 'utf8')
+  const cell = await readTheCell()
 
   assert.match(
     cell,

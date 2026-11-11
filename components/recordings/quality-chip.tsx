@@ -5,8 +5,8 @@ import {
 import { LEFT_SCRAMBLED_TERM } from '@/lib/state-terms'
 import type { Recording } from '@/repository/recordings'
 import { Badge } from '@/components/ui/badge'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   stateColumnFor,
   tipBoxOf,
   toneOf,

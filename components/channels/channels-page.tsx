@@ -12,8 +12,8 @@ import {
   type StartScanResult,
   type WriteResult,
 } from '@/repository/services'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   StatusCell,
   stateColumnFor,
   type StateTone,

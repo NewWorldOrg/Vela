@@ -12,9 +12,9 @@ import {
 } from '@/repository/video-paths'
 import {
   GearActions,
-  PlayerGear,
   type GearAction,
-} from '@/components/recordings/player-gear'
+} from '@/components/recordings/gear-actions'
+import { PlayerGear } from '@/components/recordings/player-gear'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/player-setting'
 import {
@@ -23,9 +23,9 @@ import {
 } from '@/components/recordings/format-setting'
 import {
   CaptionStyleEntry,
-  CaptionStylePanel,
   useGearPanel,
 } from '@/components/recordings/caption-style-controls'
+import { CaptionStylePanel } from '@/components/recordings/caption-style-panel'
 import type { CaptionStyle } from '@/lib/caption-style'
 
 export const PLAYBACK_SPEEDS = ['0.5', '1.0', '1.25', '1.5', '2.0'] as const

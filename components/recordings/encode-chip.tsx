@@ -9,8 +9,8 @@ import {
   type EncodeStanding,
 } from '@/repository/encode-terms'
 import { Badge } from '@/components/ui/badge'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   stateColumnFor,
   tipBoxOf,
   toneOf,

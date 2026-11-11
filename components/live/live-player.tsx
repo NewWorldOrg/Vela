@@ -172,14 +172,14 @@ import {
   holdWireProfile,
 } from '@/components/live/live-wire-ahead'
 import { LiveSettings } from '@/components/live/live-settings'
-import type { GearAction } from '@/components/recordings/player-gear'
+import type { GearAction } from '@/components/recordings/gear-actions'
+import { DockFace } from '@/components/recordings/dock-face'
 import {
-  DockFace,
   PlayerDock,
-  PlayerStrip,
   type DockSide,
   type SideColumn,
 } from '@/components/recordings/player-dock'
+import { PlayerStrip } from '@/components/recordings/player-strip'
 import { LiveStartupSteps } from '@/components/live/live-startup'
 
 const RESTS = 3000

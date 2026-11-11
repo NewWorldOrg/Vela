@@ -5,8 +5,8 @@ import {
 } from '@/lib/state-terms'
 import { shapeFor } from '@/lib/not-yet-in-this-build'
 import { Badge } from '@/components/ui/badge'
+import { StateSay } from '@/components/recordings/state-say'
 import {
-  StateSay,
   alsoSays,
   stateColumnFor,
   toneOf,

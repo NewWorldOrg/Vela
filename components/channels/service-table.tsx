@@ -7,11 +7,9 @@ import type {
   ServiceRow,
   WriteResult,
 } from '@/repository/services'
-import {
-  AbleSay,
-  StateSay,
-  StatusCell,
-} from '@/components/recordings/status-cell'
+import { AbleSay } from '@/components/recordings/able-say'
+import { StateSay } from '@/components/recordings/state-say'
+import { StatusCell } from '@/components/recordings/status-cell'
 import {
   Table,
   TableBody,

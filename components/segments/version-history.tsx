@@ -26,11 +26,8 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { cardPlace } from '@/components/ui/table-cards'
-import {
-  StateSay,
-  StatusCell,
-  type StateTone,
-} from '@/components/recordings/status-cell'
+import { StateSay } from '@/components/recordings/state-say'
+import { StatusCell, type StateTone } from '@/components/recordings/status-cell'
 import { InlineAlert } from '@/components/vela/inline-alert'
 import { InFull } from '@/components/vela/in-full'
 import { Spinner } from '@/components/vela/spinner'
