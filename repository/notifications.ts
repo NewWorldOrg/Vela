@@ -2,6 +2,7 @@ import {
   DELIVERIES_SHOWN,
   NAME_LONGEST,
   RULE_SETS_AT_MOST,
+  destinationKindOf,
   isLead,
   newestFirst,
 } from '@/lib/notifications'
@@ -25,6 +26,13 @@ import type {
   WriteRefusal,
 } from '@/lib/notifications'
 import { couldNot } from '@/lib/try-again'
+import {
+  NO_PUBLIC_ORIGIN_HERE,
+  type BrowserRow,
+  type BrowserWrite,
+  type PushKeyAnswer,
+  type PushSubscriptionDraft,
+} from '@/lib/web-push'
 import { unstable_rethrow } from 'next/navigation'
 
 import { carinaClient } from '@/repository/client/carina'
@@ -85,6 +93,11 @@ export const WHEN_SETTLING_THE_LEAD: NotificationAsking = {
 }
 
 const UNREADABLE = '通知の設定を読めませんでした'
+
+const BROWSER_REFUSED: Partial<Record<number, string>> = {
+  400: 'このブラウザには送れないため、追加できませんでした。',
+  409: NO_PUBLIC_ORIGIN_HERE,
+}
 
 const NOT_WATCHED = '通知を設定できませんでした'
 
@@ -361,6 +374,99 @@ export async function settleLead(
   )
 }
 
+/** The key a browser subscribes under, which Carina gives only while it knows its public address. */
+export async function readPushKey(): Promise<PushKeyAnswer> {
+  return reaching(
+    WHEN_ADDING_A_DESTINATION.fell,
+    async (): Promise<PushKeyAnswer> => {
+      const { data, response } = await carinaClient().GET(
+        '/api/notifications/push/key',
+      )
+
+      if (response.status === 401) {
+        return { state: 'unauthenticated' }
+      }
+
+      const key = data?.data?.publicKey
+
+      if (response.ok && key) {
+        return { state: 'ok', publicKey: key }
+      }
+
+      return {
+        state: 'rejected',
+        message:
+          response.status === 409
+            ? NO_PUBLIC_ORIGIN_HERE
+            : couldNot(WHEN_ADDING_A_DESTINATION.fell),
+      }
+    },
+  )
+}
+
+/** Adds a browser by its subscription. A browser already held is answered with its row, as one added. */
+export async function registerBrowser(
+  draft: PushSubscriptionDraft & { name: string },
+): Promise<BrowserWrite> {
+  return reaching(
+    WHEN_ADDING_A_DESTINATION.fell,
+    async (): Promise<BrowserWrite> => {
+      const { data, error, response } = await carinaClient().POST(
+        '/api/notifications/push/subscriptions',
+        {
+          body: {
+            name: draft.name,
+            endpoint: draft.endpoint,
+            keys: draft.keys,
+          },
+        },
+      )
+
+      return toBrowserWrite(
+        response,
+        data?.data?.id,
+        whatItSaid(error),
+        WHEN_ADDING_A_DESTINATION,
+      )
+    },
+  )
+}
+
+/** Puts the subscription a browser made anew to its row, which the rule sets keep pointing at. */
+export async function replaceBrowserSubscription(
+  destinationId: string,
+  draft: PushSubscriptionDraft,
+): Promise<BrowserWrite> {
+  return reaching(
+    WHEN_CHANGING_A_DESTINATION.fell,
+    async (): Promise<BrowserWrite> => {
+      const { data, error, response } = await carinaClient().PUT(
+        '/api/notifications/push/subscriptions/{destinationId}',
+        {
+          params: { path: { destinationId } },
+          body: { endpoint: draft.endpoint, keys: draft.keys },
+        },
+      )
+
+      return toBrowserWrite(
+        response,
+        data?.data?.id,
+        whatItSaid(error),
+        WHEN_CHANGING_A_DESTINATION,
+      )
+    },
+  )
+}
+
+/** The browser rows, by which a browser finds whether its own is still there. */
+export async function listBrowserRows(): Promise<BrowserRow[]> {
+  const destinations = await fetchDestinations()
+
+  return destinations
+    .filter(({ kind }) => kind === 'webPush')
+    .map(({ id, fingerprint }) => ({ id, fingerprint }))
+}
+
 /** The single notices still waiting, by the programme each is for. */
 export async function listWatches(): Promise<Map<string, ProgrammeWatch>> {
   const waiting = await fetchWaitingWatches()
@@ -517,6 +623,36 @@ function toRuleBody(draft: RuleSetDraft) {
   }
 }
 
+function toBrowserWrite(
+  response: Response,
+  id: string | undefined,
+  said: string | undefined,
+  asking: NotificationAsking,
+): BrowserWrite {
+  if (response.status === 401) {
+    return { state: 'unauthenticated' }
+  }
+
+  if (response.ok) {
+    return id
+      ? { state: 'ok', id }
+      : { state: 'rejected', message: couldNot(asking.fell) }
+  }
+
+  if (response.status === 404) {
+    return {
+      state: 'rejected',
+      message: whyItRefused(asking, said),
+      gone: true,
+    }
+  }
+
+  return {
+    state: 'rejected',
+    message: BROWSER_REFUSED[response.status] ?? whyItRefused(asking, said),
+  }
+}
+
 function toWrite(
   response: Response,
   said: string | undefined,
@@ -602,8 +738,9 @@ function toDestination(one: DestinationResponder): NotificationDestination {
   return {
     id: one.id,
     name: one.name,
-    kind: one.kind,
-    tail: one.tail,
+    kind: destinationKindOf(one.kind),
+    tail: one.kind === 'push' ? undefined : one.tail,
+    fingerprint: one.fingerprint ?? undefined,
     enabled: one.enabled,
     readable: one.readable,
     lastResultAt: one.lastResultAt ?? undefined,

@@ -5,6 +5,7 @@ import {
   amongWatches,
   deliveriesShown,
   deliverySaid,
+  destinationKindOf,
   destinationsByDefault,
   eventLabelOf,
   eventsSummary,
@@ -459,4 +460,10 @@ test('a refusal for what is no longer there is said where it outlives the row, a
   )
   assert.equal(saidOfTheGone({ state: 'unauthenticated' }), undefined)
   assert.equal(saidOfTheGone({ state: 'ok' }), undefined)
+})
+
+test('the kind Carina calls push is the browser kind the screen draws, and the webhooks keep theirs', () => {
+  assert.equal(destinationKindOf('push'), 'webPush')
+  assert.equal(destinationKindOf('slack'), 'slack')
+  assert.equal(destinationKindOf('discord'), 'discord')
 })

@@ -152,6 +152,7 @@ const store: {
   settings: unknown
   deliveries: Record<string, unknown[]>
   trial: unknown
+  pushKey: unknown
   watches: unknown[]
   programme: unknown
   made: unknown
@@ -167,6 +168,7 @@ const store: {
   settings: null,
   deliveries: {},
   trial: null,
+  pushKey: null,
   watches: [],
   programme: null,
   made: null,
@@ -223,6 +225,10 @@ function answerTo(method: string, path: string): unknown {
     return store.trial
   }
 
+  if (path.startsWith('/api/notifications/push/subscriptions')) {
+    return store.made
+  }
+
   return method === 'POST' && path === '/api/notifications/watches'
     ? store.made
     : null
@@ -259,6 +265,10 @@ const client = () => ({
         })
       case '/api/notifications/watches':
         return envelope({ items: store.watches })
+      case '/api/notifications/push/key':
+        return store.pushKey === null
+          ? refusal(409, 'no public origin')
+          : envelope(store.pushKey)
       case '/api/programs/{id}':
         return store.programme
           ? envelope(store.programme)
@@ -289,9 +299,13 @@ const {
   getNotificationsScreen,
   getWatchOffer,
   listWatchedProgrammes,
+  listBrowserRows,
   listWatches,
+  readPushKey,
   readSingleNotices,
+  registerBrowser,
   registerDestination,
+  replaceBrowserSubscription,
   removeDestination,
   removeRuleSet,
   reviseDestination,
@@ -310,6 +324,7 @@ beforeEach(() => {
   store.settings = { notifyLeadMinutes: 3, publicOriginKnown: true }
   store.deliveries = {}
   store.trial = { delivered: true, failure: null }
+  store.pushKey = { publicKey: 'BPsampleServerKey' }
   store.watches = []
   store.programme = PROGRAMME
   store.made = watch(WATCH_ONE)
@@ -332,6 +347,7 @@ test('the screen is read from the destinations, the rule sets and the settings',
       tail: 'a1b2',
       enabled: true,
       readable: true,
+      fingerprint: undefined,
       lastResultAt: '2026-01-02T03:04:05Z',
       lastFailure: undefined,
     },
@@ -342,6 +358,7 @@ test('the screen is read from the destinations, the rule sets and the settings',
       tail: '9f3e',
       enabled: false,
       readable: false,
+      fingerprint: undefined,
       lastResultAt: '2026-01-02T03:04:05Z',
       lastFailure: 'timedOut',
     },
@@ -1108,4 +1125,187 @@ test('while what a new one starts from cannot be read, the notices waiting are s
 
   assert.deepEqual([...(await watches).keys()], [DOCUMENTARY])
   assert.equal(await offer, undefined)
+})
+
+const BROWSER = '0a000000-0000-4000-8000-000000000003'
+
+const FINGERPRINT =
+  '5b1e0c7d3f6a9b2e4c8d1f0a7e6b5c4d3a2f1e0d9c8b7a6f5e4d3c2b1a0f9e8d'
+
+const DESTINATION_BROWSER = {
+  ...DESTINATION_HOME,
+  id: BROWSER,
+  name: '見本のブラウザ',
+  kind: 'push',
+  tail: '',
+  fingerprint: FINGERPRINT,
+}
+
+const SUBSCRIPTION = {
+  endpoint: 'https://fcm.googleapis.com/fcm/send/sample-token',
+  keys: { p256dh: 'BSampleP256dh', auth: 'sampleAuth' },
+}
+
+test('a browser row is drawn as a browser, with its fingerprint and no tail', async () => {
+  store.destinations = [DESTINATION_HOME, DESTINATION_BROWSER]
+
+  const screen = await getNotificationsScreen()
+
+  assert.deepEqual(screen.destinations[1], {
+    id: BROWSER,
+    name: '見本のブラウザ',
+    kind: 'webPush',
+    tail: undefined,
+    fingerprint: FINGERPRINT,
+    enabled: true,
+    readable: true,
+    lastResultAt: '2026-01-02T03:04:05Z',
+    lastFailure: undefined,
+  })
+})
+
+test('the browser rows are listed by their ids and fingerprints, the webhooks left out', async () => {
+  store.destinations = [DESTINATION_HOME, DESTINATION_BROWSER]
+
+  assert.deepEqual(await listBrowserRows(), [
+    { id: BROWSER, fingerprint: FINGERPRINT },
+  ])
+})
+
+test('the server key is read as Carina gives it', async () => {
+  assert.deepEqual(await readPushKey(), {
+    state: 'ok',
+    publicKey: 'BPsampleServerKey',
+  })
+  assert.deepEqual(sent.at(-1), {
+    method: 'GET',
+    path: '/api/notifications/push/key',
+    query: undefined,
+  })
+})
+
+test('a key Carina cannot give for want of a public address says so', async () => {
+  store.pushKey = null
+
+  assert.deepEqual(await readPushKey(), {
+    state: 'rejected',
+    message: '通知を送るには公開のアドレスの設定が要ります',
+  })
+})
+
+test('a key asked by someone signed out says so', async () => {
+  store.readStatus = 401
+
+  assert.deepEqual(await readPushKey(), { state: 'unauthenticated' })
+})
+
+test('a key that never arrived is refused as what could not be added', async () => {
+  store.down = 'everything'
+
+  assert.deepEqual(await readPushKey(), {
+    state: 'rejected',
+    message:
+      '送り先を追加できませんでした。時間をおいてからもう一度お試しください。',
+    unreached: true,
+  })
+})
+
+test('a browser is registered by its name and its subscription, and the row made is named by its id', async () => {
+  store.writeStatus = 201
+  store.made = DESTINATION_BROWSER
+
+  const result = await registerBrowser({
+    name: '見本のブラウザ',
+    ...SUBSCRIPTION,
+  })
+
+  assert.deepEqual(result, { state: 'ok', id: BROWSER })
+  assert.deepEqual(sent.at(-1), {
+    method: 'POST',
+    path: '/api/notifications/push/subscriptions',
+    at: undefined,
+    body: { name: '見本のブラウザ', ...SUBSCRIPTION },
+  })
+})
+
+test('a browser already held is answered with its row, as one added', async () => {
+  store.writeStatus = 200
+  store.made = DESTINATION_BROWSER
+
+  assert.deepEqual(
+    await registerBrowser({ name: '見本のブラウザ', ...SUBSCRIPTION }),
+    { state: 'ok', id: BROWSER },
+  )
+})
+
+test('what refuses a browser is said by its status', async () => {
+  store.writeStatus = 400
+  store.writeMessage = 'The subscription is not one a notice can be sent to.'
+
+  assert.deepEqual(
+    await registerBrowser({ name: '見本のブラウザ', ...SUBSCRIPTION }),
+    {
+      state: 'rejected',
+      message: 'このブラウザには送れないため、追加できませんでした。',
+    },
+  )
+
+  store.writeStatus = 409
+
+  assert.deepEqual(
+    await registerBrowser({ name: '見本のブラウザ', ...SUBSCRIPTION }),
+    {
+      state: 'rejected',
+      message: '通知を送るには公開のアドレスの設定が要ります',
+    },
+  )
+
+  store.writeStatus = 401
+
+  assert.deepEqual(
+    await registerBrowser({ name: '見本のブラウザ', ...SUBSCRIPTION }),
+    { state: 'unauthenticated' },
+  )
+})
+
+test('a browser Carina took without saying which row is not counted as added', async () => {
+  store.writeStatus = 201
+  store.made = null
+
+  const result = await registerBrowser({
+    name: '見本のブラウザ',
+    ...SUBSCRIPTION,
+  })
+
+  assert.equal(result.state, 'rejected')
+})
+
+test('a subscription the browser made anew is put to the row by its id', async () => {
+  store.made = DESTINATION_BROWSER
+
+  assert.deepEqual(await replaceBrowserSubscription(BROWSER, SUBSCRIPTION), {
+    state: 'ok',
+    id: BROWSER,
+  })
+  assert.deepEqual(sent.at(-1), {
+    method: 'PUT',
+    path: '/api/notifications/push/subscriptions/{destinationId}',
+    at: { destinationId: BROWSER },
+    body: SUBSCRIPTION,
+  })
+})
+
+test('a subscription put to a row that is gone says it is gone', async () => {
+  store.writeStatus = 404
+
+  const result = await replaceBrowserSubscription(BROWSER, SUBSCRIPTION)
+
+  assert.equal(result.state, 'rejected')
+  assert.equal(result.state === 'rejected' && result.gone, true)
+
+  store.writeStatus = 409
+
+  const taken = await replaceBrowserSubscription(BROWSER, SUBSCRIPTION)
+
+  assert.equal(taken.state === 'rejected' && taken.gone, undefined)
 })

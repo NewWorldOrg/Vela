@@ -9,6 +9,9 @@ export type WebhookKind = 'slack' | 'discord'
 
 export type DestinationKind = WebhookKind | 'webPush'
 
+/** The kinds as Carina names them: a browser is `push` there. */
+export type CarinaDestinationKind = WebhookKind | 'push'
+
 export type DeliveryFailure =
   | 'timedOut'
   | 'rateLimited'
@@ -26,6 +29,8 @@ export interface NotificationDestination {
   name: string
   kind: DestinationKind
   tail?: string
+  /** For a browser, the SHA-256 of the address its subscription is sent to, by which a browser finds its own row. */
+  fingerprint?: string
   enabled: boolean
   /** Whether Carina can still open the address it keeps sealed. */
   readable: boolean
@@ -222,6 +227,18 @@ export const KIND_LABEL: Record<DestinationKind, string> = {
   slack: 'Slack',
   discord: 'Discord',
   webPush: 'Web Push',
+}
+
+const KIND_OF: Record<CarinaDestinationKind, DestinationKind> = {
+  slack: 'slack',
+  discord: 'discord',
+  push: 'webPush',
+}
+
+export function destinationKindOf(
+  kind: CarinaDestinationKind,
+): DestinationKind {
+  return KIND_OF[kind]
 }
 
 export const FAILURE_LABEL: Record<DeliveryFailure, string> = {
