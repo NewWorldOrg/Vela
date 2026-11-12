@@ -11,8 +11,10 @@ import type {
   WebhookDraft,
 } from '@/lib/notifications'
 import { wasAnswered } from '@/lib/notifications'
+import type { BrowserWrite, PushSubscriptionDraft } from '@/lib/web-push'
 import {
   defineRuleSet,
+  registerBrowser,
   registerDestination,
   removeDestination,
   removeRuleSet,
@@ -27,7 +29,9 @@ import {
 const NOTIFICATIONS = '/settings/notifications'
 
 /** The page is read again once Carina has answered; a write that never reached it leaves the page as it is. */
-function readAgain<T extends NotificationWrite | TestSending>(result: T): T {
+function readAgain<T extends NotificationWrite | TestSending | BrowserWrite>(
+  result: T,
+): T {
   if (wasAnswered(result)) {
     revalidatePath(NOTIFICATIONS)
   }
@@ -39,6 +43,12 @@ export async function addDestination(
   draft: WebhookDraft,
 ): Promise<NotificationWrite> {
   return readAgain(await registerDestination(draft))
+}
+
+export async function addBrowser(
+  draft: PushSubscriptionDraft & { name: string },
+): Promise<BrowserWrite> {
+  return readAgain(await registerBrowser(draft))
 }
 
 export async function changeDestination(

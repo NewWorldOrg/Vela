@@ -223,7 +223,7 @@ async function givenUp(hands: PushHands): Promise<void> {
 export async function addThisBrowser(
   name: string,
   hands: PushHands,
-  carina: PushCarina,
+  carina: Pick<PushCarina, 'readKey' | 'add'>,
   memory: PushMemory,
 ): Promise<NotificationWrite> {
   const granted = await hands.askPermission()
@@ -315,7 +315,7 @@ async function put(
   id: string,
   held: HeldSubscription,
   hands: PushHands,
-  carina: PushCarina,
+  carina: Pick<PushCarina, 'replace'>,
   memory: PushMemory,
 ): Promise<void> {
   const written = await carina.replace(id, draftOf(held))
@@ -328,7 +328,7 @@ async function put(
 /** Keeps the remembered row on this browser's subscription when Vela opens. It never asks for a grant and never says anything. */
 export async function renewThisBrowser(
   hands: PushHands,
-  carina: PushCarina,
+  carina: Omit<PushCarina, 'add'>,
   memory: PushMemory,
 ): Promise<void> {
   try {

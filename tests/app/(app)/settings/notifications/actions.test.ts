@@ -47,7 +47,9 @@ async function answer() {
   const ok = store.status < 400
 
   return {
-    data: ok ? { data: { delivered: true, failure: null } } : undefined,
+    data: ok
+      ? { data: { id: ONE, delivered: true, failure: null } }
+      : undefined,
     error: ok ? undefined : { message: store.said },
     response: { status: store.status, ok },
   }
@@ -73,6 +75,7 @@ mock.module(CACHE, {
 })
 
 const {
+  addBrowser,
   addDestination,
   addRuleSet,
   changeDestination,
@@ -181,5 +184,25 @@ test('a change that never reached the API leaves the page as it is, and says wha
       '送り先を変更できませんでした。時間をおいてからもう一度お試しください。',
     unreached: true,
   })
+  assert.deepEqual(revalidated, [])
+})
+
+const BROWSER = {
+  name: '見本のブラウザ',
+  endpoint: 'https://fcm.googleapis.com/fcm/send/sample-token',
+  keys: { p256dh: 'BSampleP256dh', auth: 'sampleAuth' },
+}
+
+test('a browser the API took reads the page again and names its row', async () => {
+  store.status = 201
+
+  assert.deepEqual(await addBrowser(BROWSER), { state: 'ok', id: ONE })
+  assert.deepEqual(revalidated, [PAGE])
+})
+
+test('a browser that never reached the API leaves the page as it is', async () => {
+  store.down = true
+
+  assert.equal((await addBrowser(BROWSER)).state, 'rejected')
   assert.deepEqual(revalidated, [])
 })
