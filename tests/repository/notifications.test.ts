@@ -1309,3 +1309,14 @@ test('a subscription put to a row that is gone says it is gone', async () => {
 
   assert.equal(taken.state === 'rejected' && taken.gone, undefined)
 })
+
+test('a subscription put that Carina refuses with a conflict is said in the words of changing, not as a missing public address', async () => {
+  store.writeStatus = 409
+  store.writeMessage = 'Another destination already has that endpoint.'
+
+  assert.deepEqual(await replaceBrowserSubscription(BROWSER, SUBSCRIPTION), {
+    state: 'rejected',
+    message:
+      '送り先を変更できませんでした。時間をおいてからもう一度お試しください。',
+  })
+})

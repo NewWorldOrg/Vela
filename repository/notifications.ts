@@ -427,6 +427,7 @@ export async function registerBrowser(
         data?.data?.id,
         whatItSaid(error),
         WHEN_ADDING_A_DESTINATION,
+        BROWSER_REFUSED,
       )
     },
   )
@@ -628,6 +629,7 @@ function toBrowserWrite(
   id: string | undefined,
   said: string | undefined,
   asking: NotificationAsking,
+  refused: Partial<Record<number, string>> = {},
 ): BrowserWrite {
   if (response.status === 401) {
     return { state: 'unauthenticated' }
@@ -649,7 +651,7 @@ function toBrowserWrite(
 
   return {
     state: 'rejected',
-    message: BROWSER_REFUSED[response.status] ?? whyItRefused(asking, said),
+    message: refused[response.status] ?? whyItRefused(asking, said),
   }
 }
 
