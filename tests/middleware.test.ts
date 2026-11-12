@@ -112,6 +112,7 @@ test('every page and relay passes through, and the static files do not', () => {
     '/apple-icon.png',
     '/manifest.webmanifest',
     '/pwa/icon-192.png',
+    '/sw.js',
   ]) {
     assert.ok(!matches.test(path), path)
   }
