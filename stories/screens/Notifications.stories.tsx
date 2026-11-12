@@ -8,10 +8,9 @@ import {
   NotificationsView,
   type NotificationActions,
 } from '@/components/notifications/notifications-view'
-import {
-  DENIED_HERE,
-  type BrowserChoice,
-} from '@/components/notifications/add-destination-dialog'
+import type { BrowserChoice } from '@/components/notifications/add-destination-dialog'
+import { THIS_DEVICE } from '@/components/notifications/this-device-chip'
+import { DENIED_HERE, REASON_OF } from '@/lib/web-push'
 import { REFUSED_ADDRESS } from '@/components/notifications/webhook-field'
 import { inTheSettings } from '@/stories/frames'
 import { PHONE } from '@/stories/rows-as-cards'
@@ -20,6 +19,8 @@ import {
   DISCORD_ROOM,
   EMPTY_NOTIFICATIONS_SCREEN,
   HOME_SLACK,
+  IPAD_FINGERPRINT,
+  IPAD_SAFARI,
   NOTIFICATIONS_NOW,
   NOTIFICATIONS_SCREEN,
   TWENTY_RULE_SETS,
@@ -37,13 +38,23 @@ const addWebhook = fn<NotificationActions['onAddWebhook']>(async () => OK)
 
 const addBrowser = fn<BrowserChoice['onAdd']>(async () => OK)
 
+const forgetBrowser = fn<NonNullable<BrowserChoice['onForget']>>(
+  async () => undefined,
+)
+
 const BROWSER: BrowserChoice = {
   here: 'Windows の Chrome',
-  permission: 'default',
   onAdd: addBrowser,
+  onForget: forgetBrowser,
 }
 
 const ON_A_PHONE: BrowserChoice = { ...BROWSER, here: 'iPhone の Safari' }
+
+const ON_THE_IPAD: BrowserChoice = {
+  ...BROWSER,
+  here: 'iPad の Safari',
+  fingerprint: IPAD_FINGERPRINT,
+}
 
 const toggleDestination = fn<NotificationActions['onToggleDestination']>(
   async () => OK,
@@ -120,6 +131,13 @@ async function fromTheMenu(
     within(canvasElement).getByRole('button', { name: `${name} の操作` }),
   )
   await userEvent.click(await screen.findByRole('menuitem', { name: item }))
+}
+
+/** The elements saying the text that are drawn, leaving out the ones hidden at this width. */
+function shownIn(scope: HTMLElement, text: string): HTMLElement[] {
+  return within(scope)
+    .queryAllByText(text)
+    .filter((one) => one.getClientRects().length > 0)
 }
 
 async function openTheAdding(canvasElement: HTMLElement) {
@@ -631,7 +649,7 @@ export const 送り先を追加_このブラウザ: Story = {
 }
 
 export const 送り先を追加_通知を拒否している: Story = {
-  args: { browser: { ...BROWSER, permission: 'denied' } },
+  args: { browser: { ...BROWSER, reason: DENIED_HERE } },
   play: async ({ canvasElement }) => {
     const dialog = within(await openTheBrowserForm(canvasElement))
 
@@ -639,6 +657,149 @@ export const 送り先を追加_通知を拒否している: Story = {
     await expect(
       dialog.getByRole('button', { name: '許可して追加' }),
     ).toBeDisabled()
+  },
+}
+
+export const 送り先を追加_通知に対応していない: Story = {
+  args: { browser: { ...BROWSER, reason: REASON_OF.unsupported } },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheBrowserForm(canvasElement))
+
+    await expect(
+      dialog.getByText('このブラウザは通知に対応していません'),
+    ).toBeVisible()
+    await expect(
+      dialog.getByRole('button', { name: '許可して追加' }),
+    ).toBeDisabled()
+  },
+}
+
+export const 送り先を追加_ホーム画面から開いていない: Story = {
+  args: { browser: { ...ON_A_PHONE, reason: REASON_OF.homeScreenOnly } },
+  parameters: { screen: PHONE, coarse: true },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheBrowserForm(canvasElement))
+
+    await expect(
+      dialog.getByText('ホーム画面に追加した Vela から使えます'),
+    ).toBeVisible()
+    await expect(
+      dialog.getByRole('button', { name: '許可して追加' }),
+    ).toBeDisabled()
+  },
+}
+
+export const 送り先を追加_公開のアドレスがない: Story = {
+  args: {
+    screen: {
+      ...NOTIFICATIONS_SCREEN,
+      settings: { ...NOTIFICATIONS_SCREEN.settings, publicOriginKnown: false },
+    },
+    browser: { ...BROWSER, reason: REASON_OF.noPublicOrigin },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheBrowserForm(canvasElement))
+
+    await expect(
+      dialog.getByText('通知を送るには公開のアドレスの設定が要ります'),
+    ).toBeVisible()
+    await expect(
+      dialog.getByRole('button', { name: '許可して追加' }),
+    ).toBeDisabled()
+  },
+}
+
+export const 送り先を追加_このブラウザを断られる: Story = {
+  args: {
+    browser: {
+      ...BROWSER,
+      onAdd: async () => ({
+        state: 'rejected',
+        message: 'このブラウザには送れないため、追加できませんでした。',
+      }),
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheBrowserForm(canvasElement))
+
+    await userEvent.click(dialog.getByRole('button', { name: '許可して追加' }))
+
+    await expect(
+      await dialog.findByText(
+        'このブラウザには送れないため、追加できませんでした。',
+      ),
+    ).toBeVisible()
+    await expect(dialog.getByLabelText('名前')).toHaveValue('Windows の Chrome')
+    await expect(
+      dialog.getByRole('button', { name: '許可して追加' }),
+    ).toBeEnabled()
+  },
+}
+
+export const この端末: Story = {
+  args: { browser: ON_THE_IPAD },
+  play: async ({ canvasElement }) => {
+    const list = within(canvasElement).getByRole('list', { name: '送り先' })
+    const own = list.querySelector<HTMLElement>(
+      `[data-destination="${IPAD_SAFARI.id}"]`,
+    )!
+
+    await expect(shownIn(own, THIS_DEVICE)).toHaveLength(1)
+    await expect(shownIn(list, THIS_DEVICE)).toHaveLength(1)
+  },
+}
+
+export const 送り先を追加_この端末は追加済み: Story = {
+  args: { browser: ON_THE_IPAD },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await openTheAdding(canvasElement))
+    const own = dialog.getByRole('button', { name: /このブラウザ/ })
+
+    await expect(own).toBeDisabled()
+    await expect(own).toHaveTextContent('iPad の Safari は追加済みです')
+    await expect(shownIn(own, THIS_DEVICE)).toHaveLength(1)
+    await expect(
+      dialog.getByRole('button', { name: /Slack・Discord/ }),
+    ).toBeEnabled()
+  },
+}
+
+export const この端末を削除: Story = {
+  args: { browser: ON_THE_IPAD },
+  play: async ({ canvasElement }) => {
+    removeDestination.mockClear()
+    forgetBrowser.mockClear()
+
+    await fromTheMenu(canvasElement, 'iPad の Safari', '削除')
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+
+    await waitFor(() =>
+      expect(removeDestination).toHaveBeenCalledWith(IPAD_SAFARI.id),
+    )
+    await waitFor(() => expect(forgetBrowser).toHaveBeenCalledTimes(1))
+  },
+}
+
+export const ほかのブラウザを削除: Story = {
+  play: async ({ canvasElement }) => {
+    removeDestination.mockClear()
+    forgetBrowser.mockClear()
+
+    await fromTheMenu(canvasElement, 'iPad の Safari', '削除')
+    await userEvent.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', {
+        name: '削除する',
+      }),
+    )
+
+    await waitFor(() =>
+      expect(removeDestination).toHaveBeenCalledWith(IPAD_SAFARI.id),
+    )
+    await expect(forgetBrowser).not.toHaveBeenCalled()
   },
 }
 
@@ -1230,6 +1391,33 @@ export const 電話_このブラウザ: Story = {
     const dialog = within(await openTheBrowserForm(canvasElement))
 
     await expect(dialog.getByLabelText('名前')).toHaveValue('iPhone の Safari')
+  },
+}
+
+export const 電話_この端末: Story = {
+  parameters: { screen: PHONE, coarse: true },
+  args: { browser: ON_THE_IPAD },
+  play: async ({ canvasElement }) => {
+    const own = within(canvasElement)
+      .getByRole('list', { name: '送り先' })
+      .querySelector<HTMLElement>(`[data-destination="${IPAD_SAFARI.id}"]`)!
+
+    const [chip] = shownIn(own, THIS_DEVICE)
+    const result = within(own).getByText('届いた 21:03')
+
+    await expect(shownIn(own, THIS_DEVICE)).toHaveLength(1)
+    await expect(
+      Math.abs(
+        chip.getBoundingClientRect().top +
+          chip.getBoundingClientRect().height / 2 -
+          (result.getBoundingClientRect().top +
+            result.getBoundingClientRect().height / 2),
+      ),
+    ).toBeLessThan(2)
+    await expect(within(own).getByText('iPad の Safari')).toBeVisible()
+    await expect(
+      within(own).getByText('iPad の Safari').scrollWidth,
+    ).toBeLessThanOrEqual(within(own).getByText('iPad の Safari').clientWidth)
   },
 }
 

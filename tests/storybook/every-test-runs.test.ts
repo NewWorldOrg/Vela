@@ -7,6 +7,7 @@ import { test } from 'node:test'
 const TOLD_TO_RUN = ['tests/**/*.test.ts']
 
 const THE_SUITE = [
+  'tests/app/(app)/_shell/actions.test.ts',
   'tests/app/(app)/guide/actions.test.ts',
   'tests/app/(app)/settings/notifications/actions.test.ts',
   'tests/app/(app)/settings/segments/actions.test.ts',
@@ -15,6 +16,7 @@ const THE_SUITE = [
   'tests/app/the-curtain-comes-with-the-page.test.ts',
   'tests/app/the-frames-stay-on-vela.test.ts',
   'tests/app/the-system-theme-needs-no-script.test.ts',
+  'tests/app/the-worker-is-read-afresh.test.ts',
   'tests/components/a-face-keeps-its-words-while-it-closes.test.ts',
   'tests/components/a-server-part-only-renders-client-parts.test.ts',
   'tests/components/data-broadcast/bml-mng.test.ts',
@@ -177,8 +179,10 @@ const THE_SUITE = [
   'tests/lib/utils.test.ts',
   'tests/lib/version.test.ts',
   'tests/lib/viewing.test.ts',
+  'tests/lib/web-push.test.ts',
   'tests/lib/when-terms.test.ts',
   'tests/middleware.test.ts',
+  'tests/public/sw.test.ts',
   'tests/repository/announced.test.ts',
   'tests/repository/auth.test.ts',
   'tests/repository/channel-ids.test.ts',
