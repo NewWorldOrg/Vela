@@ -23,6 +23,7 @@ import { EditDestinationDialog } from '@/components/notifications/edit-destinati
 import { RemoveDialog } from '@/components/notifications/remove-dialog'
 import { KindChip } from '@/components/notifications/kind-chip'
 import { RowMenu } from '@/components/notifications/row-menu'
+import { ThisDeviceChip } from '@/components/notifications/this-device-chip'
 import type { DestinationActions } from '@/components/notifications/destination-list'
 
 export const DOT_OF: Record<Verdict, StatusTone> = {
@@ -75,18 +76,20 @@ function ResultLine({
   testing,
   tested,
   tail,
+  mine,
 }: {
   said?: Said
   testing: boolean
   tested?: Said
   tail?: string
+  mine: boolean
 }) {
   const shown = tested ?? said
   const words = testing
     ? `${TEST_SENT} · 送信中`
     : tested && `${TEST_SENT} · ${withWhy(tested)}`
 
-  if (!shown && !testing && !tail) {
+  if (!shown && !testing && !tail && !mine) {
     return null
   }
 
@@ -101,6 +104,7 @@ function ResultLine({
         !testing && !tested && LINE_OF[said?.verdict ?? 'calm'],
       )}
     >
+      {mine && <ThisDeviceChip className="hidden h-5 upright:inline-flex" />}
       {testing && <Spinner size="control" />}
       {!testing && shown && (
         <StatusDot tone={DOT_OF[shown.verdict]} className="size-1.5" />
@@ -121,12 +125,15 @@ function ResultLine({
 export function DestinationRow({
   destination,
   goingWith,
+  mine = false,
   actions,
   now,
 }: {
   destination: NotificationDestination
   /** The names of the rule sets that are removed when this destination is. */
   goingWith: string[]
+  /** Whether this is the browser the page is open in. */
+  mine?: boolean
   actions: DestinationActions
   now?: number
 }) {
@@ -182,13 +189,20 @@ export function DestinationRow({
           {name}
         </span>
         <KindChip kind={kind} className="shrink-0" />
+        {mine && <ThisDeviceChip className="shrink-0 upright:hidden" />}
         {tail && (
           <span className="shrink-0 text-[calc(13rem/16)] text-ink-2 tabular-nums upright:hidden">
             {tailOf(tail)}
           </span>
         )}
       </span>
-      <ResultLine said={said} testing={testing} tested={tested} tail={tail} />
+      <ResultLine
+        said={said}
+        testing={testing}
+        tested={tested}
+        tail={tail}
+        mine={mine}
+      />
       <Switch
         checked={enabled}
         aria-label={`${name} を有効にする`}

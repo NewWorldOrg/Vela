@@ -235,10 +235,11 @@ const KIND_OF: Record<CarinaDestinationKind, DestinationKind> = {
   push: 'webPush',
 }
 
+/** The screen's kind for Carina's. A kind this build does not know yet passes as it is, and the chip calls it unknown. */
 export function destinationKindOf(
   kind: CarinaDestinationKind,
 ): DestinationKind {
-  return KIND_OF[kind]
+  return shapeFor(KIND_OF, kind, kind as DestinationKind)
 }
 
 export const FAILURE_LABEL: Record<DeliveryFailure, string> = {

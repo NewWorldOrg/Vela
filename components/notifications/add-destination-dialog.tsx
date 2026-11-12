@@ -7,7 +7,6 @@ import { signedOut } from '@/lib/signed-out'
 import {
   nameFits,
   readAddress,
-  type BrowserPermission,
   type NotificationWrite,
   type WebhookDraft,
 } from '@/lib/notifications'
@@ -29,6 +28,7 @@ import {
   NoticeDialogHeader,
   NoticeLabel,
 } from '@/components/notifications/notice-dialog-content'
+import { ThisDeviceChip } from '@/components/notifications/this-device-chip'
 import { WebhookField } from '@/components/notifications/webhook-field'
 
 export interface BrowserDraft {
@@ -39,24 +39,26 @@ export const ADD_DESTINATION = '送り先を追加'
 
 const SIGNED_OUT = signedOut('追加')
 
-export const DENIED_HERE =
-  'このブラウザは通知を拒否しています。サイトの設定で許可してください'
-
 type Step = 'pick' | 'webhook' | 'browser'
 
-/** This browser as a destination: what a person calls it, whether it lets notices through, and what adds it. */
+/** This browser as a destination: what a person calls it, why it cannot be added where it cannot, the fingerprint of its subscription, what adds it, and what is done once its own row is removed. */
 export interface BrowserChoice {
   here: string
-  permission: BrowserPermission
+  reason?: string
+  fingerprint?: string
   onAdd: (draft: BrowserDraft) => Promise<NotificationWrite>
+  onForget?: () => Promise<void>
 }
 
 /** `追加` and the dialog it opens: the form for a webhook, or, where this browser can be a destination too, the choice of kind first with a way back to it. */
 export function AddDestinationDialog({
   browser,
+  held = false,
   onAddWebhook,
 }: {
   browser?: BrowserChoice
+  /** Whether this browser already has a row, so it is not offered a second time. */
+  held?: boolean
   onAddWebhook: (draft: WebhookDraft) => Promise<NotificationWrite>
 }) {
   const first: Step = browser ? 'pick' : 'webhook'
@@ -80,7 +82,7 @@ export function AddDestinationDialog({
       </Button>
       <NoticeDialogContent>
         {step === 'pick' && browser && (
-          <KindPicker here={browser.here} onPick={setStep} />
+          <KindPicker here={browser.here} held={held} onPick={setStep} />
         )}
         {step === 'webhook' && (
           <WebhookForm
@@ -92,7 +94,7 @@ export function AddDestinationDialog({
         {step === 'browser' && browser && (
           <BrowserForm
             here={browser.here}
-            permission={browser.permission}
+            reason={browser.reason}
             onBack={back}
             onClose={() => setOpen(false)}
             onAdd={browser.onAdd}
@@ -105,9 +107,11 @@ export function AddDestinationDialog({
 
 function KindPicker({
   here,
+  held,
   onPick,
 }: {
   here: string
+  held: boolean
   onPick: (step: Step) => void
 }) {
   return (
@@ -126,7 +130,9 @@ function KindPicker({
         <KindOption
           icon={<BellIcon />}
           name="このブラウザ"
-          says={`${here} に通知を出します`}
+          says={held ? `${here} は追加済みです` : `${here} に通知を出します`}
+          tag={held && <ThisDeviceChip />}
+          disabled={held}
           onPick={() => onPick('browser')}
         />
       </ul>
@@ -138,11 +144,15 @@ function KindOption({
   icon,
   name,
   says,
+  tag,
+  disabled = false,
   onPick,
 }: {
   icon: ReactNode
   name: string
   says: string
+  tag?: ReactNode
+  disabled?: boolean
   onPick: () => void
 }) {
   return (
@@ -150,23 +160,27 @@ function KindOption({
       <button
         type="button"
         data-pressable-row
+        disabled={disabled}
         onClick={onPick}
         className={cn(
           'flex min-h-16 w-full items-center gap-3.5 py-3.5 pr-3.5 pl-4 text-left outline-none',
-          'transition-[background-color] duration-[140ms] ease-toy hover:bg-surface-2 focus-visible:shadow-ring dark:hover:bg-surface-3',
-          pressable,
+          'transition-[background-color] duration-[140ms] ease-toy focus-visible:shadow-ring',
+          disabled
+            ? 'cursor-not-allowed'
+            : cn('hover:bg-surface-2 dark:hover:bg-surface-3', pressable),
         )}
       >
         <span className="flex size-8 shrink-0 items-center justify-center rounded-sm bg-surface-2 text-ink dark:bg-surface-3 [&_svg]:size-[calc(18rem/16)]">
           {icon}
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-title font-semibold text-ink">
+          <span className="flex items-center gap-2 text-title font-semibold text-ink">
             {name}
+            {tag}
           </span>
           <span className="mt-0.5 block text-sub text-ink-2">{says}</span>
         </span>
-        <ChevronRightIcon className="text-ink-3" />
+        {!disabled && <ChevronRightIcon className="text-ink-3" />}
       </button>
     </li>
   )
@@ -259,13 +273,13 @@ function WebhookForm({
 
 function BrowserForm({
   here,
-  permission,
+  reason,
   onBack,
   onClose,
   onAdd,
 }: {
   here: string
-  permission: BrowserPermission
+  reason?: string
   onBack?: () => void
   onClose: () => void
   onAdd: (draft: BrowserDraft) => Promise<NotificationWrite>
@@ -273,7 +287,6 @@ function BrowserForm({
   const id = useId()
   const [name, setName] = useState(here)
   const { refusal, pending, add } = useAdding(onClose)
-  const denied = permission === 'denied'
 
   return (
     <>
@@ -293,8 +306,10 @@ function BrowserForm({
           />
         </Field>
         <span aria-live="polite" className="contents">
-          {denied && <InlineAlert tone="danger">{DENIED_HERE}</InlineAlert>}
-          {refusal && <InlineAlert tone="warn">{refusal}</InlineAlert>}
+          {reason && <InlineAlert tone="danger">{reason}</InlineAlert>}
+          {refusal && refusal !== reason && (
+            <InlineAlert tone="warn">{refusal}</InlineAlert>
+          )}
         </span>
       </div>
       <NoticeDialogFooter>
@@ -302,7 +317,7 @@ function BrowserForm({
           キャンセル
         </Button>
         <Button
-          disabled={denied || !nameFits(name) || pending}
+          disabled={reason !== undefined || !nameFits(name) || pending}
           onClick={() => add(() => onAdd({ name: name.trim() }))}
         >
           許可して追加

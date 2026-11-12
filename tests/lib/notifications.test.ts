@@ -30,7 +30,9 @@ import {
   webhookKindOf,
   withWhy,
   yetToStart,
+  type CarinaDestinationKind,
   type DeliveryFailure,
+  type DestinationKind,
   type NotificationDelivery,
   type NotificationEvent,
 } from '@/lib/notifications'
@@ -466,4 +468,8 @@ test('the kind Carina calls push is the browser kind the screen draws, and the w
   assert.equal(destinationKindOf('push'), 'webPush')
   assert.equal(destinationKindOf('slack'), 'slack')
   assert.equal(destinationKindOf('discord'), 'discord')
+  assert.equal(
+    destinationKindOf('email' as CarinaDestinationKind),
+    'email' as DestinationKind,
+  )
 })

@@ -26,11 +26,14 @@ export interface DestinationActions {
 export function DestinationList({
   destinations,
   ruleSets,
+  mine,
   actions,
   now,
 }: {
   destinations: NotificationDestination[]
   ruleSets: Pick<NotificationRuleSet, 'name' | 'destinations'>[]
+  /** The row of the browser the page is open in. */
+  mine?: string
   actions: DestinationActions
   now?: number
 }) {
@@ -46,6 +49,7 @@ export function DestinationList({
           goingWith={ruleSetsGoingWith(destination.id, ruleSets).map(
             ({ name }) => name,
           )}
+          mine={destination.id === mine}
           actions={actions}
           now={now}
         />
