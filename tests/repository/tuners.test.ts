@@ -526,11 +526,11 @@ test("each way the driver takes a tuner out of service is said in the screen's w
     ],
     [
       'deviceFailedAgain',
-      '戻した直後にデバイスがまた応答しなくなった。driver を起動し直すまで割り当てられない。',
+      '戻した直後にデバイスがまた応答しなくなった。間を延ばして開き直し、開けた時点で割り当てが戻る。',
     ],
     [
       'repeatedTuneFailure',
-      '同じチャンネルで続けて選局できなかった。driver を起動し直すまで割り当てられない。',
+      '違うチャンネルで続けて選局できなかった。開き直せた時点で割り当てが戻る。',
     ],
   ] as const) {
     standing()
@@ -579,7 +579,7 @@ test("a tuner that has failed to tune a channel says so in the screen's words", 
   assert.equal(row?.stateLabel, '警告')
   assert.equal(
     row?.stateSub,
-    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+    '選局に失敗したチャンネルがある。違うチャンネルでも続けて失敗すると割り当てが止まる。',
   )
 })
 
