@@ -847,7 +847,7 @@ export const SATELLITES_THAT_CANNOT_LOCK: QualityResult = {
 }
 
 const FAILING_TO_TUNE =
-  '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。'
+  '選局に失敗したチャンネルがある。違うチャンネルでも続けて失敗すると割り当てが止まる。'
 
 export const SATELLITES_FAILING_TO_TUNE: QualityResult = {
   ...SATELLITES_THAT_CANNOT_LOCK,

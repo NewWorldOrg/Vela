@@ -493,7 +493,7 @@ test('選局の失敗が続くチューナーは選局失敗で、チューナ�
     level: 'warn',
     label: '選局失敗',
     explanation:
-      '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+      '選局に失敗したチャンネルがある。違うチャンネルでも続けて失敗すると割り当てが止まる。',
   })
   assert.deepEqual(result.tuners[2].state, { level: 'good', label: '健全' })
   assert.equal(health?.value, '1 / 3')
@@ -1207,7 +1207,7 @@ test('選局の失敗が続くチューナーの再掲は、チューナー画�
   assert.equal(anomaly.title, 'チューナーの選局が失敗している')
   assert.equal(
     anomaly.observed,
-    '選局に失敗したチャンネルがある。同じチャンネルで続けて失敗すると割り当てが止まる。',
+    '選局に失敗したチャンネルがある。違うチャンネルでも続けて失敗すると割り当てが止まる。',
   )
   assert.equal(anomaly.applied, undefined)
   assert.equal(anomaly.level, 'warn')
