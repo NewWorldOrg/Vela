@@ -29,10 +29,14 @@ export const DISCORD_ROOM: NotificationDestination = {
   lastFailure: 'timedOut',
 }
 
+export const IPAD_FINGERPRINT =
+  '3f1a9c0e7b2d4e6f8a1b3c5d7e9f0a2b4c6d8e0f1a3b5c7d9e1f2a4b6c8d0e2f'
+
 export const IPAD_SAFARI: NotificationDestination = {
   id: 'dest-ipad',
   name: 'iPad の Safari',
   kind: 'webPush',
+  fingerprint: IPAD_FINGERPRINT,
   enabled: true,
   readable: true,
   lastResultAt: '2026-11-09T12:03:00Z',

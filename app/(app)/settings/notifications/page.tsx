@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 
 import { getNotificationsScreen } from '@/repository/notifications'
-import { NotificationsView } from '@/components/notifications/notifications-view'
+import { NotificationsHere } from '@/components/notifications/notifications-here'
+import { readServerKey } from '../../_shell/actions'
 import {
+  addBrowser,
   addDestination,
   addRuleSet,
   changeDestination,
@@ -21,8 +23,9 @@ export default async function Page() {
   const screen = await getNotificationsScreen()
 
   return (
-    <NotificationsView
+    <NotificationsHere
       screen={screen}
+      push={{ readKey: readServerKey, add: addBrowser }}
       actions={{
         onAddWebhook: addDestination,
         onReviseDestination: changeDestination,

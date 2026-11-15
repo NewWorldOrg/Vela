@@ -1117,6 +1117,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/api/notifications/push/subscriptions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['createPushSubscription']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/api/notifications/settings': {
     parameters: {
       query?: never
@@ -1126,6 +1142,22 @@ export interface paths {
     }
     get: operations['getNotificationSettings']
     put: operations['putNotificationSettings']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/api/notifications/push/key': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['getPushKey']
+    put?: never
     post?: never
     delete?: never
     options?: never
@@ -1179,6 +1211,22 @@ export interface paths {
     options?: never
     head?: never
     patch: operations['reviseNotificationRule']
+    trace?: never
+  }
+  '/api/notifications/push/subscriptions/{destinationId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put: operations['replacePushSubscription']
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
     trace?: never
   }
   '/api/notifications/destinations/{id}/test': {
@@ -2223,6 +2271,11 @@ export interface components {
       message: string
       data: null | components['schemas']['ProgrammeSearchResponder']
     }
+    BaseResponderOfPushKeyResponder: {
+      status: boolean
+      message: string
+      data: null | components['schemas']['PushKeyResponder']
+    }
     BaseResponderOfQualityCandidateScoreListResponder: {
       status: boolean
       message: string
@@ -2697,6 +2750,11 @@ export interface components {
       /** Format: int32 */
       leadMinutes?: null | number | string
       destinations?: null | string[]
+    }
+    CreatePushSubscriptionRequest: {
+      name?: null | string
+      endpoint?: null | string
+      keys?: null | components['schemas']['PushKeysRequest']
     }
     CreateReservationRequest: {
       programme?: null | string
@@ -3511,6 +3569,7 @@ export interface components {
       name: string
       kind: components['schemas']['WebhookTarget']
       tail: string
+      fingerprint: null | string
       enabled: boolean
       readable: boolean
       /** Format: date-time */
@@ -3763,6 +3822,13 @@ export interface components {
     ProgrammeSource: 'presentFollowing' | 'scheduleBasic' | 'scheduleExtended'
     /** @enum {string} */
     ProgrammeWatchState: 'waiting' | 'notified' | 'skipped' | 'cancelled'
+    PushKeyResponder: {
+      publicKey: string
+    }
+    PushKeysRequest: {
+      p256dh?: null | string
+      auth?: null | string
+    }
     PutDataBroadcastSettingsRequest: {
       postalCode: null | string
       /** Format: int32 */
@@ -4445,6 +4511,10 @@ export interface components {
     RelationKind: 'shared' | 'relayed' | 'moved'
     RemakeThumbnailsRequest: {
       ids?: null | string[]
+    }
+    ReplacePushSubscriptionRequest: {
+      endpoint?: null | string
+      keys?: null | components['schemas']['PushKeysRequest']
     }
     RerunEncodeJobsRequest: {
       ids?: null | string[]
@@ -5522,7 +5592,7 @@ export interface components {
       versionChanges: number | string
     }
     /** @enum {string} */
-    WebhookTarget: 'slack' | 'discord'
+    WebhookTarget: 'slack' | 'discord' | 'push'
   }
   responses: never
   parameters: never
@@ -10152,6 +10222,76 @@ export interface operations {
       }
     }
   }
+  createPushSubscription: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['CreatePushSubscriptionRequest']
+        'application/*+json':
+          null | components['schemas']['CreatePushSubscriptionRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Created */
+      201: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+    }
+  }
   getNotificationSettings: {
     parameters: {
       query?: never
@@ -10236,6 +10376,51 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfNotificationSettingsResponder']
+        }
+      }
+    }
+  }
+  getPushKey: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPushKeyResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPushKeyResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfPushKeyResponder']
         }
       }
     }
@@ -10531,6 +10716,78 @@ export interface operations {
         }
         content: {
           'application/json': components['schemas']['BaseResponderOfNotificationRuleResponder']
+        }
+      }
+    }
+  }
+  replacePushSubscription: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        destinationId: string
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json':
+          null | components['schemas']['ReplacePushSubscriptionRequest']
+        'application/*+json':
+          null | components['schemas']['ReplacePushSubscriptionRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Bad Request */
+      400: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Unauthenticated. The default-deny middleware answers with an empty body. */
+      401: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+      /** @description Not Found */
+      404: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description Conflict */
+      409: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
+        }
+      }
+      /** @description The request failed before it could answer for itself. The body carries the usual envelope with no data. */
+      500: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': components['schemas']['BaseResponderOfNotificationDestinationResponder']
         }
       }
     }

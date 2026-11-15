@@ -12,6 +12,7 @@ import {
   type NotificationWrite,
   type WebhookDraft,
 } from '@/lib/notifications'
+import { ownRowOf } from '@/lib/web-push'
 import { Banner } from '@/components/vela/banner'
 import { PageHeading } from '@/components/vela/page-heading'
 import { SettingsGroup } from '@/components/vela/settings-group'
@@ -86,6 +87,17 @@ export function NotificationsView({
   const logFor = narrowedTo(destinations, chosen)
   const deliveries = deliveriesShown(screen.deliveries, logFor)
   const say = useToast()
+  const mine = ownRowOf(destinations, browser?.fingerprint)
+
+  const removeDestination = async (id: string) => {
+    const result = await actions.onRemoveDestination(id)
+
+    if (result.state === 'ok' && id === mine) {
+      await browser?.onForget?.()
+    }
+
+    return result
+  }
 
   const settleLead = async (next: LeadMinutes) => {
     const was = lead
@@ -117,6 +129,7 @@ export function NotificationsView({
           end={
             <AddDestinationDialog
               browser={browser}
+              held={mine !== undefined}
               onAddWebhook={actions.onAddWebhook}
             />
           }
@@ -127,7 +140,8 @@ export function NotificationsView({
           <DestinationList
             destinations={destinations}
             ruleSets={ruleSets}
-            actions={actions}
+            mine={mine}
+            actions={{ ...actions, onRemoveDestination: removeDestination }}
             now={now}
           />
         ) : (
