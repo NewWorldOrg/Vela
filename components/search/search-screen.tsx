@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactElement } from 'react'
+import type { KeyboardEvent, ReactElement } from 'react'
 import { useCallback, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
@@ -98,6 +98,12 @@ function insteadOfHits(
   }
 
   return null
+}
+
+function holdBackTheEnterThatSettlesAConversion(event: KeyboardEvent) {
+  if (event.key === 'Enter' && event.nativeEvent.isComposing) {
+    event.preventDefault()
+  }
 }
 
 const QUIET_CHOICE =
@@ -248,11 +254,7 @@ export function SearchScreen({
         id={formId}
         role="search"
         className="mt-2 flex items-center gap-3.5 phone:hidden"
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && event.nativeEvent.isComposing) {
-            event.preventDefault()
-          }
-        }}
+        onKeyDown={holdBackTheEnterThatSettlesAConversion}
         onSubmit={(event) => {
           event.preventDefault()
           go(asking, true)
