@@ -19,7 +19,6 @@ export const COLUMN_FLEX = '1 1 0'
 
 const UNSCHEDULED_LABEL_REM = 3.25
 
-/** The shortest programme that keeps a `+` clear of its foot. */
 const PLUS_MIN_DURATION = 15
 
 export const GuideColumn = memo(function GuideColumn({

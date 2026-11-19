@@ -12,14 +12,12 @@ import { QualityChip } from '@/components/recordings/quality-chip'
 import { LeftScrambledChip } from '@/components/recordings/left-scrambled-chip'
 import { FileMissingChip } from '@/components/recordings/file-missing-chip'
 
-/** The encode states a recording names, each with the word that says it is the encode's. */
 const SHOWN_ENCODE: Partial<Record<Recording['encode'], string>> = {
   queued: 'エンコード待ち',
   running: 'エンコード中',
   failed: 'エンコード失敗',
 }
 
-/** Only the states of a recording that want a look: how it ended where it did not end well, what is wrong with it, and an encode not yet done. */
 export function attentionOf(recording: Recording) {
   const r = recording
   const left = unfinishedDeletionShapeOf(r)

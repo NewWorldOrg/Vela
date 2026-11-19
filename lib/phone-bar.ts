@@ -2,15 +2,12 @@ import type { Route } from 'next'
 
 import { isPathActive } from '@/lib/path'
 
-/** What the bar at the top of a phone held upright says for a screen: its name, and where its arrow goes back to when the screen is one pressed into. */
 export interface PhoneBar {
   title: string
   back?: { href: Route; label: string }
-  /** The bar gives the screen its whole width, without the theme: the search's field. */
   withoutTheme?: boolean
 }
 
-/** The settings, in the order the side nav and the phone's entrance give them. */
 export const SETTINGS_SCREENS: readonly { href: Route; label: string }[] = [
   { href: '/settings/system', label: 'システム' },
   { href: '/settings/tuners', label: 'チューナー' },
@@ -26,7 +23,6 @@ export const SETTINGS_SCREENS: readonly { href: Route; label: string }[] = [
   { href: '/settings/migration', label: '移行記録' },
 ]
 
-/** The names of the screens a setting presses into, by the setting. */
 const SETTINGS_SUB_SCREENS: Readonly<Record<string, string>> = {
   '/settings/channels': 'スキャン結果',
 }
@@ -70,7 +66,6 @@ function settingsBarOf(pathname: string): PhoneBar {
   return { title: screen.label, back: TO_THE_SETTINGS }
 }
 
-/** The bar a phone held upright gives the screen at this path: the head of a tab says its name alone, a screen pressed into says its name after the arrow back. */
 export function phoneBarOf(pathname: string): PhoneBar {
   if (isPathActive(pathname, '/settings')) {
     return settingsBarOf(pathname)

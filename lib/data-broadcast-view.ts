@@ -25,26 +25,20 @@ export const SAID_UNREACHED = '放送局のサーバにつながりませんで�
 
 export const SAID_UNOPENED = 'Hybridcast のアプリを開けませんでした。'
 
-/** How long the word about an application that did not open stays: as long as one about an unsupported operation. */
 export const UNOPENED_LASTS_MS = 3000
 
-/** How long a word about the line stays: as long as one about an unsupported operation. */
 export const LINE_SAID_LASTS_MS = 3000
 
 export const RECEIVING_SAID_AFTER_MS = 3000
 
 export const UNSUPPORTED_LASTS_MS = 3000
 
-/** How long a script may run before the frame is given up on: the runtime's own limit. */
 export const SCRIPT_GIVEN_UP_AFTER_MS = MOST_RUN_MS
 
-/** The keys a document takes until it says otherwise: `basic` and `data-button`. */
 export const KEYS_UNTIL_TOLD = keysOf(['basic', 'data-button'])
 
-/** The keys an application takes until it says otherwise. */
 export const APP_KEYS_UNTIL_TOLD = keysOfKeySet(KEY_SET_UNTIL_TOLD)
 
-/** Why a Hybridcast application gave way to the documents: the viewer closed it, it closed itself or went back to the documents, it went outside its boundary, a document loaded in its frame was not on the relay, it never opened, the relay did not start it, the data broadcast closed or ended, Hybridcast stopped being allowed, or the channel changed. */
 export type AppEnd =
   | { why: 'viewer' }
   | { why: 'destroyed' }
@@ -57,7 +51,6 @@ export type AppEnd =
   | { why: 'notAllowed' }
   | { why: 'channelChanged' }
 
-/** A URL as an ending names it: its origin and path, with no query or fragment, which may carry what identifies the viewer. */
 function siteOf(address: string | null): string {
   if (address === null) {
     return 'an address not known'
@@ -78,7 +71,6 @@ const NOT_ON_THE_RELAY: Record<'true' | 'false', string> = {
   true: 'said hello but did not answer once it had loaded',
 }
 
-/** The warning the player leaves when an application ends, naming why. */
 export function appEndSaid(end: AppEnd): string {
   switch (end.why) {
     case 'viewer':
@@ -106,7 +98,6 @@ export function appEndSaid(end: AppEnd): string {
   }
 }
 
-/** The Hybridcast application the documents asked to start: what they asked for, which start it is, so that an answer for an earlier one is not taken, and the address its frame opens and the application as its AIT names it, once Carina started it, null until then. */
 export interface HybridcastApp {
   start: AppStart
   nth: number
@@ -114,7 +105,6 @@ export interface HybridcastApp {
   application: OwnedApplication | null
 }
 
-/** What the player shows of a data broadcast. `waits`, `notices`, `lineNotices` and `scripting` name the latest wait, notice, word about the line and script run, so a timer started for one of them cannot end a later one. `lineOffSaid` is whether the setting refusing the line has been said while open, as it is said once. */
 export interface DataBroadcastView {
   open: boolean
   rect: Rect | null
@@ -207,7 +197,6 @@ export type DataBroadcastStep =
   | { on: 'appReplaced'; start: AppStart; nth: number }
   | { on: 'appLost'; end: AppEnd; nth: number }
 
-/** What decides whether the broadcast opens by itself: the setting, what the catalog asks, whether it can be opened, and whether it was open during this programme already, as one closed by hand stays closed until the programme changes. */
 export interface AutoOpening {
   autoOpens: boolean
   autoStart: boolean
@@ -228,7 +217,6 @@ export function opensByItself(
   )
 }
 
-/** Whether the player puts the control on its bar: when the broadcast can be opened, and while it is open so that it can be closed. */
 export function offersDataBroadcast(
   availability: DataBroadcastAvailability,
   view: DataBroadcastView,
@@ -290,7 +278,6 @@ function heard(
   }
 }
 
-/** A word about the line: the setting refusing it is said once while open, the server not reached each time it is not. */
 function saidOfTheLine(
   view: DataBroadcastView,
   said: LineSaid,
@@ -308,7 +295,6 @@ function saidOfTheLine(
   }
 }
 
-/** An application that did not open is said once while open, however often the documents ask for it again. */
 function saidUnopened(
   view: DataBroadcastView,
   nth: number | undefined,
@@ -323,7 +309,6 @@ function saidUnopened(
       }
 }
 
-/** Back to the documents from the application, keeping the shared registers for them, at the start document of the component the application named, or the one they began at. `returns` counts the times they came back, as the documents closed themselves for the application and are drawn afresh each time, even when the application never got as far as the screen. The picture fills the box again and the documents' keys are the ones taken until they say otherwise. */
 function backToTheDocuments(
   view: DataBroadcastView,
   end: AppEnd,
@@ -342,12 +327,10 @@ function backToTheDocuments(
     : view
 }
 
-/** The start document of a component, as the documents name one. */
 export function startupOf(componentTag: number): string {
   return `/${componentTag.toString(16).padStart(2, '0')}/0000/startup.bml`
 }
 
-/** A rectangle of the application's 1920x1080 coordinates on the 960x540 grid the picture is laid by. */
 export function gridRectOfApp(rect: Rect | null): Rect | null {
   if (!rect) {
     return null
@@ -364,7 +347,6 @@ export function gridRectOfApp(rect: Rect | null): Rect | null {
   }
 }
 
-/** The start Carina refused or could not make, or whose first document never opened on the relay: back to the documents, said once, and not asked for again while open. `nth` names the notice. */
 function unopenedApp(
   view: DataBroadcastView,
   nth: number,
@@ -403,7 +385,6 @@ type AppStep = Extract<
   }
 >
 
-/** What the running application changes: where the picture is, the keys it takes, the shared registers, and another application in its place, which opens once Carina started it. */
 function runningAppAfter(
   view: DataBroadcastView,
   step: Extract<
@@ -437,7 +418,6 @@ function runningAppAfter(
   }
 }
 
-/** What the application steps change: Carina started it or did not, it ran, it was closed or lost, or the word about it faded. A frame that lost its first document never opened; one that lost a later one was taken off the relay, and gives way to the documents without a word. */
 function appAfter(view: DataBroadcastView, step: AppStep): DataBroadcastView {
   switch (step.on) {
     case 'appStarted':
@@ -474,7 +454,6 @@ function appAfter(view: DataBroadcastView, step: AppStep): DataBroadcastView {
   }
 }
 
-/** A script run that starts is remembered until it ends; one the runtime says overran closes the broadcast as broken, as the frame is remade around it. */
 function scripted(
   view: DataBroadcastView,
   state: ScriptState,
@@ -490,7 +469,6 @@ function scripted(
   }
 }
 
-/** The view after one thing happens to it. */
 export function dataBroadcastAfter(
   view: DataBroadcastView,
   step: DataBroadcastStep,
@@ -561,7 +539,6 @@ const SAID_OF_THE_LINE: Record<LineSaid, string> = {
   unreached: SAID_UNREACHED,
 }
 
-/** The one line the face says at its bottom, if any: an unsupported operation first, as it answers what was just pressed, then a word about the line. */
 export function dataBroadcastSays(view: DataBroadcastView): string | null {
   if (!view.open) {
     return null
@@ -582,7 +559,6 @@ export function dataBroadcastSays(view: DataBroadcastView): string | null {
   return view.slow ? SAID_RECEIVING : null
 }
 
-/** The transform that lays the picture box over a rectangle of the 960x540 grid, or none to leave it filling the box. */
 export function pictureTransform(rect: Rect | null): string | undefined {
   if (!rect) {
     return undefined
@@ -594,10 +570,8 @@ export function pictureTransform(rect: Rect | null): string | undefined {
   return `translate(${left}%, ${top}%) scale(${rect.width / GRID.width}, ${rect.height / GRID.height})`
 }
 
-/** Where the remote control stands: in the page's column beside the player, as a tall remote; under the player's box as a band, where the window has no column; or over the picture on the control bar, in fullscreen, where there is no room beside or below. */
 export type BandPlace = 'column' | 'under' | 'over' | 'dock'
 
-/** The remote's place for a window or fullscreen, for a page with a column beside the player or without one, and for a phone, where it opens in the dock under the picture (or beside it, held on its side) as the gear does. A mouse and a finger get the same: the face is text to read, not a picture to keep whole. */
 export function bandPlace(
   full: boolean,
   column: boolean,

@@ -10,7 +10,6 @@ const AT_REST: { phase: FoldPhase; staggered: boolean } = {
   staggered: true,
 }
 
-/** Whether a fold is drawn at once rather than played: when the person asked for less motion, in the page or in the system. */
 export function atOnce(): boolean {
   return !movesNow(
     document.documentElement.dataset.motion,
@@ -61,7 +60,6 @@ export function useFoldingChannels(
   }
 }
 
-/** Calls `settle` once every transition and animation under `whole` has run out, after a fold or a swap has started playing them. */
 export function useSettled(
   whole: RefObject<HTMLElement | null>,
   phase: FoldPhase,

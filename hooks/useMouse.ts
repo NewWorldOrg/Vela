@@ -20,7 +20,6 @@ function notOnTheServer(): boolean {
   return false
 }
 
-/** Whether the screen's pointer can rest over something before pressing it; not on the server, where nothing is pointed at. */
 export function useMouse(): boolean {
   return useSyncExternalStore(follow, isMouse, notOnTheServer)
 }

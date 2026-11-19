@@ -41,7 +41,6 @@ export function RulesView({
   channels: GuideChannel[]
   editing: RuleEditing
   actions: RuleActions
-  /** How many reservations each rule still has ahead of it, by the rule's id; left out when they cannot be counted. */
   ahead?: Readonly<Record<string, number>>
 }) {
   return (

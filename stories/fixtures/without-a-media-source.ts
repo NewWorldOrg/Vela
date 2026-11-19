@@ -1,6 +1,5 @@
 const HLS = 'application/vnd.apple.mpegurl'
 
-/** Takes both media sources away for as long as a story is up, with the video answering about HLS as it is told. */
 export function withoutAMediaSource(
   playsHls: CanPlayTypeResult,
   before: () => void = () => {},

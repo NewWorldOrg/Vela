@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { CheckIcon } from '@/components/vela/icons'
 import { pressable } from '@/components/vela/tactile'
 
-/** A choice pressed in and out: a tick on the accent's tint while it is in, an empty ring while it is out. */
 export function PickChip({
   on,
   onPress,

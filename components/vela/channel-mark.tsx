@@ -5,7 +5,6 @@ import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import type { StationLogo } from '@/repository/channels'
 
-/** How large the mark stands: the chip beside a name, the square beside a programme's title under the picture, or the badge as tall as a line that leads the channel's line in a row of the live column. */
 export type ChannelMarkShape = 'chip' | 'square' | 'tile'
 
 const SLOT: Record<ChannelMarkShape, string> = {

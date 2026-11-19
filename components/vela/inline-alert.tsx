@@ -5,7 +5,6 @@ import { type ComponentProps } from 'react'
 import { cn } from '@/lib/utils'
 import { type BannerTone, TONE_ICON } from '@/components/vela/banner'
 
-/** An alert inside a form or a dialog is small enough to wear its colour as a soft ground. */
 const ALERT_CLASS: Record<'warn' | 'danger', string> = {
   warn: 'bg-warn-soft text-warn-text',
   danger: 'bg-rec-soft text-rec-text',

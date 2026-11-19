@@ -23,7 +23,6 @@ import {
 
 const FACE = 'bg-(--pl-bg) text-(--pl-ink)'
 
-/** The gear: a small window over the picture, drawn inside the board so it goes full screen with it; and on a phone, where the board is given a dock, the gear's face opens in the dock instead, attached to the picture as the caption's face and the data broadcast are. */
 export function PlayerGear({
   container,
   dock = null,

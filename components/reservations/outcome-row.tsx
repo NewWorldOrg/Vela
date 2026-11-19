@@ -16,7 +16,6 @@ const GONE = '記録が残っていません'
 
 export const OUTCOME_COLUMN_COUNT = 7
 
-/** Where the reservation came from, on the line under its title: the rule by name, or how it was made. */
 function OriginLine({
   origin,
   ruleName,

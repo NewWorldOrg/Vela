@@ -12,7 +12,6 @@ import { RecordingThumb } from '@/components/library/recording-thumb'
 const GLASS =
   'pointer-events-none absolute z-[1] inline-flex h-5 items-center gap-1 rounded-full bg-[rgba(20,20,22,.6)] px-1.5 font-code text-micro leading-none font-semibold text-white backdrop-blur-md'
 
-/** The line of how far a recording was watched, inside the foot of its picture. */
 function WatchedBar({ share }: { share: number | undefined }) {
   if (share === undefined) {
     return null
@@ -32,7 +31,6 @@ function WatchedBar({ share }: { share: number | undefined }) {
   )
 }
 
-/** A recording's picture at 16:9, with its length at the foot, a recording still being made at the head, and how far it was watched. */
 export function Picture({
   recording,
   corner = 'rounded-md',

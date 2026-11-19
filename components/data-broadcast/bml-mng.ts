@@ -1,21 +1,17 @@
 import { updatesOf, type MngAnimation, type MngUpdate } from '@/lib/bml/mng'
 
-/** How many frames of no delay are drawn at once before the page is let through. */
 export const MOST_UPDATES_AT_ONCE = 64
 
-/** How long frames are worked out and drawn at once before the page is let through. */
 export const MOST_MS_AT_ONCE = 8
 
 const LEAST_DELAY_MS = 10
 
 const MOST_DELAY_MS = 0x7fffffff
 
-/** A decoded picture the player lets go of once it is done with it. */
 export interface MngBitmap {
   close(): void
 }
 
-/** The part of a canvas's 2D context the player draws with. */
 export interface MngSurface<B extends MngBitmap> {
   clearRect(x: number, y: number, width: number, height: number): void
   save(): void
@@ -33,7 +29,6 @@ export interface MngCanvas<B extends MngBitmap> {
   getContext(kind: '2d'): MngSurface<B> | null
 }
 
-/** What the player asks of the frame it runs in. */
 export interface MngHost<B extends MngBitmap> {
   decode(png: Uint8Array): Promise<B>
   setTimeout(run: () => void, ms: number): number
@@ -42,12 +37,10 @@ export interface MngHost<B extends MngBitmap> {
   now(): number
 }
 
-/** How many pixels an MNG holds once it plays: its canvas, at the size of its frame, and its pictures decoded. */
 export function pixelsHeld(mng: MngAnimation): number {
   return mng.width * mng.height + mng.pixels
 }
 
-/** Plays an MNG on a canvas: decodes every picture first, then draws the frames in order for as long as each says, and lets go of the pictures once it ends, is stopped, or finds its canvas gone from the document. */
 export class MngPlayer<B extends MngBitmap> {
   private readonly canvas: MngCanvas<B>
 
@@ -76,7 +69,6 @@ export class MngPlayer<B extends MngBitmap> {
     return !this.stopped
   }
 
-  /** How many pixels it holds: its canvas and its pictures decoded. */
   get pixels(): number {
     return pixelsHeld(this.mng)
   }

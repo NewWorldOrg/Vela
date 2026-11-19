@@ -14,7 +14,6 @@ import { PickStart, SHOWN_AT_REST } from '@/components/library/pick-start'
 import type { Picking, PickStarting } from '@/components/library/library-tiles'
 import { Picture } from '@/components/library/picture'
 
-/** Whether the pointer rests on a recording, and the handlers that follow it; only a mouse's pointer counts. */
 export function usePointerResting() {
   const [resting, setResting] = useState(false)
 
@@ -33,7 +32,6 @@ function recordingHref(id: string): Route {
   return `/recordings/${id}` as Route
 }
 
-/** The accent's dot before the title of a recording nobody has watched. */
 function UnwatchedDot() {
   return (
     <span
@@ -45,7 +43,6 @@ function UnwatchedDot() {
   )
 }
 
-/** The press a tile gives: open the recording, or while choosing, take it in or leave it out. */
 function TilePress({
   recording,
   picking,
@@ -86,7 +83,6 @@ function TilePress({
   )
 }
 
-/** A recording in the grid: its picture, its title after the dot of one nobody has watched, and a line under it. On a mouse's screen the check comes up on its picture under the pointer. */
 export function RecordingTile({
   recording,
   title = recording.title,

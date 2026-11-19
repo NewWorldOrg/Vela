@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils'
 
-/** The reservation's ring: the accent's outline, as the guide draws a programme reserved in one press. */
 export function ReserveRing({ className }: { className?: string }) {
   return (
     <span

@@ -15,7 +15,6 @@ interface Node {
   disconnect(): void
 }
 
-/** A stand-in for the browser's audio context that notes what was played: for each tone its wave, its pitch and when it starts, and the gain of the node it ends at before the speakers. */
 class HeardContext {
   state: AudioContextState
 
@@ -78,7 +77,6 @@ class HeardContext {
     return made as unknown as OscillatorNode
   }
 
-  /** Resumes as the browser does, a moment after it was asked. */
   resume() {
     this.resumed += 1
 
@@ -93,7 +91,6 @@ class HeardContext {
     return Promise.resolve()
   }
 
-  /** The node each tone reaches the speakers through: the last one before them. */
   wholeOf(oscillator: Node): Node {
     let at: Node = oscillator
 
@@ -106,7 +103,6 @@ class HeardContext {
     return at
   }
 
-  /** The gain each tone reaches the speakers through. */
   gains(): number[] {
     return this.oscillators.map(
       (oscillator) =>
@@ -115,12 +111,10 @@ class HeardContext {
     )
   }
 
-  /** How many sounds were laid: the nodes the tones reach the speakers through, counted as each tone is started. */
   sounds(): number {
     return new Set(this.wholes).size
   }
 
-  /** Lets every tone laid so far end, as the browser tells each when it stops. */
   endAll(): void {
     this.oscillators.forEach((oscillator) => oscillator.onended?.())
   }

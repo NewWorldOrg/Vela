@@ -36,7 +36,6 @@ export const RESTS_AFTER_A_REFUSAL_MS = 10_000
 
 export const RESTS_WHILE_COMING_MS = 30_000
 
-/** How many module versions are read at once; the rest wait their turn, the ones in effect first. */
 export const MOST_READS_AT_ONCE = 4
 
 type Read =
@@ -47,7 +46,6 @@ type Read =
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** A recording's data broadcast as the player holds it: the catalog of the whole recording is read once, and at each second of playback the version of each module in effect then is chosen, read from the module route and handed on, with the versions of the next two minutes read before they are needed. An event message is handed on once, when playback passes its second; a seek back lets the ones after it be heard again, and a seek forward passes over the ones between. The time on air is when the recording began and the position played, told each time playback moves it, so that the date a document reads and how far into the programme it is follow where playback is: they stand while paused and go back with a seek. */
 export class RecordingDataBroadcast implements DataBroadcastHeld {
   private readonly readTimeline: ReadTimeline
 
@@ -107,7 +105,6 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
     this.warn = warn
   }
 
-  /** Asks for the catalog, and again after a rest while it is still being made or could not be read. */
   start(): void {
     if (this.closed || this.timeline || this.asking) {
       return
@@ -167,12 +164,10 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
     return [...this.held.values()]
   }
 
-  /** A recording keeps no NPT reference: its event messages already carry the moments they fire at. */
   get nptReadings(): NptReading[] {
     return []
   }
 
-  /** The time on air at the position played: when the recording began, in seconds, and the seconds played since. */
   get clock(): number | null {
     return this.began === null || this.seen === null
       ? null
@@ -187,14 +182,12 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
     return this.forTheCatalog
   }
 
-  /** The versions being read now, for whoever watches the reading ahead. */
   get asked(): PlacedVersion[] {
     return [...this.reads.entries()]
       .filter(([, read]) => read.state === 'asking')
       .flatMap(([key]) => this.placedBy(key) ?? [])
   }
 
-  /** Moves to a second of the source: the versions in effect there are chosen and handed on where they differ from before, the event messages played past are fired, and the versions coming within two minutes are read. */
   advance(second: number): void {
     const timeline = this.timeline
 
@@ -370,7 +363,6 @@ export class RecordingDataBroadcast implements DataBroadcastHeld {
     }
   }
 
-  /** Lets go of the versions read that are no longer in effect and are not coming within the stretch read ahead, and of the oldest beyond what may be held. */
   private forget(second: number): void {
     const inEffect = new Set(
       [...this.chosen.values()].map((placed) => versionKey(placed)),

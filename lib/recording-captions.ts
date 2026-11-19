@@ -13,7 +13,6 @@ export interface CaptionWindow {
   cues: TimedCaption[]
 }
 
-/** The captions held for one stretch of a source: every change in [fromSec, untilSec), led by the one already showing at fromSec. */
 export interface CaptionTimeline {
   fromSec: number
   untilSec: number

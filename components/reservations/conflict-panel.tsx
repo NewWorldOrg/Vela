@@ -48,7 +48,6 @@ const BAR_GAP_REM = { side: 6 / 16, phone: 4 / 16 }
 
 const AXIS_REM = 22 / 16
 
-/** Only the hours, when the line is long enough to carry more than two of them; the half hours crowd a narrow box. */
 function hoursOf(ticks: { label: string; at: number }[]) {
   const hours = ticks.filter((tick) => tick.label.endsWith(':00'))
 
@@ -67,7 +66,6 @@ function msOf(at: string): number {
   return new Date(at).getTime()
 }
 
-/** The rounded ends of the struck stretch: round where it meets an end of the programme that loses, square where it runs on. */
 function hatchRadius(kept: Span[], lost: Span): string {
   const atStart =
     Math.min(...kept.map((one) => msOf(one.startAt))) <= msOf(lost.startAt)
@@ -106,12 +104,6 @@ function Bar({
   )
 }
 
-/**
- * A conflict: the programmes that keep the tuner and the one that loses it on one line of hours with the lost stretch
- * struck through, then a row each — the ones that keep it said so, the one that loses it with what it goes without and
- * the press that gives it the tuner — and the way to the tuners. Beside the list on a wide screen, at the head of the
- * list on a phone.
- */
 export function ConflictPanel({
   reservation,
   onRaise,

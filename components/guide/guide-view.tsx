@@ -82,7 +82,6 @@ export function GuideView({
   noticing,
   subChannelsFolded = false,
 }: {
-  /** Puts back a reservation the circle took back, from the toast's `元に戻す`. */
   onRestore?: (id: string) => Promise<ReservationWrite>
   guide: GuideResult
   collection: CollectionStatus

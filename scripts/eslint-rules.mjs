@@ -1,4 +1,3 @@
-/** The lint rules this repository keeps for itself. `eslint.config.mjs` loads them as the `vela` plugin. */
 
 const PARTS = ['test', 'consequent', 'alternate']
 
@@ -28,11 +27,6 @@ function waivesWithoutReason(comment, ruleId) {
   )
 }
 
-/**
- * Counts the ternaries joined directly, one as the test or a branch of the next, and stops the chain at `max`.
- *
- * @type {import('eslint').Rule.RuleModule}
- */
 const maxTernaryChain = {
   meta: {
     type: 'suggestion',

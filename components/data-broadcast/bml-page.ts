@@ -1,7 +1,6 @@
 import type { BmlPage, PageElement, PageNode } from '@/lib/bml/document'
 import { stillCut, videoHole } from '@/lib/bml/style'
 
-/** A drawn page: its body, its elements by `nav-index` and by id, the page element each was drawn from, and the style element the runtime writes a script's focus and active styles into. */
 export interface MountedPage {
   body: HTMLElement
   byNavIndex: Map<number, HTMLElement>
@@ -100,7 +99,6 @@ function build(node: PageNode, building: Building): Node {
   return element
 }
 
-/** Draws a converted page into the plane, replacing what was there. Nothing of the document becomes an event handler or reaches past `data-bml-*`. */
 export function mountPage(page: BmlPage, plane: HTMLElement): MountedPage {
   const document = plane.ownerDocument
   const style = document.createElement('style')

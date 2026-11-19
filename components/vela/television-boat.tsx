@@ -61,12 +61,6 @@ function Boat({ edge }: { edge: boolean }) {
   )
 }
 
-/**
- * The app icon's television under sail, off its plate: the mast and the sail,
- * the set with a face on its screen, two legs and the star.
- * Both faces are drawn; `mood` shows one of them, and the curtain turns one
- * into the other. `edged` rims it in the ground colour.
- */
 export function TelevisionBoat({
   mood = 'plain',
   edged = false,

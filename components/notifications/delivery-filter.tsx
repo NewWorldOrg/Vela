@@ -12,7 +12,6 @@ const EVERY = '__every__'
 
 export const EVERY_DESTINATION = 'すべての送り先'
 
-/** Which destination's deliveries the log shows: all of them, or one. */
 export function DeliveryFilter({
   destinations,
   value,

@@ -9,7 +9,6 @@ const OPTIONS = LEADS.map((lead) => ({
   label: leadLabel(lead),
 }))
 
-/** How long before a programme starts its notice is sent: at the start, or one, three, five or ten minutes before. */
 export function LeadChoice({
   value,
   onValueChange,

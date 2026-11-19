@@ -15,7 +15,6 @@ const COLOURS: { key: BmlKey; name: string; fill: string }[] = [
   { key: 'yellow', name: '黄', fill: 'bg-(--remote-yellow)' },
 ]
 
-/** The four colour keys as the remote has them: a dot of the colour and nothing written on it. The press reaches halfway to the neighbour. */
 export function Colours({ pressing }: { pressing: Pressing }) {
   return (
     <div className="flex h-(--dot) shrink-0 items-center gap-[calc(var(--pitch)-var(--dot))]">

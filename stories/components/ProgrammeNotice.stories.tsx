@@ -49,16 +49,13 @@ const asked = fn<(programmeId: string, draft: WatchDraft) => void>()
 
 const cancel = fn<(id: string) => Promise<NotificationWrite>>(async () => OK)
 
-/** A programme's detail as far as the single notice reaches into it: the time with the chip beside it once set, and the row of actions with the button. */
 function DetailWithTheNotice({
   watching,
   nowhere = false,
   refused = false,
 }: {
   watching: boolean
-  /** No destination is on, so there is nowhere to send a notice. */
   nowhere?: boolean
-  /** The notice is turned away when asked. */
   refused?: boolean
 }) {
   const [watch, setWatch] = useState<ProgrammeWatch | undefined>(
@@ -149,7 +146,6 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-/** Cells of the guide the way the bell sits in one: at the corner, the title leaving room for it. */
 function GuideCells() {
   return (
     <div className="grid w-[calc(444rem/16)] grid-cols-2 gap-1">
@@ -196,7 +192,6 @@ function GuideCells() {
   )
 }
 
-/** Two single notices the way the list of reservations shows them among its rows. */
 function ReservationRows() {
   return (
     <ul className="w-[min(calc(900rem/16),100vw)] px-4 upright:px-0">

@@ -39,7 +39,6 @@ export interface FontBytes {
   bytes: ArrayBuffer
 }
 
-/** The programme on air as a document asks after it: its ids, which a recording may lack, and when it began. */
 export interface Programme {
   service: number
   event: number | null
@@ -48,13 +47,11 @@ export interface Programme {
   startsAt: number | null
 }
 
-/** What the player knows of the programme the broadcast belongs to: its network and when it began, in seconds. */
 export interface OnAir {
   network: number | null
   startsAt: number | null
 }
 
-/** The programme the runtime is handed for a service, its start in whole seconds as a receiver has it from the broadcast: a recording begins part way into a second, and the runtime drops a programme whose start has a fraction, ids and all. A start that is not a time is left out. */
 export function programmeOnAir(service: number, onAir: OnAir): Programme {
   const { startsAt } = onAir
 
@@ -94,7 +91,6 @@ export const RUNTIME_ERRORS = ['malformed', 'missing', 'undecoded'] as const
 
 export type RuntimeError = (typeof RUNTIME_ERRORS)[number]
 
-/** Where a script run stands: `running` when one starts, `done` when it ends in time, `overran` when it ended past the time a run may take. */
 export const SCRIPT_STATES = ['running', 'done', 'overran'] as const
 
 export type ScriptState = (typeof SCRIPT_STATES)[number]
@@ -116,12 +112,10 @@ export type RuntimeMessage =
   | { kind: 'unopened' }
   | { kind: 'romsound'; sound: number }
 
-/** What the viewer is told of the line: the setting refuses it, or the broadcaster's server could not be reached. */
 export const LINE_SAYINGS = ['off', 'unreached'] as const
 
 export type LineSaid = (typeof LINE_SAYINGS)[number]
 
-/** How a sandboxed document without `allow-same-origin` names its origin. */
 export const RUNTIME_ORIGIN = 'null'
 
 export interface Delivered {
@@ -132,13 +126,10 @@ export interface Delivered {
 
 const MOST_FONT_BYTES = 4 * 1024 * 1024
 
-/** The registers shared by the documents and the applications they start: 64 strings. */
 export const SHARED_REGISTERS = 64
 
-/** The longest string a shared register is handed over with. */
 export const MOST_REGISTER = 1024
 
-/** The most starts the player tells the runtime have failed while the broadcast is open. */
 export const MOST_FAILED_STARTS = 16
 
 const MOST_WHAT = 64
@@ -153,7 +144,6 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
 }
 
-/** A rectangle on the 960x540 grid with a size, or null when it is not one. */
 export function gridRectOf(value: unknown): Rect | null {
   const rect = recordOf(value)
 
@@ -191,7 +181,6 @@ export function isMemoryValue(value: unknown): value is string {
   return typeof value === 'string' && value.length <= MOST_MEMORY_BYTES
 }
 
-/** A broadcaster's memory as it is handed over, or null when the value has another shape. */
 export function memoryEntriesOfValue(value: unknown): MemoryEntries | null {
   if (!Array.isArray(value) || value.length > MOST_MEMORY_ENTRIES) {
     return null
@@ -212,7 +201,6 @@ function isRequestId(value: unknown): value is number {
   return Number.isSafeInteger(value) && (value as number) > 0
 }
 
-/** A URL a runtime may ask over the line, written as the runtime writes it: `http:` or `https:`, without a fragment. */
 function isLineUri(value: unknown): value is string {
   return (
     typeof value === 'string' &&
@@ -234,7 +222,6 @@ function transmitOf(message: Record<string, unknown>): RuntimeMessage | null {
     : null
 }
 
-/** The 64 shared registers, each a string no longer than the most one is handed over with, or null. */
 export function sharedRegistersOf(value: unknown): string[] | null {
   return Array.isArray(value) &&
     value.length === SHARED_REGISTERS &&
@@ -317,7 +304,6 @@ function runtimeMessageOf(data: unknown): RuntimeMessage | null {
   }
 }
 
-/** What the runtime said, when it came from the player's own frame in its opaque origin and has a shape the player takes. Anything else is null. */
 export function runtimeMessageFrom(
   delivered: Delivered,
   frame: unknown,
@@ -373,7 +359,6 @@ function programmeOf(value: unknown): Programme | null {
     : null
 }
 
-/** A number of an answer, which may be NaN where there is none, but nothing else that is not finite. */
 function isAnswerNumber(value: unknown): value is number {
   return typeof value === 'number' && !Number.isFinite(value)
     ? Number.isNaN(value)
@@ -410,7 +395,6 @@ function fetchedOf(message: Record<string, unknown>): PlayerMessage | null {
     : null
 }
 
-/** Opening, at the start document of a component when one is named. */
 function openOf(message: Record<string, unknown>): PlayerMessage | null {
   if (message.startup === undefined) {
     return { kind: 'open' }
@@ -523,7 +507,6 @@ function playerMessageOf(data: unknown): PlayerMessage | null {
   }
 }
 
-/** What the player said, when it came from the parent window in Vela's own origin and has a shape the runtime takes. Anything else is null. */
 export function playerMessageFrom(
   delivered: Delivered,
   player: { origin: string; window: unknown },

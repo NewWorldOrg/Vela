@@ -1420,7 +1420,6 @@ export const 行の操作の並び: Story = {
 
 const WHAT_THE_PICKED_JOBS_DO = '選んだジョブの操作'
 
-/** The bar that floats at the window's foot while the failed jobs are being chosen, or the band over a phone's tabs. */
 function pickingRow(canvasElement: HTMLElement): HTMLElement {
   return within(canvasElement).getByRole('toolbar', {
     name: WHAT_THE_PICKED_JOBS_DO,
@@ -1437,7 +1436,6 @@ function rowOf(canvasElement: HTMLElement, job: EncodeJob): HTMLElement {
   return row
 }
 
-/** The check that takes a failed job in, at the head of its row. */
 function pickOf(canvasElement: HTMLElement, job: EncodeJob): HTMLElement {
   return within(rowOf(canvasElement, job)).getByRole('checkbox', {
     name: `${job.title} を選ぶ`,
@@ -1451,7 +1449,6 @@ async function startChoosing(canvasElement: HTMLElement) {
   )
 }
 
-/** Sees the list leave choosing: the bar gone and `選ぶ` no longer pressed. */
 async function stopsChoosing(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
 

@@ -216,7 +216,6 @@ export const LIVE_PROFILE_FIXTURES: LiveProfile[] = [
   },
 ]
 
-/** A machine whose card writes H.265 and AV1 as well as H.264. */
 export const LIVE_PROFILE_FIXTURES_EVERY_FORMAT: LiveProfile[] =
   LIVE_PROFILE_FIXTURES.map((one) => ({ ...one, formats: EVERY_FORMAT }))
 

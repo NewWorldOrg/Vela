@@ -30,7 +30,6 @@ function cardsOf(table: HTMLTableElement): HTMLTableRowElement[] {
   )
 }
 
-/** Every part of a list says what it is in the table, so a reader that is told a laid-out table is no table still hears rows, cells and the heading of each column. */
 async function saysItIsATable(table: HTMLTableElement): Promise<void> {
   await expect(table.getAttribute('role')).toBe('table')
 
@@ -51,7 +50,6 @@ async function saysItIsATable(table: HTMLTableElement): Promise<void> {
   }
 }
 
-/** Each row of every list is a card inside its container: nothing runs off to the side, every value and label is drawn whole, and every button says its word at a size a finger can press. */
 export async function laysRowsAsCards(
   canvasElement: HTMLElement,
 ): Promise<void> {
@@ -134,7 +132,6 @@ async function cellIsWhole(cell: HTMLElement, edge: DOMRect): Promise<void> {
   }
 }
 
-/** From 600px up every list is the table it was: a header row of column names and a row of cells for each line. */
 export async function laysRowsAsATable(
   canvasElement: HTMLElement,
 ): Promise<void> {

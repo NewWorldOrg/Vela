@@ -73,7 +73,6 @@ export interface UnfinishedDeletion {
   filesLeft?: number
 }
 
-/** The service a recording was taken from, as the broadcast names it. */
 export interface BroadcastService {
   networkId: number
   serviceId: number
@@ -116,7 +115,6 @@ export interface Recording {
   thumbnail: ThumbnailState
   thumbnailLabel?: string
   thumbnailHref?: string
-  /** How far the signed-in viewer watched, in seconds; none where they have not. */
   watchedSec?: number
 }
 
@@ -341,7 +339,6 @@ export async function remakeThumbnail(id: string): Promise<ThumbnailWrite> {
 export type ThumbnailRemakeOutcome =
   components['schemas']['ThumbnailRemakeOutcome']
 
-/** What became of one recording handed to `サムネイルを再生成`: queued when `reason` is absent, otherwise the sentence that says why not. */
 export interface ThumbnailRemakeRow {
   id: string
   outcome: ThumbnailRemakeOutcome
@@ -364,7 +361,6 @@ const REMAKE_REASONS: Record<
   refused: couldNot(CANNOT_REMAKE),
 }
 
-/** The sentence a recording's row says when its thumbnail was not made again; nothing when it was queued. */
 export function whyItWasNotRemade(
   outcome: ThumbnailRemakeOutcome,
 ): string | undefined {
@@ -788,7 +784,6 @@ function gapOf(r: RecordingResponder): Recording['gap'] {
   return label && detail ? { label, detail } : undefined
 }
 
-/** The gaps a recording kept; an API from before gaps were kept answers none. */
 function gapsOf(r: RecordingResponder): GapResponder[] {
   return r.gaps ?? []
 }

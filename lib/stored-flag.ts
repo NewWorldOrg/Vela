@@ -38,7 +38,6 @@ export const DATA_BROADCAST_SOUNDS = 'vela-data-broadcast-sounds'
 
 const KEPT_S = 31536000
 
-/** Whether a flag is on by what its cookie says: on only for the word for yes, and as it starts out while there is no cookie. */
 export function flagOf(
   said: string | undefined,
   spelling: FlagSpelling,
@@ -47,7 +46,6 @@ export function flagOf(
   return said === undefined ? unsaid : said === spelling.yes
 }
 
-/** A cookie's value with its escapes undone, or as it stands when an escape is broken. */
 function decoded(value: string): string {
   try {
     return decodeURIComponent(value)

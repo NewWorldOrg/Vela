@@ -10,7 +10,6 @@ import {
 
 const listenToNothing = (): (() => void) => () => undefined
 
-/** この端末で開けるプレイヤーのアプリ。サーバの HTML には無い。 */
 export function usePlayerApps(): readonly PlayerApp[] {
   return useSyncExternalStore(
     listenToNothing,

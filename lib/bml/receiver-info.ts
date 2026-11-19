@@ -7,7 +7,6 @@ import {
 } from '@/lib/bml/memory'
 import { fieldsOf } from '@/lib/bml/structure'
 
-/** Where the receiver is, as the household registered it in Carina: the postal code as seven digits, and the prefecture as its place in the prefecture designation of ARIB STD-B10 annex G, table G-2, counted from 0. Either is null while it is not registered. */
 export interface Residence {
   postalCode: string | null
   prefecture: number | null
@@ -21,19 +20,12 @@ export const FIRST_PREFECTURE = 0
 
 export const LAST_PREFECTURE = 49
 
-/** The names a document reads the viewer's residence under (ARIB TR-B14, volume 3, 5.2.7). */
 export const RECEIVER_INFO = 'nvram://receiverinfo/'
 
-/** What the receiver answers for a prefecture or a region code not registered (TR-B14, volume 3, table 5-2). */
 export const NO_PREFECTURE = 255
 
 export const NO_REGION_CODE = 0
 
-/**
- * The region code of the emergency warning signal for each prefecture, in the order of the prefecture designation: the
- * prefecture codes of ARIB STD-B10 annex D, table D-2. The east and the west of Hokkaido share Hokkaido's, and the
- * islands of Tokyo and of Kagoshima share their prefecture's.
- */
 export const REGION_CODES: readonly number[] = [
   0x16b, 0x16b, 0x467, 0x5d4, 0x758, 0xac6, 0xe4c, 0x1ae, 0xc69, 0xe38, 0x98b,
   0x64b, 0x1c7, 0xaac, 0x56c, 0x4ce, 0x539, 0x6a6, 0x92d, 0xd4a, 0x9d2, 0xa65,
@@ -58,7 +50,6 @@ export function isPrefecture(value: unknown): value is number {
   )
 }
 
-/** A residence from what Carina or the player handed over, or null when it is not one: each value registered as it should be, or null. */
 export function residenceOf(value: unknown): Residence | null {
   if (typeof value !== 'object' || value === null) {
     return null
@@ -88,7 +79,6 @@ function block(bytes: readonly number[]): Uint8Array {
   return area
 }
 
-/** The block a document reads under a name of the residence, as TR-B14 lays it out: the postal code as seven characters, the prefecture in one byte and the region code in two, each read as not registered when it is not. Null for a name the receiver does not have. */
 export function receiverInfoBlock(
   residence: Residence,
   name: string,
@@ -111,7 +101,6 @@ export function receiverInfoBlock(
   }
 }
 
-/** What a document reads under a name: the residence for a name of the receiver's own, and the broadcaster's memory for any other. Null where the name or the structure is not one the receiver reads. */
 export function readPersistent(
   memory: PersistentMemory,
   residence: Residence,
@@ -128,7 +117,6 @@ export function readPersistent(
   return read && fields ? readCells(new BitReader(read), fields, UTF8) : null
 }
 
-/** Writes values under a name of the broadcaster's memory: how many bytes were written, or null when they do not fit, and for every name of the residence, which a document never writes. */
 export function writePersistent(
   memory: PersistentMemory,
   name: unknown,

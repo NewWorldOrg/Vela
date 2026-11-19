@@ -18,7 +18,6 @@ import { NO_MARGIN, type Margin } from '@/lib/caption-placement'
 import { VEIL_OF, type CaptionLook } from '@/lib/caption-style'
 import type { CaptionPicture } from '@/lib/live-wire'
 
-/** A caption's picture ready to draw, with what it adds around the caption's own rectangle. */
 export interface DrawnCaption {
   image: CanvasImageSource
   margin: Margin
@@ -170,7 +169,6 @@ async function composed(layers: Layers): Promise<DrawnCaption> {
   }
 }
 
-/** The broadcast's own picture, decoded as it came. */
 export async function broadcastCaption(
   picture: CaptionPicture,
 ): Promise<DrawnCaption | null> {
@@ -181,7 +179,6 @@ export async function broadcastCaption(
   }
 }
 
-/** A caption's picture in the look chosen, or null when its PNG is not a shape this can rewrite, or anything goes wrong on the way: then the broadcast's own is drawn. The palette is rewritten, and pixels are read only to find a solid band, to lay bands behind a caption that has none, and to make the shape an added edge is drawn from. `stretch` is how much wider than tall the canvas's pixel is drawn, and `canvasHeight` the canvas's height, which the edge's thickness follows. */
 export async function restyledCaption(
   picture: CaptionPicture,
   look: CaptionLook,

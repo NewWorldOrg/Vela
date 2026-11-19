@@ -1,7 +1,6 @@
 import { clsx, type ClassValue } from 'clsx'
 import { extendTailwindMerge } from 'tailwind-merge'
 
-// tailwind-merge reads `text-ink` as a font size like `text-ui`, and silently drops one whenever both appear.
 const twMerge = extendTailwindMerge({
   extend: {
     classGroups: {

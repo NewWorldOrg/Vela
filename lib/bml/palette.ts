@@ -2,8 +2,6 @@ import { INDEXED, chunksOf, pngChunk } from '@/lib/png-chunks'
 
 export const PALETTE_SIZE = 256
 
-/** The first index a document's lookup table may define; below it are the common fixed colours. */
-
 const INDEXED_DEPTHS = new Set([1, 2, 4, 8])
 
 const CHANNELS = 4
@@ -26,7 +24,6 @@ const COMMON_FIXED =
   'aaaaff80aaff0080aaff5580aaffaa80aaffff80ff005580ff00ff80ff550080' +
   'ff555580ff55aa80ff55ff80ffaa0080ffaa5580ffaaaa80ffaaff80ffff5580'
 
-/** The colours a document can name by index: 256 of red, green, blue and alpha. */
 export interface Palette {
   colours: Uint8Array
 }
@@ -89,7 +86,6 @@ function rangeOf(
   return { from: bytes[at] >> 4, to: bytes[at] & 0x0f, next: at + 1 }
 }
 
-/** Reads a colour lookup table resource: its entries from the index they start at, or null when it is not one. */
 export function readClut(bytes: Uint8Array): ClutEntries | null {
   if (bytes.length < 1) {
     return null
@@ -124,7 +120,6 @@ export function readClut(bytes: Uint8Array): ClutEntries | null {
   return { from: range.from, colours }
 }
 
-/** The common fixed colours, with a document's lookup table laid over every index it names. An index the table does not name keeps its common fixed colour. */
 export function paletteOf(clut: ClutEntries | null): Palette {
   const colours = commonFixed()
 
@@ -139,7 +134,6 @@ export function paletteOf(clut: ClutEntries | null): Palette {
   return { colours }
 }
 
-/** The CSS colour of an index, or null when the index is not one. */
 export function colourOf(palette: Palette, index: number): string | null {
   if (!Number.isInteger(index) || index < 0 || index >= PALETTE_SIZE) {
     return null
@@ -153,7 +147,6 @@ export function colourOf(palette: Palette, index: number): string | null {
     : `rgb(${r} ${g} ${b} / ${Number((a / 255).toFixed(3))})`
 }
 
-/** A PNG the way a browser can draw it: an indexed PNG that leaves its palette to the document is given the document's. */
 export function withPalette(png: Uint8Array, palette: Palette): Uint8Array {
   const chunks = chunksOf(png)
   const header = chunks?.[0]

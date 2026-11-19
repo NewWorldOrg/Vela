@@ -6,7 +6,6 @@ import {
 } from '@/lib/bml/event-message'
 import { moduleAddressOf, streamTagOf, type BmlAddress } from '@/lib/bml/paths'
 
-/** The kinds of `beitem` a document may listen for. */
 export const EVENT_TYPES = [
   'ModuleUpdated',
   'ModuleLocked',
@@ -19,7 +18,6 @@ export const EVENT_TYPES = [
 
 export type EventType = (typeof EVENT_TYPES)[number]
 
-/** One `beitem` of the document: what it listens for, its attributes and whether it is subscribed now. */
 export interface EventItem {
   id: string | null
   type: EventType | null
@@ -35,7 +33,6 @@ function typeOf(value: string | null): EventType | null {
     : null
 }
 
-/** The document's `beitem`s as the runtime keeps them. */
 export function eventItemsOf(events: PageEvent[]): EventItem[] {
   return events.map((event) => {
     const attributes = new Map(
@@ -51,7 +48,6 @@ export function eventItemsOf(events: PageEvent[]): EventItem[] {
   })
 }
 
-/** The items that listen for a kind of event and are subscribed, with a handler to run. */
 export function listening(
   items: readonly EventItem[],
   type: EventType,
@@ -84,7 +80,6 @@ function comesOn(
     : event.componentTag === stream
 }
 
-/** Whether an `EventMessageFired` item listens for an event message: its `es_ref`, when given, must name the stream the message came on, or for a message that does not say, a stream the broadcast carries; its group must match, and its `message_id` and `message_version` match the upper and lower byte of the message's id unless left out or 255. */
 export function listensFor(
   item: EventItem,
   event: BroadcastEvent,
@@ -104,7 +99,6 @@ export function listensFor(
   )
 }
 
-/** Whether a `ModuleUpdated` or `ModuleLocked` item names a module. */
 export function namesModule(
   item: EventItem,
   base: BmlAddress,
@@ -121,7 +115,6 @@ export function namesModule(
 
 const utf8 = new TextDecoder('utf-8', { fatal: true })
 
-/** The private data of an event message as a handler reads it: its text when it is UTF-8, otherwise one character per byte. */
 export function privateDataOf(bytes: Uint8Array): string {
   try {
     return utf8.decode(bytes)

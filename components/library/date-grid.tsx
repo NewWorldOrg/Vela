@@ -13,7 +13,6 @@ import { RecordingTile } from '@/components/library/recording-tile'
 const TILE_GRID =
   'grid grid-cols-[repeat(auto-fill,minmax(calc(200rem/16),1fr))] gap-x-4 gap-y-[calc(22rem/16)]'
 
-/** Every recording in one grid, newest first, the day each started on written over the first of that day. */
 export function DateGrid({
   recordings,
   now,

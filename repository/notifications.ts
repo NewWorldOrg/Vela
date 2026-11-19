@@ -374,7 +374,6 @@ export async function settleLead(
   )
 }
 
-/** The key a browser subscribes under, which Carina gives only while it knows its public address. */
 export async function readPushKey(): Promise<PushKeyAnswer> {
   return reaching(
     WHEN_ADDING_A_DESTINATION.fell,
@@ -404,7 +403,6 @@ export async function readPushKey(): Promise<PushKeyAnswer> {
   )
 }
 
-/** Adds a browser by its subscription. A browser already held is answered with its row, as one added. */
 export async function registerBrowser(
   draft: PushSubscriptionDraft & { name: string },
 ): Promise<BrowserWrite> {
@@ -433,7 +431,6 @@ export async function registerBrowser(
   )
 }
 
-/** Puts the subscription a browser made anew to its row, which the rule sets keep pointing at. */
 export async function replaceBrowserSubscription(
   destinationId: string,
   draft: PushSubscriptionDraft,
@@ -459,7 +456,6 @@ export async function replaceBrowserSubscription(
   )
 }
 
-/** The browser rows, by which a browser finds whether its own is still there. */
 export async function listBrowserRows(): Promise<BrowserRow[]> {
   const destinations = await fetchDestinations()
 
@@ -468,14 +464,12 @@ export async function listBrowserRows(): Promise<BrowserRow[]> {
     .map(({ id, fingerprint }) => ({ id, fingerprint }))
 }
 
-/** The single notices still waiting, by the programme each is for. */
 export async function listWatches(): Promise<Map<string, ProgrammeWatch>> {
   const waiting = await fetchWaitingWatches()
 
   return new Map(waiting.map((one) => [one.programmeId, toWatch(one)]))
 }
 
-/** What a new single notice starts from; nothing while no destination is on. */
 export async function getWatchOffer(): Promise<WatchOffer | undefined> {
   const [destinations, settings] = await Promise.all([
     fetchDestinations(),
@@ -491,13 +485,11 @@ export async function getWatchOffer(): Promise<WatchOffer | undefined> {
     : undefined
 }
 
-/** The single notices as a programme's detail needs them, each still on its way. */
 export interface SingleNotices {
   watches: Promise<Map<string, ProgrammeWatch>>
   offer: Promise<WatchOffer | undefined>
 }
 
-/** The notices waiting and what a new one starts from. While those waiting cannot be read none is marked and no new one is offered, since one may already be set. */
 export function readSingleNotices(): SingleNotices {
   const waiting: Promise<Map<string, ProgrammeWatch> | undefined> =
     listWatches().catch(() => undefined)
@@ -601,7 +593,6 @@ export async function cancelWatch(id: string): Promise<NotificationWrite> {
   })
 }
 
-/** What a write answers; one that never reached Carina is refused as what could not be done, never thrown. */
 async function reaching<T>(
   fell: string,
   write: () => Promise<T>,

@@ -1,9 +1,7 @@
 import { BASE_STYLE } from '@/lib/bml/style'
 
-/** The sandbox of the runtime's frame: scripts run, but in an opaque origin of their own. */
 export const RUNTIME_SANDBOX = 'allow-scripts'
 
-/** The policy the runtime's document is held to: no network, and only what it is handed. */
 export const RUNTIME_POLICY =
   "default-src 'none'; script-src 'unsafe-inline' blob:; img-src blob:; style-src 'unsafe-inline'; connect-src 'none'"
 
@@ -21,7 +19,6 @@ function attribute(value: string): string {
 
 const BREAKS_OUT = /<!--|<\/?script/i
 
-/** The `srcdoc` of the runtime's frame: its policy, the origin it takes messages from, its base style and its script. A script that could end or reopen the element it is written into is refused. */
 export function runtimeDocument(playerOrigin: string, script: string): string {
   if (BREAKS_OUT.test(script)) {
     throw new Error('the script would break out of its element')

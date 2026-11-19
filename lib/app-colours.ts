@@ -13,7 +13,6 @@ export interface StatusBarColour {
   color: string
 }
 
-/** The colours of the status bar above the top bar, which wears the ground, for the theme a person chose. */
 export function statusBarColours(
   preference: ThemePreference,
 ): StatusBarColour[] {

@@ -1,4 +1,3 @@
-/** Bundles the data broadcast runtime into the one script its sandboxed frame is given, and the receiver a Hybridcast application's documents are given into the script this server serves them, or with `--check`, fails when a committed one is not what it would write. */
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'

@@ -16,7 +16,6 @@ export function LiveStartupSteps({
   elapsedMs: number
   reconnecting?: number
   brief?: boolean
-  /** The channel being made ready, named in the brief line in place of the word channel. */
   channelName?: string
   className?: string
 }) {

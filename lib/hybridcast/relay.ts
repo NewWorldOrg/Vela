@@ -1,11 +1,9 @@
-/** Where a Hybridcast application's frame reaches the broadcaster: Vela's origin, which the frame's documents are served from, the path its documents and resources are relayed on, and the path its WebSockets are carried on. */
 export interface AppRelay {
   origin: string
   app: string
   socket: string
 }
 
-/** What becomes of an address the application asks for: relayed to the broadcaster through Carina, left to the browser (`data:`, `blob:` and the like, which name no server), or refused. */
 export type Routed =
   { to: 'relay'; url: string } | { to: 'browser' } | { to: 'refused' }
 
@@ -25,7 +23,6 @@ function urlOf(written: string, base?: string): URL | null {
   }
 }
 
-/** The relay's address for a broadcaster's URL, as Carina writes it into the markup: the relay's path with the URL, fragment aside, as `uri`, and the fragment after. */
 export function relayedAddress(relay: string, target: URL): string {
   const fragment = target.hash
   const asked = new URL(target.href)
@@ -35,7 +32,6 @@ export function relayedAddress(relay: string, target: URL): string {
   return `${relay}?${URI}=${encodeURIComponent(asked.href)}${fragment}`
 }
 
-/** The broadcaster's URL a relay address names, or null when the address is not the relay's. */
 export function relayedTarget(url: URL, relay: AppRelay): URL | null {
   if (url.origin !== relay.origin || url.pathname !== relay.app) {
     return null
@@ -57,7 +53,6 @@ function directoryOf(path: string): string {
   return path.slice(0, path.lastIndexOf('/') + 1)
 }
 
-/** What the application meant by an address the browser resolved against the frame's own, which is on Vela's origin: a relay address, the broadcaster's URL it names; anything else on Vela's origin, the same path on the broadcaster's server, taken beside the document when it lies beside the relay; an address elsewhere, itself. */
 export function intendedTarget(
   url: URL,
   relay: AppRelay,
@@ -81,7 +76,6 @@ export function intendedTarget(
   return new URL(`${path}${url.search}${url.hash}`, documentAt)
 }
 
-/** The broadcaster's URL an address the application wrote stands for: what it wrote resolved against the document's own URL on the broadcaster's server, unless it is whole, and then as the browser would have resolved it against the frame. A relay address without Vela's origin, as the relay writes it into the markup and a link's attribute reads, is the URL it names. */
 export function writtenTarget(
   written: string | URL,
   relay: AppRelay,
@@ -100,7 +94,6 @@ export function writtenTarget(
   return relayed ?? urlOf(text, documentAt.href)
 }
 
-/** Where a request the application makes goes: through the relay when it is for an `http:` or `https:` address inside the boundary, to the browser when it names no server, and nowhere otherwise. */
 export function routeRequest(
   written: string | URL,
   relay: AppRelay,
@@ -127,7 +120,6 @@ export function routeRequest(
   }
 }
 
-/** Where a WebSocket the application opens goes: carried by the relay when its address, read as `http:` for `ws:` and `https:` for `wss:`, is inside the boundary, and nowhere otherwise. */
 export function routeSocket(
   written: string | URL,
   relay: AppRelay,

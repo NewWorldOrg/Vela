@@ -34,7 +34,6 @@ export async function getResidence(): Promise<Reading<Residence>> {
   }
 }
 
-/** Registers the postal code and the prefecture together, either of them null for none. */
 export async function settleResidence(
   residence: Residence,
 ): Promise<ResidenceWrite> {

@@ -14,7 +14,6 @@ async function bytesOf(family: FontFamily): Promise<FontBytes | null> {
   }
 }
 
-/** The bundled faces as bytes for the runtime, which cannot fetch them itself. A face that cannot be read is left out. */
 export async function fontsForTheRuntime(): Promise<FontBytes[]> {
   const fonts = await Promise.all(
     (Object.keys(FONT_FILES) as FontFamily[]).map(bytesOf),

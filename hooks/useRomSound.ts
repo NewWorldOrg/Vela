@@ -11,7 +11,6 @@ import {
 } from '@/components/data-broadcast/rom-sound'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 
-/** Plays the receiver's built-in sounds the data broadcast asks for, at the player's volume (`level`, 0 while muted) and only while the setting is on, and unlocks the browser's audio for them when the player calls `unlock` from a press. */
 export function useRomSound(level: number): RomSounds {
   const [on] = useStoredFlag(DATA_BROADCAST_SOUNDS, SOUNDS_SPELLING, true)
   const [sounder] = useState(() => new RomSounder(audioContextOf))

@@ -25,13 +25,10 @@ import {
 } from '@/lib/hybridcast/event-information'
 import { keySetOf } from '@/lib/hybridcast/keys'
 
-/** The fixed coordinates an application is laid out in. */
 export const APP_SIZE = { width: 1920, height: 1080 } as const
 
-/** How a sandboxed document without `allow-same-origin` names its origin. */
 export const APP_ORIGIN = 'null'
 
-/** The application the frame runs: the AIT it was started from, its identifiers, its control code, its entry and its boundary, none meaning no boundary at all. */
 export interface OwnedApplication {
   ait: string
   orgId: number
@@ -41,7 +38,6 @@ export interface OwnedApplication {
   boundary: BoundaryPair[]
 }
 
-/** What the application's documents read at once as they open, which the frame carries from one document to the next in its name: the application, the shared registers, the broadcaster's memory, the programme on air, and the name the application itself gave its window. The receiver's identifier is never in it, as a document outside the relay would read it too. */
 export interface AppState {
   application: OwnedApplication
   greg: string[]
@@ -50,7 +46,6 @@ export interface AppState {
   name: string
 }
 
-/** What the application's frame says of itself to the player, over the port its document handed over. */
 export type AppMessage =
   | { kind: 'loaded' }
   | { kind: 'leave'; to: string }
@@ -63,7 +58,6 @@ export type AppMessage =
   | { kind: 'launchBml'; componentTag: number | null }
   | { kind: 'replace'; start: AppStart }
 
-/** What the player tells the application's document, over the port it handed over. */
 export type ReceiverMessage =
   | { kind: 'welcome'; receiverId: ReceiverId | null; npt: NptReading[] }
   | { kind: 'checkLoaded' }
@@ -72,7 +66,6 @@ export type ReceiverMessage =
   | { kind: 'programme'; programme: EventInformation | null }
   | { kind: 'npt'; reading: NptReading }
 
-/** A document of the application saying it opened on the relay: the broadcaster's URL it stands for, and the port the player talks to it on. */
 export interface AppHello {
   document: string
   port: MessagePort
@@ -94,7 +87,6 @@ function isNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value)
 }
 
-/** A rectangle of the application's 1920x1080 coordinates with a size, or null when it is not one. */
 export function appRectOf(value: unknown): Rect | null {
   const rect = recordOf(value)
 
@@ -141,12 +133,10 @@ function applicationOf(value: unknown): OwnedApplication | null {
     : null
 }
 
-/** The frame's name for a state: the prefix and the state written out. */
 export function frameNameOf(state: AppState): string {
   return `${STATE_PREFIX}${JSON.stringify(state)}`
 }
 
-/** The state a frame's name carries, or null when the name is not one the player gave. */
 export function appStateOf(name: string): AppState | null {
   if (!name.startsWith(STATE_PREFIX)) {
     return null
@@ -188,7 +178,6 @@ function isComponentTagOrNone(value: unknown): value is number | null {
   )
 }
 
-/** What the application's document said, when it has a shape the player takes. Anything else is null. */
 export function appMessageOf(data: unknown): AppMessage | null {
   const message = recordOf(data)
 
@@ -247,7 +236,6 @@ export function appMessageOf(data: unknown): AppMessage | null {
   }
 }
 
-/** A document of the application saying it opened: from the player's own frame, in an opaque origin, on the relay the player opened it through, with one port. Anything else is null. */
 export function appHelloFrom(
   delivered: Delivered & { ports: readonly MessagePort[] },
   frame: unknown,
@@ -283,7 +271,6 @@ function readingsOf(value: unknown): NptReading[] | null {
     : null
 }
 
-/** What the player told the application's document, when it has a shape the document takes. Anything else is null. */
 export function receiverMessageOf(data: unknown): ReceiverMessage | null {
   const message = recordOf(data)
 

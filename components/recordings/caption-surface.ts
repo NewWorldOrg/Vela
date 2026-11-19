@@ -50,7 +50,6 @@ interface Made {
   drawn: DrawnCaption
 }
 
-/** The canvas laid over a video that draws one broadcast caption at a time inside the picture's own rectangle, in the style its board holds. */
 export class CaptionSurface implements CaptionDrawing {
   private readonly canvas: HTMLCanvasElement
 
@@ -120,7 +119,6 @@ export class CaptionSurface implements CaptionDrawing {
     return this.standing !== null
   }
 
-  /** Stand a caption: nothing at once for null; otherwise the one drawn now stays until the new one is ready, as the broadcast's own pictures always have. */
   show(caption: DecodedCaption | null): void {
     this.standing = caption
 
@@ -214,7 +212,6 @@ export class CaptionSurface implements CaptionDrawing {
     return Number(this.board.style.scale) / 100
   }
 
-  /** How much wider than tall a pixel of the caption's canvas is drawn: 4/3 for a 1440x1080 canvas over a 16:9 picture. */
   private stretch(): number {
     const { videoWidth, videoHeight } = this.video
     const canvas = this.drawnOn
@@ -236,7 +233,6 @@ export class CaptionSurface implements CaptionDrawing {
     return `${lookKey(look)}@${this.stretch().toFixed(2)}@${this.drawnOn?.height ?? 0}`
   }
 
-  /** What is drawn now: the standing caption once it is made, and until then the one before it. */
   private drawable(): Made | null {
     return this.standing ? this.made : null
   }
@@ -311,7 +307,6 @@ export class CaptionSurface implements CaptionDrawing {
     return restyled
   }
 
-  /** Closes the broadcast's own picture decoded on arrival, once a restyled one is drawn instead. */
   private letGoOfTheBroadcast(caption: DecodedCaption): void {
     if (caption.taken) {
       return

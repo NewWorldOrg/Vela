@@ -13,10 +13,8 @@ import {
 import { ColumnHead } from '@/components/live/column-head'
 import { RemoteSlot } from '@/components/live/remote-slot'
 
-/** The column's name, and its fold's: what it holds, as the recording's page has no channels to list. */
 const REMOTE = 'リモコン'
 
-/** The column the recording's page stands beside its player while the data broadcast is open in a wide window, where the live page has one of its own: the fold alone at its head, as there are no channels to switch to, and the remote under it. It always arrives with the remote, growing from nothing as the remote slides in. The fold makes it the thin rail and back, keeping the height it had with the remote so the programme's information under the player stays where it was, and is forgotten when the data broadcast closes and the column goes. */
 export function RecordingRemoteColumn({
   slotRef,
 }: {

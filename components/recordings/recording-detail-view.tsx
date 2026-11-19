@@ -69,14 +69,12 @@ import { RecordingInfo } from '@/components/recordings/recording-info'
 
 const GUTTER = 'px-10 max-[1365px]:px-6 max-[700px]:px-3.5'
 
-/** The page's one column, which the link back, the player and the programme's information share: as wide as the picture the window's height allows, centred. While the data broadcast's remote stands beside the player, it is as wide as the box, the gap and the remote's column, still centred, so everything above and below starts at the box's left edge. On a phone held on its side the column takes the page's width, so the dock can open beside the picture. */
 const WATCH_COLUMN = cn(
   PLAYER_COLUMN,
   'has-[[data-remote=beside]]:w-fit has-[[data-remote=beside]]:max-w-full',
   'sideways:max-w-none',
 )
 
-/** What runs along the column above and below the player: as wide as the column and no wider however long its text, so the player alone sets the column's width. */
 const ALONG = 'w-0 min-w-full'
 
 const OUTCOME_STYLE = {
@@ -158,7 +156,6 @@ const OUTCOME_LABEL = {
   failed: '失敗',
 } as const
 
-/** What the stories hand the player in place of the API: the picture and how it is fed, its frames, and the data broadcast. */
 type PlayerStandIns = Pick<
   ComponentProps<typeof Player>,
   | 'pictureHref'
@@ -173,7 +170,6 @@ const PROGRAMME_FACE = '番組'
 
 const OUTSIDE_FACE = '外部'
 
-/** Where the recording was left, on the bar's bottom line of a phone held on its side, and the way to start it from its head. On an upright phone the same stands under the picture. */
 function PicksUpOnTheBar({ at, id }: { at: number; id: string }) {
   return (
     <span
@@ -229,7 +225,6 @@ export function RecordingDetailView({
   ...standIns
 }: PlayerStandIns & {
   detail: RecordingDetail
-  /** The other recordings of the series this one belongs to, newest first. */
   episodes?: readonly Recording[]
   seriesFolded?: boolean
   playback: PlaybackRead

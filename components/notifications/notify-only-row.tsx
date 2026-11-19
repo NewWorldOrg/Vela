@@ -27,7 +27,6 @@ export const NOTIFY_ONLY = '通知'
 
 const SIGNED_OUT = signedOut('操作')
 
-/** What to say once a single notice was asked to be taken back. */
 export function takenBackWords(
   result: NotificationWrite,
   title: string,
@@ -39,7 +38,6 @@ export function takenBackWords(
   return result.state === 'unauthenticated' ? SIGNED_OUT : result.message
 }
 
-/** A notice that a programme starts, standing among the reservations: a bell where a reservation has its genre's dot, and `通知` where it has its state. */
 export function NotifyOnlyRow({
   watch,
   nth,
@@ -48,7 +46,6 @@ export function NotifyOnlyRow({
 }: {
   watch: WatchedProgramme
   nth: number
-  /** While reservations are being picked the row keeps their columns, with nothing to check. */
   picking?: boolean
   onCancel: (id: string) => Promise<NotificationWrite>
 }) {

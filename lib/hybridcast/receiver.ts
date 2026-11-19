@@ -41,7 +41,6 @@ import type {
   ReceiverMessage,
 } from '@/lib/hybridcast/messages'
 
-/** What the receiver needs of the frame it runs in: the broadcaster's URL of the document, the state the frame carried in, a way to say things to the player, to carry the state on to the next document, to warn, the clock, and timers. */
 export interface ReceiverEnvironment {
   documentAt: string
   state: AppState
@@ -74,10 +73,8 @@ interface HeldNpt {
   takenAt: number
 }
 
-/** The most listeners of one kind an application may add, and alarms it may set. */
 export const MOST_LISTENERS = 64
 
-/** The functions this receiver does not offer, which answer that they failed: choosing a service, leaving the AIT's management, widening the boundary, and the companion devices. */
 export const UNOFFERED = [
   'tuneTo',
   'exitFromManagedState',
@@ -158,7 +155,6 @@ function registerIndexOf(property: string | symbol): number | null {
   return index < SHARED_REGISTERS ? index : null
 }
 
-/** The receiver an application's documents are given: the functions of IPTVFJ STD-0013 table 5.1 under `navigator.receiverDevice`, `navigator.applicationManager`, `navigator.bmlCompat.browserPseudo` and `navigator.capabilities`, each allowed by the permission bitmap the boundary gives the document's URL. What it offers answers as a receiver does; what it does not, and what the bitmap forbids, answers that it failed and leaves a warning, and the application goes on. What the documents read at once — the shared registers, the broadcaster's memory, the programme — is carried in from the frame's name and carried on whenever it changes; the receiver's identifier comes from the player once the document opened, and an application that asks before then is answered when it does. */
 export class HybridcastReceiver {
   private readonly environment: ReceiverEnvironment
 
@@ -204,12 +200,10 @@ export class HybridcastReceiver {
     this.memory.take(this.state.memory)
   }
 
-  /** Whether the document's bitmap allows what a bit stands for. */
   allows(permission: Permission): boolean {
     return permits(this.bitmap, permission)
   }
 
-  /** Whether a key the player hands over is one the application's key set takes. */
   takes(key: BmlKey): boolean {
     return keysOfKeySet(this.keySet).includes(key)
   }
@@ -223,7 +217,6 @@ export class HybridcastReceiver {
     this.environment.keep(this.state)
   }
 
-  /** Takes what the player told the document. */
   take(message: ReceiverMessage): void {
     switch (message.kind) {
       case 'welcome':
@@ -255,7 +248,6 @@ export class HybridcastReceiver {
     }
   }
 
-  /** Whether a function may run: it is allowed by the bitmap, or a warning names it. */
   private may(permission: Permission, name: string): boolean {
     if (this.allows(permission)) {
       return true
@@ -667,7 +659,6 @@ export class HybridcastReceiver {
     }
   }
 
-  /** The shared registers as an array the application reads and writes by index; every write is carried on and told to the player, so the documents have it when the application gives way to them. */
   private registers(): string[] {
     const greg = this.state.greg
 
@@ -719,7 +710,6 @@ export class HybridcastReceiver {
     }
   }
 
-  /** The objects the document's navigator is given. */
   api(): {
     receiverDevice: Record<string, unknown>
     applicationManager: Record<string, unknown>
@@ -734,7 +724,6 @@ export class HybridcastReceiver {
     }
   }
 
-  /** Tells the player where the broadcast's picture is, or that it fills the frame, and whether the application may draw over it. A document not allowed the picture has it nowhere. */
   videoAt(rect: Rect | null): void {
     this.say({
       kind: 'videoRect',

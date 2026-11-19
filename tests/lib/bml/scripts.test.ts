@@ -20,7 +20,6 @@ function run(code: string, scope: object): unknown {
   return new Function('scope', `with (scope) { return (${code}) }`)(scope)
 }
 
-/** Runs a document's code with its scope over a frame whose own globals are the names it holds, as the frame's window lies beyond the scope. */
 function runIn(frame: object, scope: object, code: string): unknown {
   return new Function(
     'frame',
@@ -102,7 +101,6 @@ test('typeof, delete and an assignment of undefined act on what the document wro
   )
 })
 
-/** A global object that holds the names a scope hides as a browser's window does: history behind a getter alone, open as a value that may be written over, and top unconfigurable. */
 function windowLike() {
   const context = vm.createContext({})
   const global = vm.runInContext('this', context) as Record<string, unknown>
@@ -130,7 +128,6 @@ function windowLike() {
   return { context, global, history, open, top }
 }
 
-/** A document's runs as the frame makes them, over a window-like global: each through the scope's run, wrapped in `with` over the scope, with the names it hides laid over the global object while it runs. */
 function runsOver(
   context: vm.Context,
   global: Record<string, unknown>,
@@ -224,7 +221,6 @@ test('new is taken off the table constructors, so that a table that cannot be ma
   )
 })
 
-/** A scope whose runs share one global object, as a document's scripts and handlers share the frame's, each wrapped in `with` over the scope as the frame runs it. */
 function sharingAGlobal(placed: object) {
   const context = vm.createContext({})
   const given = scopeOf({ placed })
@@ -346,7 +342,6 @@ test("a run puts the document's writes on the built-ins in place only while its 
   assert.deepEqual(seen, ['write:theirs', 'read:theirs'])
 })
 
-/** A global object holding history behind a getter and open as a value, whose defineProperty throws for open while it is told to refuse. */
 function refusingOpen() {
   const target: Record<string, unknown> = {}
   const refusing = { now: false }
@@ -553,7 +548,6 @@ test('a document’s state is the names declared on its global object since and 
   assert.equal(given.held, 2)
 })
 
-/** A scope over a plain global object whose bindings it takes, running no code: a test changes the global and its objects by hand between taking the state and putting it back. */
 function scopeOverHand(warn?: (warning: string) => void) {
   const global: Record<string, unknown> = {}
   const bindings = globalBindingsOf(global)

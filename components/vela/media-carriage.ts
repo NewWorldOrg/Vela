@@ -1,4 +1,3 @@
-/** How a browser takes a stream: fed to a media source, handed a playlist, or not at all. */
 export type MediaCarriage = 'feed' | 'playlist' | 'none'
 
 const HLS = 'application/vnd.apple.mpegurl'
@@ -13,7 +12,6 @@ export function aVideo(): Asked {
   return probe
 }
 
-/** Feeds a browser that has a media source, and otherwise hands the playlist to a video that plays HLS by itself. */
 export function mediaCarriage(fed: boolean, video: () => Asked): MediaCarriage {
   if (fed) {
     return 'feed'

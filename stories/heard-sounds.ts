@@ -1,6 +1,5 @@
 import { ROM_SOUNDS } from '@/lib/data-broadcast-sound'
 
-/** A built-in sound the player played, as the stand-in for the browser's audio heard it: the number whose tones it was, or null for tones of none, and the gain it reached the speakers at. */
 export interface HeardSound {
   sound: number | null
   gain: number
@@ -38,7 +37,6 @@ const NO_PARAM = {
   exponentialRampToValueAtTime: () => {},
 }
 
-/** The events WebKit lets audio start in, as the viewer presses something. */
 const PRESSES = new Set([
   'click',
   'keydown',
@@ -51,7 +49,6 @@ const PRESSES = new Set([
   'change',
 ])
 
-/** Whether the page is handling a press right now, read from the event being dispatched. */
 function inAPress(): boolean {
   const event = (window as { event?: Event }).event
 
@@ -68,7 +65,6 @@ function soundOf(tones: number[]): number | null {
   return found === -1 ? null : found
 }
 
-/** Stands in for the browser's audio context while a story runs, so the sounds the player plays are heard by the story instead of the speakers. `heard` tells them in the order they were played, `made` how many contexts the player made; `stop` puts the browser's own back. With `asWebKit`, a context made or resumed outside a press stays suspended, as WebKit keeps it. */
 export function hearingTheSounds({ asWebKit = false } = {}): {
   heard: () => HeardSound[]
   made: () => number

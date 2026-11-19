@@ -24,7 +24,6 @@ let version = 0
 
 const SIZE = /^(\d+)x(\d+)@([\d.]+)$/
 
-/** A picture's size and rate in one word, which is what its answer is kept under. */
 export function sizeOf(picture: PictureSize): string {
   return `${picture.width}x${picture.height}@${picture.framerate}`
 }
@@ -53,14 +52,12 @@ function heldFor<T>(
   return held
 }
 
-/** The pictures the browser has to be asked about: those Carina transcodes in more than H.264. */
 export function picturesToAsk(
   pictures: readonly OfferedPicture[],
 ): OfferedPicture[] {
   return pictures.filter((one) => asksTheBrowser(one.formats))
 }
 
-/** This browser, asked through the media source a feed in this order is fed through; none on the server. */
 export function browserProbe(order: SourceOrder): FormatProbe | undefined {
   if (typeof window === 'undefined') {
     return undefined
@@ -92,7 +89,6 @@ export function answersFor(
   return answered.get(probe)?.get(sizeOf(picture))
 }
 
-/** Asks about each picture not yet answered or being asked about, once for each probe, and tells the followers as each answer comes. */
 export function askAbout(
   probe: FormatProbe,
   pictures: readonly PictureSize[],

@@ -38,7 +38,6 @@ function hand(send: SendToRuntime, module: BmlModule): void {
   send({ kind: 'module', module: handed.module }, handed.transfer)
 }
 
-/** The browser's storage, where a broadcaster's memory is kept between sessions, or null where it cannot be reached. */
 function storageOf(): MemoryStorage | null {
   try {
     return window.localStorage
@@ -49,7 +48,6 @@ function storageOf(): MemoryStorage | null {
 
 const NOTHING_ON_AIR: OnAir = { network: null, startsAt: null }
 
-/** Hands the runtime the catalog, and with it what the player keeps for that broadcaster and the programme on air. */
 function catalogued(
   send: SendToRuntime,
   catalog: BmlCatalog,
@@ -65,7 +63,6 @@ function catalogued(
   send({ kind: 'programme', programme: programmeOnAir(catalog.service, onAir) })
 }
 
-/** What the viewer is told of a transmission through the relay: the setting refusing the line, the broadcaster's server not reached, or nothing. */
 function saidOf(relayed: Relayed<TransmitAnswer>): RuntimeMessage | null {
   if (relayed.said === 'off') {
     return { kind: 'line', said: 'off' }
@@ -78,7 +75,6 @@ function saidOf(relayed: Relayed<TransmitAnswer>): RuntimeMessage | null {
 
 const NO_STARTS: readonly AppStart[] = []
 
-/** The broadcast's face over the player's 16:9 box: the runtime's frame, handed the fonts, the receiver's residence as `readResidence` reads it, the catalog, the modules and the time on air where the feed keeps one when it loads and every change after, and the one line said at its bottom. What the runtime asks to keep is written to the browser's storage under the broadcaster. Coming back from a Hybridcast application, the runtime is handed the shared registers as the application left them, the starts that failed so that it does not ask for them again, and the start document of the component the application named, if it named one. */
 export function DataBroadcastFace({
   feed,
   onAir = NOTHING_ON_AIR,

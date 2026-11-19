@@ -4,7 +4,6 @@ import type { HybridcastReceiver } from '@/lib/hybridcast/receiver'
 
 type PictureWindow = Window & typeof globalThis
 
-/** The types of the object an application places the broadcast's picture with. */
 const BROADCAST_VIDEOS = new Set(['video/x-iptvf-broadcast', 'video/broadcast'])
 
 export function isBroadcastVideo(type: unknown): boolean {
@@ -13,14 +12,11 @@ export function isBroadcastVideo(type: unknown): boolean {
   )
 }
 
-/** The mark on an element whose background lies under the broadcast's picture, and is drawn around it instead. */
 export const UNDER_THE_PICTURE = 'data-hybridcast-under'
 
-/** How an element marked as under the picture is drawn: its own background taken off, and drawn again by a box behind its content with the picture's rectangle cut out, so what is drawn over the picture stays and the picture shows where nothing is. */
 const UNDER_RULES = `[${UNDER_THE_PICTURE}]{background-color:transparent!important;background-image:none!important}
 [${UNDER_THE_PICTURE}]::before{content:"";position:absolute;left:var(--hc-box-x);top:var(--hc-box-y);width:var(--hc-box-w);height:var(--hc-box-h);z-index:-1;pointer-events:none;background-color:var(--hc-bg-color);background-image:var(--hc-bg-image);background-position:var(--hc-bg-position);background-size:var(--hc-bg-size);background-repeat:var(--hc-bg-repeat);-webkit-mask-image:linear-gradient(#000 0 0),linear-gradient(#000 0 0);mask-image:linear-gradient(#000 0 0),linear-gradient(#000 0 0);-webkit-mask-size:100% 100%,var(--hc-hole-w) var(--hc-hole-h);mask-size:100% 100%,var(--hc-hole-w) var(--hc-hole-h);-webkit-mask-position:0 0,var(--hc-hole-x) var(--hc-hole-y);mask-position:0 0,var(--hc-hole-x) var(--hc-hole-y);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-composite:xor;mask-composite:exclude}`
 
-/** The points across the picture's rectangle the elements under it are looked for at. */
 const ACROSS = [0.02, 0.25, 0.5, 0.75, 0.98]
 
 interface Under {
@@ -39,7 +35,6 @@ function clipped(box: DOMRect): Rect | null {
     : null
 }
 
-/** Whether the picture object is shown: laid out, and neither hidden nor transparent, itself or by what holds it. */
 function shown(object: Element): boolean {
   const checked = (
     object as Element & {
@@ -69,7 +64,6 @@ function drawsABackground(style: CSSStyleDeclaration): boolean {
   )
 }
 
-/** Whether an element whose position is static can be given a position of its own without moving anything: nothing positioned absolutely inside it takes its place from outside it. */
 function positionable(window: PictureWindow, element: Element): boolean {
   return [...element.querySelectorAll('*')].every((inner) => {
     if (window.getComputedStyle(inner).position !== 'absolute') {
@@ -90,7 +84,6 @@ function positionable(window: PictureWindow, element: Element): boolean {
   })
 }
 
-/** The elements drawn under the picture object somewhere in its rectangle, the object itself included, that draw a background there: the browser's own order of drawing at points across the rectangle says which lie under it. */
 function underThePicture(
   window: PictureWindow,
   object: Element,
@@ -115,7 +108,6 @@ function underThePicture(
   return [...found]
 }
 
-/** Draws the backgrounds under the picture around it, so the broadcast's picture, under the whole frame, shows through them while what the application draws over it stays: each such element keeps its background on a box behind its content, cut where the picture is. An element that draws no background is left alone, and so is one that cannot be given a position of its own without moving what is in it. */
 function cutAroundThePicture(window: PictureWindow) {
   const marked = new Map<Element, Under>()
   const style = window.document.createElement('style')
@@ -228,7 +220,6 @@ function cutAroundThePicture(window: PictureWindow) {
   }
 }
 
-/** Follows the broadcast's picture as the document places it, the first `object` of its type that is shown, and tells the player whenever it moves, once per frame at most. Where the application may draw over the picture, the backgrounds under the object are drawn around it, so the picture under the frame shows through them and what is drawn over it stays; where it may not, the player cuts the whole frame there. An object that is hidden places no picture. */
 export function followThePicture(
   window: PictureWindow,
   receiver: HybridcastReceiver,

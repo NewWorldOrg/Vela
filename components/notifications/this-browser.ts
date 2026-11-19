@@ -15,7 +15,6 @@ const WORKER = '/sw.js'
 
 const REMEMBERED = 'vela-push-destination'
 
-/** The browser the page is open in, as the notification screen reads it. */
 export interface ThisBrowser {
   here: string
   around: Omit<PushSurroundings, 'publicOriginKnown'>
@@ -111,7 +110,6 @@ function tellEveryone(): void {
   }
 }
 
-/** Reads the fingerprint of this browser's subscription again, and tells whoever follows it. */
 export async function readTheFingerprint(): Promise<void> {
   try {
     const held = await PUSH_HANDS.current()
@@ -124,7 +122,6 @@ export async function readTheFingerprint(): Promise<void> {
   tellEveryone()
 }
 
-/** Forgets the row this browser added and gives up its subscription, once that row is removed. */
 export async function forgetThisBrowser(): Promise<void> {
   PUSH_MEMORY.forget()
 
@@ -135,7 +132,6 @@ export async function forgetThisBrowser(): Promise<void> {
   await readTheFingerprint()
 }
 
-/** Follows this browser: its fingerprint once read, and its grant again whenever the page comes back into view. */
 export function followThisBrowser(onChange: () => void): () => void {
   listeners.add(onChange)
 
@@ -161,7 +157,6 @@ function standaloneNow(): boolean {
   )
 }
 
-/** This browser as it is now, the same object while nothing about it changed. */
 export function thisBrowserNow(): ThisBrowser {
   const { userAgent, maxTouchPoints } = navigator
   const next: ThisBrowser = {

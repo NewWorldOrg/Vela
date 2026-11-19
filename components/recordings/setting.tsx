@@ -8,7 +8,6 @@ const ROW = 'border-b border-dashed border-white/12 py-3.5 last:border-b-0'
 
 const CHOICES = 'flex flex-wrap items-center gap-x-3 gap-y-1.5'
 
-/** One row of the gear: its name, what is chosen there, and the one line that says why it cannot be chosen. */
 export function Setting({
   label,
   note,

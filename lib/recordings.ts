@@ -10,7 +10,6 @@ const RECORDING_ID = /^[0-9a-f]{32}$/i
 
 const NO_RECORDING = /^0{32}$/
 
-/** Whether `text` names a recording the way the API does: 32 hexadecimal digits, not all zero. */
 export function isRecordingId(text: string): boolean {
   return RECORDING_ID.test(text) && !NO_RECORDING.test(text)
 }
@@ -116,7 +115,6 @@ export function scrambledPercent(detail: RecordingDetail) {
   return ((detail.scrambledShare ?? 0) * 100).toFixed(1)
 }
 
-/** The one line the toast says after `サムネイルを再生成` on the picked recordings: how many are to be drawn again by the next pass, and how many were not taken. */
 export function thumbnailRemakeSaying(queued: number, left: number): string {
   if (left === 0) {
     return `${queued} 件のサムネイルを作り直します。`

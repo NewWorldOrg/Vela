@@ -10,7 +10,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { MoreIcon, TrashIcon } from '@/components/vela/icons'
 
-/** The `…` of a row, drawn as the library's row draws it, always in sight since the row has no other way to its actions. */
 const MORE_TRIGGER =
   'tap-target inline-grid size-9 shrink-0 cursor-pointer place-items-center rounded-full text-ink-2 outline-none transition-[background-color,color] duration-[140ms] ease-toy hover:bg-surface-2 hover:text-ink focus-visible:shadow-ring data-[state=open]:bg-surface-2'
 
@@ -19,7 +18,6 @@ export interface RowAction {
   onSelect: () => void
 }
 
-/** A row's `…` and the menu it opens: its actions, then a line, then `削除` in the colour of what cannot be undone. */
 export function RowMenu({
   name,
   actions,

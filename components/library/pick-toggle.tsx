@@ -5,7 +5,6 @@ import { type Ref } from 'react'
 import { cn } from '@/lib/utils'
 import { iconButtonVariants } from '@/components/vela/icon-button'
 
-/** The `選ぶ` at the head of a list, drawn pressed while the list is choosing. */
 export function PickToggle({
   pressed,
   onPress,

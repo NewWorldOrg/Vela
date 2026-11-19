@@ -27,7 +27,6 @@ const DOT_OF: Record<Verdict, string> = {
   calm: 'bg-ink-3',
 }
 
-/** The columns of the log on a wide window; on a phone the time and destination share the first line, the event the second, and the state stands to the right of both. */
 const ROW_AREAS = cn(
   'grid grid-cols-[calc(150rem/16)_minmax(0,1fr)_calc(190rem/16)_calc(230rem/16)] items-center gap-x-4 px-4',
   "[grid-template-areas:'tm_ev_to_st']",

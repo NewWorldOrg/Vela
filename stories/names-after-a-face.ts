@@ -16,7 +16,6 @@ function named(): HTMLElement | null {
   return document.querySelector('[data-slot="player-tip-name"]')
 }
 
-/** Rests on the gear until its name is up, opens its face, closes the face by pressing outside the player, and sees no name left standing over the gear. */
 export async function noNameStaysAfterTheFaceCloses(
   canvasElement: HTMLElement,
 ): Promise<void> {
@@ -39,7 +38,6 @@ export async function noNameStaysAfterTheFaceCloses(
   await expect(named()).toBeNull()
 }
 
-/** Moves the focus onto the gear with Tab, and sees its name come up as it did. */
 export async function tabNamesTheGear(
   canvasElement: HTMLElement,
 ): Promise<void> {

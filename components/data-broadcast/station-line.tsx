@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils'
 
-/** The station and what is open on it, `データ放送` or `Hybridcast`: the station bold, what is open in the quieter ink. Where both do not fit on one line, what is open goes under the station, and only a station that does not fit on its own line is cut short. */
 export function StationLine({
   station,
   what,

@@ -168,7 +168,6 @@ export const DATA_BROADCAST_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The modules of a self-made data broadcast: a start page with a video hole, a menu and images, a weather page beside it, and a news page in a second module. */
 export function dataBroadcastModules(): BmlModule[] {
   return [
     {
@@ -312,7 +311,6 @@ export const SCRIPTED_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The modules of a self-made data broadcast built the way a broadcaster's is: an entry document that cannot be seen and moves to the face when the data button is pressed, a face whose scripts switch panels on the colour keys, count in the persistent memory, tick a timer, call a function that is not supported and move to a second page, and that second page. */
 export function scriptedModules(): BmlModule[] {
   return [
     {
@@ -419,7 +417,6 @@ export const HISTORY_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The modules of a self-made data broadcast whose second document keeps the pages it went through in a global of its own named `history`, as a broadcaster's traffic pages do: its own `open` pushes the page it leaves there and moves on, the back key reads how many are kept and returns to the last, and with none kept it goes back to the start. Each page it shows it writes to the persistent memory as `page`. */
 export function historyModules(): BmlModule[] {
   return [
     {
@@ -493,7 +490,6 @@ export const WORD_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The modules of a self-made data broadcast whose start page waits for event messages of id 58 in group 1 on the stream tagged 0x48: the handler writes the message id and version it was told to the persistent memory as `told` and moves to a page whose video sits elsewhere. */
 export function wordModules(): BmlModule[] {
   return [
     {
@@ -643,12 +639,10 @@ function readingModules(startup: string, face = READ_FACE): BmlModule[] {
   ]
 }
 
-/** The module of a self-made data broadcast whose entry document, at the top of its first script, reads its own path and the network of the programme, and moves on to its face only when it has both. */
 export function programmeReadingModules(): BmlModule[] {
   return readingModules(READS_ITSELF)
 }
 
-/** The module of a self-made data broadcast whose entry document moves on to its face only when it is told it is within the first minute of the programme. */
 export function relativeTimeModules(): BmlModule[] {
   return readingModules(KNOWS_HOW_FAR)
 }
@@ -676,17 +670,14 @@ function show() {
 </body>
 </bml>`
 
-/** The module of a self-made data broadcast whose entry document reads the receiver's postal code, prefecture and region code, tries to write the postal code, and prints and keeps under `seen` as `S:19B` the three it read and what the write answered, joined by slashes. */
 export function residenceModules(): BmlModule[] {
   return readingModules(READS_THE_RESIDENCE)
 }
 
-/** The module of a self-made data broadcast whose entry document prints the date and time it sees, four times a second, and keeps what it printed under `seen` as `S:19B`. */
 export function clockModules(): BmlModule[] {
   return readingModules(SEES_THE_TIME)
 }
 
-/** The module of a self-made data broadcast whose two pages, on the enter key, ask how far into the programme they are: the one for the start moves on to the one further on from the 100th second, and that one back before it. */
 export function howFarModules(): BmlModule[] {
   return readingModules(NEAR_THE_START, FURTHER_ON)
 }
@@ -797,7 +788,6 @@ export const LOCKING_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The modules of a self-made data broadcast whose entry document cannot be seen, locks the module of the programme's page and moves there once the lock is held, leaving word that the page starts hidden. The page goes back to the entry document unless it finds that module still listed as locked; it is ready once its own lock of the module is heard of, through a function its common script declares and its own script declares again to write to the persistent memory, and ready only when the write answers the bytes it wrote. It shows itself on the data button once ready, and hides itself on the next press. */
 export function lockingModules(): BmlModule[] {
   return [
     {
@@ -881,7 +871,6 @@ export const LINE_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The module of a self-made data broadcast that checks the line as it loads, once, as it marks on an object of its own before it sends, sending the card's ID when it is given one, and moves to a page over the line when the check is answered. */
 export function lineModules(): BmlModule[] {
   return [
     {
@@ -897,7 +886,6 @@ export function lineModules(): BmlModule[] {
   ]
 }
 
-/** What the line answers for the self-made pages: the page and its style sheet, each as a module of one resource. */
 export const OVER_THE_LINE_PAGES: Record<string, BmlModule> = {
   'http://example.test/bml/top.bml': {
     tag: 0,
@@ -913,7 +901,6 @@ export const OVER_THE_LINE_PAGES: Record<string, BmlModule> = {
   },
 }
 
-/** The AIT the self-made Hybridcast page names, and the application in it, as Carina answers them. */
 export const HYBRIDCAST_AIT = 'http://example.test/hc/app.ait'
 
 export const HYBRIDCAST_APPLICATION = {
@@ -969,7 +956,6 @@ function pressed() {
 </body>
 </bml>`
 
-/** A self-made data broadcast whose menu starts a Hybridcast application on 決定, as a broadcaster's menu does: its key handler turns a second press away until a timer lets it in again, checks the line first, and only then asks for the application. */
 export const KEYED_HYBRIDCAST_CATALOG: BmlCatalog = {
   ...LINE_CATALOG,
   service: 1028,
@@ -990,7 +976,6 @@ export function keyedHybridcastModules(): BmlModule[] {
   ]
 }
 
-/** A self-made data broadcast whose entry document starts a Hybridcast application as it opens, unless the shared registers say it came back from one. The script runs again from its start once the AIT is in, so it tells its own mark in the shared registers from one left by the documents before it by a mark in its own. */
 export const HYBRIDCAST_CATALOG: BmlCatalog = {
   ...LINE_CATALOG,
   service: 1027,
@@ -1027,7 +1012,6 @@ function sound() {
 </body>
 </bml>`
 
-/** The document a sounding broadcast moves to once its sound played: 決定 plays sound 9, and with `later`, sound 10 plays by itself a moment after it opens. */
 function soundPlayed(later: boolean): string {
   return `${PROLOGUE}
 <bml>
@@ -1049,7 +1033,6 @@ ${later ? 'browser.setInterval("ring()", 1500, 1);' : ''}
 </bml>`
 }
 
-/** A self-made data broadcast whose start document plays the receiver's built-in sound 7 as it opens, and moves to a second document with the picture at the left once it is told the sound played, where 決定 plays sound 9. */
 export const SOUNDING_CATALOG: BmlCatalog = {
   service: 1029,
   entryTag: 0x40,
@@ -1076,7 +1059,6 @@ export const SOUNDING_CATALOG: BmlCatalog = {
   ],
 }
 
-/** The modules of the sounding broadcast; with `later`, its second document plays sound 10 by itself a moment after it opens. */
 export function soundingModules({ later = false } = {}): BmlModule[] {
   return [
     {
@@ -1093,7 +1075,6 @@ export function soundingModules({ later = false } = {}): BmlModule[] {
   ]
 }
 
-/** A script that tries, from inside the runtime's frame, what a document must not reach, and tells the player what happened. */
 export const SANDBOX_PROBE = `
 const report = { violations: [] }
 document.addEventListener('securitypolicyviolation', (event) => report.violations.push(event.violatedDirective))
@@ -1159,7 +1140,6 @@ export const ROWS_CATALOG: BmlCatalog = {
   ],
 }
 
-/** A list of rows each as tall as its 16px text, set by the style sheet, with nothing said about the line height. */
 export function rowModules(): BmlModule[] {
   return [
     {
@@ -1210,7 +1190,6 @@ export const STILL_CATALOG: BmlCatalog = {
   ],
 }
 
-/** A page whose ground is a JPEG over the whole of it, with the video in a rectangle of it and a PNG over the video's corner. */
 export function stillModules(): BmlModule[] {
   return [
     {
@@ -1226,7 +1205,6 @@ export function stillModules(): BmlModule[] {
   ]
 }
 
-/** Measures, once the page is drawn, the rectangle the JPEG ground has cut out of it, on the page, against the video's, how the cut is put together with the rest of the ground, and what is cut out of the PNG. */
 export const STILL_PROBE = `
 function measure() {
   const ground = document.querySelector('#bml-plane [id="ground"]')
@@ -1253,7 +1231,6 @@ const measuring = setInterval(() => {
 }, 50)
 `
 
-/** Measures, once the bundled face is loaded and the rows are drawn, how far the text of any row reaches above or below its box, in the document's pixels, and how far its lines overflow it. */
 export const GLYPH_PROBE = `
 const faceLoaded = () => Array.from(document.fonts).some((face) => face.family.replace(/"/g, '') === 'Denpa Font' && face.status === 'loaded')
 function measure() {
@@ -1342,7 +1319,6 @@ export const MENU_CATALOG: BmlCatalog = {
   ],
 }
 
-/** A two-column menu whose cursor a script places over the second item, working out its row by halving the item's number, as a receiver's integers do. */
 export function menuModules(): BmlModule[] {
   return [
     {
@@ -1357,7 +1333,6 @@ export function menuModules(): BmlModule[] {
   ]
 }
 
-/** Measures, once the bundled face is loaded and the cursor is shown, how far the cursor reaches past the item it is on above and below, and where the item's text sits in it, in the document's pixels. */
 export const CURSOR_PROBE = `
 const faceLoaded = () => Array.from(document.fonts).some((face) => face.family.replace(/"/g, '') === 'Denpa Font' && face.status === 'loaded')
 const byId = (id) => document.querySelector('#bml-plane [id="' + id + '"]')
@@ -1423,7 +1398,6 @@ export const SIGNAL_CATALOG: BmlCatalog = {
   ],
 }
 
-/** A document with a synthetic MNG of three lamps that light in turn. */
 export function signalModules(): BmlModule[] {
   return [
     {
@@ -1438,7 +1412,6 @@ export function signalModules(): BmlModule[] {
   ]
 }
 
-/** Reads, inside the frame, which lamp of the signal is lit on its canvas, and says each time it changes: the lamps in the order they were seen lit, whether two were ever lit at once, and the canvas's size. */
 export const SIGNAL_PROBE = `
 const LAMPS = ${JSON.stringify(SIGNAL_LAMPS)}
 const LIT = ${JSON.stringify(SIGNAL_COLOURS.lit)}

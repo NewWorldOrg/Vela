@@ -87,7 +87,6 @@ export function ProgramDetailBody({
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   reservation?: ReactNode
   extras?: 'ready' | 'waiting' | 'failed'
-  /** Whether the programme has yet to start, which is when its start can be told. */
   ahead?: boolean
   noticing?: Noticing
 }) {

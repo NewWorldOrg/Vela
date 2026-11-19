@@ -83,7 +83,6 @@ function useJobsAddress(): [boolean, Show] {
 interface Rerunning {
   picking: boolean
   picked: ReadonlySet<string>
-  /** The ids still on the list, the ones queued again having left it. */
   shownIds: string[]
   chosen: string[]
   reasons: ReadonlyMap<string, string>
@@ -102,7 +101,6 @@ function notQueued(one: EncodeRerunRow): one is EncodeRerunRow & {
   return one.reason !== undefined
 }
 
-/** The failed jobs being chosen for `まとめて再実行`, what the press did to each row, and the rows that left the list as they were queued again. */
 function useRerunning(
   ids: readonly string[],
   onRerun: (ids: string[]) => Promise<EncodeRerun>,
@@ -202,7 +200,6 @@ export function JobsList({
   jobs: EncodeJobsPage
   onCallOff: (id: string) => Promise<EncodeWrite>
   onRerun: (ids: string[]) => Promise<EncodeRerun>
-  /** Told when the failed jobs start and stop being chosen, so the page can leave room for a phone's band. */
   onChoosing?: (choosing: boolean) => void
 }) {
   const [waiting, show] = useJobsAddress()

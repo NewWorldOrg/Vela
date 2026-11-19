@@ -121,7 +121,6 @@ export default meta
 
 type Story = StoryObj<typeof meta>
 
-/** Opens a row's `…` and picks one of its items. */
 async function fromTheMenu(
   canvasElement: HTMLElement,
   name: string,
@@ -133,7 +132,6 @@ async function fromTheMenu(
   await userEvent.click(await screen.findByRole('menuitem', { name: item }))
 }
 
-/** The elements saying the text that are drawn, leaving out the ones hidden at this width. */
 function shownIn(scope: HTMLElement, text: string): HTMLElement[] {
   return within(scope)
     .queryAllByText(text)
@@ -420,7 +418,6 @@ const CHOSEN_DESTINATION_GONE =
 const RULE_SET_NOT_REMOVED =
   'ルールセットを削除できませんでした。時間をおいてからもう一度お試しください。'
 
-/** An action that turns away whatever it is asked, in these words. */
 function turnedAway(message: string) {
   return async (): Promise<NotificationWrite> => ({
     state: 'rejected',
@@ -993,7 +990,6 @@ const RULE_SET_GONE =
 const RULE_SET_GONE_REMOVING =
   'このルールセットは残っていないため、削除できませんでした。'
 
-/** The page as it is when what is changed or removed was removed on another screen: the write is refused and the row leaves the page. */
 function RemovedElsewhere(props: ComponentProps<typeof NotificationsView>) {
   const [held, setHeld] = useState(props.screen)
 
@@ -1024,7 +1020,6 @@ function RemovedElsewhere(props: ComponentProps<typeof NotificationsView>) {
   )
 }
 
-/** The refusal stands whole in the toast, the dialog that asked having left. */
 async function theToastSays(words: string) {
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   await waitFor(() => expect(screen.queryByRole('alertdialog')).toBeNull())

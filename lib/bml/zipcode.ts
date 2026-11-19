@@ -1,10 +1,8 @@
-/** A run of seven-digit postal codes, both ends in. */
 export interface ZipRange {
   from: number
   to: number
 }
 
-/** The postal codes a zip code field names: those in its included runs and in none of its excluded runs. */
 export interface ZipCode {
   includes: ZipRange[]
   excludes: ZipRange[]
@@ -133,7 +131,6 @@ function sevenDigits(entry: Entry): number | null {
     : null
 }
 
-/** The runs a list of entries names. A run that starts with one entry and ends with the next is read as one. */
 function rangesOf(bytes: Uint8Array): ZipRange[] {
   const ranges: ZipRange[] = []
   let at = 0
@@ -158,7 +155,6 @@ function rangesOf(bytes: Uint8Array): ZipRange[] {
   return ranges
 }
 
-/** Reads one long entry into the runs; true when it took the entry after it as its end. */
 function longForm(entry: Entry, next: Entry | null, into: ZipRange[]): boolean {
   switch (entry.kind) {
     case 0x8:
@@ -217,7 +213,6 @@ function sevenDigitRun(
   return to !== null
 }
 
-/** The zip code a `Z` field holds: its length, the length of its excluded list, that list, then the included list. */
 export function zipCodeOf(bytes: Uint8Array): ZipCode {
   if (bytes.length < 2) {
     return { includes: [], excludes: [] }
@@ -235,7 +230,6 @@ function within(ranges: ZipRange[], code: number): boolean {
   return ranges.some((range) => code >= range.from && code <= range.to)
 }
 
-/** Whether a seven-digit postal code is one the field names. */
 export function zipIncludes(zip: ZipCode, code: unknown): boolean {
   const asked = Number(code)
 

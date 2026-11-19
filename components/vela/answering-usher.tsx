@@ -22,10 +22,6 @@ function answerAgain(node: HTMLElement): void {
   }
 }
 
-/**
- * The usher of an empty state: it arrives once, and hops again each time a
- * pointer comes onto it or a finger touches it.
- */
 export function AnsweringUsher({
   mood,
   className,

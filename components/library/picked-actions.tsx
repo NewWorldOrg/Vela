@@ -26,16 +26,13 @@ import { useToast } from '@/components/vela/toasts'
 
 const SIGNED_OUT = signedOut('操作')
 
-/** What the choosing bar and the phone's band press, and the question asked before the picked recordings go. */
 export interface PickedDeletion {
   pending: boolean
-  /** Whether `削除` can be pressed: something is picked and none of it is still being recorded. */
   deletable: boolean
   ask: () => void
   dialog: ReactNode
 }
 
-/** Asks before deleting the picked recordings, deletes them, and says what was left when not all of them went. */
 export function usePickedDeletion(
   chosen: Recording[],
   onDeleteAll: (ids: string[]) => Promise<RecordingBatch>,
@@ -113,7 +110,6 @@ export function usePickedDeletion(
   return { pending, deletable, ask: () => setAsking(true), dialog }
 }
 
-/** One press at the end of the choosing bar and band: what it is called, its icon and colour, and whether it can be pressed now. `short` is the word a phone's band uses when the whole label would not fit beside the others. */
 export interface PickedAction {
   label: string
   short?: string
@@ -124,7 +120,6 @@ export interface PickedAction {
   onPress: () => void
 }
 
-/** The library's `削除` as the press at the end of the bar. */
 export function deletionAction(deletion: PickedDeletion): PickedAction {
   return {
     label: '削除',
@@ -136,10 +131,8 @@ export function deletionAction(deletion: PickedDeletion): PickedAction {
   }
 }
 
-/** What the press of `サムネイルを再生成` did to the picked recordings: the press itself, and why each one that was not queued was left out. */
 export interface PickedRemake {
   pending: boolean
-  /** Whether `サムネイルを再生成` can be pressed: something is picked and none of it is still being recorded. */
   remakable: boolean
   remake: () => void
   said: ReadonlyMap<string, string>
@@ -147,7 +140,6 @@ export interface PickedRemake {
 
 const NO_REASONS: ReadonlyMap<string, string> = new Map()
 
-/** Asks the backend to make the picked recordings' thumbnails again, says in one toast how many it took, and keeps the reason each one it did not take was left out, until choosing ends. */
 export function usePickedRemake(
   chosen: Recording[],
   choosing: boolean,
@@ -198,7 +190,6 @@ export function usePickedRemake(
   return { pending, remakable, remake, said }
 }
 
-/** The library's `サムネイルを再生成` as a press on the bar, in the amber of doing something again. */
 export function remakeAction(remake: PickedRemake): PickedAction {
   return {
     label: 'サムネイルを再生成',
@@ -211,10 +202,8 @@ export function remakeAction(remake: PickedRemake): PickedAction {
   }
 }
 
-/** The room left at the end of a list that scrolls inside itself, so the floating bar does not cover its last row. */
 export const ROOM_FOR_THE_BAR = 'pb-[calc(80rem/16)]'
 
-/** Leaves choosing on Esc, unless a dialog, a menu or a list is open to take the key first. */
 export function useLeaveOnEscape(choosing: boolean, leave: () => void): void {
   useEffect(() => {
     if (!choosing) {

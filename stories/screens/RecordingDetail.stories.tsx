@@ -70,7 +70,6 @@ const KITCHEN_DISHES = [
   '台所の片付け',
 ]
 
-/** Seven more weeks of the kitchen programme the stories open, on the same channel, some watched, some part-way, some not. */
 const KITCHEN_EPISODES = LIBRARY_SHELF.filter((one) =>
   one.title.startsWith('となりの発明王'),
 ).map((one, nth) => ({
@@ -337,7 +336,6 @@ export const 同じシリーズのほかの回を右に並べる: Story = {
   },
 }
 
-/** The series' column on the page, found by its slot. */
 function seriesColumn(canvasElement: HTMLElement): HTMLElement {
   const found = canvasElement.querySelector('[data-slot="series-episodes"]')
 

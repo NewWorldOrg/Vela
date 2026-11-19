@@ -10,7 +10,6 @@ import { Picture } from '@/components/library/picture'
 const SHELF_HEADING =
   'text-heading leading-[calc(22rem/16)] font-bold tracking-[-0.015em] text-ink'
 
-/** The recordings left part-way, in one row: as many as the width holds, each going on from where it was left. Over the table the row is compact, its pictures small and its titles on one line. */
 export function ContinueRow({
   recordings,
   compact = false,
@@ -18,7 +17,6 @@ export function ContinueRow({
 }: {
   recordings: Recording[]
   compact?: boolean
-  /** While the library is choosing: drawn faint, and nothing in it can be pressed. */
   dimmed?: boolean
 }) {
   if (recordings.length === 0) {

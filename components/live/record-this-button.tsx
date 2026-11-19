@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button'
 import { useToast } from '@/components/vela/toasts'
 import { ReserveRing } from '@/components/live/reserve-ring'
 
-/** Reserves a programme in one press, and puts up a toast whose press takes the reservation back. */
 export function useRecordInOnePress(
   onReserve: (programmeId: string) => Promise<ReservationWrite>,
   onCancel: (reservationId: string) => Promise<ReservationWrite>,
@@ -48,7 +47,6 @@ export function useRecordInOnePress(
   return [pending, record]
 }
 
-/** Reserves the programme on now in one press, and puts up a toast whose press takes the reservation back. */
 export function RecordThisButton({
   programmeId,
   onReserve,
@@ -58,7 +56,6 @@ export function RecordThisButton({
   programmeId: string
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   onCancel: (reservationId: string) => Promise<ReservationWrite>
-  /** Under the picture of a phone, or in the column beside the programme on a wide window. */
   size?: 'sm' | 'lg'
 }) {
   const [pending, record] = useRecordInOnePress(onReserve, onCancel)

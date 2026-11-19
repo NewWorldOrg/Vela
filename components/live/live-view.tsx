@@ -106,7 +106,6 @@ const TICK_MS = 30_000
 
 const COUNT_EVERY_MS = 60_000
 
-/** A swap of what the column shows while it stays open: the list closed for the data broadcast leaving before the remote comes, the channels leaving before the remote comes, the remote leaving before the channels come, the channels coming, and the list coming back when the data broadcast closes. */
 type Swap =
   | 'still'
   | 'closed-list-out'
@@ -124,7 +123,6 @@ function playing(
 
 function nothingToSettle() {}
 
-/** The remote and the head over it come in from the right when they first stand. */
 const COMING = playing('opening', nothingToSettle)
 
 export function LiveView({
@@ -150,9 +148,7 @@ export function LiveView({
 }: {
   screen: LiveScreen
   onTakeTicket: TakeLiveTicket
-  /** Reserves the programme on now, from the phone's `この番組を録画`. */
   onRecord?: (programmeId: string) => Promise<ReservationWrite>
-  /** Takes back the reservation the toast after `この番組を録画` offers. */
   onTakeTheRecordingBack?: (reservationId: string) => Promise<ReservationWrite>
   clockHeldAt?: Date
   openSocket?: OpenSocket
@@ -160,7 +156,6 @@ export function LiveView({
   askSignedOut?: () => Promise<boolean>
   askBacklog?: AskBacklog
   startupDeadlineMs?: number
-  /** How long the player's controls stay up after they were last stirred; the player's own when not given. */
   restsMs?: number
   takeCapture?: TakeCapture
   channelsFolded?: boolean
@@ -617,7 +612,6 @@ export function LiveView({
   )
 }
 
-/** The remote's motion: leaving for the channels, playing the column's fold, or coming in when it first stands. */
 function remoteMotion(swap: Swap, fold: FoldMotion): FoldMotion {
   if (swap === 'remote-out') {
     return playing('closing', nothingToSettle)
@@ -626,7 +620,6 @@ function remoteMotion(swap: Swap, fold: FoldMotion): FoldMotion {
   return fold.phase === 'still' ? COMING : fold
 }
 
-/** The channels' motion while the data broadcast is open: leaving for the remote, coming after it, or playing the column's fold. */
 function channelsMotion(
   swap: Swap,
   fold: FoldMotion,
@@ -643,7 +636,6 @@ function channelsMotion(
   return fold
 }
 
-/** The list's motion while the data broadcast is closed or its remote not in the column: leaving for the remote when it opens, coming back when it closes, or playing the column's fold. */
 function closedMotion(
   swap: Swap,
   fold: FoldMotion,

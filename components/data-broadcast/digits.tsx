@@ -10,7 +10,6 @@ import {
 
 const DIGITS: BmlKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-/** The digits 1 to 9 and 0 in one row, drawn out to the right of `123`, or on the row above it when the band has no room beside. */
 export function Digits({ pressing }: { pressing: Pressing }) {
   return (
     <div

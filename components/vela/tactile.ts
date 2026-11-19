@@ -1,8 +1,6 @@
-/** A press: the control lifts a pixel toward the pointer, its hard shadow growing, and sinks a pixel when pressed. */
 export const tactile =
   'transition-[translate,transform,box-shadow,background-color,border-color,color] duration-150 ease-toy hover:-translate-x-px hover:-translate-y-px active:translate-x-px active:translate-y-px'
 
-/** The drawing in a control grows and turns a little under the pointer. */
 export const iconTilt =
   '[&_svg]:transition-transform [&_svg]:duration-150 [&_svg]:ease-toy hover:[&_svg]:scale-[1.08] hover:[&_svg]:rotate-[-7deg]'
 

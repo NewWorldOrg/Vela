@@ -49,7 +49,6 @@ function malformed(bytes: Uint8Array): string {
   return (reading as { why: string }).why
 }
 
-/** The first updates of an animation, written short: which images at which places, whether the frame was cleared first, and for how long it stays. */
 function played(animation: MngAnimation, most = 20): string[] {
   const told: string[] = []
 

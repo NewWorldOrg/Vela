@@ -9,10 +9,8 @@ import { READS_AHEAD_WITHIN_SEC } from '@/lib/recording-captions'
 
 export { READS_AHEAD_WITHIN_SEC }
 
-/** A playhead that moves further than this between two readings has been seeked, not played. */
 export const MOST_STEP_SEC = 2.5
 
-/** One version of a module as the recording's catalog places it: the seconds of the source it was first and last seen at, and the bytes its module answers with. */
 export interface BroadcastVersion {
   id: number
   version: number
@@ -27,7 +25,6 @@ export interface BroadcastCarousel {
   versions: BroadcastVersion[]
 }
 
-/** An event message at the second of the source it fires at, with the component tag of the stream it came on when the record kept it. */
 export interface TimedEvent {
   group: number
   id: number
@@ -38,7 +35,6 @@ export interface TimedEvent {
   componentTag?: number
 }
 
-/** The catalog of a recording's data broadcast over the whole of the source played. */
 export interface DataBroadcastTimeline {
   entryTag: number
   autoStart: boolean
@@ -48,7 +44,6 @@ export interface DataBroadcastTimeline {
   events: TimedEvent[]
 }
 
-/** One version with the carousel it belongs to, as the module route is asked for it. */
 export interface PlacedVersion extends BroadcastVersion {
   tag: number
   downloadId: number
@@ -164,7 +159,6 @@ function eventOf(value: unknown): TimedEvent | null {
     : null
 }
 
-/** The timeline a value carries, as the recording's catalog route answers it, or null when its shape is not one. */
 export function timelineOf(value: unknown): DataBroadcastTimeline | null {
   const timeline = value as Record<string, unknown> | null
 
@@ -201,7 +195,6 @@ export function timelineOf(value: unknown): DataBroadcastTimeline | null {
   }
 }
 
-/** Every version of the timeline with its carousel, in the order of their first seconds. */
 export function placedVersions(
   timeline: DataBroadcastTimeline,
 ): PlacedVersion[] {
@@ -216,7 +209,6 @@ export function placedVersions(
     .sort((one, other) => one.fromSec - other.fromSec)
 }
 
-/** Whether one version is the later of two of the same module: first seen later, or of a later download or version when first seen at the same second. */
 function later(one: PlacedVersion, other: PlacedVersion): boolean {
   return (
     one.fromSec > other.fromSec ||
@@ -226,7 +218,6 @@ function later(one: PlacedVersion, other: PlacedVersion): boolean {
   )
 }
 
-/** The version of each module in effect at a second of the source: of those first seen by then, the latest. It stands until its last second, or on until a later version of the same module takes over, so that a module does not drop out between one version being last seen and the next being first seen. */
 export function versionsAt(
   timeline: DataBroadcastTimeline,
   second: number,
@@ -255,7 +246,6 @@ export function versionsAt(
     .map(([, placed]) => placed)
 }
 
-/** The versions first seen within a stretch after a second, in the order they are first seen, so that they can be read before they are needed. */
 export function versionsAhead(
   timeline: DataBroadcastTimeline,
   second: number,
@@ -266,14 +256,12 @@ export function versionsAhead(
   )
 }
 
-/** Whether a version is still of use around a second: in effect or coming within the stretch read ahead. */
 export function stillOfUse(placed: PlacedVersion, second: number): boolean {
   return (
     placed.toSec >= second && placed.fromSec <= second + READS_AHEAD_WITHIN_SEC
   )
 }
 
-/** The catalog a runtime is handed for a second of the source: each carousel of the recording with the versions in effect then, and no resources listed, as what a module holds is known once it is read. */
 export function catalogAt(
   timeline: DataBroadcastTimeline,
   second: number,
@@ -314,7 +302,6 @@ export function catalogAt(
   }
 }
 
-/** The event messages that fire after one second and by another, in the order they fire. */
 export function eventsBetween(
   timeline: DataBroadcastTimeline,
   afterSec: number,
@@ -325,7 +312,6 @@ export function eventsBetween(
   )
 }
 
-/** The event as the runtime takes it: fired at its second on the 90 kHz clock. */
 export function broadcastEventOf(event: TimedEvent): BroadcastEvent {
   return {
     group: event.group,
@@ -340,7 +326,6 @@ export function broadcastEventOf(event: TimedEvent): BroadcastEvent {
   }
 }
 
-/** Whether the playhead was moved rather than played from one reading to the next: a first reading, a move back, or a move forward further than playing carries it. */
 export function isASeek(from: number | null, to: number): boolean {
   return from === null || to < from || to - from > MOST_STEP_SEC
 }

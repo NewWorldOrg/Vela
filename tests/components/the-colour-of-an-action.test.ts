@@ -31,7 +31,6 @@ const THE_VARIANTS = [
   'danger',
 ]
 
-/** The ground and the word each kind of press is drawn in, as the canon's table of buttons pairs them. */
 const BY_KIND: Record<string, [string, string]> = {
   default: ['bg-accent-fill', 'text-on-accent'],
   record: ['bg-rec-fill', 'text-on-rec'],

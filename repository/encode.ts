@@ -172,7 +172,6 @@ export type EncodeRemoval =
   | { state: 'unauthenticated' }
   | { state: 'rejected'; message: string }
 
-/** What became of one job handed to `まとめて再実行`: queued again when `reason` is absent, otherwise the sentence that says why not. */
 export interface EncodeRerunRow {
   id: string
   outcome: EncodeRerunOutcome
@@ -499,7 +498,6 @@ const RERUN_REASONS: Record<
   alreadyEncoded: 'この録画はこのプロファイルですでにエンコード済みのため、',
 }
 
-/** The sentence a row says when it was not run again, in the words of the encode screen's refusals; nothing when it was queued. */
 export function whyItWasNotRerun(
   outcome: EncodeRerunOutcome,
   said: string,

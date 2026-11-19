@@ -96,9 +96,7 @@ export function HandoverMenu({
   choices: HandoverChoice[]
   only: Handover
   tone?: 'page' | 'player'
-  /** Grey among other grey buttons, or the green of playing, as the recording's row of actions draws it. */
   look?: OpenLook
-  /** The large button as wide as the column it stands in, beside the live programme under the picture. */
   wide?: boolean
   className?: string
 }) {

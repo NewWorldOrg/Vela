@@ -2,7 +2,6 @@ import { Fragment, type ReactNode } from 'react'
 
 import type { SearchHit } from '@/repository/search'
 
-/** The words a hit is drawn with, the asked-for ones on a faint accent so the eye finds why it was found. */
 export function marked(text: string, words: readonly string[]): ReactNode {
   const asked = words.filter((word) => word.length > 0)
 
@@ -29,7 +28,6 @@ export function marked(text: string, words: readonly string[]): ReactNode {
   )
 }
 
-/** The hits in their order, gathered under the day each is on; a day keeps the place of its first hit. */
 export function hitsByDay(
   hits: readonly SearchHit[],
 ): { day: string; near?: string; hits: SearchHit[] }[] {

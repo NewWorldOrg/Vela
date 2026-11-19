@@ -8,7 +8,6 @@ import {
   PLAYER_BUTTON_ON,
 } from '@/components/recordings/player-palette'
 
-/** One thing the gear does rather than chooses: taking a capture, sending the picture out to picture in picture. */
 export type GearAction = {
   name: string
   icon: ReactNode
@@ -17,7 +16,6 @@ export type GearAction = {
   onPress: () => void
 }
 
-/** The gear's last row, when the bar has no room for the controls it does not use often: each one by its own name, and pressing it closes the gear. Beside the picture of a phone held on its side they stand one under another, each as wide as the face. */
 export function GearActions({
   actions,
   onDone,

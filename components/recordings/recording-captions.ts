@@ -28,7 +28,6 @@ interface Asking {
   abort: AbortController
 }
 
-/** A recording's captions, looked up by the second of the picture on screen and read ahead ten minutes at a time. */
 export class RecordingCaptions {
   private readonly clock: CaptionClock
 

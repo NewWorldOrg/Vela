@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import type { Genre } from '@/repository/programs'
 import { Badge } from '@/components/ui/badge'
 
-/** The pill that names a programme's genre as a fact: the genre's light tint under its deep text, and neutral where the genre has no colour of its own. */
 const GENRE_PILL_CLASS: Partial<Record<Genre, string>> = {
   news: 'bg-g-news-light text-g-news-text',
   sports: 'bg-g-sports-light text-g-sports-text',

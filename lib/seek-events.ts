@@ -1,15 +1,10 @@
 import { RETURNS_WITHIN_MS, WATCHED_FOR_SEC } from '@/lib/skip-events'
 import type { SeekEvent, SeekMeans } from '@/repository/recording-segments'
 
-/** How close one step forward follows the one before for the two to be one seek. */
 export const STEPS_JOIN_WITHIN_MS = 3_000
 
 const STEPPING: readonly SeekMeans[] = ['step', 'key']
 
-/**
- * How far either way of where it was sent a landing made each way may lie, as learning reads it. Coming back to within
- * that of where a seek forward landed puts right a seek that went a little too far, and is no coming back.
- */
 export const LANDING_REACH_SEC: Readonly<Record<SeekMeans, number>> = {
   bar: 8,
   key: 8,
@@ -25,7 +20,6 @@ interface Run {
   cancel: () => void
 }
 
-/** Runs something once after a while, and gives back what calls it off. */
 export type Later = (run: () => void, ms: number) => () => void
 
 const afterAWhile: Later = (run, ms) => {
@@ -46,16 +40,6 @@ function hundredths(second: number): number {
   return Math.round(second * 100) / 100
 }
 
-/**
- * The seeks a person makes in one recording, sent in the recording's own time. A seek forward is sent as soon as it is
- * made, but steps forward that follow one another within {@link STEPS_JOIN_WITHIN_MS} are held and sent as one, from
- * where the first started to where the last landed, once that long passes after the last, another seek is made or the
- * player goes away; when the page is hidden they are sent at once, the way that outlives the page. Seeking back into
- * what a seek forward passed moments before, short of the reach of where it landed ({@link LANDING_REACH_SEC}), counts
- * once the person has watched there for a while, as it does after the skip button. Nothing is sent while the player
- * plays faster than as broadcast, for a jump the skip button made, or while no time in the recording can be placed on
- * the file.
- */
 export class SeekEvents {
   private run: Run | undefined
 
@@ -83,7 +67,6 @@ export class SeekEvents {
     this.later = later
   }
 
-  /** How far the recording's own time stands ahead of the file the player plays, or nothing when it cannot be placed. */
   runsBehindBy(offsetSec: number | undefined): void {
     this.offset = offsetSec
   }
@@ -92,7 +75,6 @@ export class SeekEvents {
     this.rate = rate
   }
 
-  /** A move of the playhead from one second of the file to another, by one of the ways a person seeks, or by none. */
   sought(fromSec: number, toSec: number, means?: SeekMeans): void {
     if (toSec < fromSec) {
       this.endTheRun()
@@ -129,15 +111,10 @@ export class SeekEvents {
     this.send({ event: 'returned', ...back })
   }
 
-  /** The player goes away: the steps still held are sent. */
   leaves(): void {
     this.endTheRun()
   }
 
-  /**
-   * The page is hidden or put away, after which it may never run again: the steps still held are sent the way that
-   * outlives the page. A seek back still being watched is kept for when the person comes back to the page.
-   */
   hides(): void {
     this.leaving = true
 

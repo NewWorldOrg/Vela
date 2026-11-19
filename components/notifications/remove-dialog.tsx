@@ -21,7 +21,6 @@ import { Spinner } from '@/components/vela/spinner'
 
 const SIGNED_OUT = signedOut('削除')
 
-/** The question asked before anything goes: the name of what goes, what goes with it, and that it cannot come back. */
 export function RemoveDialog({
   what,
   name,

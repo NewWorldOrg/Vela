@@ -185,7 +185,6 @@ import { LiveStartupSteps } from '@/components/live/live-startup-steps'
 
 const RESTS = 3000
 
-/** What the seat says of the format while the browser has not answered: a seat of its own, on which nothing is opened. */
 const FORMAT_BEING_ASKED = 'asking'
 
 const TICK_MS = 250
@@ -234,7 +233,6 @@ const LATENCY_TONE = {
   err: 'border-(--pl-err)/50 bg-(--pl-err)/14 text-(--pl-err)',
 } as const
 
-/** Where the play stands in a compact picture, and a mark that stands in for it: across the middle, between the title's line with the gear's company and the line of the latency and the full screen. */
 const LIVE_SENDS_PLACE =
   'inset-x-0 top-[calc(50%-4rem/16)] mx-auto -translate-y-1/2'
 
@@ -263,11 +261,8 @@ export function LivePlayer({
   side,
   onPhase,
 }: {
-  /** What the screen keeps at the picture's right on a phone held on its side, and the faces it opens there. */
   side?: SideColumn
-  /** Told each time the picture's phase moves: starting, buffering, playing, paused or faulted. */
   onPhase?: (phase: Phase | undefined) => void
-  /** What stands at the left of the compact bar's top line, before the channel's name: the way to put the picture away. */
   lead?: ReactNode
   channel?: LiveChannel
   profiles: LiveProfile[]
@@ -290,20 +285,15 @@ export function LivePlayer({
     sound: SoundTrack,
   ) => string
   startupDeadlineMs?: number
-  /** How long the controls stay up after the pointer or a key last stirred them. */
   restsMs?: number
   takeCapture?: TakeCapture
   autoOpensDataBroadcast?: boolean
   lineRelayOf?: (channel: string) => LineRelay
-  /** The page has a column beside the player to hold the remote, and the window is wide enough to show it. */
   remoteInTheColumn?: boolean
-  /** Where in the column the remote is drawn; none while the column is folded or shows the channels. */
   remoteSlot?: HTMLElement | null
   onDataBroadcastOpen?: (open: boolean) => void
   captionStyle?: CaptionStyle
-  /** The format this browser was left on, as its cookie says. */
   formatChoice?: FormatChoice
-  /** What is asked whether a format plays here, in place of this browser. */
   askBrowser?: FormatProbe
 }) {
   const video = useRef<HTMLVideoElement>(null)

@@ -22,11 +22,6 @@ const TITLE_OF: Record<ReservationTab, string> = {
   outcomes: '失敗台帳',
 }
 
-/**
- * The head of the reservations, the rules and the ledger: the page's name and its count, the three tabs beside them
- * and the page's own actions at the right end. A phone puts the name in its bar and the tabs across the screen under it,
- * the actions under the tabs; a phone on its side carries the tabs up into its bar.
- */
 export function ReservationTabs({
   current,
   count,

@@ -14,7 +14,6 @@ export const HEAD_TONE: Record<StatusTone, string> = {
   off: 'text-ink-2',
 }
 
-/** A row of the state: its name over its facts at the left, the state at the right, and an arrow when it leads somewhere. */
 export function Part({
   name,
   mark: Mark,

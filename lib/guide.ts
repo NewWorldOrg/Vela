@@ -58,7 +58,6 @@ export function openingScrollTopOf(
 
 export const NOW_LINE_THICKNESS_PX = 2
 
-/** The now line's top as CSS: where the minute says, but never past the bottom of the day. */
 export function nowLineTopOf(
   nowMin: number,
   hourRem: number,
@@ -67,7 +66,6 @@ export function nowLineTopOf(
   return `min(${(nowMin / 60) * hourRem}rem, calc(${windowHours * hourRem}rem - ${NOW_LINE_THICKNESS_PX}px))`
 }
 
-/** 最初の HTML で番組表の枠の直後に置き、最初の描画の前に今の位置へ送るスクリプト。 */
 export function openingScrollScriptOf(nowMin: number, hourRem: number): string {
   const nowRem = (nowMin / 60) * hourRem
 
@@ -339,7 +337,6 @@ export function primaryKeyOfShadow(
 
 export const GUTTER_PX = 46
 
-/** The hour gutter's width as CSS, growing with the window past 2560px as every length set in pixels does. */
 export const GUTTER_WIDTH = `calc(${GUTTER_PX} * var(--px))`
 
 const SEAM_SLACK_PX = 1
@@ -349,7 +346,6 @@ export interface OpeningSeam {
   line: boolean
 }
 
-/** 番組表の入りで覆いが割れる高さと、そこを今の線として玉が走るかどうか。 */
 export function openingSeamOf({
   nowMin,
   hourPx,
@@ -378,7 +374,6 @@ export function openingSeamOf({
 
 export const COLUMN_MIN_REM = 13.75
 
-/** The narrowest the grid is drawn, as CSS: the hour gutter and every column at its narrowest. */
 export function gridMinWidthOf(columns: number): string {
   return `calc(${GUTTER_WIDTH} + ${columns * COLUMN_MIN_REM}rem)`
 }
@@ -459,7 +454,6 @@ export interface MinuteRange {
   to: number
 }
 
-/** The hours the guide opened on and the rest of the day as one day, each column's cells in the order they air. A cell of the rest that the opening hours also hold is theirs: a rest kept from before a refresh gives way to what the refresh brought. */
 export function wholeDayOf<
   P extends { id: string; channelId: string; startMin: number },
 >(opening: readonly P[], rest: readonly P[]): P[] {
@@ -473,7 +467,6 @@ export function wholeDayOf<
 
 export const HOURS_DRAWN_BEFORE_MEASURING = 12
 
-/** The minutes drawn before the guide is measured: the hours around where it opens, so the HTML carries what is first in view and not the whole day. */
 export function minutesBeforeMeasuringOf(
   nowMin: number | undefined,
   windowMin: number,

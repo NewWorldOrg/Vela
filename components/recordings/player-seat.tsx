@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { whichArtefactSeats } from '@/lib/playback-source'
 import { Player } from '@/components/recordings/player'
 
-/** The player, opened anew on a replaced artefact even when its address has nothing left to change. */
 export function PlayerSeat(
   props: Omit<ComponentProps<typeof Player>, 'onOpenAnewWhereItStands'>,
 ) {

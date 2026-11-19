@@ -5,7 +5,6 @@ import { cn } from '@/lib/utils'
 import { MoonIcon, SunIcon } from '@/components/vela/icons'
 import type { ThemeToggleProps } from '@/components/theme/theme-toggle'
 
-/** The theme in the bar at the top of a wide window, beside the settings: one press turns the page to the other of light and dark, as on a phone. */
 export function BarThemeButton({ className }: ThemeToggleProps) {
   const { mode, press } = useTheme()
   const Icon = mode === 'dark' ? MoonIcon : SunIcon

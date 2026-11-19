@@ -8,7 +8,6 @@ import {
 
 type AddressWindow = Window & typeof globalThis
 
-/** Where the number of a receiver's built-in sound is kept on the element that was given one, as `romsound://` is no address the frame may load. */
 export const ROM_SOUND = 'data-hybridcast-romsound'
 
 const ROM_SOUND_ADDRESS = /^romsound:\/\/(\d{1,3})\s*$/i
@@ -17,7 +16,6 @@ const MEDIA = new Set(['audio', 'video', 'source'])
 
 const XLINK = 'http://www.w3.org/1999/xlink'
 
-/** The properties that set an attribute naming an address, by the interface they are on. */
 const ADDRESS_PROPERTIES: [string, string][] = [
   ['HTMLImageElement', 'src'],
   ['HTMLImageElement', 'srcset'],
@@ -58,7 +56,6 @@ function descriptorOf(
   return undefined
 }
 
-/** One sample of silence as a WAV file, which a media element plays in place of a built-in sound. */
 function silence(): Uint8Array {
   const bytes = new Uint8Array(45)
   const view = new DataView(bytes.buffer)
@@ -85,7 +82,6 @@ function silence(): Uint8Array {
   return bytes
 }
 
-/** What an attribute of an element is actually given for what the application wrote: an address pointed at the relay, a built-in sound swapped for silence and its number kept aside, or what was written. */
 function writtenFor(
   window: AddressWindow,
   quiet: () => string,
@@ -108,7 +104,6 @@ function writtenFor(
   }
 }
 
-/** The name an attribute set with a namespace goes by among the ones that name an address: its own without one, `xlink:href` for XLink's `href`, and null for any other. */
 function addressNameOf(namespace: string | null, name: string): string | null {
   if (!namespace) {
     return name
@@ -123,7 +118,6 @@ function isStyle(node: Node | null): node is Element {
   return node?.nodeType === 1 && (node as Element).localName === 'style'
 }
 
-/** The number of the built-in sound a media element was given, on itself or on a source of it, or null. */
 function romSoundOf(element: Element): number | null {
   const kept =
     element.getAttribute(ROM_SOUND) ??
@@ -132,7 +126,6 @@ function romSoundOf(element: Element): number | null {
   return kept === null || kept === undefined ? null : Number(kept)
 }
 
-/** Gives each element's `style` as the browser does, but with the `url()` of whatever is set on it by name pointed at the relay: the browser keeps those properties on each declaration rather than on its prototype, so they are reached through a stand-in for the declaration, one per element. */
 function watchStyles(window: AddressWindow, point: Point): void {
   const prototype = window.HTMLElement.prototype
   const described = descriptorOf(prototype, 'style')
@@ -178,7 +171,6 @@ function watchStyles(window: AddressWindow, point: Point): void {
   })
 }
 
-/** Points the imports and the `url()` of the text a style element is given, as its text, and of the rules inserted into a style sheet, before the browser reads them. */
 function watchStyleText(window: AddressWindow, point: Point): void {
   const text = (prototype: object, property: string) => {
     const described = descriptorOf(prototype, property)
@@ -223,7 +215,6 @@ function watchStyleText(window: AddressWindow, point: Point): void {
   }
 }
 
-/** `Audio` as the application is given it: the element is made empty and its address set through `src`, so that it is pointed, or swapped for silence for a built-in sound, as one set on an element is. */
 function pointNewAudio(window: AddressWindow): void {
   const Audio = window.Audio
   const made = function (src?: string): HTMLAudioElement {
@@ -240,7 +231,6 @@ function pointNewAudio(window: AddressWindow): void {
   window.Audio = made as unknown as typeof Audio
 }
 
-/** Carina points every address of the markup it relays at the relay; what a script writes later is pointed here, resolved against the station URL: the address properties of the elements, `setAttribute` and `setAttributeNS`, an `Audio` made with an address, the `url()` of styles set by name, with `setProperty` or as `cssText`, the text of style elements and the rules inserted into style sheets, and markup written with `innerHTML`, `outerHTML` or `insertAdjacentHTML`, read in the element it is written into, as each is written, before the browser loads it. Anything that lands in the document another way is pointed as it lands, which loads it again from the relay. A receiver's built-in sound (`romsound://`) is no address the frame may load: its element is given silence instead, and `play` tells the player which sound it was and plays nothing in the frame. */
 export function pointAddressesWrittenLater(
   window: AddressWindow,
   point: Point,

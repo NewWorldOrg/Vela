@@ -6,7 +6,6 @@ import { pressMeansOf, type PressMeans } from '@/lib/player-taps'
 
 export interface Press {
   means: PressMeans
-  /** Whether the controls were showing when the press came down. */
   wasUp: boolean
 }
 
@@ -18,7 +17,6 @@ function coarseScreen(): boolean {
   )
 }
 
-/** The surface over the picture that takes presses, telling each player whether a finger or a mouse pressed it. */
 export function PlayerPress({
   up,
   closesSettings,

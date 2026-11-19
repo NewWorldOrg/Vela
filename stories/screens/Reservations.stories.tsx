@@ -93,7 +93,6 @@ function chosenBar(canvas: ReturnType<typeof within>): HTMLElement {
   return canvas.getByRole('group', { name: '選択した予約の操作' })
 }
 
-/** The line of the list a word sits in: a reservation, a segment of a relay, or the line a relay folds into. */
 function rowFor(inside: HTMLElement): HTMLElement {
   const row = inside.closest<HTMLElement>(
     'li[data-reservation], li[data-relay]',
@@ -652,7 +651,6 @@ const STANDING_WORDS = {
   failed: '失敗',
 }
 
-/** The standings a row says with a chip; a reservation that simply holds its tuner says nothing. */
 const SAID_WITH_A_CHIP = Object.entries(STANDING_WORDS).filter(
   ([standing]) => standing !== 'scheduled',
 )

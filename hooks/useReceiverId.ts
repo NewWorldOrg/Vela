@@ -10,7 +10,6 @@ interface Named {
   id: ReceiverId | null
 }
 
-/** The receiver's identifier Carina names for the channel's relay, asked once while `asks` holds; null until it answers, when it names none, and while the viewer has not allowed it. */
 export function useReceiverId(
   relay: LineRelay | null,
   asks: boolean,

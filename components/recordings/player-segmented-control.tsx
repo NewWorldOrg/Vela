@@ -21,7 +21,6 @@ export function PlayerSegmentedControl<T extends string>({
   value?: T
   onChange: (next: T) => void
   nameOf?: (option: T) => string
-  /** What a choice shows instead of its name, such as a colour; its name is then what it is read out as. */
   faceOf?: (option: T) => ReactNode
   numeric?: boolean
   off?: boolean

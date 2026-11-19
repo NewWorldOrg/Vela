@@ -25,7 +25,6 @@ export function FilterSelect({
   value?: string
   options: { value: string; label: string }[]
   onChange: (next: string | null) => void
-  /** A condition chip, `期間 すべて`, for a band with no surface of its own: the chip's own ground, and the accent's tint while it narrows the list. */
   quiet?: boolean
 }) {
   const current = value

@@ -18,5 +18,4 @@ export function AppShell({ className, ...props }: ComponentProps<'div'>) {
   )
 }
 
-/** A tool in the bar at the top of a phone held upright: a round button of 40px. */
 export const PHONE_BAR_BUTTON = 'size-10 [&_svg]:size-[calc(19rem/16)]!'

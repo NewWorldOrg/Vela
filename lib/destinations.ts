@@ -8,7 +8,6 @@ export interface Destination {
   alsoUnder: readonly string[]
 }
 
-/** Where the app's own navigation goes: the four services, then the settings. */
 export const DESTINATIONS: readonly Destination[] = [
   { href: '/guide', label: '番組表', alsoUnder: ['/search'] },
   { href: '/live', label: 'ライブ', alsoUnder: [] },

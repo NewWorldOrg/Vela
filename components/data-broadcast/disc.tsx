@@ -53,7 +53,6 @@ const WEDGES: { way: Way; name: string; shift: string; glyph: ReactNode }[] = [
   },
 ]
 
-/** The cross as a remote control has it: one disc with its two diagonals drawn, the four arrows each a wedge of it and Enter at its heart. The wedges reach past the circle and are clipped by it, so a press anywhere in a quarter is that arrow. */
 export function Disc({ pressing }: { pressing: Pressing }) {
   return (
     <div

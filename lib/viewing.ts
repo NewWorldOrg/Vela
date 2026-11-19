@@ -22,7 +22,6 @@ export const HYBRIDCAST_LABEL = 'Hybridcast を許可する'
 
 export const SOUNDS_LABEL = 'データ放送の効果音'
 
-/** The viewing settings as the switches start out, read the same way on the server from the request's cookies and in the browser from its own. */
 export interface ViewingSettings {
   autoOpensDataBroadcast: boolean
   allowsTheLine: boolean
@@ -31,7 +30,6 @@ export interface ViewingSettings {
   playsSounds: boolean
 }
 
-/** The viewing settings from what `said` finds for each cookie. */
 export function viewingSettingsOf(
   said: (key: string) => string | undefined,
 ): ViewingSettings {

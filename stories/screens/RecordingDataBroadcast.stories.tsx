@@ -145,7 +145,6 @@ function onTheScreen(canvasElement: HTMLElement, slot: string): HTMLElement {
   return found
 }
 
-/** The player, where the control bar's `データ放送` is; the remote in the column has a key of the same name. */
 function inThePlayer(canvasElement: HTMLElement) {
   return within(onTheScreen(canvasElement, 'player'))
 }
@@ -162,17 +161,14 @@ const AT_THE_START = '560,60,360,203'
 
 const ON_THE_WEATHER = '40,60,360,203'
 
-/** A length the page sets in rem, in pixels at the root's font size, which grows with the window. */
 function rem(px: number): number {
   return (
     (px * parseFloat(getComputedStyle(document.documentElement).fontSize)) / 16
   )
 }
 
-/** The gap between the player's box and the column, as the live page parts them. */
 const GAP = 32
 
-/** The column's width when it is folded to its rail, and when it holds the remote. */
 const RAIL = 44
 
 const COLUMN = 372
@@ -205,7 +201,6 @@ function columnOn(canvasElement: HTMLElement): HTMLElement {
   return found
 }
 
-/** Waits for the column to come to rest after it arrived or folded. */
 async function columnAtRest(canvasElement: HTMLElement) {
   const column = columnOn(canvasElement)
 
@@ -215,7 +210,6 @@ async function columnAtRest(canvasElement: HTMLElement) {
   )
 }
 
-/** What the column's arrival and fold play: the column's own width and gap, and the remote's slide, leaving out a key's own press. */
 function foldMoves(column: HTMLElement): CSSTransition[] {
   return column
     .getAnimations({ subtree: true })
@@ -230,7 +224,6 @@ function foldMoves(column: HTMLElement): CSSTransition[] {
     })
 }
 
-/** Waits for the remote to have left the column, once a fold has settled. */
 async function remoteGone(canvasElement: HTMLElement) {
   await waitFor(
     () =>
@@ -247,13 +240,11 @@ function faceWidth(canvasElement: HTMLElement): number {
   return onTheScreen(canvasElement, 'player-face').getBoundingClientRect().width
 }
 
-/** The programme's information under the player: the title, the line under it and the rest, in the page's column. */
 function infoWidth(canvasElement: HTMLElement): number {
   return onTheScreen(canvasElement, 'recording-info').getBoundingClientRect()
     .width
 }
 
-/** Where the page lays its content out: inside the main area's gutters. */
 function thePage(canvasElement: HTMLElement): { left: number; right: number } {
   const main = onTheScreen(canvasElement, 'screen-main')
   const { left, right } = main.getBoundingClientRect()
@@ -269,7 +260,6 @@ async function within1(got: number, want: number) {
   await expect(Math.abs(got - want)).toBeLessThanOrEqual(1)
 }
 
-/** One column for the page while the remote stands beside the box: the box and the programme's information start at the same left edge, the information runs to the right edge of the column beside the box, and the whole is centred in the page. */
 async function oneColumn(canvasElement: HTMLElement) {
   const box = onTheScreen(canvasElement, 'player').getBoundingClientRect()
   const info = onTheScreen(
@@ -311,7 +301,6 @@ async function opened(canvasElement: HTMLElement) {
   return toggle
 }
 
-/** The control row right under the box on its own opaque ground with no scrim, and the programme below it. */
 async function rowUnderTheBox(canvasElement: HTMLElement) {
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
   const chrome = onTheScreen(canvasElement, 'player-chrome')
@@ -332,7 +321,6 @@ async function rowUnderTheBox(canvasElement: HTMLElement) {
   ).toBeGreaterThanOrEqual(shell.bottom)
 }
 
-/** The remote in the column beside the player: the fold alone at the column's head, the card 14 under it, its right edge at the page's, no band anywhere, the box narrowed to leave the column and the gap, and the control row under the box. */
 async function inTheColumn(canvasElement: HTMLElement, closedWidth: number) {
   const remote = await within(
     await waitFor(() => columnOn(canvasElement)),
@@ -636,7 +624,6 @@ export const 入口が移った番組のページがデータボタンで出る:
   },
 }
 
-/** What the player played while the story ran, heard in place of the speakers. */
 const sounds: { heard: () => HeardSound[] } = { heard: () => [] }
 
 export const 効果音: Story = {

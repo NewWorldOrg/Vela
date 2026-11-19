@@ -1,10 +1,8 @@
 import { bitsOf, type Field } from '@/lib/bml/structure'
 import { zipCodeOf, type ZipCode } from '@/lib/bml/zipcode'
 
-/** What one field holds once read: a number, text, a truth or a zip code. */
 export type Cell = number | string | boolean | ZipCode
 
-/** How text in a block of fields is read and written. */
 export interface TextCoding {
   decode(bytes: Uint8Array): string
   encode(text: string): Uint8Array
@@ -14,7 +12,6 @@ const utf8Decoder = new TextDecoder('utf-8')
 
 const utf8Encoder = new TextEncoder()
 
-/** Text as UTF-8, which is how the runtime keeps its own blocks. */
 export const UTF8: TextCoding = {
   decode: (bytes) => utf8Decoder.decode(bytes),
   encode: (text) => utf8Encoder.encode(text),
@@ -28,13 +25,11 @@ function eucDecoder(): TextDecoder {
   }
 }
 
-/** Text as a broadcast writes it into its tables, EUC-JP, read only. */
 export const BROADCAST_TEXT: TextCoding = {
   decode: (bytes) => eucDecoder().decode(bytes),
   encode: (text) => utf8Encoder.encode(text),
 }
 
-/** Text up to its first NUL, as a fixed field is read. */
 function untilNul(text: string): string {
   const at = text.indexOf('\0')
 
@@ -54,7 +49,6 @@ export class BitReader {
     return this.bytes.length * 8 - this.at
   }
 
-  /** The bytes read so far, a byte begun counted whole. */
   get bytesTaken(): number {
     return Math.ceil(this.at / 8)
   }
@@ -131,7 +125,6 @@ function zipCell(reader: BitReader, field: Field): ZipCode | undefined {
     : undefined
 }
 
-/** Reads one field, or nothing when the bytes run out before it ends. */
 export function readCell(
   reader: BitReader,
   field: Field,
@@ -167,7 +160,6 @@ export function readCell(
   }
 }
 
-/** Reads the fields of one block in turn; padding gives no cell. Null when the block ends before the fields do. */
 export function readCells(
   reader: BitReader,
   fields: Field[],
@@ -223,7 +215,6 @@ class BitWriter {
   }
 }
 
-/** A value as the bits of a field hold it: whole, wrapped to the width, and zero when it is not a number. */
 function wrapped(value: unknown, bits: number): number {
   const whole = Math.trunc(Number(value))
   const width = 2 ** bits
@@ -282,7 +273,6 @@ function writeCell(
   }
 }
 
-/** Writes values into a block as its fields say, one value per field that gives a cell. Null when a value does not fit its field. */
 export function writeCells(
   fields: Field[],
   values: unknown[],

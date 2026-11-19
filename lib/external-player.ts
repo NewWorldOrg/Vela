@@ -65,7 +65,6 @@ function inAName(character: string): string {
   return unfit(code) || NOT_IN_A_NAME.has(character) ? ' ' : character
 }
 
-/** The file name a player shows as the title: what is being watched, then the extension of what it is handed. */
 export function fileNameOf(
   showing: string,
   extension: string,
@@ -101,7 +100,6 @@ async function written(handover: Handover): Promise<TicketWrite> {
   }
 }
 
-/** Asks for a ticket and answers with the URL to hand over, or with what to say instead. */
 export async function takeTheTicket(
   handover: Handover,
   base: string,
@@ -223,7 +221,6 @@ const ON_A_MAC: readonly PlayerApp[] = ['infuse']
 
 const NOWHERE: readonly PlayerApp[] = []
 
-/** The player apps a browser can hand a URL to, in the order they are offered. */
 export function playerAppsOn({
   userAgent,
   maxTouchPoints,
@@ -245,7 +242,6 @@ export function appSays(app: PlayerApp): string {
   return THE_APPS[app].says
 }
 
-/** The URL that opens the app, handing it the ticketed URL in the form the app accepts. */
 export function appHref(app: PlayerApp, handed: Handed): string {
   const { opens, takes } = THE_APPS[app]
 

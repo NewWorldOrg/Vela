@@ -4,7 +4,6 @@ import { modulePayload } from '@/lib/bml/resources'
 import type { DataBroadcastTimeline } from '@/lib/recording-data-broadcast'
 import type { ReadDataBroadcastModule } from '@/components/recordings/read-data-broadcast'
 
-/** The catalog of a recording that carried a self-made broadcast throughout: every module in effect from the first second to the last. */
 export function throughout(catalog: BmlCatalog): DataBroadcastTimeline {
   return {
     entryTag: catalog.entryTag,
@@ -26,7 +25,6 @@ export function throughout(catalog: BmlCatalog): DataBroadcastTimeline {
   }
 }
 
-/** Reads the recording's modules out of `modules`, by the version the timeline placed. */
 export function readingModulesOf(
   modules: () => BmlModule[],
 ): ReadDataBroadcastModule {

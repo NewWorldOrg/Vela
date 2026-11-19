@@ -1122,7 +1122,6 @@ const TWO_UP = 'grid gap-x-5 gap-y-[calc(18rem/16)] min-[800px]:grid-cols-2'
 
 const SEGMENTS_ON_THE_PANEL = 'w-fit bg-bg'
 
-/** The dot each genre wears in the guide, by the name a search gives the genre. */
 const DOT_OF: Partial<Record<SearchGenre, Genre>> = {
   news: 'news',
   sports: 'sports',
@@ -1144,7 +1143,6 @@ function RuleLabel({ className, ...props }: ComponentProps<typeof FieldLabel>) {
   )
 }
 
-/** The field a set of picks sits in: the picks as tags, and the way to add one more at their end. */
 function Tags({ children }: { children: ReactNode }) {
   return (
     <span className="flex min-h-10 flex-wrap items-center gap-x-2 gap-y-4 rounded-md bg-bg px-1.5 py-1.5">

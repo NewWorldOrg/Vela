@@ -20,7 +20,6 @@ import {
   readTheFingerprint,
 } from '@/components/notifications/this-browser'
 
-/** Settings > notifications with the browser it is open in offered as a destination. */
 export function NotificationsHere({
   screen,
   actions,

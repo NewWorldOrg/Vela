@@ -1,7 +1,6 @@
 import { isRomSound } from '@/lib/bml/rom-sound'
 import { ROM_SOUNDS, type Tone } from '@/lib/data-broadcast-sound'
 
-/** What of the browser's audio context the built-in sounds are played through. */
 export type SoundContext = Pick<
   AudioContext,
   | 'state'
@@ -13,31 +12,23 @@ export type SoundContext = Pick<
   | 'close'
 >
 
-/** How far ahead of the context's clock a sound is laid, so its first tone is not cut. */
 const LEAD_S = 0.01
 
-/** How long a tone takes to swell to its loudness, short enough not to click. */
 const ATTACK_S = 0.005
 
-/** Where a tone fades to by its end: silence as far as the ear goes, as an exponential fade cannot reach 0. */
 const FADED = 0.0001
 
-/** How long after its fade a tone is stopped. */
 const TAIL_S = 0.02
 
-/** The most built-in sounds that ring at once; one asked for beyond them is dropped, so a document or an application asking in a loop neither clips nor loads the page. */
 export const MOST_SOUNDS_AT_ONCE = 4
 
-/** How long after one start the same sound may start again, in seconds. */
 export const SAME_SOUND_GAP_S = 0.06
 
-/** What the player's data broadcast does with the built-in sounds: plays one the documents or an application ask for, and unlocks the browser's audio while the viewer presses something, as WebKit lets it start only then. */
 export interface RomSounds {
   play(sound: number): void
   unlock(): void
 }
 
-/** Lays a sound's tones from now, and calls `ended` once the last of them has stopped. */
 function played(
   context: SoundContext,
   tones: readonly Tone[],
@@ -83,7 +74,6 @@ function played(
   })
 }
 
-/** Plays the receiver's built-in sounds for one player, in an audio context of its own kept until the player goes. The context is made, or resumed, by `unlock` while the viewer presses something; failing that, at the first sound, where a browser that has seen the viewer use the page lets it run. Nothing is laid while it is not running: a sound asked for then is dropped, never kept for later. A few sounds ring at once at most, and the same one does not start again within a short gap. */
 export class RomSounder {
   private context: SoundContext | null = null
 
@@ -97,7 +87,6 @@ export class RomSounder {
     this.make = make
   }
 
-  /** Plays a built-in sound at a gain; at no gain, or for a number that names no built-in sound, nothing is played. */
   play(sound: number, gain: number): void {
     if (!(gain > 0) || !isRomSound(sound)) {
       return
@@ -123,7 +112,6 @@ export class RomSounder {
     })
   }
 
-  /** Makes the context, or asks a suspended one to resume; called while the viewer presses something, which is when WebKit lets audio start. */
   unlock(): void {
     this.unlocked()
   }
@@ -152,7 +140,6 @@ export class RomSounder {
   }
 }
 
-/** The browser's own audio context, where it has one. */
 export function audioContextOf(): SoundContext | null {
   return typeof AudioContext === 'function' ? new AudioContext() : null
 }

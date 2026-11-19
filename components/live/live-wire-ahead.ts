@@ -3,7 +3,6 @@ import type { FormatSettled } from '@/lib/playback-format'
 
 import type { LiveSocket } from '@/components/live/live-session'
 
-/** How long a wire opened at the press waits for the player to take it before it is closed. */
 export const WIRE_KEPT_AHEAD_MS = 5000
 
 const OPEN = 1
@@ -16,10 +15,6 @@ type Heard =
   | { kind: 'close'; event: CloseEvent }
   | { kind: 'error'; event: Event }
 
-/**
- * A wire opened before anyone listens to it. What it hears is kept, and handed on in the order it was heard once it
- * has been taken; what nobody listens for by then is dropped.
- */
 class KeptWire implements LiveSocket {
   onopen: ((event: Event) => void) | null = null
 
@@ -131,10 +126,6 @@ let ahead: {
   expiry: ReturnType<typeof setTimeout>
 } | null = null
 
-/**
- * Opens the wire for a channel at the moment it is chosen, for the player to take once it has been drawn. A wire
- * opened earlier and not taken is closed, and so is this one if nothing takes it in time.
- */
 export function openWireAhead(
   href: string,
   open: (href: string) => LiveSocket,
@@ -151,7 +142,6 @@ export function openWireAhead(
   }
 }
 
-/** The wire opened ahead for this address, handed over once; nothing for any other address. */
 export function takeWireAhead(href: string): LiveSocket | undefined {
   if (!ahead || ahead.href !== href) {
     return undefined
@@ -189,7 +179,6 @@ function letGoOfTheWireAhead() {
 
 let profileInUse: string | undefined
 
-/** Notes the profile a player is using, so that a wire opened ahead for the next channel asks for the same one. */
 export function holdWireProfile(profile: string | undefined): () => void {
   profileInUse = profile
 
@@ -206,7 +195,6 @@ export function wireProfileInUse(): string | undefined {
 
 let formatInUse: FormatSettled | undefined
 
-/** Notes the format a player settled on, so that a wire opened ahead for the next channel asks for the same one. */
 export function holdWireFormat(format: FormatSettled): () => void {
   formatInUse = format
 

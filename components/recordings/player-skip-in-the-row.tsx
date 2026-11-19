@@ -24,7 +24,6 @@ function fitsOnTheServer(): boolean {
   return true
 }
 
-/** Whether the skip with the given words stands on the line of the row it sits in, between what comes before it and what comes after it. */
 function fitsBeside(seat: HTMLElement | null, unseen: HTMLElement | null) {
   const row = seat?.parentElement
 
@@ -90,10 +89,6 @@ function useFitsBeside(
 
 const SKIP_IN_THE_ROW = 'flex items-center gap-x-1'
 
-/**
- * The skip button and its close button in the line of the time, before the full screen, where the bar takes a phone's
- * layout; words that do not fit there give way to the shortest ones.
- */
 export function PlayerSkipInTheRow({
   kinds,
   to,

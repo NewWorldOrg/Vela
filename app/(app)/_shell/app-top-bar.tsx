@@ -27,7 +27,6 @@ const GUIDE = '/guide'
 
 const SEARCH = '/search'
 
-/** The field in the bar that opens the programme search with its words. */
 function BarSearch() {
   return (
     <Form

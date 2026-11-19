@@ -10,7 +10,6 @@ import {
 } from '@/components/reservations/phone-reservation-rows'
 import { ReservationChange } from '@/components/reservations/reservation-change'
 
-/** One reservation beside the list on a phone held on its side: its title, channel, time and where it came from, a chip for what needs attention, and its change under them. */
 export function ReservationBeside({
   reservation,
   actions,

@@ -1,4 +1,3 @@
-/** One programme as an application is told of it: the event's id where it is known, when it starts in milliseconds, how long it lasts in seconds, its name and its description. */
 export interface ProgrammeTold {
   eventId: number | null
   startsAt: number | null
@@ -7,7 +6,6 @@ export interface ProgrammeTold {
   description: string
 }
 
-/** The programme on air and the one after it, on the service watched. */
 export interface EventInformation {
   networkId: number
   serviceId: number
@@ -15,7 +13,6 @@ export interface EventInformation {
   next: ProgrammeTold | null
 }
 
-/** A programme as the player knows it from the guide. */
 export interface GuideProgramme {
   eventId?: number
   title: string
@@ -52,7 +49,6 @@ function toldOf(programme: GuideProgramme | undefined): ProgrammeTold | null {
   }
 }
 
-/** What an application is told of the service watched, from the guide's programme on air and the one after it. */
 export function eventInformationOf(channel: {
   networkId: number
   serviceId: number
@@ -71,7 +67,6 @@ function dateOf(at: number | null): Date | null {
   return at === null ? null : new Date(at)
 }
 
-/** The object `getCurrentEventInformation` hands an application: the ids of the service and the event, the programme's start as a `Date`, its length in seconds, its name and description, and the same of the next one under `f_`. The transport stream is not one the player knows. */
 export function eventInformationAnswer(
   information: EventInformation,
 ): Record<string, unknown> {
@@ -129,7 +124,6 @@ function toldValueOf(value: unknown): ProgrammeTold | null | undefined {
     : undefined
 }
 
-/** Event information in the shape the player hands it, or null when the value has another. */
 export function eventInformationOfValue(
   value: unknown,
 ): EventInformation | null {
@@ -157,7 +151,6 @@ export function eventInformationOfValue(
       }
 }
 
-/** Whether two pieces of information name the same event on air, so that a change of programme can be told apart from the guide answering again. */
 export function sameEventOnAir(
   one: EventInformation | null,
   other: EventInformation | null,

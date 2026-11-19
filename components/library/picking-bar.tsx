@@ -18,7 +18,6 @@ function enabledOf(actions: readonly PickedAction[]): string {
   return actions.map((one) => (one.enabled ? '1' : '0')).join('')
 }
 
-/** The bar floating in the middle of the window's foot while a list is choosing, from the press of `選ぶ` even before one is picked: close, how many, every one, and the one action. It rises in and sinks away, and while it sinks it stays drawn saying what it last said. */
 export function PickingBar({
   shown,
   count,

@@ -409,7 +409,6 @@ export function InfoIcon(props: IconProps) {
   )
 }
 
-/** Two arrows, down and up: the next of a few, in turn. */
 export function SwapIcon(props: IconProps) {
   return (
     <Icon {...props}>

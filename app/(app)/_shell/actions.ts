@@ -18,7 +18,6 @@ export async function readServerKey(): Promise<PushKeyAnswer> {
   return readPushKey()
 }
 
-/** The browser rows, or nothing while they cannot be read. */
 export async function readBrowserRows(): Promise<BrowserRow[] | undefined> {
   try {
     return await listBrowserRows()

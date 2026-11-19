@@ -26,7 +26,6 @@ function stays(): () => void {
   return () => {}
 }
 
-/** The sandboxed frame the data broadcast runtime draws in. It hands the player a way to talk to it once, when the runtime first loads, and passes on only what the runtime may say. A frame that loads a second time has been navigated away from the runtime: nothing more is sent to it or taken from it, and it is said to be broken. */
 export function BmlFrame({
   onReady,
   onMessage,

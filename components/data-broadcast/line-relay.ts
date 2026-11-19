@@ -16,16 +16,13 @@ import {
   type Relayed,
 } from '@/repository/live-data-broadcast'
 
-/** Longer than the relay's own limit on one transmission, so that the relay says it timed out before the player gives up on it. */
 export const RELAY_GIVEN_UP_AFTER_MS = 20_000
 
-/** The path on this server of the script a Hybridcast application's documents are given, which offers them the receiver's functions. Carina puts it into every document it relays for the application. */
 export const HYBRIDCAST_RECEIVER_SCRIPT =
   '/data-broadcast/hybridcast-receiver.js'
 
 type Send = (input: string, init: RequestInit) => Promise<Response>
 
-/** The relay of the channel watched live. A relay that cannot be reached, or answers in a shape it does not have, is unreached. An application is started with Carina's ticket and the AIT read again beside it, for the boundary its permissions come from. */
 export function liveLineRelay(
   channel: string,
   send: Send = (input, init) => fetch(input, init),

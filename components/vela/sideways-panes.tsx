@@ -4,7 +4,6 @@ import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/** The two panes a phone held on its side lays a list and its detail in: the list on the left, a little over half the width, and on the right what an upright phone opens under a row. Each scrolls on its own, and the page itself does not. */
 export function SidewaysPanes({
   list,
   detail,
@@ -13,7 +12,6 @@ export function SidewaysPanes({
 }: {
   list: ReactNode
   detail: ReactNode
-  /** What the right pane is called aloud. */
   detailLabel: string
   className?: string
 }) {

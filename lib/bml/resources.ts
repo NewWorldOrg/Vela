@@ -47,7 +47,6 @@ function pathOf(bytes: Uint8Array): string | null {
   }
 }
 
-/** Reads the module payload of the side channel and the recording's module route, or null when any part of it is malformed. */
 export function readModule(payload: Uint8Array): BmlModule | null {
   if (payload.length < MODULE_HEAD || payload[0] !== MODULE_BYTE) {
     return null
@@ -115,7 +114,6 @@ function readResource(
   }
 }
 
-/** Writes a module the way the side channel carries it. */
 export function modulePayload(module: BmlModule): Uint8Array {
   const encoder = new TextEncoder()
   const paths = module.resources.map((resource) =>
@@ -172,7 +170,6 @@ function isResource(value: unknown): value is BmlResource {
   )
 }
 
-/** The module a message carries, or null when it is not one. */
 export function moduleOf(value: unknown): BmlModule | null {
   const carried = value as Partial<BmlModule> | null
 
@@ -198,7 +195,6 @@ export function moduleOf(value: unknown): BmlModule | null {
   }
 }
 
-/** A copy of a module whose every body owns a buffer of its own, with those buffers, so it can be handed to the runtime's frame by transfer and copied only once. */
 export function moduleToHand(module: BmlModule): {
   module: BmlModule
   transfer: ArrayBuffer[]

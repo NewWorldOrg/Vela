@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { PHONE_BAR_BUTTON } from '@/components/vela/app-shell'
 import { iconButtonVariants } from '@/components/vela/icon-button'
 
-/** A tool in the bar: a round button of 40px, in the accent's soft ground while what it opens is open, with the count of what narrows over its corner. */
 export function PhoneBarButton({
   open,
   count,

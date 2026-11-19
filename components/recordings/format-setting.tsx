@@ -10,7 +10,6 @@ export interface FormatSettingProps {
   onChoose: (next: FormatChoice) => void
 }
 
-/** The gear's row for the format the picture is transcoded in; no row while there is nothing but 自動 and H.264 to choose. */
 export function FormatSetting({
   choices,
   chosen,

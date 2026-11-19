@@ -20,7 +20,6 @@ const ART = {
   error: <ThumbErrorIcon className="size-[calc(19rem/16)]" />,
 }
 
-/** A recording's picture, or where it has none yet the mark of why, on the quiet ground of a picture still to come. */
 export function RecordingThumb({
   recording,
   className,
@@ -28,7 +27,6 @@ export function RecordingThumb({
 }: {
   recording: Recording
   className?: string
-  /** Laid on the picture itself, so it can grow under a pointer without its frame. */
   pictureClassName?: string
 }) {
   const [reached, setReached] = useState(true)

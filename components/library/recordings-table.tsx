@@ -27,7 +27,6 @@ export function RecordingsTable({
   className,
 }: {
   items: Recording[]
-  /** The series to head the rows with, in their order; the rows go under no heads where there are none. */
   groups?: { key: string; name: string; items: Recording[] }[]
   onDelete: (id: string) => Promise<RecordingDiscarded>
   picking?: Picking

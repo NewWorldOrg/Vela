@@ -14,7 +14,6 @@ import { ReserveCircle } from '@/components/guide/reserve-circle'
 import { pressable } from '@/components/vela/tactile'
 import { hitsByDay, marked } from '@/components/search/hit-parts'
 
-/** The hits on a phone held upright: the count and the rule they would make, then the hits under the day they are on, each a row like the guide's with the circle that reserves it in one press. */
 export function PhoneSearchHits({
   hits,
   total,
@@ -27,9 +26,7 @@ export function PhoneSearchHits({
   onChoose,
   className,
 }: {
-  /** The hit whose detail stands beside the list, on a phone held on its side: ringed. */
   chosenId?: string
-  /** Pressing a row shows its detail beside the list rather than going to it. */
   onChoose?: (hit: SearchHit) => void
   className?: string
   hits: SearchHit[]
@@ -132,7 +129,6 @@ export function PhoneSearchHits({
 const ROW_PRESS =
   'flex min-h-16 min-w-0 flex-1 items-start gap-3 py-3 pr-1.5 pl-4 text-left text-ink no-underline outline-none focus-visible:shadow-ring'
 
-/** What pressing a row does: shows its detail beside the list, or goes to the programme's screen. */
 function RowPress({
   hit,
   onChoose,

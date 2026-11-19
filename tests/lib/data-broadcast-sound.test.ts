@@ -25,7 +25,6 @@ test('every sound is short, well under a second', () => {
   })
 })
 
-/** Tones that only meet, one starting as the one before ends, do not ring together. */
 const TOUCHING = 1e-9
 
 test('every sound is soft: rounded waves in the middle of the range, no louder together than one tone alone', () => {

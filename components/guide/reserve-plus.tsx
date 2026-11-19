@@ -5,7 +5,6 @@ import { type CSSProperties } from 'react'
 import { PlusIcon } from '@/components/vela/icons'
 import { useOneTapReserve } from '@/components/guide/reserve-circle'
 
-/** The `+` a pointer finds at the top right of a programme still to come: one click reserves it. A touch screen never shows it, the programme's panel and the phone's row carrying the same press. */
 export function ReservePlus({
   style,
   ...reserving

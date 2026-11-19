@@ -15,7 +15,6 @@ export type ReadDataBroadcast = (
   decodes?: readonly BrowserDecoding[],
 ) => Promise<DataBroadcastRead>
 
-/** Reads one version of a module: its bytes as the side channel carries them, or null when the recording holds no such version. */
 export type ReadDataBroadcastModule = (
   id: string,
   placed: PlacedVersion,

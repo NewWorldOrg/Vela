@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import type { ChannelKind } from '@/repository/channels'
 import { ChannelKinds } from '@/components/live/channel-kinds'
 
-/** The kinds of channel across the phone's width, under the picture while one is watched. */
 export function PhoneKinds({
   kind,
   kinds,

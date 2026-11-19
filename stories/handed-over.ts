@@ -23,7 +23,6 @@ export const A_MAC: Browsing = { ...AN_IPAD, maxTouchPoints: 0 }
 
 const THE_RUN_SAYS_SO = /\bStorybookTestRunner\S*/
 
-/** Has the browser name itself as another device for as long as a story is up, and puts back what it said before. A run under test goes on saying so. */
 export function browsingAs(device: Browsing): () => () => void {
   return () => {
     const underTest = THE_RUN_SAYS_SO.exec(navigator.userAgent)?.[0]
@@ -56,7 +55,6 @@ export function browsingAs(device: Browsing): () => () => void {
   }
 }
 
-/** Does what it is given and answers with where the page was sent, without leaving for it. */
 export async function whereItLeftFor(
   doing: (left: string[]) => Promise<void>,
 ): Promise<string[]> {
@@ -78,7 +76,6 @@ export async function whereItLeftFor(
   return left
 }
 
-/** Does what it is given and answers with what was put on the clipboard. */
 export async function whatWasCopied(
   doing: (copied: string[]) => Promise<void>,
   keeps = true,
@@ -148,7 +145,6 @@ export async function pressInTheHandoverMenu(
 
 const MEANS_SOMETHING_IN_A_PATTERN = /[.*+?^${}()|[\]\\]/g
 
-/** The URL a player is handed with the ticket in its path and the name it shows as the title at the end. */
 export function namedWithTheTicket(
   path: string,
   ticket: string,
@@ -162,7 +158,6 @@ export function namedWithTheTicket(
   )
 }
 
-/** The URL a player app was handed, read back out of where the page was sent. */
 export function handedTo(scheme: string, left: string): string | null {
   return left.startsWith(scheme) ? new URL(left).searchParams.get('url') : null
 }

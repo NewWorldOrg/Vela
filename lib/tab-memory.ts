@@ -1,15 +1,12 @@
-/** Where each tab of a phone was left: the address it showed and how far down it was. */
 export interface TabPlace {
   address: string
   scrollY: number
 }
 
-/** What pressing a tab does: go to an address (and down to a position), or stay and go back to the top. */
 export type TabPress =
   | { kind: 'go'; address: string; scrollY: number }
   | { kind: 'top'; address: string }
 
-/** The tabs' places, kept for as long as the page lives. */
 export class TabMemory {
   private readonly places = new Map<string, TabPlace>()
 
@@ -28,7 +25,6 @@ export class TabMemory {
   }
 }
 
-/** Pressing a tab: another tab goes back to the screen and the position it was left at, or to its head when it was never left; the open tab goes to its head screen, at the top. */
 export function pressTab(
   memory: TabMemory,
   pressed: string,

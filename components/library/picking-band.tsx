@@ -11,7 +11,6 @@ import { PickedCount } from '@/components/library/picked-count'
 
 const BAND_PRESS = 'h-[calc(38rem/16)] px-3 text-ui'
 
-/** The band over a phone's tabs while a list is choosing: how many, every one, and the actions. The presses wrap under the count when the width has no room for them beside it. */
 export function PickingBand({
   count,
   everyPicked,
