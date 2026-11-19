@@ -147,7 +147,6 @@ function TableCaption({
   )
 }
 
-/** The checkbox over every shown row, with the words that say so where the table is a list of cards. */
 function SelectEvery({ children }: { children: React.ReactNode }) {
   return (
     <label className="flex items-center gap-4">

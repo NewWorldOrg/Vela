@@ -24,7 +24,6 @@ const RING: Record<CircleMark, string> = {
   recording: 'bg-black/6 dark:bg-white/10',
 }
 
-/** Not yet: a hollow ring. Booked: an amber ring, filled. Recording: a red one. */
 const DOT: Record<CircleMark, string> = {
   none: 'border-[1.5px] border-ink-2',
   booked: 'border-[1.5px] border-warn bg-warn bg-clip-content p-[2px]',
@@ -37,7 +36,6 @@ function said(written: ReservationWrite): string {
     : 'サインインし直してください'
 }
 
-/** One press reserves a programme and one press on a reserved or recording programme takes it back, each with a toast whose press undoes it. The mark answers at once and falls back if the write is turned down. */
 export function useOneTapReserve({
   programmeId,
   title,
@@ -115,7 +113,6 @@ export function useOneTapReserve({
   }
 }
 
-/** The circle at the right of a programme's row, pressed once to reserve or to take the reservation back. */
 export function ReserveCircle({
   className,
   ...reserving

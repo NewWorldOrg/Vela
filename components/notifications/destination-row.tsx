@@ -47,11 +47,9 @@ const TESTED_OF: Record<Verdict, string> = {
   calm: 'text-ink-2',
 }
 
-/** A row of a group, parted from the one above by a hair that starts where its words do. */
 export const GROUP_ROW =
   'relative before:absolute before:top-0 before:right-0 before:left-4 before:h-px before:bg-hair first:before:hidden upright:before:left-3.5'
 
-/** The name and the last result on the left; the switch and the `…` on the right, beside the name on a phone. */
 const ROW_AREAS = cn(
   'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 px-4 py-3',
   "upright:min-h-0 upright:gap-x-1 upright:px-3.5 upright:[grid-template-areas:'head_sw_more'_'last_last_last']",
@@ -59,7 +57,6 @@ const ROW_AREAS = cn(
 
 const TWO_LINES = "[grid-template-areas:'head_sw_more'_'last_sw_more']"
 
-/** A row with nothing to say under its name. */
 const ONE_LINE = "[grid-template-areas:'head_sw_more']"
 
 const SIGNED_OUT = signedOut('操作')
@@ -70,7 +67,6 @@ function refusalOf(result: Exclude<NotificationWrite, { state: 'ok' }>) {
 
 const TEST_SENT = 'テスト送信'
 
-/** The line under the name: the answer to a test send while there is one, otherwise how the last notice went; on a phone the address's tail after it. */
 function ResultLine({
   said,
   testing,
@@ -130,9 +126,7 @@ export function DestinationRow({
   now,
 }: {
   destination: NotificationDestination
-  /** The names of the rule sets that are removed when this destination is. */
   goingWith: string[]
-  /** Whether this is the browser the page is open in. */
   mine?: boolean
   actions: DestinationActions
   now?: number

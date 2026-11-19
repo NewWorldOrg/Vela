@@ -4,7 +4,6 @@ import { wholeNumber } from '@/lib/reservations'
 import { cn } from '@/lib/utils'
 import { MinusIcon, PlusIcon } from '@/components/vela/icons'
 
-/** A whole number between a least and a most, typed or stepped with the − and + on either side of it. */
 export function Stepper({
   id,
   value,

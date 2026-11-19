@@ -107,7 +107,6 @@ import {
 
 const ACTIVE_MS = 150
 
-/** How many documents may follow one another before the event loop is let through again. */
 const MOST_LAUNCHES_IN_A_ROW = 16
 
 const MOST_TIMERS = 64
@@ -116,12 +115,10 @@ const LEAST_INTERVAL_MS = 10
 
 const MOST_SLEEP_MS = 1000
 
-/** How often the data button is pressed again on an entry document that still cannot be seen: one that readies itself on timers after its scripts, as a viewer presses it a moment after tuning in. */
 const DATA_BUTTON_EVERY_MS = 500
 
 const MOST_DATA_BUTTON_PRESSES = 20
 
-/** How many pixels of MNG a page may hold at once, each canvas and its pictures decoded. */
 const MOST_ANIMATED_PIXELS = 2 * MNG_LIMITS.pixels
 
 const LOCKED = 0
@@ -173,7 +170,6 @@ interface Timer {
 type Leaving =
   { to: BmlAddress } | { reload: true } | { quit: true } | { start: AppStart }
 
-/** Where a run that waits on the line was: the page, the event it ran for and what it changed of the document's state before it stopped. */
 interface Seen {
   shown: Shown
   event: BmlEvent | null
@@ -194,7 +190,6 @@ function handlerOf(element: HTMLElement, name: string): string | null {
   return element.getAttribute(`data-bml-attr-${name}`)
 }
 
-/** The runtime inside the sandboxed frame: it keeps the modules the player hands it, draws the document it is asked to open, runs the document's scripts and answers keys and events. */
 export class BmlRuntime {
   private readonly window: RuntimeWindow
 
@@ -206,7 +201,6 @@ export class BmlRuntime {
 
   private readonly modules = new Map<string, BmlModule>()
 
-  /** The modules the documents locked. A lock outlasts the document that made it, as on a receiver: it goes when a document unlocks it, when the catalog no longer lists its module, or when the broadcast is closed. */
   private readonly locked = new Set<string>()
 
   private readonly timers = new Map<number, Timer>()
@@ -391,7 +385,6 @@ export class BmlRuntime {
     this.leaveWhatIsGone(gone)
   }
 
-  /** A page whose module the catalog no longer lists gives way to the start document, unless its own handler for the module going already moved elsewhere. */
   private leaveWhatIsGone(gone: BmlModule[]): void {
     const shown = this.shown
     const startup = this.catalog ? addressOf(this.catalog.startup) : null
@@ -465,7 +458,6 @@ export class BmlRuntime {
       ?.resources.find((resource) => resource.path === address.name)
   }
 
-  /** Opens at the catalog's start document, or at the one the player names: the start document of the component a Hybridcast application went back to. */
   private open(named?: string): void {
     const startup = this.catalog
       ? addressOf(named ?? this.catalog.startup)
@@ -490,7 +482,6 @@ export class BmlRuntime {
     this.requests.clear()
   }
 
-  /** Presses the data button on a document that cannot be seen, so that an entry document moves on to its face, and again every moment while the document shown still cannot be seen, for some seconds: an entry document that takes a while to get ready, locking modules first, takes the press once it is, and so does a page it moves on to by itself that cannot be seen either and shows itself on the press, as the viewer's press reaches the document the broadcast has come to. Once a document can be seen, nothing is pressed. */
   private nudge(): void {
     const shown = this.shown
 
@@ -556,7 +547,6 @@ export class BmlRuntime {
     this.show(address, resource)
   }
 
-  /** A document over the line is fetched through the player, and waited for like a module of the carousel. One that could not be fetched, or is not a document, leaves the page as it is. */
   private launchOverTheLine(address: BmlAddress, url: string): void {
     if (this.line !== 'on') {
       this.refuseTheLine('launchDocument')
@@ -583,7 +573,6 @@ export class BmlRuntime {
     this.show(address, resource)
   }
 
-  /** A function that uses the line, called while it is not used: the player is told the setting refuses it, or, where there is no line, that the operation is not supported. */
   private refuseTheLine(what: string): void {
     if (this.line === 'off') {
       this.say({ kind: 'line', said: 'off' })
@@ -630,7 +619,6 @@ export class BmlRuntime {
     }
   }
 
-  /** The scripts of a page over the line that are not fetched yet. */
   private missingScripts(page: BmlPage, missing: Set<string>): void {
     page.scripts.forEach((script) => {
       const url = 'src' in script ? locationOf(script.src)?.url : undefined
@@ -714,7 +702,6 @@ export class BmlRuntime {
     this.start(shown)
   }
 
-  /** Runs the document's scripts and its body's `onload`, then settles its focus where they did not, and tells the player of it, unless a script moved on. */
   private start(shown: Shown, from = 0): void {
     const scripts = shown.page.scripts
 
@@ -765,7 +752,6 @@ export class BmlRuntime {
     }, 0)
   }
 
-  /** Where the video goes on the page's grid; whole while the page cannot be seen, as the receiver shows the video alone until an entry document shows itself. */
   private tellVideoRect(shown: Shown): void {
     const rect = shown.page.videoRect
 
@@ -905,7 +891,6 @@ export class BmlRuntime {
     }
   }
 
-  /** The time the documents see, in milliseconds: live, the wall clock as the runtime found it, not as a document may have rewritten it; in a recording, the time on air the player told last. The player tells it at each tick while playback moves and not while it stands, so it is held between ticks rather than run on: it stops with a pause, never runs ahead of the picture, and goes back only with a seek. */
   private timeOnAir(): number {
     return this.clock === null
       ? this.wallClock()
@@ -944,7 +929,6 @@ export class BmlRuntime {
     return true
   }
 
-  /** Runs one piece of the document's code, telling the player when it starts and ends so that one that runs too long is seen. True when the document is still the one shown and has not asked to move on, to a document there already or to one still awaited, and the code is not waiting on the line. One that waits is run again with `answers` once the answer is in, and `then` after it. */
   private execute(
     code: string,
     event: BmlEvent | null,
@@ -994,12 +978,10 @@ export class BmlRuntime {
     )
   }
 
-  /** Whether a run may stop to wait on the line: while the line is used, or Hybridcast is allowed and its AIT is read through the player. */
   private mayWait(): boolean {
     return this.line === 'on' || this.hybridcast
   }
 
-  /** Runs again the code that waited on the line, now that its answer is in, if its page is still the one shown, and what was to follow it. What the run changed of the document's state before it stopped, its globals, what it wrote by the names its scope hides and the objects they hold, is put back as it was where nothing has changed it since, so that the run again begins where the first began: a guard against a second press it set, a flag that it has started on an object, or a toggle it turned, does not turn the run again aside. */
   private answered(awaited: Awaited<Seen> | null): void {
     const shown = awaited?.seen.shown
 
@@ -1022,7 +1004,6 @@ export class BmlRuntime {
     }
   }
 
-  /** Keeps what a fetch brought, and opens the document that waited on it once nothing else is on its way. */
   private took(id: number, module: BmlModule | null): void {
     const pending = this.pending
 
@@ -1035,7 +1016,6 @@ export class BmlRuntime {
     this.nudge()
   }
 
-  /** Moves to the document a script asked for, once the script has ended; a document that moves on at once from its own scripts is followed only so far. */
   private settle(): void {
     if (this.settling) {
       return
@@ -1070,13 +1050,11 @@ export class BmlRuntime {
     }
   }
 
-  /** Ends the broadcast's documents as one of them asked: the plane is cleared and the player is told to close. */
   private quit(): void {
     this.close()
     this.say({ kind: 'exit' })
   }
 
-  /** Ends the broadcast's documents to start the application a document asked for, handing the player the shared registers so that the application, and the documents when they come back, read what was written. Each register goes as a string no longer than the most one carries, whatever a document left in it. A start the player would not take leaves the documents as they are, and is said not to open. */
   private startApplication(start: AppStart): void {
     const greg = Array.from({ length: SHARED_REGISTERS }, (_, at) =>
       registerText(this.registers.Greg[at]),
@@ -1093,7 +1071,6 @@ export class BmlRuntime {
     this.say({ kind: 'startApp', start: asked, greg })
   }
 
-  /** Whether the module a reference names is in the catalog now; null when the reference names no module. */
   private listed(reference: unknown): boolean | null {
     const base = this.shown?.page.address
     const address =
@@ -1147,7 +1124,6 @@ export class BmlRuntime {
     }
   }
 
-  /** One press of the data button: the items listening for it hear it, and a document with no such item gets the key. */
   private dataButtonPressed(): void {
     const shown = this.shown
 
@@ -1176,7 +1152,6 @@ export class BmlRuntime {
     }
   }
 
-  /** Tells the document a module it asked to lock is held, or is not in the carousel at all. */
   private moduleLocked(
     module: { tag: number; id: number },
     status: number,
@@ -1192,7 +1167,6 @@ export class BmlRuntime {
     }
   }
 
-  /** The NPT of the stream carrying the document shown, or of the first stream that has one, in whole milliseconds now. */
   private nptNow(): number | null {
     const tag = this.shown?.page.address.tag
     const held =
@@ -1204,7 +1178,6 @@ export class BmlRuntime {
       : null
   }
 
-  /** The stream an `NPTReferred` item names, or the one carrying the document when it names none. */
   private nptStreamOf(item: EventItem, shown: Shown): number | null {
     const reference = item.attributes.get('es_ref')
 
@@ -1213,7 +1186,6 @@ export class BmlRuntime {
       : streamTagOf(reference)
   }
 
-  /** Tells each `NPTReferred` item of the document shown, once, that the NPT of the stream it names can be read. */
   private nptReferred(): void {
     const shown = this.shown
 
@@ -1399,7 +1371,6 @@ export class BmlRuntime {
     }
   }
 
-  /** Plays the MNG a script gave a canvas, read as the document's own are; what is not one, or is malformed, is a warning and the canvas plays on what it played. */
   private animateFrom(element: HTMLElement, reference: string): void {
     const shown = this.shown
     const resource = this.resourceOf(reference)
@@ -1430,7 +1401,6 @@ export class BmlRuntime {
     this.animate(shown, element, paintedWith(reading.mng, shown.page.palette))
   }
 
-  /** Plays an MNG on a canvas of the page, stopping what played there, unless the page would then hold more decoded pixels than it may. */
   private animate(shown: Shown, element: HTMLElement, mng: MngAnimation): void {
     shown.players.get(element)?.stop()
     shown.players.delete(element)
@@ -1487,7 +1457,6 @@ export class BmlRuntime {
     return url
   }
 
-  /** Takes the page shown down. Its elements are let go of their pictures before the pictures' URLs are: a page left in the same turn as it was drawn, or a picture a handler set just before it left, has not begun to load, and a load that begins on a URL let go is refused. */
   private unmount(): void {
     this.requests.drop()
     this.stopTimers()
@@ -1537,7 +1506,6 @@ export class BmlRuntime {
     })
   }
 
-  /** A script may focus any element of the page, with a `nav-index` or without: one without takes the keys but the arrows lead nowhere from it. */
   private focusOn(element: HTMLElement | null): void {
     const shown = this.shown
 
@@ -1552,7 +1520,6 @@ export class BmlRuntime {
     return index === null ? null : (shown.mounted.byNavIndex.get(index) ?? null)
   }
 
-  /** The `nav-index` the focus is at, or null when nothing is focused or the focused element has none the arrows go by. */
   private navIndexOf(shown: Shown): number | null {
     const focused = shown.focused
     const index = focused ? shown.mounted.nodes.get(focused)?.nav.index : null
@@ -1564,7 +1531,6 @@ export class BmlRuntime {
       : null
   }
 
-  /** Moves the focus, running `onblur` on the element it leaves and `onfocus` on the one it reaches when asked to. */
   private focus(to: HTMLElement | null, telling: boolean): void {
     const shown = this.shown
 
@@ -1631,7 +1597,6 @@ export class BmlRuntime {
     }
   }
 
-  /** Hands a key to the focused element's handler. True when the document stays to take the key's own effect. */
   private keyTo(
     shown: Shown,
     phase: 'keydown' | 'keyup',
@@ -1728,7 +1693,6 @@ export class BmlRuntime {
 
 const MOST_REASON = 200
 
-/** What a shared register holds, as the player is handed it: a string, cut at the most a register carries. Anything a document left that is not a string, a number or a truth value is empty. */
 function registerText(value: unknown): string {
   const text =
     typeof value === 'string' ||
@@ -1740,7 +1704,6 @@ function registerText(value: unknown): string {
   return text.slice(0, MOST_REGISTER)
 }
 
-/** An error as the console is told of it: its name and the start of its message. */
 function describe(error: unknown): string {
   const thrown = error as { name?: unknown; message?: unknown } | null
   const name =
@@ -1755,7 +1718,6 @@ function describe(error: unknown): string {
   return reason.length > 0 ? `${name}: ${reason}` : name
 }
 
-/** Starts the runtime in the frame's own window, taking messages only from the origin written into its document. */
 export function startBmlRuntime(window: RuntimeWindow): BmlRuntime | null {
   const document = window.document
   const plane = document.getElementById(PLANE_ID)

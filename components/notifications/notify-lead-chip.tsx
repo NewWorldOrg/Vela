@@ -3,7 +3,6 @@
 import { leadChipWords, type LeadMinutes } from '@/lib/notifications'
 import { BellIcon } from '@/components/vela/icons'
 
-/** The amber chip a programme wears beside its time once its start is to be told: how early. */
 export function NotifyLeadChip({ leadMinutes }: { leadMinutes: LeadMinutes }) {
   return (
     <span

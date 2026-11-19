@@ -11,7 +11,6 @@ import {
 
 const PLAYER_TIP_WAITS = 500
 
-/** Whether the last thing the person did was a key rather than a press, so a control the focus lands on was reached from the keyboard. */
 let keyedLast = false
 let listening = false
 
@@ -25,7 +24,6 @@ function listenForTheHand(): void {
   document.addEventListener('pointerdown', () => (keyedLast = false), true)
 }
 
-/** Names a control of the player when the pointer rests on it or the keyboard reaches it. It does not come up when the focus is only handed back to the control, as a face or a dialog closed with a press does, nor while the face the control opened is up: no pointer is there to take it down again. */
 export function PlayerTip({
   name,
   keys,

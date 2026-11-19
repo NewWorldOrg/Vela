@@ -10,7 +10,6 @@ function noWidth(): number {
   return 0
 }
 
-/** The element's laid-out width in CSS pixels, following it as it changes: 0 for no element, and on the server. */
 export function useWidth(element: HTMLElement | null): number {
   const follow = useCallback(
     (notify: () => void) => {

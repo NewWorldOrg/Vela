@@ -1572,7 +1572,6 @@ const CHECKS_THE_LOCK = bml(
     '</script>',
 ).replace('<body>', '<body onload="arrive()">')
 
-/** A start document that locks the module of its face and moves there once the lock is held, and a face that goes back to the start unless it finds the lock still listed. */
 function lockedThenFaced() {
   const opening = frame()
 
@@ -2497,7 +2496,6 @@ const STARTS_BY_ITSELF = {
   entryUrl: APP_ENTRY,
 }
 
-/** A document opened with Hybridcast allowed, the starts the player says failed, and the shared registers it was handed, if any. */
 function withHybridcast(
   startup: string,
   {
@@ -2800,7 +2798,6 @@ const STILL = mng(
   MEND,
 )
 
-/** A frame whose pictures decode into named fakes, with the document and its MNGs handed to it and opened. */
 function withMng(startup: string) {
   const bitmaps: FakeBitmap[] = []
   const opening = frame({

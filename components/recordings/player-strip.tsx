@@ -4,7 +4,6 @@ import { type ReactNode } from 'react'
 
 import { OpensAFace } from '@/components/recordings/player-dock'
 
-/** The column at the picture's right on a phone held on its side: the screen's buttons, as high as the window, on the player's ground. Kept while a face stands in its place, only hidden, so what it had scrolled to is still there when the face closes. */
 export function PlayerStrip({
   hidden,
   onOpen,

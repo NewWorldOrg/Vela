@@ -1,4 +1,3 @@
-/** The `Date` a document's scripts are given: the constructor it stands for, with its prototype and its functions, whose current time is read from `now` at each call, by a date made without arguments, by `Date()` and by `Date.now()`. A date made from given arguments, `Date.parse` and `Date.UTC` are as before, and every date, the runtime's own among them, is an instance of it. */
 export function dateOnAir(
   real: DateConstructor,
   now: () => number,

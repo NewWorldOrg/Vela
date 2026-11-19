@@ -13,7 +13,6 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-/** Both states side by side: the toggle as it rests, and as it stands while the list is choosing. */
 function BothStates() {
   return (
     <div className="flex items-center gap-4">

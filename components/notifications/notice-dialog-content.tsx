@@ -14,7 +14,6 @@ import { IconButton } from '@/components/vela/icon-button'
 import { ChevronLeftIcon } from '@/components/vela/icons'
 import { FieldLabel } from '@/components/vela/field'
 
-/** On a phone held upright the dialog is a sheet that rises from the foot of the window, square at the bottom. */
 const SHEET_ON_A_PHONE = cn(
   'upright:top-auto upright:bottom-0 upright:left-0 upright:w-full upright:max-w-none upright:translate-x-0 upright:translate-y-0',
   'upright:max-h-[90dvh] upright:rounded-t-xl upright:rounded-b-none upright:px-4 upright:pt-[calc(18rem/16)] upright:pb-9',
@@ -34,7 +33,6 @@ export function NoticeDialogContent({
   )
 }
 
-/** The title row: a way back to the step before when there is one, then the title. The close button is the dialog's own. */
 export function NoticeDialogHeader({
   title,
   description,
@@ -62,7 +60,6 @@ export function NoticeDialogHeader({
   )
 }
 
-/** The buttons at a dialog's foot, in the middle as every dialog has them; stacked the width of the sheet on a phone, the main one on top. */
 export function NoticeDialogFooter({ children }: { children: ReactNode }) {
   return (
     <DialogFooter className="mt-1.5 upright:[&_[data-slot=button]]:h-11">
@@ -71,7 +68,6 @@ export function NoticeDialogFooter({ children }: { children: ReactNode }) {
   )
 }
 
-/** A field's name over it, small and quiet, as the rule editor writes it. */
 export function NoticeLabel({
   className,
   ...props

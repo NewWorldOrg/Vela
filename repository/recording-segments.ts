@@ -7,7 +7,6 @@ import type { SkippableKind } from '@/repository/videos'
 
 export type SkipEventKind = 'skipped' | 'dismissed' | 'returned'
 
-/** What a person did with the button that skips a break, an opening or an ending, in the recording's own time. */
 export interface SkipEvent {
   event: SkipEventKind
   kind: SkippableKind
@@ -20,10 +19,6 @@ export type SeekEventKind = 'forward' | 'returned'
 
 export type SeekMeans = 'bar' | 'step' | 'chapter' | 'key'
 
-/**
- * A seek a person made in a recording, in the recording's own time: forward past a stretch, the steps made one after
- * another as one, or back into a stretch a seek forward passed moments before, once they watched on from there.
- */
 export interface SeekEvent {
   event: SeekEventKind
   means: SeekMeans
@@ -43,7 +38,6 @@ function versionIn(said: number | string | null): number | undefined {
   return version !== undefined && Number.isFinite(version) ? version : undefined
 }
 
-/** The version of the model that found the stretches of one recording, or nothing when no model found them. */
 export async function getSegmentModelVersion(
   id: string,
 ): Promise<Reading<number | undefined>> {

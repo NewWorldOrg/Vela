@@ -1,4 +1,3 @@
-/** Rows laid out field by field, so a page that hands a client hundreds of rows names each field once. A field a row leaves out is held as `null`. */
 export interface PackedRows<T extends object> {
   count: number
   fields: { [K in keyof T]?: Array<T[K] | null> }

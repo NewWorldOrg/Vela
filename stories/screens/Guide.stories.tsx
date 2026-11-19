@@ -375,7 +375,6 @@ const day = base
 
 const A_LAPTOP = { width: 1280, height: 720 }
 
-/** The gap between two programmes is laid as two pixels inside each. */
 const HALF_GAP_PX = 2
 
 function toolsOf(canvasElement: HTMLElement): ReturnType<typeof within> {

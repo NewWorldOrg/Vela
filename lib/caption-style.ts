@@ -1,17 +1,13 @@
-/** How the band behind the caption is drawn: as the broadcast drew it, taken away, half see-through or solid. */
 export type CaptionBackground = 'broadcast' | 'none' | 'half' | 'solid'
 
-/** The colour the white letters are drawn in, or the broadcast's own. */
 export type CaptionColour = 'broadcast' | 'white' | 'yellow' | 'cyan' | 'green'
 
-/** Whether a black edge is added around the letters. */
 export type CaptionEdge = 'broadcast' | 'added'
 
 export const CAPTION_SCALES = ['75', '100', '125', '150'] as const
 
 export type CaptionScale = (typeof CAPTION_SCALES)[number]
 
-/** How far the caption is moved from where the broadcast put it, as fractions of the picture's width and height. */
 export interface CaptionShift {
   x: number
   y: number
@@ -76,7 +72,6 @@ export const CAPTION_EDGE_LABEL: Record<CaptionEdge, string> = {
   added: '足す',
 }
 
-/** The red, green and blue of each colour the letters can be given: the pure colours a broadcast's captions use. */
 export const CAPTION_RGB: Record<
   Exclude<CaptionColour, 'broadcast'>,
   number[]
@@ -87,7 +82,6 @@ export const CAPTION_RGB: Record<
   green: [0, 255, 0],
 }
 
-/** The opacity of the band for each background chosen, or null for the broadcast's own. */
 export const VEIL_OF: Record<CaptionBackground, number | null> = {
   broadcast: null,
   none: 0,
@@ -95,7 +89,6 @@ export const VEIL_OF: Record<CaptionBackground, number | null> = {
   solid: 255,
 }
 
-/** The furthest the caption is moved, either way, as a fraction of the picture. */
 export const FURTHEST_SHIFT = 1
 
 const PER = 1000
@@ -168,7 +161,6 @@ const READINGS: Record<string, Reading> = {
   }),
 }
 
-/** The caption style a cookie's value says, item by item: an item that cannot be read is left as it starts out, and the others stand. */
 export function captionStyleOf(said: string | undefined): CaptionStyle {
   if (!said) {
     return PLAIN_CAPTION_STYLE
@@ -191,7 +183,6 @@ function perMille(fraction: number): number {
   )
 }
 
-/** The cookie's value for a style: only what differs from how a caption starts out, or undefined when nothing does. */
 export function captionStyleSpelling(style: CaptionStyle): string | undefined {
   const items = [
     style.background !== 'broadcast' &&
@@ -216,7 +207,6 @@ export function isPlain(style: CaptionStyle): boolean {
   return captionStyleSpelling(style) === undefined
 }
 
-/** What of a style changes the caption's picture itself, rather than where and how large it is drawn. */
 export interface CaptionLook {
   background: CaptionBackground
   colour: CaptionColour
@@ -233,7 +223,6 @@ export function lookOf(style: CaptionStyle): CaptionLook {
   }
 }
 
-/** Whether a look leaves the broadcast's picture as it is. */
 export function looksAsBroadcast(look: CaptionLook): boolean {
   return (
     look.background === 'broadcast' &&
@@ -242,7 +231,6 @@ export function looksAsBroadcast(look: CaptionLook): boolean {
   )
 }
 
-/** One string for a look, the same for two looks that draw the same picture. */
 export function lookKey(look: CaptionLook): string {
   return [look.background, look.colour, look.allOneColour, look.edge].join('/')
 }

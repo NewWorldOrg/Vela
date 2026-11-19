@@ -13,11 +13,6 @@ export type OpenRecordingPlaylist = (
   events: RecordingPlaylistEvents,
 ) => Carrying
 
-/**
- * Hands the video a playlist of the recording transcoded as it plays. A failure once the picture has come is a cut,
- * to be opened again from where it stood; before that, or a picture the browser cannot decode, is a fault. Closing
- * takes the playlist away only while the video still has it, never a source the page has handed it since.
- */
 export const openRecordingPlaylist: OpenRecordingPlaylist = (
   video,
   href,

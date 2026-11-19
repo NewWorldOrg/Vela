@@ -49,14 +49,12 @@ const NOTHING_CARRIED: Program[] = []
 
 const NOW_LABEL_AFTER_OPENING_MS = 420
 
-/** What the `+` on a programme still to come presses through. */
 export type GridReserving = {
   onReserve: (programmeId: string) => Promise<ReservationWrite>
   onCancel: (id: string) => Promise<ReservationWrite>
   onRestore?: (id: string) => Promise<ReservationWrite>
 }
 
-/** Before this minute the line runs along the top of the day, and its time is written under it, clear of the channels' heads. */
 const NOW_LABEL_BELOW_MIN = 6
 
 const GuideHeading = memo(function GuideHeading({
@@ -116,7 +114,6 @@ export function GuideGrid({
   selectedId?: string
   onSelect: (program: Program) => void
   glyphLoads: ReadonlyArray<readonly [string, string]>
-  /** Lays a `+` on every programme still to come, a pointer's one-click reservation. */
   reserving?: GridReserving
 }) {
   const hours = Array.from(

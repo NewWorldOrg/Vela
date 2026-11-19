@@ -28,7 +28,6 @@ function recordingHref(id: string): Route {
   return `/recordings/${id}` as Route
 }
 
-/** The recordings on a phone held upright: under the day each started on, a row each of its picture with its length and the line of how far it was watched, its title, channel and time, and only the states that need attention. Pressing the row opens it; `…` opens what can be done to it under the row. */
 export function PhoneRecordingRows({
   recordings,
   now,
@@ -151,7 +150,6 @@ export function PhoneRecordingRows({
   )
 }
 
-/** What a row of the phone's list shows: the picture with its length and how far it was watched, the title, the channel and time, and the states that need attention. */
 function RowFace({
   recording,
   mark,
@@ -159,7 +157,6 @@ function RowFace({
 }: {
   recording: Recording
   mark?: ReactNode
-  /** Why this recording's thumbnail was not made again, said under the row while choosing. */
   said?: string
 }) {
   const state = watchStateOf(recording)
@@ -205,7 +202,6 @@ function RowFace({
   )
 }
 
-/** A row while the library is choosing: the whole row takes the recording in or leaves it out, its mark on the picture, so nothing moves sideways. A taken row lies on the accent's tint. */
 function PickedRow({
   recording,
   picking,

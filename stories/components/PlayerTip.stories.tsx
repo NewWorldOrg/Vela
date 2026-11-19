@@ -8,7 +8,6 @@ import { PlayerTip } from '@/components/recordings/player-tip'
 
 const LONGER_THAN_A_NAME_WAITS = 900
 
-/** A control of the player that opens a dialog, under its name, as the data broadcast's remote and the like do. */
 function OpensADialog() {
   const [open, setOpen] = useState(false)
 

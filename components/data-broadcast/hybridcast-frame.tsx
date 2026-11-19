@@ -29,18 +29,14 @@ import { RelayGuard } from '@/lib/hybridcast/relay-guard'
 import { useWidth } from '@/hooks/useWidth'
 import { cn } from '@/lib/utils'
 
-/** How the player talks to the application's document that opened last. */
 export type SendToApp = (message: ReceiverMessage) => void
 
-/** What the player hears of the application: what its documents say, and the frame lost, and why. */
 export type AppHeard =
   | Exclude<AppMessage, { kind: 'memory' | 'loaded' | 'leave' }>
   | { kind: 'lost'; end: AppEnd }
 
-/** The sandbox of the application's frame: scripts and forms run, in an opaque origin of their own, and nothing reaches the page around it. */
 export const HYBRIDCAST_SANDBOX = 'allow-scripts allow-forms'
 
-/** How long a document has from the frame's load to answer, over the port of its own hello, that it loaded on the relay before the frame is taken to have left it. */
 export const OPENED_WITHIN_MS = 2000
 
 export const HYBRIDCAST_FRAME_TITLE = 'Hybridcast'
@@ -63,7 +59,6 @@ function relayOf(address: string): string {
   return address.split(/[?#]/)[0]
 }
 
-/** The hole the broadcast's picture shows through where the application may not draw over it (IPTVFJ STD-0013 5.1.1): the whole frame with the picture object's rectangle taken out, everything the application draws there hidden. Where it may draw there, the receiver in the frame draws the backgrounds under the object around it instead, and the frame is left whole. */
 export function pictureHole(rect: Rect | null): CSSProperties {
   if (!rect) {
     return {}
@@ -91,7 +86,6 @@ export interface FrameProps {
   onSender: (send: SendToApp | null) => void
 }
 
-/** The application's frame, at 1920x1080 scaled to the box. It is handed the state its documents read at once in its name, and talks to each document that opens on the relay over the port that document hands over: the receiver's identifier, where the whole boundary permits it, the event messages and NPT of the broadcast, the programme and the keys go to it; what it says comes back. Each load of the frame is paired with one hello, and the port of that hello is asked once the load is over whether its document loaded; a load that does not answer within a moment is not on the relay, and the frame is given up. The frame never keeps the focus: the keys are the player's, which hands them over as the remote's. */
 export function HybridcastFrame({
   address,
   application,

@@ -20,7 +20,6 @@ import {
 
 const NOT_YET_HYDRATED = -1
 
-/** What the browser answered about the formats each picture can be played in, asked once the page is in the browser; nothing before the answer comes. */
 export function useFormatAnswers(
   probe: FormatProbe | undefined,
   pictures: readonly OfferedPicture[],

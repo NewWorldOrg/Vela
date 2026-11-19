@@ -24,14 +24,12 @@ import { pressable } from '@/components/vela/tactile'
 
 const ROOM_ABOVE_NOW_PX = 48
 
-/** Scrolls the list to the programme on the air with the end of the one before it showing, or to the top of a day with nothing on the air. */
 function alignToNow(node: HTMLElement): void {
   const onAir = node.querySelector<HTMLElement>('[data-on-air]')
 
   node.scrollTop = onAir ? Math.max(0, onAir.offsetTop - ROOM_ABOVE_NOW_PX) : 0
 }
 
-/** The row at the top of the list and how far into it the list is scrolled, so the row can be kept in place when rows come in above it. */
 function anchorOf(node: HTMLElement): { id: string; delta: number } | null {
   for (const row of node.querySelectorAll<HTMLElement>('[data-programme]')) {
     if (row.offsetTop + row.offsetHeight > node.scrollTop) {
@@ -45,7 +43,6 @@ function anchorOf(node: HTMLElement): { id: string; delta: number } | null {
   return null
 }
 
-/** One channel's day as rows from the top of the day, opened at the programme on the air; a row opens its detail under itself. */
 export function ChannelDayList({
   channelId,
   dayKey,
@@ -59,10 +56,8 @@ export function ChannelDayList({
   circleOf,
   className,
 }: {
-  /** The row whose detail stands beside the list, on a phone held on its side: ringed, and opened nowhere. */
   chosenId?: string
   className?: string
-  /** What stands at the right end of a row that has not ended: the circle that reserves it in one press. */
   circleOf?: (program: Program) => ReactNode
   channelId: string
   dayKey: string
@@ -316,7 +311,6 @@ export function ChannelDayList({
   )
 }
 
-/** The right end of a row: the open row's close, nothing on a programme that has ended, the circle on the rest. */
 function rightEndOf(
   program: Program,
   open: boolean,

@@ -13,7 +13,6 @@ export interface DriverHello {
   protocolVersion: string
   instanceId: string | null
   draining: boolean
-  /** The version the driver was built as, which runs on a release stream of its own. */
   version?: string
 }
 

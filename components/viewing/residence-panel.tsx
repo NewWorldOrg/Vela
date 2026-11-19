@@ -49,7 +49,6 @@ function prefectureOf(chosen: string): number | null {
   return chosen === NONE ? null : Number(chosen)
 }
 
-/** Where the receiver is, as the documents of a data broadcast read it: the postal code and the prefecture as values, which `変更` turns into a field and a list in place, saved together. */
 export function ResidencePanel({
   heading,
   residence,

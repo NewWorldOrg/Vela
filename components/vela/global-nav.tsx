@@ -45,7 +45,6 @@ export function GlobalNavItem({
   )
 }
 
-/** The count beside a destination's name: the conflicts left unsettled, on the reservations. */
 export function NavCount({ count, saying }: { count: number; saying: string }) {
   return (
     <span

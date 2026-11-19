@@ -228,12 +228,10 @@ const RESTS = 3000
 
 const SETTLES_BEFORE_SEEK = 400
 
-/** How often the data broadcast is told where the playhead is. */
 const FOLLOWS_EVERY_MS = 250
 
 type Phase = 'idle' | 'waiting' | 'playing' | 'paused' | 'diagnosing' | 'broken'
 
-/** Where the sends stand in a compact picture, and a mark that stands in for them: across the middle, between the gear's company at the top and the time's line with the seek bar at the foot. */
 const PLAYER_SENDS_PLACE =
   'inset-x-0 top-[calc(50%-15rem/16)] mx-auto -translate-y-1/2'
 
@@ -241,7 +239,6 @@ const WAITING_ON: Partial<Record<Phase, string>> = {
   diagnosing: '再生できませんでした — 理由の確認中',
 }
 
-/** What the picture was last asked for with; the format is settled from the choice once the browser has answered. */
 interface PictureAsked {
   from: number
   profile?: PlaybackProfile
@@ -286,20 +283,14 @@ export function Player({
   side,
   besideTheTime,
 }: {
-  /** What stands at the left of the compact bar's top line, before the gear's company: the way back out of the screen. */
   lead?: ReactNode
-  /** What the screen keeps at the picture's right on a phone held on its side, and the faces it opens there. */
   side?: SideColumn
-  /** What follows the time on the compact bar's bottom line. */
   besideTheTime?: ReactNode
   detail: RecordingDetail
   plan: PlaybackPlan
   unaskedProfile?: PlaybackProfile
-  /** The profiles Carina transcodes at, with the formats each is transcoded in. */
   profiles?: readonly LiveProfile[]
-  /** The format this browser was left on, as its cookie says. */
   formatChoice?: FormatChoice
-  /** What is asked whether a format plays here, in place of this browser. */
   askBrowser?: FormatProbe
   onTakeTicket: (id: string) => Promise<TicketWrite>
   onAskForTheSound: (
@@ -654,7 +645,6 @@ export function Player({
 
   const faceUp = phase !== 'broken'
 
-  /** The second of the source on screen, or null while a frame is held, a seek is landing or nothing is decoded yet. */
   const seenAt = () => {
     const element = video.current
 

@@ -23,7 +23,6 @@ function msOf(at: string): number {
   return new Date(at).getTime()
 }
 
-/** The line a phone draws for a conflict: the programmes that keep the tuner and the one that loses it, placed on one axis of half hours, and the stretch where they overlap. Places are shares of the axis, from 0 to 1. */
 export function conflictLineOf(kept: Span[], lost: Span): ConflictLine {
   const every = [...kept, lost]
   const from =
@@ -61,7 +60,6 @@ export function conflictLineOf(kept: Span[], lost: Span): ConflictLine {
   }
 }
 
-/** What the programme that loses the tuner goes without: its head, its tail, a stretch in its middle, or all of it. */
 export function whatIsLost(kept: Span[], lost: Span): string | undefined {
   const lostStart = msOf(lost.startAt)
   const lostEnd = msOf(lost.endAt)

@@ -11,11 +11,9 @@ import {
 } from '@/components/settings-entrance/settings-entrance-view'
 import { SettingsBeside } from '@/components/settings-entrance/settings-beside'
 
-/** The page heading of a setting, at the size of the frame's second level, under the frame's own `設定`. */
 const A_SETTINGS_HEADING =
   '[&_[data-slot=page-heading]_h1]:text-[calc(28rem/16)] [&_[data-slot=page-heading]_h1]:leading-[calc(34rem/16)] [&_[data-slot=page-heading]_h1]:font-bold [&_[data-slot=page-heading]_h1]:tracking-[-0.025em]'
 
-/** Every setting's frame: `設定` over the entrance at the left, which marks the setting open, and the setting at the right, the three held together in a column of at most 1280px in the middle of a wide window. A phone held upright opens the entrance as a screen of its own and the setting full width; on its side the entrance stays beside the setting. */
 export function SettingsFrame({
   status,
   values,

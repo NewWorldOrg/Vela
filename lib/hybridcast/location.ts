@@ -1,9 +1,7 @@
 import { writtenTarget, type AppRelay } from '@/lib/hybridcast/relay'
 
-/** The name the relay gives `location` in the application's scripts, and `window.location`, `document.location` and the like as a property of the window. */
 export const STATION_LOCATION = '__hcLocation'
 
-/** What the application's location stands on: the relay the frame is on, the station URL the frame is on now, whether an address is inside the boundary, and how the frame goes to an address through the relay, moves within its document, reloads, or leaves for the documents. */
 export interface StationNavigation {
   relay: AppRelay
   station(): URL
@@ -20,7 +18,6 @@ function withoutHash(url: URL): string {
   return url.href.split('#')[0]
 }
 
-/** Goes where an address the application wrote says, taken as the application meant it on the broadcaster's server as its requests are: resolved against the station, and a relay address or one on Vela's origin, as a link of the document reads it, as the broadcaster's URL it stands for. Within the document when only the fragment changes, through the relay inside the boundary, and back to the documents outside it. An address that names no server is not followed. */
 export function navigateTo(
   nav: StationNavigation,
   written: string | URL,
@@ -61,7 +58,6 @@ const PARTS: Part[] = [
   'search',
 ]
 
-/** The application's `location`, as a receiver's would read on the broadcaster's server: every part is the station URL's, and setting `href`, a part, `assign` and `replace` go where the station URL with that change says. Setting `hash` stays in the document. */
 export function stationLocation(nav: StationNavigation): Location {
   const location: Record<string, unknown> = {
     assign: (address: string | URL) => navigateTo(nav, address, 'assign'),

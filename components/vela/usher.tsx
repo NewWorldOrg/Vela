@@ -111,12 +111,6 @@ function Antenna({
   )
 }
 
-/**
- * The usher: a sail riding on a hull, an antenna on its head and a star above
- * its shoulder, with its face cut through the sail.
- * The body, the antenna, the lids, the star and its sparks are drawn apart so
- * `usher-arrives` can move each of them; drawn without it, they stand still.
- */
 export function Usher({
   mood = 'plain',
   className,

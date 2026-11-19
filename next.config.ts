@@ -9,7 +9,6 @@ const { version } = JSON.parse(
   readFileSync(resolve(process.cwd(), 'package.json'), 'utf8'),
 ) as { version: string }
 
-/** Where the frames of Vela's pages may load from: Vela's own origin, which the Hybridcast relay is served on, so that the browser sends nothing when an application's frame goes anywhere else. The data broadcast frame is written into its element and loads nothing. */
 const FRAME_POLICY = "frame-src 'self'"
 
 const nextConfig: NextConfig = {

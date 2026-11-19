@@ -5,7 +5,6 @@ import { SegmentedControl } from '@/components/vela/segmented-control'
 import { ColumnHead } from '@/components/live/column-head'
 import { stepOf } from '@/components/live/remote-column-palette'
 
-/** What the column shows while the data broadcast is open: its remote, or the channels. */
 export type ColumnShows = 'remote' | 'channels'
 
 const SHOWS = [
@@ -13,7 +12,6 @@ const SHOWS = [
   { value: 'channels', label: 'チャンネル' },
 ]
 
-/** The live column's head: `リモコン` and `チャンネル` to switch between, and the fold. The switch slides in from the right when it first stands, and out with the fold. */
 export function ColumnSwitch({
   shows,
   onShows,

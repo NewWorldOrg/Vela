@@ -6,7 +6,6 @@ import { PHONE_ON_ITS_SIDE } from '@/lib/phone'
 
 const BAR_BOTTOM_PX = 56
 
-/** The first row marked `data-keep` that shows below the top of what scrolled: the window's, under the bar, or a list's own. */
 function topRowIn(scrolled: Document | Element): string | undefined {
   const top =
     scrolled instanceof Element
@@ -25,7 +24,6 @@ function topRowIn(scrolled: Document | Element): string | undefined {
   return undefined
 }
 
-/** The nearest box around the row that scrolls on its own, or none where the window does. */
 function scrollerOf(row: HTMLElement): HTMLElement | undefined {
   for (let up = row.parentElement; up; up = up.parentElement) {
     const { overflowY } = getComputedStyle(up)
@@ -41,7 +39,6 @@ function scrollerOf(row: HTMLElement): HTMLElement | undefined {
   return undefined
 }
 
-/** Sends the row to the top of what scrolls it: its own list, or the window under the bar. */
 function bringToTheTop(row: HTMLElement): void {
   const scroller = scrollerOf(row)
   const at = row.getBoundingClientRect().top
@@ -53,7 +50,6 @@ function bringToTheTop(row: HTMLElement): void {
   }
 }
 
-/** Keeps the row a list showed first at its top when the phone is turned, either way: the list is laid anew for the other way of holding it, in one column or in two panes, and the row the eye was on is put back at the top. Rows say they can be kept with `data-keep` and their key. Draws nothing. */
 export function KeptRowsAcrossTurns() {
   useEffect(() => {
     const side = window.matchMedia(PHONE_ON_ITS_SIDE)

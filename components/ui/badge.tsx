@@ -4,7 +4,6 @@ import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
 
-/** A chip wears the success colour when it says a thing goes well, red when it fails, amber when it needs a look, and no colour when it passes no verdict. */
 const badgeVariants = cva(
   'inline-flex h-6 shrink-0 items-center justify-center gap-[5px] rounded-full px-[9px] text-note font-semibold whitespace-nowrap transition-[color,box-shadow] outline-none focus-visible:shadow-ring [&>svg]:pointer-events-none [&>svg]:size-3',
   {

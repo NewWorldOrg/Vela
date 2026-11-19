@@ -14,10 +14,6 @@ export function maskIdOf(id: string, part: string): string {
   return `vela-${part}-${id.replace(/[^A-Za-z0-9_-]/g, '')}`
 }
 
-/**
- * The mark: the keel and the sail meeting at the foot, where they cross is the star.
- * `small` is the thicker cut for 32px and under.
- */
 export function VelaMark({
   small = false,
   className,

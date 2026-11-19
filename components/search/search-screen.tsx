@@ -1,6 +1,6 @@
 'use client'
 
-import type { ReactElement } from 'react'
+import type { KeyboardEvent, ReactElement } from 'react'
 import { useCallback, useId, useState, useTransition } from 'react'
 import Link from 'next/link'
 import type { Route } from 'next'
@@ -100,7 +100,12 @@ function insteadOfHits(
   return null
 }
 
-/** A choice of how the hits are shown, as a chip on its own ground: what it is set to and its arrow. */
+function holdBackTheEnterThatSettlesAConversion(event: KeyboardEvent) {
+  if (event.key === 'Enter' && event.nativeEvent.isComposing) {
+    event.preventDefault()
+  }
+}
+
 const QUIET_CHOICE =
   'h-8 w-fit gap-1 rounded-full bg-surface pr-2.5 pl-3 text-ui font-medium text-ink transition-[background-color,transform] duration-[140ms] ease-toy enabled:hover:bg-surface-2 enabled:active:scale-[0.98] [&_svg]:size-3.5'
 
@@ -249,12 +254,7 @@ export function SearchScreen({
         id={formId}
         role="search"
         className="mt-2 flex items-center gap-3.5 phone:hidden"
-        // WebKit lets the Enter that settles an IME conversion submit the form; Chromium and Gecko hold it back themselves.
-        onKeyDown={(event) => {
-          if (event.key === 'Enter' && event.nativeEvent.isComposing) {
-            event.preventDefault()
-          }
-        }}
+        onKeyDown={holdBackTheEnterThatSettlesAConversion}
         onSubmit={(event) => {
           event.preventDefault()
           go(asking, true)

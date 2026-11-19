@@ -49,7 +49,6 @@ const HYBRIDCAST_ID = 'viewing-data-broadcast-hybridcast'
 
 const SOUNDS_ID = 'viewing-data-broadcast-sounds'
 
-/** One row of the page: the name on the left, its switch on the right. */
 function Row({
   id,
   label,
@@ -66,7 +65,6 @@ function Row({
   )
 }
 
-/** The viewing settings. The card's ID can be handed over, and Hybridcast allowed, only while the line is allowed, so turning the line off turns both off too. The sounds stand apart from the line and start on. Under them, where the receiver is, which Carina keeps for the household rather than the browser. */
 export function ViewingView({
   autoOpensDataBroadcast = false,
   allowsTheLine = false,

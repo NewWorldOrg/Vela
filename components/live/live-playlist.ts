@@ -16,7 +16,6 @@ export type OpenPlaylist = (
   heard: PlaylistHeard,
 ) => LivePlaylist
 
-/** Hands the video a playlist to play by itself, and plays the picture once it has loaded. */
 export const openPlaylist: OpenPlaylist = (video, href, heard) => {
   const pictured = () => {
     heard.onPicture()

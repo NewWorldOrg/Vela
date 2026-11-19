@@ -10,7 +10,6 @@ interface TunerChip {
   busy: boolean
 }
 
-/** The tuners that can record, leaving out the ones turned off or at fault, each named by its kind and, where there are several of a kind, its place among them, with what it is doing now. */
 export function tunerChipsOf(rows: readonly TunerRow[]): TunerChip[] {
   const usable = rows.filter(
     (row) => row.enabled && row.kind && row.state !== 'faulted',
@@ -33,7 +32,6 @@ export function tunerChipsOf(rows: readonly TunerRow[]): TunerChip[] {
   })
 }
 
-/** The reservation that records next, with the time it starts and the tuners as they stand. */
 export function NextRecording({
   reservations,
   tuners,

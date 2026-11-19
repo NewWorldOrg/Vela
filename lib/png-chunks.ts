@@ -2,7 +2,6 @@ import { crc32 } from '@/lib/bml/crc32'
 
 export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
 
-/** The PNG colour type of a picture whose pixels are indices into its palette. */
 export const INDEXED = 3
 
 export interface PngChunk {
@@ -11,7 +10,6 @@ export interface PngChunk {
   length: number
 }
 
-/** The chunks of a PNG in order, or null when it is not one: it has to start with the signature, and the lengths the chunks declare have to run exactly to its end. */
 export function chunksOf(png: Uint8Array): PngChunk[] | null {
   if (
     png.length < PNG_SIGNATURE.length ||
@@ -35,12 +33,10 @@ export function chunksOf(png: Uint8Array): PngChunk[] | null {
   return at === png.length ? chunks : null
 }
 
-/** The data a chunk carries, without its length, type and CRC. */
 export function dataOf(png: Uint8Array, chunk: PngChunk): Uint8Array {
   return png.subarray(chunk.at + 8, chunk.at + 8 + chunk.length)
 }
 
-/** One chunk as it is written into a PNG: its length, type, data and the CRC over type and data. */
 export function pngChunk(type: string, data: Uint8Array): Uint8Array {
   const bytes = new Uint8Array(12 + data.length)
   const view = new DataView(bytes.buffer)
@@ -56,7 +52,6 @@ export function pngChunk(type: string, data: Uint8Array): Uint8Array {
   return bytes
 }
 
-/** A PNG put back together from its own bytes, with the chunks `replaced` names given new bytes; a chunk replaced by an empty array is left out. */
 export function rewritten(
   png: Uint8Array,
   chunks: readonly PngChunk[],

@@ -1,4 +1,3 @@
-/** One tone of a built-in sound: when it starts after the sound does and how long it rings, in seconds, its wave, its pitch, where the pitch glides to by its end, and its share of the sound's loudness. */
 export interface Tone {
   at: number
   lasts: number
@@ -8,7 +7,6 @@ export interface Tone {
   loud: number
 }
 
-/** The loudest a built-in sound gets, at the player's full volume: soft beside the programme's own sound. */
 export const ROM_SOUND_PEAK = 0.25
 
 const G4 = 392
@@ -30,7 +28,6 @@ function tone(
   return { at, lasts, wave: 'sine', hz, loud: 1, ...more }
 }
 
-/** Vela's own sounds for the receiver's built-in sounds 0 to 15, each drawn as tones for Web Audio. The standard names the sounds without giving them, so each number has a sound of its own: single blips, steps up and down, chimes and a glide. */
 export const ROM_SOUNDS: readonly (readonly Tone[])[] = [
   [tone(0, 0.05, C6)],
   [tone(0, 0.08, G5)],
@@ -70,12 +67,10 @@ export const ROM_SOUNDS: readonly (readonly Tone[])[] = [
   [tone(0, 0.14, A4, { to: A5 }), tone(0.14, 0.06, C6)],
 ]
 
-/** How long a built-in sound rings, from its first tone to the end of its last, in seconds. */
 export function romSoundLasts(sound: number): number {
   return Math.max(...ROM_SOUNDS[sound].map((one) => one.at + one.lasts))
 }
 
-/** How loud a built-in sound is played at the player's volume (0 to 1, 0 while muted): in step with it, and not at all while the setting is off or the player is silent. */
 export function romSoundGain(on: boolean, level: number): number {
   if (!on || !(level > 0)) {
     return 0

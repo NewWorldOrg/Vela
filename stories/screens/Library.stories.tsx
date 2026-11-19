@@ -80,7 +80,6 @@ async function remaking(ids: string[]): Promise<ThumbnailRemakes> {
 const STILL_RECORDING_SAID =
   '録画中のため、サムネイルを再生成できませんでした。'
 
-/** Queues every picked recording but the second, which is said to be still recording. */
 async function remakingAllButTheSecond(
   ids: string[],
 ): Promise<ThumbnailRemakes> {
@@ -135,7 +134,6 @@ async function startChoosing(canvasElement: HTMLElement) {
   )
 }
 
-/** Opens a row's menu and hands back its 削除. */
 async function deleteIn(row: HTMLElement): Promise<HTMLElement> {
   await userEvent.click(
     within(row).getByRole('button', { name: 'この録画の操作' }),
@@ -153,14 +151,12 @@ function rowNamed(canvasElement: HTMLElement, name: RegExp): HTMLElement {
   return within(canvasElement).getByRole('row', { name })
 }
 
-/** The bar that floats at the window's foot while choosing, or the band over a phone's tabs. */
 function pickingRow(canvasElement: HTMLElement): HTMLElement {
   return within(canvasElement).getByRole('toolbar', {
     name: '選んだ録画の操作',
   })
 }
 
-/** The mark that takes a recording in, on whichever list the width draws. */
 function pickOf(canvasElement: HTMLElement, recording: Recording) {
   const holder = drawnOf([
     ...canvasElement.querySelectorAll<HTMLElement>(
@@ -181,7 +177,6 @@ function placeOf(canvasElement: HTMLElement, recording: Recording) {
   ])
 }
 
-/** Presses with Shift held, as a pointer on a desk does to take in a range. */
 async function pressWithShift(target: HTMLElement) {
   const user = userEvent.setup()
 
@@ -192,19 +187,16 @@ async function pressWithShift(target: HTMLElement) {
 
 const A_DESKTOP = { width: 1440, height: 900 }
 
-/** The picture of a recording, where a pointer comes to rest over it. */
 function pictureOf(canvasElement: HTMLElement, recording: Recording) {
   return placeOf(canvasElement, recording).querySelector<HTMLElement>(
     '[data-thumbnail]',
   )!
 }
 
-/** Rests the pointer on a recording's picture. */
 async function hoverOn(canvasElement: HTMLElement, recording: Recording) {
   await userEvent.hover(pictureOf(canvasElement, recording))
 }
 
-/** Whether a control is there to see: drawn, and not faded out. */
 function shownOf(control: HTMLElement): boolean {
   return (
     control.getBoundingClientRect().width > 0 &&
@@ -212,7 +204,6 @@ function shownOf(control: HTMLElement): boolean {
   )
 }
 
-/** Starts choosing as a mouse does: rests on a recording and presses the check that comes up on its picture. */
 async function startWithTheCheck(
   canvasElement: HTMLElement,
   recording: Recording,
@@ -364,7 +355,6 @@ const CARRIED_ON_AFTER_A_GAP = {
   gap: { label: '欠け 3.8 秒', detail: '欠け 22:10 から 3.8 秒' },
 }
 
-/** The chips a row says in its state, wherever the width puts them. */
 function stateIn(row: HTMLElement): string[] {
   const chips = [
     ...row.querySelectorAll<HTMLElement>('[data-slot="attention"]'),
@@ -1028,7 +1018,6 @@ export const 複数を選んで削除する: Story = {
   },
 }
 
-/** Sees the library leave choosing: the bar or band gone, no checks drawn, and `選ぶ` no longer pressed where it is drawn. */
 async function stopsChoosing(canvasElement: HTMLElement): Promise<void> {
   const canvas = within(canvasElement)
 
@@ -1041,7 +1030,6 @@ async function stopsChoosing(canvasElement: HTMLElement): Promise<void> {
 
 const BAR_ABOVE_THE_FOOT = 24
 
-/** Where the bar stands once it has risen in: fixed, its foot 24px over the window's, in the middle of the window. */
 async function floatsAtTheFoot(bar: HTMLElement): Promise<void> {
   const { clientWidth, clientHeight } = document.documentElement
 
@@ -1147,7 +1135,6 @@ export const 選ぶをもう一度押すか閉じるで帯が消える: Story = 
   },
 }
 
-/** Scrolls the list the recordings are in to its end, and sees the bar float where it did and the last recording clear of it. */
 async function leavesTheLastOneClear(canvasElement: HTMLElement) {
   await startChoosing(canvasElement)
 
@@ -1312,7 +1299,6 @@ export const Escで選ぶのをやめる: Story = {
   },
 }
 
-/** Takes the one recording in from its check and leaves it out again, and sees the library stop choosing with it. */
 async function leavesTheOnlyOneOut(
   canvasElement: HTMLElement,
   recording: Recording,
@@ -1328,7 +1314,6 @@ async function leavesTheOnlyOneOut(
 
 const SINKS_WITHIN = 500
 
-/** Presses what leaves the last picked recording out, and sees the bar start sinking at once and be gone within half a second, saying what it said before all the while. */
 async function pressAndSinks(
   canvasElement: HTMLElement,
   target: HTMLElement,
@@ -1702,7 +1687,6 @@ export const iPadでも選ぶ帯は窓の下に浮かぶ: Story = {
   },
 }
 
-/** On a finger's screen, presses `選ぶ`, sees the bar wait at none picked, and sees it go once the one taken in is left out. */
 async function waitsAtNoneThenLeaves(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
   const [first] = LIBRARY_SHELF

@@ -1,8 +1,6 @@
 import { PNG_SIGNATURE, pngChunk } from '@/lib/png-chunks'
 import type { CaptionPicture } from '@/lib/live-wire'
 
-/** Captions drawn here for the stories, never cut from a broadcast: blocks stand for letters, each with a ring of lighter entries for its soft edge, on a 1440x1080 canvas. */
-
 type Rgba = [number, number, number, number]
 
 const STORED_BLOCK = 65535
@@ -19,7 +17,6 @@ function adler32(bytes: Uint8Array): number {
   return ((b << 16) | a) >>> 0
 }
 
-/** The bytes as a zlib stream of stored blocks: what a PNG's picture data needs, without compressing anything. */
 function zlibStored(bytes: Uint8Array): Uint8Array {
   const blocks = Math.max(1, Math.ceil(bytes.length / STORED_BLOCK))
   const out = new Uint8Array(2 + blocks * 5 + bytes.length + 4)
@@ -79,7 +76,6 @@ class Drawing {
     }
   }
 
-  /** A made-up letter: two strokes, a tall one and a wide one, each with its soft ring. */
   letter(left: number, top: number, size: number, ink: Rgba, soft: Rgba) {
     const stroke = Math.round(size / 6)
     const middle = top + Math.round((size - stroke) / 2)
@@ -149,7 +145,6 @@ function placed(left: number, top: number, drawing: Drawing): CaptionPicture {
   }
 }
 
-/** Yellow letters on the half see-through band, one line low in the picture. */
 export function yellowOnAHalfBand(): CaptionPicture {
   const drawing = new Drawing(640, 88)
 
@@ -162,7 +157,6 @@ export function yellowOnAHalfBand(): CaptionPicture {
   return placed(400, 920, drawing)
 }
 
-/** White letters with no band, and a second speaker in cyan far off to the right on the second line. */
 export function whiteWithNoBand(): CaptionPicture {
   const drawing = new Drawing(960, 150)
 
@@ -181,7 +175,6 @@ export function whiteWithNoBand(): CaptionPicture {
   return placed(240, 880, drawing)
 }
 
-/** White letters on a solid black band, high in the picture. */
 export function whiteOnASolidBand(): CaptionPicture {
   const drawing = new Drawing(700, 96)
 

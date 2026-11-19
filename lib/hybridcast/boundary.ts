@@ -1,12 +1,10 @@
 import { MOST_URL } from '@/lib/bml/paths'
 
-/** One pair of an application's boundary: the sixteen bits of what it is permitted, and the addresses the pair applies to, none meaning every address. */
 export interface BoundaryPair {
   permissionBitmap: number
   managedUrls: string[]
 }
 
-/** The bits of the permission bitmap and what each lets an application do (IPTVFJ STD-0013 table 5.1). */
 export const PERMISSION_BIT = {
   broadcastVideo: 12,
   overTheVideo: 11,
@@ -20,7 +18,6 @@ export const PERMISSION_BIT = {
 
 export type Permission = keyof typeof PERMISSION_BIT
 
-/** A bitmap whose upper three bits are 000 permits everything when its lower thirteen are all set, and nothing otherwise. */
 export const EVERYTHING = 0x1fff
 
 const BY_BIT = 0b001
@@ -29,7 +26,6 @@ export const MOST_PAIRS = 64
 
 export const MOST_MANAGED_URLS = 64
 
-/** Whether a bitmap permits what a bit stands for (IPTVFJ STD-0013 5.1.1): bit by bit under the upper three bits 001, all or nothing under 000, and nothing under any other. */
 export function permits(bitmap: number, permission: Permission): boolean {
   const upper = bitmap >>> 13
   const lower = bitmap & EVERYTHING
@@ -65,7 +61,6 @@ function managedOf(written: string): Managed | null {
   }
 }
 
-/** How narrow a managed URL is, where it applies: a deeper host first, then a longer path. -1 where it does not. */
 function narrowness(managed: Managed, url: URL): number {
   const host = url.hostname.toLowerCase()
   const onTheHost = host === managed.host || host.endsWith(`.${managed.host}`)
@@ -84,7 +79,6 @@ function narrowness(managed: Managed, url: URL): number {
 
 const EVERY_ADDRESS = 0
 
-/** How narrowly a pair applies to a URL: a pair with no managed URL applies to every one, least narrowly; one with managed URLs by its narrowest that applies, or not at all. */
 function pairNarrowness(pair: BoundaryPair, url: URL): number {
   if (pair.managedUrls.length === 0) {
     return EVERY_ADDRESS
@@ -98,7 +92,6 @@ function pairNarrowness(pair: BoundaryPair, url: URL): number {
   }, -1)
 }
 
-/** The permission bitmap at a URL: the pair whose managed URL applies most narrowly, the later of two as narrow (IPTVFJ STD-0010 7.6.2, appendix A.4.1.6). With no boundary at all, everything is permitted everywhere. Null outside the boundary, and for what is not an `http:` or `https:` URL. */
 export function bitmapAt(
   boundary: readonly BoundaryPair[],
   address: string,
@@ -134,7 +127,6 @@ export function bitmapAt(
   return (found as BoundaryPair | null)?.permissionBitmap ?? null
 }
 
-/** Whether every pair of a boundary permits what a bit stands for, so that it is permitted at whatever URL a document of the application is on. With no boundary at all, everything is. */
 export function permittedEverywhere(
   boundary: readonly BoundaryPair[],
   permission: Permission,
@@ -142,7 +134,6 @@ export function permittedEverywhere(
   return boundary.every((pair) => permits(pair.permissionBitmap, permission))
 }
 
-/** Whether a URL is inside the boundary. */
 export function insideBoundary(
   boundary: readonly BoundaryPair[],
   address: string,
@@ -170,7 +161,6 @@ function pairOf(value: unknown): BoundaryPair | null {
     : null
 }
 
-/** An application's boundary as Carina answers it, or null when the value has another shape. */
 export function boundaryOf(value: unknown): BoundaryPair[] | null {
   if (!Array.isArray(value) || value.length > MOST_PAIRS) {
     return null
@@ -181,7 +171,6 @@ export function boundaryOf(value: unknown): BoundaryPair[] | null {
   return pairs.every((pair) => pair !== null) ? (pairs as BoundaryPair[]) : null
 }
 
-/** The receiver's identifier as the player hands it to the application: only when no pair of its boundary refuses it, as the application's documents may be at any URL in it, and a check in the application's own frame is the application's to undo. */
 export function receiverIdHandedOver<Id>(
   boundary: readonly BoundaryPair[],
   id: Id | null,

@@ -50,7 +50,6 @@ const MACHINE_OF: [RegExp, string][] = [
 
 export const THIS_BROWSER = 'このブラウザ'
 
-/** The browser a page is open in, as a person names it: the machine, then the browser, `Windows の Chrome`. */
 export function browserHere(agent: string): string {
   const browser = browserOf(agent.trim())
 

@@ -12,7 +12,6 @@ function wideOnTheServer(): PlayerFit {
   return 'wide'
 }
 
-/** The layout of the player's controls for the width its board is laid out at and the width its wide row needs, following the board as it changes. The layout width, not the drawn one: a screen that rises in is drawn scaled for a moment, and no resize follows when it settles. */
 export function usePlayerFit(
   board: HTMLElement | null,
   needs: number,

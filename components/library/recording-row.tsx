@@ -25,11 +25,9 @@ import { PickShade } from '@/components/library/pick-shade'
 import { PickStart, SHOWN_AT_REST } from '@/components/library/pick-start'
 import { usePointerResting } from '@/components/library/recording-tile'
 
-/** A cell of the library's table: a hairline under it from the title on, gone under a row a pointer rests on, a picked row, and the row above either. A picked row lies on the accent's tint. */
 export const CELL =
   'h-[calc(70rem/16)] border-b border-hair px-[calc(13rem/16)] align-middle text-ui transition-[background-color,border-color] duration-[140ms] ease-toy group-last:border-b-0 group-hover:border-transparent group-hover:bg-surface [tr:has(+tr:hover)>&]:border-transparent [tr:has(+tr[data-state=selected])>&]:border-transparent [tr[data-state=selected]>&]:border-transparent [tr[data-state=selected]>&]:bg-accent-tint'
 
-/** The first and last cells' corners, joined between picked rows that follow one another. */
 const JOINED_FIRST =
   '[tr[data-state=selected]:has(+tr[data-state=selected])>&]:rounded-bl-none [tr[data-state=selected]+tr[data-state=selected]>&]:rounded-tl-none'
 
@@ -58,7 +56,6 @@ function Length({ recording: r }: { recording: Recording }) {
   )
 }
 
-/** How far a recording was watched: 未視聴 in the accent's ink, the line and its share part-way, 視聴済み quietly. */
 function Watched({ recording }: { recording: Recording }) {
   const state = watchStateOf(recording)
 
@@ -103,11 +100,8 @@ export function RecordingRow({
   nth: number
   picking: boolean
   selected: boolean
-  /** Why this recording's thumbnail was not made again, said under the title while choosing. */
   said?: string
-  /** The row pressed while choosing, `range` when Shift was held. */
   onSelect: (range: boolean) => void
-  /** On a mouse's screen, the press of the check on the row's picture, which starts the library choosing with this row taken. */
   onPickStart?: () => void
   onOpen: () => void
   onDelete: () => void

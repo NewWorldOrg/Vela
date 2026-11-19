@@ -4,10 +4,8 @@ import { type ReactNode } from 'react'
 
 import { FoldButton } from '@/components/live/fold-button'
 
-/** The gap under the column's head, as the mock lays the remote under it. */
 const UNDER_THE_HEAD = 14
 
-/** The head of the column while the data broadcast is open: what stands at its left, and the fold at its right end, with the remote 14 below. */
 export function ColumnHead({
   folded,
   onFold,

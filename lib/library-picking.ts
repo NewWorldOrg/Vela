@@ -1,4 +1,3 @@
-/** The picked recordings after one is pressed: taken in or left out, and with Shift held, every one from the one pressed before along with it. */
 export function pressedPick(
   picked: ReadonlySet<string>,
   shown: readonly string[],
@@ -25,7 +24,6 @@ export function pressedPick(
   return next
 }
 
-/** Whether every recording shown is picked, which there must be one of. */
 export function everyShownPicked(
   picked: ReadonlySet<string>,
   shown: readonly string[],
@@ -33,7 +31,6 @@ export function everyShownPicked(
   return shown.length > 0 && shown.every((one) => picked.has(one))
 }
 
-/** The picked recordings after `すべて選ぶ`: every one shown, or after `すべて外す`, none. */
 export function withEveryShown(
   picked: ReadonlySet<string>,
   shown: readonly string[],
@@ -41,15 +38,12 @@ export function withEveryShown(
   return everyShownPicked(picked, shown) ? new Set() : new Set(shown)
 }
 
-/** What a list chooses among: the library's recordings, or the encode screen's jobs. */
 export type PickedSubject = '録画' | 'ジョブ'
 
-/** The unit after the number of picked ones, and the word after it, which a narrow phone's band leaves off. */
 export const PICKED_UNIT = ' 件'
 
 export const PICKED_TAIL = 'を選択'
 
-/** What the choosing row says of how many are picked. */
 export function pickedSaying(
   count: number,
   subject: PickedSubject = '録画',
@@ -59,7 +53,6 @@ export function pickedSaying(
     : `${count}${PICKED_UNIT}${PICKED_TAIL}`
 }
 
-/** Whether the library goes on choosing with `count` picked: it stops once none is left, unless nothing has been picked yet since `選ぶ` was pressed, so `すべて選ぶ` can still be reached. */
 export function keepsChoosing(count: number, pickedSome: boolean): boolean {
   return count > 0 || !pickedSome
 }

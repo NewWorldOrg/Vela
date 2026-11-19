@@ -18,17 +18,11 @@ import {
 
 const STILL_TO_RECORD: ReservationStanding[] = ['scheduled', 'conflict']
 
-/**
- * The chips a reservation's row carries, only for what needs a look: recording now, what a conflict costs it (or that it
- * is in one), an end not yet fixed, a channel it cannot tune, a programme the guide moved or lost, and how a finished
- * reservation ended. A reservation that simply holds its tuner carries none.
- */
 export function ReservationAttention({
   reservation,
   loses,
 }: {
   reservation: Reservation
-  /** What the reservation goes without in its conflict, when the overlap can be read: 頭 30 分が欠ける. */
   loses?: string
 }) {
   if (!STILL_TO_RECORD.includes(reservation.standing)) {

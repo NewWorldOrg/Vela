@@ -3,12 +3,10 @@ import type { Program } from '@/repository/programs'
 
 export const HOUR_REM = 9
 
-/** A length of the guide's time axis, in rem so the hours grow with the words. */
 export function remOfMinutes(minutes: number): string {
   return `${(minutes / 60) * HOUR_REM}rem`
 }
 
-/** How tall an hour is drawn in this document, in pixels. */
 export function hourPxIn(document: Document): number {
   const rootPx = parseFloat(getComputedStyle(document.documentElement).fontSize)
 
@@ -17,7 +15,6 @@ export function hourPxIn(document: Document): number {
 
 type Genre = Program['genre']
 
-/** The v4 tint each genre is drawn in. 劇場・趣味/教育・福祉・その他 take the news row. */
 const TINT_OF: Record<Genre, string> = {
   news: 'news',
   sports: 'sports',
@@ -46,7 +43,6 @@ export const GENRE_MARK_CLASS: Record<Genre, string> = {
 
 export type CellTime = 'ended' | 'onAir' | 'ahead'
 
-/** Where a programme stands against now: over, on the air, or still to come. A programme with no end is never over. */
 export function cellTimeOf(
   program: Pick<Program, 'startMin' | 'durationMin' | 'endUndecided'>,
   nowMin: number | undefined,
@@ -65,10 +61,6 @@ export function cellTimeOf(
   return 'onAir'
 }
 
-/**
- * The ground of a programme in the guide: neutral once it is over, the deep tint of its genre while it is to come,
- * and on the air the two tints split at `splitAt` — the light above, aired, the deep below.
- */
 export function groundOf(
   genre: Genre,
   time: CellTime,

@@ -13,8 +13,6 @@ import { ChannelKinds } from '@/components/live/channel-kinds'
 import { useSettled } from '@/components/live/channel-fold'
 import { FoldButton } from '@/components/live/fold-button'
 
-/** The column's fold: a chevron pointing where the column goes, named for what the column holds. */
-/** Whether the station's own logo is drawn; when it is not, the badge already says the number. */
 function drawsALogo(logo: LiveChannel['logo']): boolean {
   return logo?.declaration === 'inTheCommonDataTable'
 }

@@ -1,7 +1,6 @@
 import type { Recording } from '@/repository/recordings'
 import { RECORDING_FIXTURES } from '@/stories/fixtures/recordings'
 
-/** A drawn still: a sky, two hills and a sun in a hue of its own, so a grid of them reads as pictures without being anyone's broadcast. */
 function stillOf(hue: number, sun = 0.72): string {
   const sky = `hsl(${hue} 62% 74%)`
   const far = `hsl(${(hue + 40) % 360} 34% 52%)`
@@ -76,7 +75,6 @@ const NEWS = {
   lengthSec: 32 * 60,
 }
 
-/** Two weeks of a library: an evening cartoon every day, a late show each week and a news programme, some watched, some part-way, some not at all. */
 export const LIBRARY_SHELF: Recording[] = [
   shelfOf(
     '2101',

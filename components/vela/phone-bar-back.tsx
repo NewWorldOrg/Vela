@@ -4,7 +4,6 @@ import { Slot } from 'radix-ui'
 import { cn } from '@/lib/utils'
 import { ChevronLeftIcon } from '@/components/vela/icons'
 
-/** The arrow back out of a screen pressed into, named for the screen it goes back to. */
 export function PhoneBarBack({
   asChild,
   className,

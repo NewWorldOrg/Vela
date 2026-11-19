@@ -2,7 +2,6 @@
 
 import { cn } from '@/lib/utils'
 
-/** The shade at the head of a picture while choosing, so its mark reads on a bright picture. */
 export function PickShade({ className }: { className?: string }) {
   return (
     <span

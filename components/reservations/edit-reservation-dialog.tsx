@@ -60,10 +60,6 @@ export function EditReservationDialog({
   onRevise,
   layout = 'dialog',
 }: {
-  /**
-   * `dialog` opens over the screen; `row` is drawn across the reservation it changes, under its row in the list; `stack`
-   * puts the fields one under another, under a row on a phone.
-   */
   layout?: 'dialog' | 'row' | 'stack'
   booking: Booking
   open: boolean

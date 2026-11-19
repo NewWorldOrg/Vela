@@ -27,7 +27,6 @@ const ICONS: Record<string, ComponentType<IconProps>> = {
 
 const RESERVATIONS = '/reservations'
 
-/** How many frames a position is tried for while the screen it belongs to is still arriving. */
 const FRAMES_TO_REACH = 30
 
 const memory = new TabMemory()
@@ -62,7 +61,6 @@ function reach(scrollY: number, frames = FRAMES_TO_REACH): void {
   }
 }
 
-/** The tabs at the foot of a phone held upright. A tab goes back to the screen and the position it was left at; the open tab, pressed again, goes to its head screen at the top. The reservations' tab carries the count of conflicts left unsettled. */
 export function AppTabBar({ conflicts }: { conflicts?: ReactNode }) {
   const pathname = usePathname()
   const router = useRouter()

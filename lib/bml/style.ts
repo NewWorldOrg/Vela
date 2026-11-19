@@ -36,14 +36,12 @@ export const RESOLUTIONS = new Map<string, Size>([
   ['720x480', { width: 720, height: 480 }],
 ])
 
-/** The longest value of one declaration the converter reads; a longer one is ignored. */
 export const MOST_VALUE_LENGTH = 256
 
 export const DEFAULT_USED_KEYS: UsedKeyGroup[] = ['basic', 'data-button']
 
 export const FONT_FAMILIES = ['Denpa Font'] as const
 
-/** Each bundled face with its ascent and descent set to its em square, so a line as tall as the font holds the whole glyph, as on a receiver. */
 export const FONT_METRICS: Record<
   (typeof FONT_FAMILIES)[number],
   FontFaceDescriptors
@@ -98,7 +96,6 @@ function topLevelParts(text: string, separator: string): string[] {
   return parts
 }
 
-/** The declarations of a style attribute or a rule's block, lower-cased by name, with `!important` dropped. */
 export function declarationsOf(text: string): Declaration[] {
   return topLevelParts(text, ';').flatMap((part) => {
     const colon = part.indexOf(':')
@@ -156,7 +153,6 @@ function compoundOf(text: string): SimpleSelector | null {
   return compound
 }
 
-/** A selector of compound simple selectors joined by descendant combinators, or null for anything else. */
 export function selectorOf(text: string): Selector | null {
   const compounds = text.trim().split(/\s+/).map(compoundOf)
 
@@ -204,7 +200,6 @@ function blockEnd(text: string, open: number): number {
   return text.length
 }
 
-/** The rules of a style sheet. A rule, selector or at-rule it does not take is left out with a warning. */
 export function styleSheetOf(source: string): StyleSheet {
   const text = stripComments(source)
   const rules: StyleRule[] = []
@@ -257,7 +252,6 @@ function ruleOf(head: string, block: string, warnings: string[]): StyleRule[] {
     : []
 }
 
-/** How specific a selector is, compared position by position. */
 export function specificityOf(selector: Selector): [number, number, number] {
   return selector.reduce<[number, number, number]>(
     ([ids, classes, types], compound) => [
@@ -288,7 +282,6 @@ function matchesCompound(
   )
 }
 
-/** Whether a selector picks an element in its plain state (a `:focus` or `:active` selector never does). */
 export function matches(selector: Selector, element: StyledElement): boolean {
   const subject = selector[selector.length - 1]
 
@@ -322,7 +315,6 @@ function cssIdent(name: string): string {
   }).join('')
 }
 
-/** The selector in the converted page: a BML element is named by its `data-bml-tag`, and the focus and active states by the attributes the runtime sets. */
 export function cssSelectorOf(selector: Selector): string {
   return selector
     .map((compound) => {
@@ -375,7 +367,6 @@ function keyword(value: string, allowed: string[]): string | null {
   return allowed.includes(lowered) || lowered === 'inherit' ? lowered : null
 }
 
-/** Answers the `blob:` URL of an image a declaration names, or null when there is no such image. */
 export type ImageResolver = (reference: string) => string | null
 
 const NO_IMAGES: ImageResolver = () => null
@@ -454,7 +445,6 @@ function clipOf(value: string): string | null {
     : null
 }
 
-/** The reference inside `url(...)`, with or without quotes, or null when the value is not one. */
 export function urlReferenceOf(value: string): string | null {
   const inside = insideOf(value, 'url(')?.trim()
 
@@ -471,7 +461,6 @@ export function urlReferenceOf(value: string): string | null {
   return quoted.length > 0 && !/[\s"']/.test(quoted) ? quoted : null
 }
 
-/** `background-image` named as `url(...)` becomes the image's `blob:` URL; one that is not there leaves no declaration, the resolver having said so. */
 const backgroundImage: Mapper = (value, _palette, images) => {
   if (value.trim().toLowerCase() === 'none') {
     return [
@@ -593,7 +582,6 @@ export interface ConvertedPairs {
   warnings: string[]
 }
 
-/** The CSS properties and values of a block of BML declarations, each as a pair. BML's own properties are left for the runtime; a property or value it does not take is dropped with a warning. */
 export function cssPairsOf(
   declarations: Declaration[],
   palette: Palette,
@@ -622,7 +610,6 @@ export function cssPairsOf(
   return { pairs, warnings }
 }
 
-/** The CSS of a block of BML declarations, as one declaration list. */
 export function cssOf(
   declarations: Declaration[],
   palette: Palette,
@@ -636,7 +623,6 @@ export function cssOf(
   }
 }
 
-/** The converted style sheet: each rule's selectors in the converted page, and its declarations as CSS. */
 export function cssSheetOf(
   sheet: StyleSheet,
   palette: Palette,
@@ -706,7 +692,6 @@ function urlOf(value: string): string | undefined {
   return url && url.length > 0 ? url : undefined
 }
 
-/** BML's own properties among the declarations an element ends with, each read into the value the runtime uses. One that cannot be read is left out. */
 export function featuresOf(values: Map<string, string>): BmlFeatures {
   const features: BmlFeatures = {}
 
@@ -735,7 +720,6 @@ export function featuresOf(values: Map<string, string>): BmlFeatures {
   ) as BmlFeatures
 }
 
-/** A plain length in pixels, or null when the value is not one. */
 export function pixelsOf(value: string | undefined): number | null {
   const parsed = value === undefined ? null : LENGTH.exec(value.trim())
 
@@ -749,7 +733,6 @@ export interface Plane {
   scaleY: number
 }
 
-/** Where a document's fixed layout stands in a box: its display shape contained in the middle, each axis scaled to fill that shape. */
 export function planeIn(box: Size, resolution: Size, aspect: Aspect): Plane {
   const shape = aspect === '4v3' ? 4 / 3 : 16 / 9
 
@@ -768,7 +751,6 @@ export function planeIn(box: Size, resolution: Size, aspect: Aspect): Plane {
   }
 }
 
-/** A rectangle of a document, given on the 960x540 grid of the 16:9 box the document is laid over. */
 export function onGrid(rect: Rect, resolution: Size, aspect: Aspect): Rect {
   const plane = planeIn(GRID, resolution, aspect)
 
@@ -780,7 +762,6 @@ export function onGrid(rect: Rect, resolution: Size, aspect: Aspect): Rect {
   }
 }
 
-/** The page's own rules, laid under every converted document. */
 export const BASE_STYLE = [
   'html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }',
   '#bml-plane { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; }',
@@ -796,7 +777,6 @@ export const BASE_STYLE = [
   'input[data-bml-tag] { background: transparent; color: inherit; font: inherit; outline: none; }',
 ].join('\n')
 
-/** Where the video's rectangle lies inside the page, cut out of the page's own ground, its colour and its picture alike. */
 export function videoHole(
   rect: Rect,
   resolution: Size,
@@ -809,7 +789,6 @@ export function videoHole(
   }
 }
 
-/** Where the video's rectangle lies inside a still picture, in the picture's own place, to be cut out of it: a JPEG lies on the still picture plane, behind the video. */
 export function stillCut(rect: Rect): Record<string, string> {
   return {
     '--bml-cut-left': `${rect.left}px`,

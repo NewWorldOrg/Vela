@@ -1,6 +1,5 @@
 import { BML_KEYS, type BmlKey } from '@/lib/bml/keys'
 
-/** The key codes an application compares a `keydown`'s `which` with, by the remote control's key, given to it as the `VK_*` globals. The codes are this receiver's own: those of the keyboard for the arrows, Enter and the digits, those television engines commonly give the colours and Back, and one of its own for d. */
 export const APP_KEY_CODE: Record<BmlKey, number> = {
   up: 38,
   down: 40,
@@ -49,12 +48,10 @@ const GLOBAL_NAME: Record<BmlKey, string> = {
   blue: 'VK_BLUE',
 }
 
-/** The `VK_*` globals an application's window is given. */
 export function keyGlobals(): [string, number][] {
   return BML_KEYS.map((key) => [GLOBAL_NAME[key], APP_KEY_CODE[key]])
 }
 
-/** The groups of keys an application asks for with `keySet.setValue`, as the constants of its key set. */
 export const KEY_SET = {
   RED: 0x1,
   GREEN: 0x2,
@@ -68,7 +65,6 @@ export const KEY_SET = {
 
 const KNOWN = Object.values(KEY_SET).reduce((all, bit) => all | bit, 0)
 
-/** The groups an application has until it says otherwise: every one this remote has keys for but d, which closes the application until it asks for it. */
 export const KEY_SET_UNTIL_TOLD =
   KEY_SET.RED |
   KEY_SET.GREEN |
@@ -89,7 +85,6 @@ const KEYS_OF_GROUP: [number, BmlKey[]][] = [
   [KEY_SET.DBUTTON, ['d']],
 ]
 
-/** The remote's keys an application's key set takes, in the remote's order. VCR names keys this remote does not have. */
 export function keysOfKeySet(mask: number): BmlKey[] {
   const taken = new Set(
     KEYS_OF_GROUP.flatMap(([group, keys]) =>
@@ -100,7 +95,6 @@ export function keysOfKeySet(mask: number): BmlKey[] {
   return BML_KEYS.filter((key) => taken.has(key))
 }
 
-/** A key set as an application writes it, kept to the groups there are, or null when it is not a number. */
 export function keySetOf(value: unknown): number | null {
   return typeof value === 'number' && Number.isInteger(value) && value >= 0
     ? value & KNOWN

@@ -1,10 +1,8 @@
 import type { SkipEvent, SkipEventKind } from '@/repository/recording-segments'
 import type { SkippableKind } from '@/repository/videos'
 
-/** How long after a stretch was skipped a seek back into it still counts as going back to it. */
 export const RETURNS_WITHIN_MS = 30_000
 
-/** How long, from where the seek back landed, a person watches before the stretch counts as one they went back to. */
 export const WATCHED_FOR_SEC = 10
 
 export interface Stretch {
@@ -33,13 +31,6 @@ function kindAt(second: number, skip: LastSkip): SkippableKind {
   return (landed ?? skip.stretches[0]).kind
 }
 
-/**
- * What a person did with the button that skips a break, an opening or an ending, sent in the recording's own time.
- * The player says where its playhead stands on the clock of the file it plays, how far the recording's own time
- * stands ahead of that clock, and when the button was pressed or closed; a seek back into a stretch skipped moments
- * before counts once the person has watched there for a while. While no time in the recording can be placed on the
- * file, nothing is sent.
- */
 export class SkipEvents {
   private lastSkip: LastSkip | undefined
 
@@ -65,7 +56,6 @@ export class SkipEvents {
     this.modelVersion = modelVersion
   }
 
-  /** How far the recording's own time stands ahead of the file the player plays, or nothing when it cannot be placed. */
   runsBehindBy(offsetSec: number | undefined): void {
     this.offset = offsetSec
   }
@@ -82,7 +72,6 @@ export class SkipEvents {
     this.send('returned', kindAt(back.toSec, skip), back.fromSec, back.toSec)
   }
 
-  /** One press that skipped stretches following one another, each sent on its own. */
   skippedTheRun(
     fromSec: number,
     skipped: readonly [Stretch, ...Stretch[]],

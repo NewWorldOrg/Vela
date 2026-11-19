@@ -88,7 +88,6 @@ function asOf(
   }
 }
 
-/** Whole minutes left of a programme at a moment; none where its end is not known or the moment is not. */
 export function minutesLeft(
   endsAt: string | undefined,
   at: Date | undefined,

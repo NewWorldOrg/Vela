@@ -106,7 +106,6 @@ function readNpt(payload: Uint8Array): NptReference | null {
     : null
 }
 
-/** Reads one payload of the side channel's data broadcast frames by its kind byte. */
 export function readDataBroadcast(payload: Uint8Array): DataBroadcastSaid {
   switch (payload[0]) {
     case DATA_BROADCAST_BYTE.catalog: {
@@ -138,7 +137,6 @@ export function readDataBroadcast(payload: Uint8Array): DataBroadcastSaid {
   }
 }
 
-/** Whether a broadcast can be opened: `none` when the service carries none, `absent` until the catalog and its start document's module are both in, `ready` after. */
 export type DataBroadcastAvailability = 'none' | 'absent' | 'ready'
 
 export type DataBroadcastChange =
@@ -150,13 +148,11 @@ export type DataBroadcastChange =
   | { kind: 'none' }
   | { kind: 'reset' }
 
-/** What a player holds of a data broadcast, from the live side channel or a recording's routes alike: whether it can be opened, the catalog, the modules, each stream's NPT and the time on air to hand a runtime that opens, and the changes as they come. */
 export interface DataBroadcastHeld {
   readonly availability: DataBroadcastAvailability
   readonly catalog: BmlCatalog | null
   readonly forTheCatalog: BmlModule[]
   readonly nptReadings: NptReading[]
-  /** The time on air of the picture shown, in seconds, where the player keeps one, or null where the runtime reads the wall clock. */
   readonly clock: number | null
   subscribe(listener: (change: DataBroadcastChange) => void): () => void
 }
@@ -185,7 +181,6 @@ export type Warn = (warning: string) => void
 const warnOnTheConsole: Warn = (warning) =>
   console.warn(`data broadcast: ${warning}`)
 
-/** When a frame takes effect: at its own time, or for an event message that fires at a moment of the programme and for an NPT reference that names a moment, at that moment when it is later. */
 function dueAt(said: DataBroadcastSaid, pts: number): number {
   if (said.said === 'event' && !said.event.immediate) {
     return Math.max(pts, said.event.at)
@@ -207,7 +202,6 @@ function sameReference(
   )
 }
 
-/** The live data broadcast as the player holds it: frames wait until the playhead reaches their time, then change what is held and are passed on to whoever listens. An event message is passed on when it fires, once, and a stream's NPT reference when the moment it names comes, read at the playhead. A module whose version the catalog moved on is held until the new version comes. What comes twice, from whichever wire, is taken once: a catalog the same as the one held, a module of the version held, an event already heard. */
 export class DataBroadcastFeed implements DataBroadcastHeld {
   private readonly waiting: Waiting[] = []
 
@@ -239,7 +233,6 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     this.warn = warn
   }
 
-  /** Takes one payload of the side channel at its time. A module larger than a module may be is dropped here, and what waits is held to the same 64 MiB and to a count, the oldest let go first but never the newest catalog. */
   offer(payload: Uint8Array, pts: number): void {
     if (
       payload[0] === DATA_BROADCAST_BYTE.module &&
@@ -297,7 +290,6 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     }
   }
 
-  /** Lets every frame whose time the playhead has reached take effect, in the order of their times. */
   advance(seconds: number): void {
     this.playhead = seconds
 
@@ -312,7 +304,6 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     }
   }
 
-  /** Forgets everything, as when the wire is opened again. */
   reset(): void {
     this.waiting.length = 0
     this.waitingBytes = 0
@@ -347,7 +338,6 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     return [...this.modules.values()].map((held) => held.module)
   }
 
-  /** The modules to hand a runtime that opens now, after the catalog: each the catalog lists, at its version or the one before while that has not come. */
   get forTheCatalog(): BmlModule[] {
     const catalog = this.carried
 
@@ -356,14 +346,12 @@ export class DataBroadcastFeed implements DataBroadcastHeld {
     )
   }
 
-  /** Each stream's NPT, in the order of their tags, read at the playhead. */
   get nptReadings(): NptReading[] {
     return [...this.references.values()]
       .sort((one, other) => one.tag - other.tag)
       .map((reference) => nptReadingAt(reference, this.playhead))
   }
 
-  /** Live, what is on air is now, and the runtime reads the wall clock. */
   get clock(): number | null {
     return null
   }

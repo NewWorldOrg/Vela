@@ -17,7 +17,6 @@ const REFUSED: Partial<Record<number, DataBroadcastRead>> = {
   409: { state: 'coming' },
 }
 
-/** The route that answers the catalog of a recording's data broadcast over the source played, the whole of it at once. */
 export function videoDataBroadcastHref(
   id: string,
   source?: PlaybackSource,
@@ -38,7 +37,6 @@ export function videoDataBroadcastHref(
   return `/api/videos/${encodeURIComponent(id)}/data-broadcast${query ? `?${query}` : ''}`
 }
 
-/** The route that answers one version of a module, as the live side channel carries it. */
 export function videoDataBroadcastModuleHref(
   id: string,
   placed: Pick<PlacedVersion, 'tag' | 'downloadId' | 'id' | 'version'>,

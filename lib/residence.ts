@@ -13,7 +13,6 @@ export const NOT_REGISTERED = '未登録'
 
 export const POSTAL_CODE_PROBLEM = '郵便番号は 7 桁の数字です。'
 
-/** The prefectures as the receiver names them to the documents, by their place in the prefecture designation of ARIB STD-B10 table G-2 counted from 0, in the order they are offered: the islands of Tokyo and of Kagoshima after their prefecture. */
 export const PREFECTURES: readonly { value: number; label: string }[] = [
   { value: 0, label: '東北海道' },
   { value: 1, label: '西北海道' },
@@ -74,7 +73,6 @@ export function prefectureShown(prefecture: number | null): string {
   )
 }
 
-/** A postal code as it is written, with the hyphen after the third digit. */
 export function postalCodeShown(postalCode: string | null): string {
   return postalCode === null
     ? NOT_REGISTERED
@@ -83,7 +81,6 @@ export function postalCodeShown(postalCode: string | null): string {
 
 const WRITTEN = /^〒?\s*([0-9]{3})-?([0-9]{4})$/
 
-/** What was typed as the postal code is sent as seven digits, written with or without the hyphen, in full or half width; empty is none. Undefined when it is neither. */
 function typedPostalCode(typed: string): string | null | undefined {
   const trimmed = typed.normalize('NFKC').trim()
 
@@ -101,12 +98,10 @@ export function postalCodeProblem(typed: string): string | undefined {
   return typedPostalCode(typed) === undefined ? POSTAL_CODE_PROBLEM : undefined
 }
 
-/** The postal code to send for what was typed, null for none. It is one `postalCodeProblem` says nothing about. */
 export function postalCodeToSend(typed: string): string | null {
   return typedPostalCode(typed) ?? null
 }
 
-/** What was typed when the row turned into a field: the postal code as it is written, or nothing. */
 export function postalCodeTyped(postalCode: string | null): string {
   return postalCode === null ? '' : postalCodeShown(postalCode)
 }

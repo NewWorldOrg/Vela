@@ -11,7 +11,6 @@ import {
 
 let renewed = false
 
-/** Puts the subscription this browser made anew to its row when Vela opens. Draws nothing, asks nothing and says nothing. */
 export function PushRenewal({
   readKey,
   rows,

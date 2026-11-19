@@ -13,18 +13,15 @@ const CALENDAR_DAY = new Intl.DateTimeFormat('en-CA', {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** The day a moment falls on in Tokyo, as `YYYY-MM-DD`. */
 export function calendarDayOf(at: string | number | Date): string {
   return CALENDAR_DAY.format(new Date(at))
 }
 
 export interface DayHeading {
-  /** `今日`, `昨日` or `明日`, where the day is one of those. */
   near?: string
   date: string
 }
 
-/** How a day's group is headed: today, yesterday and tomorrow by name, then the date. */
 export function dayHeadingOf(day: string, now: Date): DayHeading {
   const date = formatCalendarDate(day, now)
 
@@ -43,7 +40,6 @@ export function dayHeadingOf(day: string, now: Date): DayHeading {
   return { date }
 }
 
-/** Items in the order given, gathered under the day each started on; a day keeps the place of its first item. */
 export function byDay<T extends { startedAt: string }>(
   items: readonly T[],
 ): { day: string; items: T[] }[] {
@@ -68,12 +64,10 @@ interface Watched {
   lengthSec?: number
 }
 
-/** Whether a recording has a place to go on from: watched past its first moments and not to its end. */
 export function goesOnFrom(recording: Watched): boolean {
   return whereToPickUp(recording.watchedSec, recording.lengthSec) !== undefined
 }
 
-/** The whole minutes left after where a recording was watched to. */
 export function minutesLeftOf(recording: Watched): number | undefined {
   if (
     recording.watchedSec === undefined ||
@@ -89,7 +83,6 @@ export function minutesLeftOf(recording: Watched): number | undefined {
   )
 }
 
-/** How much of a recording has been watched, from 0 to 1; none where it has not. */
 export function watchedShareOf(recording: Watched): number | undefined {
   if (
     recording.watchedSec === undefined ||
@@ -104,7 +97,6 @@ export function watchedShareOf(recording: Watched): number | undefined {
 
 export type WatchState = 'unwatched' | 'partway' | 'watched'
 
-/** Unwatched until watched past its first moments, part-way while there is a place to go on from, and watched after. */
 export function watchStateOf(recording: Watched): WatchState {
   if (
     recording.watchedSec === undefined ||

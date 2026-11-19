@@ -5,12 +5,10 @@ import {
   type AppRelay,
 } from '@/lib/hybridcast/relay'
 
-/** The relay address for an address an application writes at run time, or null to leave it as it is. */
 export type Point = (written: string) => string | null
 
 const WEB = new Set(['http:', 'https:'])
 
-/** Points addresses an application writes at run time at the relay, as Carina points the ones in the markup it hands over: resolved against the station URL the frame stands for, and left as they are when the relay already has them, when they name no server, or when they are only a fragment. */
 export function addressPointer(
   relay: AppRelay,
   station: () => URL,
@@ -47,7 +45,6 @@ const STYLE_URL = /url\(\s*(["']?)([^"')]*)\1\s*\)/gi
 
 const STYLE_IMPORT = /(@import\s*)(["'])([^"']*)\2/gi
 
-/** A style with the address of each `url()`, and of each `@import` written as a string, pointed at the relay. */
 export function pointedStyle(style: string, point: Point): string {
   return style
     .replace(STYLE_URL, (whole, _quote: string, address: string) => {
@@ -65,7 +62,6 @@ export function pointedStyle(style: string, point: Point): string {
     )
 }
 
-/** A `srcset` with the address of each candidate pointed at the relay, and its descriptor kept. */
 export function pointedSrcset(srcset: string, point: Point): string {
   return srcset
     .split(',')
@@ -83,7 +79,6 @@ export function pointedSrcset(srcset: string, point: Point): string {
     .join(',')
 }
 
-/** The attributes of an element that name an address the browser loads or goes to. */
 export const ADDRESS_ATTRIBUTES = new Set([
   'src',
   'href',
@@ -95,7 +90,6 @@ export const ADDRESS_ATTRIBUTES = new Set([
   'background',
 ])
 
-/** A value written as an attribute's, pointed at the relay as its name says: an address, a `srcset`, or a style. Null to leave it as it is. */
 export function pointedAttribute(
   name: string,
   value: string,
@@ -132,7 +126,6 @@ const ATTRIBUTE_NAME_ENDS = /[\t\n\f\r />=]/
 
 const UNQUOTED_VALUE_ENDS = /[\t\n\f\r >]/
 
-/** The elements whose text the browser reads as text up to their end tag, never as markup, in a document that runs scripts. */
 const RAW_TEXT = new Set([
   'style',
   'script',
@@ -179,17 +172,14 @@ function encoded(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;')
 }
 
-/** The receiver script as the relay puts it into a page it hands over. */
 const RECEIVER_SCRIPT =
   /<script\b(?:[^>"']|"[^"]*"|'[^']*')*\bdata-hybridcast-relay\b(?:[^>"']|"[^"]*"|'[^']*')*>\s*<\/script\s*>/gi
 
-/** An attribute of a tag as the browser reads it: its name, and its value with where it is written, quotes and all, or no value. */
 interface Attribute {
   name: string
   value: { text: string; from: number; to: number } | null
 }
 
-/** A tag as the browser reads it: its name, its attributes, and where it ends. */
 interface Tag {
   name: string
   attributes: Attribute[]
@@ -222,7 +212,6 @@ function endAfter(source: string, end: string, from: number): number {
   return found < 0 ? source.length : found + end.length
 }
 
-/** The tag whose name begins at `from`, read as the browser's tokenizer reads it: an attribute begins after a space, after a slash or right after a quoted value, quotes open a value only where one begins, and only `>` outside a quoted value ends the tag. Null when the markup ends inside it, and the browser drops it. */
 function tagAt(source: string, from: number): Tag | null {
   const nameEnd = until(source, from, TAG_NAME_ENDS)
   const attributes: Attribute[] = []
@@ -292,7 +281,6 @@ function tagAt(source: string, from: number): Tag | null {
   return null
 }
 
-/** Where what begins with the `<` at `open` ends when it is no start tag: a comment, a CDATA section, an end tag, a declaration or a bogus comment, or the `<` alone as text. */
 function notStartTagEnd(source: string, open: number): number {
   const next = source[open + 1] ?? ''
 
@@ -324,7 +312,6 @@ function notStartTagEnd(source: string, open: number): number {
   return open + 1
 }
 
-/** Where the text of a raw text element that begins at `from` ends: at its end tag, or at the end of the markup. */
 function rawTextEnd(source: string, from: number, name: string): number {
   if (name === 'plaintext') {
     return source.length
@@ -337,7 +324,6 @@ function rawTextEnd(source: string, from: number, name: string): number {
   return closing.exec(source)?.index ?? source.length
 }
 
-/** A start tag with the values of its attributes that name an address pointed at the relay, and the rest of it as it was written. */
 function pointedTag(
   source: string,
   open: number,
@@ -361,7 +347,6 @@ function pointedTag(
   return written + source.slice(at, tag.end)
 }
 
-/** Markup written at run time, as `innerHTML` and the like take it, with the addresses and styles of its elements pointed at the relay, read as the browser reads it. The text between the tags is left alone, and so is what the browser never reads as markup: comments and the text of elements such as `script`, `textarea` and `title`. The text of a `style` element is a style and is pointed. Markup written into an element whose text is never markup, named by `within`, is that text: the style of a `style` element, and anything else left as it is. The receiver script is taken out: the relay puts it into every page it hands over, a fragment the application fetches to build its own markup from included, and it belongs only at the head of the document. */
 export function pointedMarkup(
   markup: string,
   point: Point,

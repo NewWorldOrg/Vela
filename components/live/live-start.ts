@@ -10,7 +10,6 @@ export interface LivePlayhead {
   play(): Promise<void>
 }
 
-/** Plays a live picture from the target behind the edge, the first time it is checked with that much buffered. */
 export class LiveStart {
   private readonly picture: LivePlayhead
 

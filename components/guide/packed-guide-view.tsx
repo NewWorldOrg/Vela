@@ -12,7 +12,6 @@ export type PackedGuide = Omit<GuideResult, 'programs'> & {
   programs: PackedRows<GridProgram>
 }
 
-/** The guide as the page hands it over: the hours it opens on, packed field by field, and the rest of the day following in the same answer. Until the rest has come the screen has the opening hours; then it has the whole day. A refresh keeps the rest it had for the same day and kind until the new rest comes. */
 export function PackedGuideView({
   guide,
   rest,

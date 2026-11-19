@@ -41,10 +41,8 @@ import {
 
 export type ReceiverWindow = Window & typeof globalThis
 
-/** What the application's documents carry in the user agent: that the receiver runs Hybridcast, and no maker. */
 export const HYBRIDCAST_AGENT = 'Hybridcast/1.0'
 
-/** Where the type of a broadcast's picture object is kept instead of `type`: an object with that type tries to load a plugin the frame's policy refuses, so the relay writes it here in the markup, and the receiver does so for one a script makes. */
 export const QUIET_TYPE = 'data-hybridcast-type'
 
 const KEY_NAME: Record<BmlKey, string> = {
@@ -97,7 +95,6 @@ function descriptorOf(
   return undefined
 }
 
-/** Whether an address a link or a form goes to lies outside the boundary, read as the application meant it. Addresses that name no server are not the boundary's to judge. */
 function outsideTheBoundary(frame: Frame, written: string | null): boolean {
   let url: URL
 
@@ -114,7 +111,6 @@ function outsideTheBoundary(frame: Frame, written: string | null): boolean {
   return !frame.inside(intendedTarget(url, frame.relay, frame.station()).href)
 }
 
-/** Keeps the broadcast's picture object from trying to load a plugin, while the application sees it as written. Its type is kept in `QUIET_TYPE`, where the relay put it in the markup, and where the receiver puts one a script sets; `type` and `getAttribute('type')` read it back. The picture is drawn by the player under the frame, so the object draws nothing. */
 function quietTheBroadcastVideo(window: ReceiverWindow): void {
   const proto = window.HTMLObjectElement.prototype
   const type = descriptorOf(proto, 'type')
@@ -168,7 +164,6 @@ function quietTheBroadcastVideo(window: ReceiverWindow): void {
   }
 }
 
-/** Keeps links and forms to the boundary: one that goes outside it is not followed, and the application stays where it is (IPTVFJ STD-0010 7.6.1). Inside it they go through the relay, as their addresses were pointed there. A document that leaves by its script, which cannot be held back from inside, is closed by the player. */
 function keepToTheBoundary(frame: Frame): void {
   const stay = (event: Event, written: string | null) => {
     if (outsideTheBoundary(frame, written)) {
@@ -223,7 +218,6 @@ function relayNetwork(frame: Frame): void {
   }
 }
 
-/** Hands a key of the remote to the document as a `keydown` and a `keyup` with the code of its `VK_*`, at what has the focus. */
 function press(window: ReceiverWindow, key: BmlKey): void {
   const code = APP_KEY_CODE[key]
   const target: EventTarget =
@@ -263,7 +257,6 @@ function giveTheNavigator(
   })
 }
 
-/** Keeps the state in the frame's name, where the next document of the application reads it, and gives the application a name of its own in its place. */
 function keepTheName(
   window: ReceiverWindow,
   receiver: () => HybridcastReceiver,
@@ -283,7 +276,6 @@ function keepTheName(
   return (state) => write?.call(window, frameNameOf(state))
 }
 
-/** The station URL's location, as the application's scripts reach it once the relay has rewritten their `location` to `__hcLocation`: it reads as the broadcaster's server, and going anywhere goes through the relay inside the boundary, and back to the documents outside it. Assigning it goes where the address says, as a location does. */
 function giveTheStationLocation(frame: Frame, leave: (to: URL) => void): void {
   const { window, relay } = frame
   const nav: StationNavigation = {
@@ -310,7 +302,6 @@ function giveTheStationLocation(frame: Frame, leave: (to: URL) => void): void {
   })
 }
 
-/** Starts the receiver in a document of the application, from the script element Carina put first into it: the relay it is on, where its WebSockets are carried, the broadcaster's URL of the document, and Vela's origin, which the script came from. The state is the one the frame carries in its name. Without any of them, nothing is given and the document never says it opened, so the player closes the frame. */
 export function startHybridcastReceiver(
   window: ReceiverWindow,
   script: HTMLScriptElement | null,

@@ -11,7 +11,6 @@ import {
 import { cookieIn, storingCookie } from '@/lib/stored-flag'
 import { useStoredText } from '@/hooks/useStoredText'
 
-/** The caption style this browser keeps, the same in every tab, starting from what the server read. Opening a player writes the cookie again, since Safari lets a cookie written by the page lapse after seven days. */
 export function useCaptionStyle(
   stored: CaptionStyle,
 ): [CaptionStyle, (next: CaptionStyle) => void] {

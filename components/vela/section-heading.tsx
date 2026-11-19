@@ -3,7 +3,6 @@ import type { ComponentProps, ComponentType } from 'react'
 import { cn } from '@/lib/utils'
 import { MarkStar, type IconProps } from '@/components/vela/icons'
 
-/** A section's heading: a star drawn in and stamped as it arrives, the words, and a dotted rule to the edge. */
 export function SectionHeading({
   mark: Mark = MarkStar,
   level = 2,

@@ -5,7 +5,6 @@ export interface Held<T> {
   held: T | null
 }
 
-/** The next held state when the value a face is opened on changes, or undefined when nothing changed. */
 export function holdWhileClosing<T>(
   last: Held<T>,
   value: T | null,
@@ -21,7 +20,6 @@ export function holdWhileClosing<T>(
   }
 }
 
-/** The value a face was last opened on, kept while it plays its way out. */
 export function useHeldWhileClosing<T>(
   value: T | null,
   onOpenedAnew?: () => void,

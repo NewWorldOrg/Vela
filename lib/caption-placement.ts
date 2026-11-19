@@ -48,7 +48,6 @@ export function placedOn(
   }
 }
 
-/** What a restyled picture adds around the caption's own rectangle, in the canvas's pixels. */
 export interface Margin {
   left: number
   top: number
@@ -59,24 +58,17 @@ export interface Margin {
 export const NO_MARGIN: Margin = { left: 0, top: 0, right: 0, bottom: 0 }
 
 export interface CaptionPlacing {
-  /** Where the picture is shown, in the box's pixels. */
   shown: Rect
   canvas: CaptionCanvas
-  /** Where the caption stands on the canvas. */
   drawn: Rect
   margin?: Margin
-  /** The size chosen: 1 is the broadcast's. */
   scale?: number
-  /** The move chosen, as fractions of the picture's width and height. */
   shift?: { x: number; y: number }
 }
 
 export interface CaptionPlace {
-  /** Where the picture that is drawn lands, margin and all. */
   image: Rect
-  /** Where the caption's own rectangle lands. */
   caption: Rect
-  /** The move once the caption is kept inside the picture. */
   shift: { x: number; y: number }
 }
 
@@ -114,7 +106,6 @@ function fittingScale(asked: number, image: Rect, shown: Rect): number {
   return asked <= fits + NEAR_ONE ? asked : fits
 }
 
-/** Where a caption is drawn once it is sized and moved. It grows about the middle of its bottom when it stands in the picture's lower half, and of its top when in the upper half; it stops growing where it would leave the picture; the move is added; and what comes out is kept inside the picture. With nothing chosen it lands where the broadcast put it. */
 export function captionPlaced({
   shown,
   canvas,
@@ -173,7 +164,6 @@ export function captionPlaced({
   }
 }
 
-/** The room kept between a caption and what it is lifted clear of. */
 export const CLEARANCE_GAP = 6
 
 function overlapsAcross(one: Rect, image: Rect): boolean {
@@ -182,7 +172,6 @@ function overlapsAcross(one: Rect, image: Rect): boolean {
   )
 }
 
-/** How far a caption is lifted to clear what lies over the picture's bottom: enough for its bottom to stand the gap above the top of everything it would overlap, across and once lifted, but never past the picture's top. */
 export function liftClearOf(
   image: Rect,
   shown: Rect,
@@ -210,7 +199,6 @@ export function liftClearOf(
   return Math.min(lift, most)
 }
 
-/** A CSS cubic Bézier timing curve, as a function of the share of the time gone. */
 export function cubicBezier(
   x1: number,
   y1: number,
@@ -247,7 +235,6 @@ export function cubicBezier(
   }
 }
 
-/** The control row's own timing (`PLAYER_CHROME_FADE`): it comes up in 250ms easing out, and goes in 100ms easing in. */
 export const CLEARANCE_MOTION = {
   rise: { ms: 250, ease: cubicBezier(0, 0, 0.2, 1) },
   fall: { ms: 100, ease: cubicBezier(0.4, 0, 1, 1) },

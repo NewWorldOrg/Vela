@@ -171,13 +171,6 @@ function Side() {
   )
 }
 
-/**
- * The curtain drawn closed in the first HTML of every full load: folds of cloth
- * drawn aside and tied back, while the app icon's television under sail pulls
- * the cord and flies to the mark.
- * It rises only over a page hydrated from the server's HTML, never over one
- * built in the browser by a navigation.
- */
 export function Curtain() {
   const fromTheServer = useSyncExternalStore(
     nothingChanges,

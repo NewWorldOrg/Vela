@@ -1,7 +1,5 @@
 import { crc32, deflateSync, inflateSync } from 'node:zlib'
 
-/** Captions drawn here for the tests, never cut from a broadcast: blocks for letters, with a ring of lighter entries for their soft edge. */
-
 export type Rgba = [number, number, number, number]
 
 export interface Drawn {
@@ -24,7 +22,6 @@ function chunk(type: string, data: Uint8Array): Buffer {
   return Buffer.concat([head, data, tail])
 }
 
-/** An 8-bit indexed PNG of the drawing, compressed with zlib. `depth` and `withTransparency` make the shapes a caption is not. */
 export function pngOf(
   drawn: Drawn,
   { depth = 8, withTransparency = true } = {},
@@ -62,7 +59,6 @@ export function pngOf(
   )
 }
 
-/** The indices of an 8-bit indexed PNG written by `pngOf`, read back with zlib. */
 export function indicesOf(png: Uint8Array, width: number): Uint8Array {
   const buffer = Buffer.from(png)
   let at = 8
@@ -92,7 +88,6 @@ export function indicesOf(png: Uint8Array, width: number): Uint8Array {
   return pixels
 }
 
-/** A mask of the pixels whose entry `keeps` keeps. */
 export function maskOf(
   drawn: Drawn,
   keeps: (entry: Rgba, index: number) => boolean,
@@ -138,7 +133,6 @@ class Canvas {
     }
   }
 
-  /** A letter: a block of its colour with a one-pixel ring of `soft`, laid where it stands. */
   letter(left: number, top: number, size: number, rgba: Rgba, soft: Rgba) {
     this.fill(left - 1, top - 1, size + 2, size + 2, soft)
     this.fill(left, top, size, size, rgba)
@@ -158,7 +152,6 @@ export const HALF_BLACK: Rgba = [0, 0, 0, 128]
 
 export const YELLOW: Rgba = [250, 250, 0, 255]
 
-/** Yellow letters on the half see-through black band, their soft edge opaque where the letter covers most of the pixel and half see-through where the band shows. */
 export function yellowOnAHalfBand(): Drawn {
   const canvas = new Canvas(120, 30)
 
@@ -172,7 +165,6 @@ export function yellowOnAHalfBand(): Drawn {
   return canvas.done()
 }
 
-/** White letters with no band: their soft edge is white, half see-through. */
 export function whiteWithNoBand(): Drawn {
   const canvas = new Canvas(100, 40)
 
@@ -184,7 +176,6 @@ export function whiteWithNoBand(): Drawn {
   return canvas.done()
 }
 
-/** White letters with black edges and no band. */
 export function edgedWithNoBand(): Drawn {
   const canvas = new Canvas(64, 24)
 
@@ -200,7 +191,6 @@ export function edgedWithNoBand(): Drawn {
   return canvas.done()
 }
 
-/** White and grey letters on a solid black band, with one half see-through black entry where the band meets the picture's border. */
 export function whiteOnASolidBand(): Drawn {
   const canvas = new Canvas(140, 36)
 
@@ -214,7 +204,6 @@ export function whiteOnASolidBand(): Drawn {
   return canvas.done()
 }
 
-/** Speakers in their colours on a half band: white, yellow, cyan and green. */
 export function speakersOnAHalfBand(): Drawn {
   const canvas = new Canvas(100, 24)
 
@@ -227,7 +216,6 @@ export function speakersOnAHalfBand(): Drawn {
   return canvas.done()
 }
 
-/** Grey letters with no white beside them, on a half band. */
 export function greyOnAHalfBand(): Drawn {
   const canvas = new Canvas(48, 24)
 
@@ -238,7 +226,6 @@ export function greyOnAHalfBand(): Drawn {
   return canvas.done()
 }
 
-/** White letters in a picture packed into 256 colours, whose low bits are gone: the white is 0xF0. */
 export function packedInto256(): Drawn {
   const canvas = new Canvas(256, 20)
 

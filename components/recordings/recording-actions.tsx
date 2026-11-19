@@ -43,7 +43,6 @@ export function RecordingActions({
   plan,
   laid = 'page',
 }: {
-  /** In the page under the programme's title and values, or in the face a phone held on its side opens at the picture's right, where the buttons stand one under another. */
   laid?: 'page' | 'face'
   recording: Recording
   onDelete: (id: string) => Promise<RecordingDiscarded>

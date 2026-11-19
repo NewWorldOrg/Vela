@@ -18,7 +18,6 @@ function tableOf(): Uint32Array {
   return table
 }
 
-/** The CRC-32 a PNG chunk carries over its type and data. */
 export function crc32(bytes: Uint8Array): number {
   const lookup = tableOf()
   let crc = 0xffffffff

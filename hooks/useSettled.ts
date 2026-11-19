@@ -8,14 +8,12 @@ const settled = new WeakMap<Promise<unknown>, Settlement<unknown>>()
 
 const watched = new WeakSet<Promise<unknown>>()
 
-/** What a promise settled with, or nothing while it has not, held as one object for as long as the promise lives. */
 export function settlementOf<T>(
   promise: Promise<T>,
 ): Settlement<T> | undefined {
   return settled.get(promise) as Settlement<T> | undefined
 }
 
-/** Tells `then` once the promise has settled and what it settled with can be read. Returns how to stop being told. */
 export function whenSettled(
   promise: Promise<unknown>,
   then: () => void,
@@ -42,7 +40,6 @@ export function whenSettled(
   }
 }
 
-/** What a promise handed down from the server settled with, read without suspending: nothing in the server's HTML and while it is on its way, its value once it has come. A failure is thrown where it is read. */
 export function useSettled<T>(promise: Promise<T> | undefined): T | undefined {
   const subscribe = useCallback(
     (notify: () => void) =>
@@ -62,13 +59,11 @@ export function useSettled<T>(promise: Promise<T> | undefined): T | undefined {
   return settlement?.value
 }
 
-/** What a promise last settled with, and for which page: its day and kind. */
 export interface Kept<T> {
   key: string
   value: T
 }
 
-/** What to show while a promise is on its way: what it settled with once it has, and until then what the last one settled with, if that was for the same page. A page handed no promise keeps nothing from before. */
 export function keptWhileSettling<T>(
   waiting: boolean,
   settled: T | undefined,
@@ -82,7 +77,6 @@ export function keptWhileSettling<T>(
   return waiting && kept?.key === key ? kept.value : undefined
 }
 
-/** `useSettled`, holding on to what the last promise for the same page settled with while a new one, handed down by a refresh, is on its way. */
 export function useSettledKept<T>(
   promise: Promise<T> | undefined,
   key: string,

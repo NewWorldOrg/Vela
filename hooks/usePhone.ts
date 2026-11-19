@@ -22,7 +22,6 @@ function notOnTheServer(): boolean {
   return false
 }
 
-/** Whether the window is a phone held upright; not on the server, where nothing is laid out. Asked of the window, not of a board, because a board's own width moves with what opens beside and under it. */
 export function usePhoneUpright(): boolean {
   return useSyncExternalStore(
     followTheUpright,
@@ -31,7 +30,6 @@ export function usePhoneUpright(): boolean {
   )
 }
 
-/** Whether the window is a phone held on its side; not on the server. */
 export function usePhoneOnItsSide(): boolean {
   return useSyncExternalStore(
     followTheSide,
@@ -40,7 +38,6 @@ export function usePhoneOnItsSide(): boolean {
   )
 }
 
-/** Whether the window is a phone held either way; not on the server. */
 export function useOnAPhone(): boolean {
   return useSyncExternalStore(
     followEitherWay,

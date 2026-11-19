@@ -1,6 +1,5 @@
 import type { Rect } from '@/lib/caption-placement'
 
-/** How far the skip is raised while the control row is up: the `data-[raised]` translate of `PlayerSkip`. */
 export const SKIP_RAISED_REM = 96 / 16
 
 function translateDown(element: Element): number {
@@ -34,7 +33,6 @@ function contentTop(chrome: HTMLElement): number {
     : chrome.getBoundingClientRect().top
 }
 
-/** What lies over the picture's bottom while the control row is up, in the window's coordinates and where each thing's own motion is taking it: the row from the top of what it draws (the seek bar, or the remote's band above it), and the skip button where it is raised to. */
 export function clearanceOf(
   chrome: HTMLElement | null,
   shell: HTMLElement | null,

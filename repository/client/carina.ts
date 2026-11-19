@@ -25,7 +25,6 @@ export function revalidatingCarinaClient() {
   })
 }
 
-/** Sends whoever opened sign-in with a session the API still honours on to where they were going. */
 export async function onwardIfSignedIn(next: string | undefined) {
   if (await sessionHolds()) {
     redirect(returnPathWithin(next) as Route)

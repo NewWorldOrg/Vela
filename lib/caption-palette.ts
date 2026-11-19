@@ -12,19 +12,14 @@ const CHANNELS = 4
 
 const MOST_ENTRIES = 256
 
-/** Below this brightness (the largest of red, green and blue) an entry is black: an edge, a band, or the band's blur. */
 export const DARK_BELOW = 32
 
-/** How far apart, as a share of their brightest channel, two colours can lie and still be one colour of letters. */
 const ONE_HUE_WITHIN = 0.2
 
-/** How bright each channel of the white letters is at least: a picture packed into 256 colours loses its low bits, and its white can come down to 0xF0. */
 const WHITE_FROM = 176
 
-/** How far apart the channels of white letters lie at most. */
 const WHITE_SPREAD = 48
 
-/** A caption's indexed PNG once it has been checked: its chunks, its size and the colours of its palette, red, green, blue and alpha for each entry. */
 export interface CaptionPng {
   png: Uint8Array
   chunks: PngChunk[]
@@ -81,7 +76,6 @@ function inOrder(
   )
 }
 
-/** A caption's PNG read for its palette, or null when it is not the 8-bit indexed picture of the size its placement gives, with one palette of 256 entries at most and chunks that run to its end. */
 export function readCaptionPng(
   png: Uint8Array,
   size: { width: number; height: number },
@@ -128,14 +122,12 @@ export function readCaptionPng(
   }
 }
 
-/** What an entry of a caption's palette is taken to be. A letter is a share of its colour of letters laid over black. */
 export type EntryRole =
   | { kind: 'clear' }
   | { kind: 'veil' }
   | { kind: 'dark' }
   | { kind: 'letter'; colour: number; cover: number }
 
-/** One colour of letters: the brightest entry of those that lie in its direction from black. */
 export interface LetterColour {
   rgb: number[]
   white: boolean
@@ -144,9 +136,7 @@ export interface LetterColour {
 export interface CaptionPalette {
   roles: EntryRole[]
   colours: LetterColour[]
-  /** The band's opacity, the smallest of the half see-through black entries, or null when the palette has none. */
   veil: number | null
-  /** Whether any entry is opaque black, which may be an edge or a solid band. */
   dark: boolean
 }
 
@@ -179,7 +169,6 @@ function premultiplied(entries: Uint8Array, index: number): number {
   return (brightness(entries, index) * entries[index * CHANNELS + 3]) / 255
 }
 
-/** Reads what each entry of a caption's palette is: clear, black (opaque, or half see-through), or a share of one colour of letters. Entries are gathered by their direction from black, brightest first, and each takes as its share its brightness over its colour's, both as laid over black. */
 export function readPalette(entries: Uint8Array): CaptionPalette {
   const count = entries.length / CHANNELS
   const roles: EntryRole[] = Array.from({ length: count }, () => ({
@@ -284,7 +273,6 @@ function letterRecoloured(
   return [...rgb.map((channel) => clampByte(share * channel)), entries[at + 3]]
 }
 
-/** The palette's entries redrawn for a look: a half see-through black takes the band chosen; a letter is its share of its colour, the chosen one for white letters, laid again over that band; opaque black and clear entries stand. With the broadcast's band, a letter keeps its opacity and only changes colour. */
 export function restyledEntries(
   entries: Uint8Array,
   palette: CaptionPalette,
@@ -319,7 +307,6 @@ export function restyledEntries(
   return out
 }
 
-/** Entries that draw only the letters, as black, each as opaque as its share: the shape an added edge is made from. */
 export function letterShapeEntries(palette: CaptionPalette): Uint8Array {
   const out = new Uint8Array(palette.roles.length * CHANNELS)
 
@@ -332,7 +319,6 @@ export function letterShapeEntries(palette: CaptionPalette): Uint8Array {
   return out
 }
 
-/** Entries that draw, as opaque white, only the entries `keeps` keeps, and leave the rest clear: a mask to read pixels from. */
 export function maskEntries(
   entries: Uint8Array,
   palette: CaptionPalette,
@@ -349,7 +335,6 @@ export function maskEntries(
   return out
 }
 
-/** The caption's PNG with its palette and transparency replaced by `entries`, its pictures' data untouched and the CRCs written again. */
 export function withEntries(read: CaptionPng, entries: Uint8Array): Uint8Array {
   const count = entries.length / CHANNELS
   const rgb = new Uint8Array(count * 3)

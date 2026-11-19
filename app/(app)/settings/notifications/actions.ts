@@ -28,7 +28,6 @@ import {
 
 const NOTIFICATIONS = '/settings/notifications'
 
-/** The page is read again once Carina has answered; a write that never reached it leaves the page as it is. */
 function readAgain<T extends NotificationWrite | TestSending | BrowserWrite>(
   result: T,
 ): T {

@@ -3,7 +3,6 @@
 import { cn } from '@/lib/utils'
 import { CheckIcon } from '@/components/vela/icons'
 
-/** The mark over a picture while the library is choosing: a rounded square cut from the picture by a white edge, filled with a tick once taken. */
 export function PickMark({
   taken,
   size = 'row',

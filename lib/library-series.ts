@@ -1,9 +1,3 @@
-/**
- * Carina gives a recording no series of its own, so the library gathers a
- * series from the titles: what is left of a title once the marks before it
- * and the episode after it are taken off, compared in one width and spacing.
- */
-
 const MARKS_BEFORE = /^(?:\s*[[【(〔][^\]】)〕]{1,4}[\]】)〕])+\s*/u
 
 const EPISODE_STARTS =
@@ -24,12 +18,10 @@ function splitOf(title: string): [string, string | undefined] {
   return [shaped.slice(0, cut).trim(), shaped.slice(cut).trim() || undefined]
 }
 
-/** The name of the series a title belongs to. */
 export function seriesNameOf(title: string): string {
   return splitOf(title)[0]
 }
 
-/** What a title adds to the name of its series: the episode's number or name. */
 export function episodeOf(title: string): string | undefined {
   return splitOf(title)[1]
 }
@@ -37,11 +29,9 @@ export function episodeOf(title: string): string | undefined {
 export interface Series<T> {
   key: string
   name: string
-  /** Newest first. */
   items: T[]
 }
 
-/** Recordings gathered under their series, the series with the newest recording first. */
 export function seriesOf<T extends { title: string; startedAt: string }>(
   items: readonly T[],
 ): Series<T>[] {

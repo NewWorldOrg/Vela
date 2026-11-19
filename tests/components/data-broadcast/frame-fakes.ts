@@ -12,7 +12,6 @@ import {
 import { SCOPE_NAME } from '@/components/data-broadcast/bml-evaluator'
 import type { RuntimeWindow } from '@/components/data-broadcast/bml-runtime'
 
-/** Enough of a DOM for the runtime to draw a page into and for a document's scripts to read and write: elements with attributes, inline style, children and a parent, and text nodes. */
 export class FakeStyle {
   private readonly set = new Map<string, string>()
 
@@ -52,7 +51,6 @@ export class FakeNode {
     return 0
   }
 
-  /** Whether the node hangs from the root of its document. */
   get isConnected(): boolean {
     let node: FakeNode = this
 
@@ -164,7 +162,6 @@ export class FakeElement extends FakeNode {
     this.append(...nodes)
   }
 
-  /** The text of this element and everything under it. */
   get text(): string {
     return this.childNodes
       .map((node) =>
@@ -173,7 +170,6 @@ export class FakeElement extends FakeNode {
       .join('')
   }
 
-  /** The first element under this one with an attribute of that value. */
   find(name: string, value: string): FakeElement | null {
     for (const node of this.childNodes) {
       if (!(node instanceof FakeElement)) {
@@ -195,7 +191,6 @@ export class FakeElement extends FakeNode {
   }
 }
 
-/** A picture decoded for a canvas, named for the test, that knows whether it was let go. */
 export class FakeBitmap {
   readonly name: string
 
@@ -214,7 +209,6 @@ export class FakeBitmap {
   }
 }
 
-/** A canvas's 2D context that writes down what is cleared and drawn on it, each picture with the place it went and the box it was clipped to. */
 export class FakeSurface {
   readonly drawn: string[] = []
 
@@ -277,7 +271,6 @@ class QuietParser extends DOMParser {
   }
 }
 
-/** Timers the test runs by hand. */
 export class FakeTimers {
   private readonly intervals = new Map<
     number,
@@ -318,7 +311,6 @@ export class FakeTimers {
     this.intervals.delete(id)
   }
 
-  /** Moves time on by one interval tick of every interval, and runs every timeout that fell due. */
   tick(ms: number): void {
     this.now += ms
     this.timeouts
@@ -334,7 +326,6 @@ export class FakeTimers {
     })
   }
 
-  /** How many timeouts are still to run. */
   get waiting(): number {
     return this.timeouts.length
   }
@@ -344,10 +335,8 @@ export class FakeTimers {
   }
 }
 
-/** The names a browser's window holds unconfigurable. */
 const UNCONFIGURABLE = new Set(['window', 'top', 'location'])
 
-/** The names a browser's window holds behind a getter alone, so that what is written to them is dropped. */
 const READ_ONLY = new Set([
   'history',
   'navigator',
@@ -359,7 +348,6 @@ const READ_ONLY = new Set([
   'customElements',
 ])
 
-/** Puts on a context's global object, by each name the scope hides that it lacks, a stand-in for the frame's own, held as a browser's window holds it. */
 function standInsOn(global: object): void {
   SHADOWED_GLOBALS.filter((name) => !(name in global)).forEach((name) => {
     const framesOwn = Object.freeze({ framesOwn: name })
@@ -378,7 +366,6 @@ function standInsOn(global: object): void {
   })
 }
 
-/** Runs a document's code in a context of its own as the frame runs it, `with` its scope over a global object that holds the frame's own by the names the scope hides, and with what its code writes there by those names kept in the scope. Declarations stay for the next run. */
 export function vmEvaluator(): Evaluate {
   const contexts = new WeakMap<
     object,
@@ -428,7 +415,6 @@ export interface FakeFrame {
   parent: { postMessage: (message: unknown, origin: string) => void }
 }
 
-/** A frame the runtime can be started in: a window with the fakes above, whose parent collects what is posted to it. */
 export function fakeFrame(playerOrigin: string): FakeFrame {
   const said: unknown[] = []
   const warnings: string[] = []

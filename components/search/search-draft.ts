@@ -1,6 +1,5 @@
 import type { SearchTerms } from '@/repository/search-options'
 
-/** The conditions as they are being set, the words still as typed. */
 export interface SearchDraft extends Omit<SearchTerms, 'q' | 'exclude'> {
   q: string
   exclude: string

@@ -2,15 +2,12 @@ import type { ComponentProps, ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/** The words over a group of settings, small and quiet, set in from the group's edge. */
 export const SETTINGS_GROUP_TITLE =
   'mx-4 mt-[calc(26rem/16)] mb-2 text-sub font-semibold text-ink-2'
 
-/** A switch that is off on the group's surface: a deeper track than the surface it would otherwise share. */
 const SWITCH_OFF_ON_THE_GROUP =
   '[&_[data-slot=switch][data-state=unchecked]]:bg-[color-mix(in_srgb,var(--ink)_17%,var(--surface))]'
 
-/** A group of settings: one surface with round corners, its rows parted by a hair that starts where their words do. */
 export function SettingsGroup({ className, ...props }: ComponentProps<'div'>) {
   return (
     <div
@@ -25,7 +22,6 @@ export function SettingsGroup({ className, ...props }: ComponentProps<'div'>) {
   )
 }
 
-/** One row of a group: its name at the left, what sets it (a switch, a choice, a value) at the right. */
 export function SettingsRow({
   name,
   className,

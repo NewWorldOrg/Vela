@@ -6,7 +6,6 @@ function clockOf(at: string): string {
   return formatClock(new Date(at).getTime())
 }
 
-/** The start in the row's own size and the end under it, quieter. */
 export function RowTimes({
   span,
   whenLabel,

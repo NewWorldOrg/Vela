@@ -49,7 +49,6 @@ function adler32(bytes: Uint8Array): number {
   return ((b << 16) | a) >>> 0
 }
 
-/** A zlib stream of stored blocks: what IDAT holds, left uncompressed. */
 function stored(raw: Uint8Array): Uint8Array {
   const blocks: number[][] = []
 
@@ -70,7 +69,6 @@ function stored(raw: Uint8Array): Uint8Array {
   return joined([[0x78, 0x01], ...blocks, u32(adler32(raw))])
 }
 
-/** The chunks of a truecolour PNG with alpha, IHDR to IEND, as an MNG embeds it, drawn pixel by pixel. */
 function picture(
   width: number,
   height: number,
@@ -99,7 +97,6 @@ const LAMP = 60
 
 const CLEAR: Rgba = [0, 0, 0, 0]
 
-/** The colours of the sample: the case, a lamp left off, and the three lamps lit in turn. */
 export const SIGNAL_COLOURS = {
   case: [40, 44, 50, 255],
   off: [78, 84, 92, 255],
@@ -110,7 +107,6 @@ export const SIGNAL_COLOURS = {
   ],
 } as const satisfies Record<string, Rgba | readonly Rgba[]>
 
-/** Where to read each lamp: the middle of it, on the frame of the MNG. */
 export const SIGNAL_LAMPS = [0, 1, 2].map((at) => ({
   x: at * LAMP + LAMP / 2,
   y: LAMP / 2,
@@ -130,7 +126,6 @@ function lamp(colour: Rgba): Uint8Array {
   )
 }
 
-/** A subframe of framing mode 4: the case, then one lamp lit over it at its place, for the ticks given. */
 function subframe(first: boolean, at: number, ticks: number): Uint8Array {
   return joined([
     chunk('FRAM', [first ? 4 : 0, 0, 1, 0, 0, 0, ...u32(ticks)]),
@@ -140,7 +135,6 @@ function subframe(first: boolean, at: number, ticks: number): Uint8Array {
   ])
 }
 
-/** A synthetic MNG made here, not taken from any broadcast: a signal of three lamps that light in turn, the first for half a second and the others for a quarter, a hundred rounds over. */
 export function signalMng(): Uint8Array {
   return joined([
     MNG_SIGNATURE,

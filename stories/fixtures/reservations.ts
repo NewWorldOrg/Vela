@@ -1,7 +1,6 @@
 import type { Reservation } from '@/repository/reservations'
 import type { Genre } from '@/repository/programs'
 
-/** The genre each fictional programme is listed under, for the dot before its title. */
 const GENRE_OF: Record<string, Genre> = {
   週末キッチンの手帖: 'info',
   'ナイター中継 延長あり': 'sports',
@@ -44,7 +43,6 @@ function genred(reservation: Reservation): Reservation {
 
 const YEAR = 2026
 
-/** The moment a clock on a listed day says, in Tokyo; 24:00 and the small hours after a late start fall on the next day. */
 function momentOf(
   month: string,
   day: string,
@@ -60,7 +58,6 @@ function momentOf(
   return new Date(at).toISOString()
 }
 
-/** The broadcast's start and end, read back from the label the list shows, and the same for each rival in a conflict. */
 function spanned(reservation: Reservation): Reservation {
   const said = /^(\d{2})\/(\d{2})\([^)]+\) (\d{2}:\d{2}) – (\d{2}:\d{2})$/.exec(
     reservation.whenLabel,

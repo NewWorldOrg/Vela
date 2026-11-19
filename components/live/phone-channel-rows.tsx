@@ -9,7 +9,6 @@ import { pressable } from '@/components/vela/tactile'
 export const ROW =
   'flex w-full items-center gap-3 py-3 pr-3.5 pl-4 text-left outline-none transition-[background-color] duration-150 ease-out hover:bg-surface focus-visible:shadow-ring'
 
-/** The channels before one is chosen: a row each across the phone's width, the station's mark and number, the programme on now with its start, end and progress, and what comes next. Pressing a row watches it. */
 export function PhoneChannelRows({
   channels,
   onSelect,

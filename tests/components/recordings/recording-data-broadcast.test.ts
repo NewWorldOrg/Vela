@@ -47,10 +47,8 @@ function event(atSec: number): TimedEvent {
   }
 }
 
-/** When the recording began, part way into a second. */
 const BEGAN = Date.parse('2026-01-01T00:00:00.250Z') / 1000
 
-/** The start document changes version at 100; a second module is first seen at 50 and withdrawn at 400; a third is first seen at 300. */
 const TIMELINE: DataBroadcastTimeline = {
   entryTag: 0x40,
   autoStart: false,

@@ -34,7 +34,6 @@ export type PlaybackSeeking = NonNullable<
   components['schemas']['PlaybackSeeking']
 >
 
-/** The kinds of chapter a person may be offered to skip: a break, an opening theme and an ending theme. */
 export type SkippableKind = 'break' | 'opening' | 'ending'
 
 export type ChapterKind = 'programme' | SkippableKind | 'unknown'
@@ -64,7 +63,6 @@ export interface PlaybackPlan {
   chapters: PlaybackChapter[]
   captions: CaptionStanding
   artefactCodec?: EncodeCodec
-  /** How far a time in the recording stands ahead of the same moment in the file played; nothing when no time in the recording can be placed on that file. */
   recordingOffsetSec?: number
 }
 
@@ -183,7 +181,6 @@ export const getPlaybackPlan = cache(
   },
 )
 
-/** The profiles a recording is transcoded at as it plays, and the formats each is transcoded in: the live list, which answers the same for a recording. */
 export const getPlaybackProfiles = cache(async (): Promise<LiveProfile[]> => {
   try {
     return await fetchLiveProfiles()
@@ -192,10 +189,8 @@ export const getPlaybackProfiles = cache(async (): Promise<LiveProfile[]> => {
   }
 })
 
-/** The codings a Carina from before it named its formats takes, refusing any other. */
 const TAKEN_BY_EVERY_CARINA: readonly BrowserDecoding[] = ['h265']
 
-/** What the browser plays as it is, cut to what this Carina takes: AV1 only where it names a format beyond H.264, since one from before refuses it. */
 export async function decodesCarinaTakes(
   decodes: readonly BrowserDecoding[],
 ): Promise<BrowserDecoding[]> {

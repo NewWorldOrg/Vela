@@ -15,14 +15,12 @@ import { Picture } from '@/components/library/picture'
 import { FoldButton } from '@/components/live/fold-button'
 import { useFoldingChannels, useSettled } from '@/components/live/channel-fold'
 
-/** The fold's name: what it folds away. */
 const SERIES_FOLD = '同じシリーズの回'
 
 function minutesOf(sec: number | undefined): number | undefined {
   return sec !== undefined && sec > 0 ? Math.round(sec / 60) : undefined
 }
 
-/** The other recordings of the series the one on the page belongs to, newest first, beside the player: each picture with how far it was watched, the day it was on after the dot of one nobody has watched, its episode, and the channel, the hour and the length. It folds to the thin rail the live page's channels fold to, with the same motion, so the player takes the room, and the page remembers the fold in its own cookie. */
 export function SeriesEpisodes({
   name,
   current,

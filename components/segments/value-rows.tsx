@@ -2,10 +2,8 @@ import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 
-/** The face a group of values sits on: as wide as a group of settings, its rows reaching its sides. */
 export const VALUE_FACE = 'px-4 py-1.5'
 
-/** Values in a group: one row each, the name at the left and the value at the right, parted by a hair. */
 export function ValueRows({
   className,
   children,

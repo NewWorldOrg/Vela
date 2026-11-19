@@ -64,9 +64,7 @@ export interface PageElement {
   nav: NavLinks
   declarations: Record<string, string>
   children: PageNode[]
-  /** The MNG a canvas plays. */
   mng?: MngAnimation
-  /** The video's rectangle in the element's own place, cut out of a JPEG: it lies on the still picture plane, behind the video, while PNG, MNG and text lie in front of it. */
   cut?: Rect
 }
 
@@ -124,7 +122,6 @@ const HTML_TAG = new Map<string, HtmlTag>([
   ['input', 'input'],
 ])
 
-/** How much of a document the converter takes: past any of these, the document is malformed. */
 export const BML_LIMITS = {
   documentBytes: 4 * 1024 * 1024,
   elements: 20_000,
@@ -150,12 +147,10 @@ const GATHERED = new Set(['style', 'link', 'script', 'bevent'])
 
 const KEPT_ATTRIBUTES = new Set(['id', 'class'])
 
-/** The elements a script writes its text into through `firstChild.data`: one left empty, as `<![CDATA[]]>` leaves it, is given an empty text node to write into. */
 const HOLDS_TEXT = new Set<HtmlTag>(['p', 'span', 'a'])
 
 const INPUT_ATTRIBUTES = new Set(['value', 'maxlength'])
 
-/** Reads a document's text as XML: its `bml` root, or null when it is not well formed or not BML. */
 export function parseBml(
   source: string,
   parser: XmlParser,
@@ -218,7 +213,6 @@ class Conversion {
 
   videoRect: Rect | null = null
 
-  /** The JPEG objects drawn, each with where it stands on the page. */
   private readonly stills: {
     element: PageElement
     left: number
@@ -579,7 +573,6 @@ class Conversion {
     return this.shaped(node, 'div', [], [['data-bml-video', '']])
   }
 
-  /** Where an element stands on the page: where its parent stands, and its own left and top from there. */
   private placeOf(
     node: XmlElementLike,
     offset: { left: number; top: number },
@@ -617,7 +610,6 @@ class Conversion {
       : null
   }
 
-  /** Cuts the video's rectangle out of each JPEG object, in the object's own place, once the page's video is known: a JPEG may come before the video object. */
   cutStills(): void {
     const video = this.videoRect
 
@@ -636,7 +628,6 @@ class Conversion {
     })
   }
 
-  /** An image element is an `img` even when its picture is not there yet, so that a script may give it one later. One whose picture is an MNG is a canvas the runtime plays it on, or an `img` without a picture when the MNG is malformed. */
   private image(node: XmlElementLike, reference: string | null): PageElement {
     const resource = reference ? this.resource(reference) : undefined
     const extra: [string, string][] = reference
@@ -656,7 +647,6 @@ class Conversion {
     return this.shaped(node, 'img', [], url ? [...extra, ['src', url]] : extra)
   }
 
-  /** The MNG a reference names, read and counted against the document's images, in the document's palette; a malformed one is a warning and no animation. */
   private animationOf(
     reference: string,
     resource: BmlResource,
@@ -679,7 +669,6 @@ class Conversion {
     return paintedWith(reading.mng, this.palette)
   }
 
-  /** The URL an image is drawn from, counted against the document's images; a reference to no image, or to one of a kind not drawn, is a warning and no URL. */
   private urlOf(reference: string): string | null {
     const resource = this.resource(reference)
     const drawable = resource?.kind === 'jpeg' || resource?.kind === 'png'
@@ -712,7 +701,6 @@ function compareSpecificity(
   return a[0] - b[0] || a[1] - b[1] || a[2] - b[2]
 }
 
-/** Converts a BML document into the page the runtime draws: its elements as HTML elements, its style as CSS, and what the runtime needs to know of it. */
 export function convertBml(
   root: XmlElementLike,
   context: DocumentContext,

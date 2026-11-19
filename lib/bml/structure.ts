@@ -1,16 +1,13 @@
 export type FieldType = 'B' | 'U' | 'I' | 'Z' | 'S' | 'P'
 
-/** The unit of a field's length: `B` bytes, `b` bits, `V` the bytes of the length that comes before a value of varying length. */
 export type FieldUnit = 'B' | 'b' | 'V'
 
-/** One field of a structure such as `U:2B,U:4b,S:1V`: its type, its length and the unit of that length. */
 export interface Field {
   type: FieldType
   length: number
   unit: FieldUnit
 }
 
-/** The structure of a binary table: the bytes of the length each row begins with, if any, and its fields. */
 export interface TableStructure {
   rowLength: number
   fields: Field[]
@@ -28,7 +25,6 @@ export const MOST_ROW_LENGTH_BYTES = 4
 
 const SIGNED_BYTES = new Set([1, 2, 4])
 
-/** The bits a field of fixed width takes, or the bits of the length before a value of varying length. */
 export function bitsOf(field: Field): number {
   return field.unit === 'b' ? field.length : field.length * 8
 }
@@ -73,7 +69,6 @@ function fieldOf(part: string): Field | null {
   return isField(field) ? field : null
 }
 
-/** The fields a structure names, or null when it is not one. */
 export function fieldsOf(structure: unknown): Field[] | null {
   if (typeof structure !== 'string') {
     return null
@@ -88,7 +83,6 @@ export function fieldsOf(structure: unknown): Field[] | null {
     : null
 }
 
-/** The structure of a binary table, whose first part is the bytes of the length each row begins with: `1,S:1V` or `0,U:2B,U:4b`. A structure without it has rows of no length before them. */
 export function tableStructureOf(structure: unknown): TableStructure | null {
   if (typeof structure !== 'string') {
     return null
@@ -105,12 +99,10 @@ export function tableStructureOf(structure: unknown): TableStructure | null {
     : null
 }
 
-/** The fields that give a column: padding does not. */
 export function columnsOf(fields: Field[]): Field[] {
   return fields.filter((field) => field.type !== 'P')
 }
 
-/** Whether a value is of a field's kind: text for a string or a zip code, a number otherwise. */
 export function fitsField(field: Field, value: unknown): boolean {
   if (field.type === 'S' || field.type === 'Z') {
     return typeof value === 'string'

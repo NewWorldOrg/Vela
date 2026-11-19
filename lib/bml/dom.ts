@@ -8,7 +8,6 @@ import {
   type UsedKeyGroup,
 } from '@/lib/bml/style'
 
-/** What the runtime drew a page into, as the document wrapper reads it. */
 export interface Stage {
   body: HTMLElement
   byId: Map<string, HTMLElement>
@@ -16,14 +15,12 @@ export interface Stage {
   states: HTMLStyleElement
 }
 
-/** What the wrapper asks of the runtime when a script changes the page. */
 export interface DocumentHooks {
   moveFocus(element: HTMLElement | null): void
   navChanged(): void
   seenChanged(): void
   usedKeys(groups: UsedKeyGroup[]): void
   image(reference: string): string | null
-  /** Plays the MNG a reference names on a canvas, in place of what it played. */
   animate(element: HTMLElement, reference: string): void
   resolve(reference: string): string | null
   warn(message: string): void
@@ -31,7 +28,6 @@ export interface DocumentHooks {
 
 export type StyleState = 'normal' | 'focus' | 'active'
 
-/** The event a handler reads as `document.currentEvent`. */
 export interface BmlEvent {
   type: string
   target: unknown
@@ -51,7 +47,6 @@ const TEXT_NODE = 3
 
 const SIDE_NAMES = new Set(['up', 'down', 'left', 'right'])
 
-/** BML's own properties a script may set that change nothing in how the page is drawn here. */
 const QUIET_PROPERTIES = new Set(['grayscale-color-index'])
 
 const STATE_MARK: Record<Exclude<StyleState, 'normal'>, string> = {
@@ -73,7 +68,6 @@ function isText(node: Node | null | undefined): node is Text {
   return node?.nodeType === TEXT_NODE
 }
 
-/** The hidden side of the document: what the wrappers reach through fields no script can name. */
 class Inner {
   readonly stage: Stage
 
@@ -336,7 +330,6 @@ function styleProxy(
   })
 }
 
-/** A text node of the page, as a script reads and writes it. */
 export class BmlText {
   readonly #node: Text
 
@@ -376,7 +369,6 @@ export class BmlText {
   }
 }
 
-/** An element of the page, as a script reads and writes it: never the element itself. */
 export class BmlElement {
   readonly #element: HTMLElement
 
@@ -444,7 +436,6 @@ export class BmlElement {
       .filter((child): child is BmlElement | BmlText => child !== null)
   }
 
-  /** The body's `invisible`: while it is set, nothing of the page is shown and the video stays whole, as an entry document waits for the data button. */
   get invisible(): boolean {
     return this.#element.getAttribute('data-bml-attr-invisible') !== null
   }
@@ -485,7 +476,6 @@ export class BmlElement {
     }
   }
 
-  /** The image's reference: what a script last set, or else what the document wrote, as a script reads it back to build the name of a sibling image. */
   get data(): string {
     return (
       this.#inner.references.get(this.#element) ??
@@ -571,7 +561,6 @@ export class BmlElement {
   }
 }
 
-/** The attributes of a `beitem` a script reads and writes by name, those read as numbers marked. */
 const ITEM_PROPERTIES: Record<string, { attribute: string; number: boolean }> =
   {
     esRef: { attribute: 'es_ref', number: false },
@@ -590,7 +579,6 @@ const ITEM_PROPERTIES: Record<string, { attribute: string; number: boolean }> =
     eventId: { attribute: 'event_id', number: true },
   }
 
-/** A `beitem` as a script reads it: its id and type, what it listens for, and whether it is subscribed. */
 export class BmlEventItem {
   readonly #item: EventItem
 
@@ -653,7 +641,6 @@ Object.entries(ITEM_PROPERTIES).forEach(([name, { attribute, number }]) => {
   })
 })
 
-/** The `document` a script sees: a way to its elements and events by id, the focus and the event being handled. */
 export class ScriptedDocument {
   readonly #inner: Inner
 
@@ -680,7 +667,6 @@ export class ScriptedDocument {
   }
 }
 
-/** The runtime's side of one page's document: the object its scripts call `document`, the events it listed, and the focus and the event the runtime sets. */
 export class BmlDocument {
   private readonly inner: Inner
 
@@ -708,7 +694,6 @@ export class BmlDocument {
     this.inner.focused = element
   }
 
-  /** Whether the page is one nothing of can be seen: its body is marked invisible or its visibility is hidden, as an entry document that waits for the data button is. */
   cannotBeSeen(): boolean {
     const body = this.inner.stage.body
 
@@ -718,17 +703,14 @@ export class BmlDocument {
     )
   }
 
-  /** An element as a handler reads it for `currentEvent.target`. */
   elementTarget(element: HTMLElement | null): BmlElement | null {
     return this.inner.wrapElement(element)
   }
 
-  /** A `beitem` as a handler reads it for `currentEvent.target`. */
   itemTarget(item: EventItem): BmlEventItem {
     return this.inner.wrapItem(item)
   }
 
-  /** Runs something while `document.currentEvent` is this event, then puts back what was there. */
   during<T>(event: BmlEvent, act: () => T): T {
     const before = this.inner.event
 

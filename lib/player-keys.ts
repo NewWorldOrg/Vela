@@ -14,7 +14,6 @@ export interface SeekMark {
   at: number
 }
 
-/** The seek mark after one more step: a step the same way while the mark is still up adds to it. */
 export function seekMarkAfter(
   last: SeekMark | null,
   way: SeekWay,
@@ -244,7 +243,6 @@ export function playerCommand(
   return command
 }
 
-/** What a data broadcast takes from the keyboard while it is open: the keys its document uses, and d too where a Hybridcast application asked for it, which otherwise opens and closes the broadcast. */
 export interface OpenBroadcast {
   usedKeys: readonly BmlKey[]
   takesD?: boolean
@@ -257,7 +255,6 @@ export type KeyRoute =
 
 const ARROWS = new Set<BmlKey>(['up', 'down', 'left', 'right'])
 
-/** Where a key goes: to an open data broadcast when its document uses it, or else to the player as before. Arrows are taken only once the player has been aimed at, as the player takes them, and while a broadcast is open they neither seek nor change the volume: one its document does not use goes nowhere, so the page does not scroll either. */
 export function routeKey(
   press: KeyPress,
   offered: PlayerKeysOffered,
@@ -292,7 +289,6 @@ export function routeKey(
   return command ? { to: 'player', command } : null
 }
 
-/** Whether a key taken by the player shows that the keyboard is working it: opening or closing the data broadcast, or a key handed to it. Arrows are taken from then on, so that the page does not scroll under an open broadcast. */
 export function aimsAtThePlayer(route: KeyRoute): boolean {
   return (
     route.to === 'dataBroadcast' ||

@@ -51,7 +51,6 @@ function halfFloat(bits: number): number {
     : sign * (1 + fraction / 1024) * 2 ** (exponent - 15)
 }
 
-/** Reads every kind of CBOR item, so that a value of a kind the catalog does not use can be passed over. Only lengths and nesting past the limits, reserved codes and a payload cut short are refused. */
 class CborReader {
   private at = 0
 
@@ -289,7 +288,6 @@ function plain(value: Cbor): unknown {
   return Array.isArray(value) ? value.map(plain) : value
 }
 
-/** Reads the catalog payload of the side channel (CBOR after the kind byte), or null when it is not one. */
 export function readCatalog(payload: Uint8Array): BmlCatalog | null {
   if (payload.length < 2 || payload[0] !== CATALOG_BYTE) {
     return null
@@ -380,7 +378,6 @@ function carouselOf(value: unknown): CatalogCarousel | null {
   return { tag: carousel.tag, downloadId: carousel.downloadId, modules }
 }
 
-/** The catalog a decoded value or a message carries, or null when its shape is not one. Keys it does not know are left out, and so is a card's ID that is not twelve hexadecimal digits. */
 export function catalogOf(value: unknown): BmlCatalog | null {
   const catalog = recordOf(value)
   const carousels = catalog && listOf(catalog.carousels, carouselOf)
@@ -476,7 +473,6 @@ class CborWriter {
   }
 }
 
-/** The version the catalog lists for a module, or undefined when it does not list the module. */
 export function listedVersion(
   catalog: BmlCatalog | null,
   tag: number,
@@ -488,7 +484,6 @@ export function listedVersion(
     .find((module) => module.id === id)?.version
 }
 
-/** Whether a module stays held when a catalog comes: when the catalog lists it, at whatever version, as the one held is kept until the version listed comes. */
 export function staysListed(
   catalog: BmlCatalog,
   tag: number,
@@ -497,7 +492,6 @@ export function staysListed(
   return listedVersion(catalog, tag, id) !== undefined
 }
 
-/** Whether a module that comes takes the place of the one held: always, unless the one held is the version the catalog lists and the one that came is not. */
 export function takesThePlace(
   catalog: BmlCatalog | null,
   held: { version: number } | undefined,
@@ -513,7 +507,6 @@ export function takesThePlace(
   )
 }
 
-/** Writes a catalog the way the side channel carries it. */
 export function catalogPayload(catalog: BmlCatalog): Uint8Array {
   const body = new CborWriter().value(catalog).bytes()
   const payload = new Uint8Array(body.length + 1)

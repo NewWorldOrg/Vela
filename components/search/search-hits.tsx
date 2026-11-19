@@ -18,7 +18,6 @@ interface Reserving {
   onRestore?: (id: string) => Promise<ReservationWrite>
 }
 
-/** The pill at the right of a hit: `予約` reserves it in one press, and a reserved or recording hit says so and takes it back in one press, each with a toast that undoes it. */
 function ReservePill({
   hit,
   onReserve,
@@ -73,7 +72,6 @@ function ReservePill({
 const ROW =
   'group/hit relative grid min-h-[calc(66rem/16)] grid-cols-[calc(96rem/16)_calc(150rem/16)_minmax(0,1fr)_auto] items-center gap-x-5 rounded-md px-2.5 py-2 transition-[background-color] duration-[140ms] ease-toy hover:bg-surface max-[1000px]:grid-cols-[calc(76rem/16)_minmax(0,1fr)_auto]'
 
-/** The hits on a screen wider than a phone: each a row of its time, channel, title over its description and the pill that reserves it, under the day it is on. A press on the row opens the programme. */
 export function SearchHits({
   hits,
   words,

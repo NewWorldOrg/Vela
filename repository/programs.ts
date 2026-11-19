@@ -116,7 +116,6 @@ export interface RelatedProgram {
 export interface ProgramDetail {
   program: Program
   day: GuideDay
-  /** The broadcast day the clock is in, as `day.date` is written. */
   today: string
   channel?: Channel
   nowMin?: number
@@ -265,7 +264,6 @@ function cellKeyOf(program: Program): string {
   return `${program.channelId}|${program.id}`
 }
 
-/** The guide in two readings: the hours the grid opens on, which the page is drawn with, and the rest of the day, which follows in the same answer. A programme is in one of them, never both. */
 export async function getGuideInTwo(
   rawKind: string | undefined,
   rawDate: string | undefined,
@@ -690,7 +688,6 @@ function guideDays(): GuideDay[] {
   return days
 }
 
-/** The genre a label names, by the table above; nothing for a label the table does not know, and for the labels that share the 'other' row. */
 export function genreOfLabel(label: string): Genre | undefined {
   const slug = Object.values(GENRES).find((one) => one.label === label)?.slug
 

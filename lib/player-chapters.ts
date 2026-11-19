@@ -6,7 +6,6 @@ import type {
 
 const ALREADY_THERE = 0.5
 
-/** The chapters this build can place; one of a kind it has never heard of draws nothing and is never jumped to. */
 export function chaptersToDraw(chapters: PlaybackChapter[]): PlaybackChapter[] {
   return chapters.filter((one) => one.kind !== 'unknown')
 }
@@ -38,7 +37,6 @@ const SKIPPABLE: ReadonlySet<ChapterKind> = new Set<SkippableKind>([
   'ending',
 ])
 
-/** A chapter of a kind a person may be offered to skip. */
 export interface SkippableChapter extends PlaybackChapter {
   kind: SkippableKind
 }
@@ -56,7 +54,6 @@ function canBeSkipped(one: PlaybackChapter): one is SkippableChapter {
   )
 }
 
-/** The break, opening or ending being played when the backend lets it be skipped, or nothing. */
 export function skippableChapterAt(
   position: number,
   chapters: PlaybackChapter[],
@@ -69,12 +66,9 @@ export function skippableChapterAt(
   )
 }
 
-/** Chapters that may be skipped, each starting where the one before it ends, skipped with one press. */
 export interface SkippableRun {
-  /** The chapter being played, then each one that follows it. */
   chapters: [SkippableChapter, ...SkippableChapter[]]
   endsAtSec: number
-  /** The kinds in the order they are played, each once. */
   kinds: SkippableKind[]
 }
 
@@ -90,7 +84,6 @@ function skippableAfter(
   return next && canBeSkipped(next) ? next : undefined
 }
 
-/** The chapter being played when it may be skipped, with every chapter that may be skipped right after it. */
 export function skippableRunAt(
   position: number,
   chapters: PlaybackChapter[],
@@ -122,21 +115,18 @@ const SHORT_NAME: Record<SkippableKind, string> = {
   ending: 'ED',
 }
 
-/** The words on the skip button for the kinds it skips, in the order they are played. */
 export function skipWords(kinds: readonly SkippableKind[]): string {
   return `${kinds.map((kind) => SHORT_NAME[kind]).join(' と ')} を飛ばす`
 }
 
 export const SKIP_ONLY = '飛ばす'
 
-/** The words on the skip button in the control row: one kind as anywhere else, and several kinds joined with a plus. */
 export function skipWordsInTheRow(kinds: readonly SkippableKind[]): string {
   return kinds.length < 2
     ? skipWords(kinds)
     : `${kinds.map((kind) => SHORT_NAME[kind]).join('+')} を飛ばす`
 }
 
-/** The name of the skip in the control row: the words it shows, so a voice and a hand reach it by what they see (WCAG 2.5.3); when it shows only `飛ばす`, the kinds it skips follow in brackets. */
 export function skipNameInTheRow(
   kinds: readonly SkippableKind[],
   fits: boolean,

@@ -25,7 +25,6 @@ function Dot() {
   )
 }
 
-/** The ring after what comes next: one press reserves it, and the toast takes it back. */
 function ReserveNext({
   programmeId,
   title,
@@ -55,7 +54,6 @@ function ReserveNext({
   )
 }
 
-/** The programme on now under the picture: the station's mark, the channel, the title, its hours and facts, what comes next, and its description; the column at its right holds what can be done with it. */
 export function NowNext({
   watching,
   actions,

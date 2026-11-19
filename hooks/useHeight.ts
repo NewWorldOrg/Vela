@@ -10,7 +10,6 @@ function noHeight(): number {
   return 0
 }
 
-/** The element's laid-out height in whole CSS pixels, rounded up, following it as it changes: 0 for no element, and on the server. */
 export function useHeight(element: HTMLElement | null): number {
   const follow = useCallback(
     (notify: () => void) => {

@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
 import { FilterIcon } from '@/components/vela/icons'
 
-/** Where a band of filters folds behind `絞り込み`: a phone held upright, or one held either way. */
 export type FoldsOn = 'phone' | 'handheld'
 
 const BUTTON_SHOWN_ON: Record<FoldsOn, string> = {
@@ -17,7 +16,6 @@ const FOLDED_ON: Record<FoldsOn, string> = {
   handheld: 'max-[600px]:hidden sideways:hidden',
 }
 
-/** The class that hides the folded filters while `絞り込み` is closed, on the screens the band folds on. */
 export function foldedFiltersOf(
   open: boolean,
   on: FoldsOn = 'phone',
@@ -25,7 +23,6 @@ export function foldedFiltersOf(
   return open ? undefined : FOLDED_ON[on]
 }
 
-/** `絞り込み`, which opens the folded filters under its row; the number is how many of them are narrowing. */
 export function FilterFoldButton({
   open,
   onOpenChange,

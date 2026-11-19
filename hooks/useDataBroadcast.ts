@@ -47,7 +47,6 @@ interface Kept {
   openedIn: string | null
 }
 
-/** Whether the broadcast opens by itself, and the programme being watched, so that one closed by hand stays closed until the programme changes. */
 export interface AutoOpens {
   autoOpens: boolean
   programme: string
@@ -85,7 +84,6 @@ function openedIn(
   return view.open ? programme : before
 }
 
-/** The data broadcast of one player: whether it can be opened, what is shown of it, and the way keys reach its runtime, or the Hybridcast application running in its place. What is shown belongs to one session, so a new channel starts closed, and an application with it. With the setting on, it opens by itself when the catalog asks and the start document is in, once per programme. A Hybridcast application the documents ask for, or one an application asks for in its own place, is started through `startApplication`; where there is none, it does not open, and one running gives way to the documents. Keys go to the application only from the groups its key set takes. The receiver's built-in sounds the documents or the application ask for are played through `sounds`, which the toggle and the keys unlock, as they are pressed, and `unlockSounds` unlocks from the player's own controls while it is open. */
 export function useDataBroadcast(
   feed: DataBroadcastHeld,
   session: string | null,

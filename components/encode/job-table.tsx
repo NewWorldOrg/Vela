@@ -44,10 +44,6 @@ interface Column {
   right?: boolean
 }
 
-/**
- * The profile and the destination are said on the line under the programme,
- * and the end under the start, so the table fits the settings frame.
- */
 const COLUMNS: Column[] = [
   { label: '番組', width: undefined },
   { label: '状態', width: JOB_STATUS_COLUMN },
@@ -117,7 +113,6 @@ function Destination({ job }: { job: EncodeJob }) {
   )
 }
 
-/** The rows picked while the failed jobs are being chosen, and the press that takes one in or leaves it out. */
 export interface JobPicking {
   picked: ReadonlySet<string>
   onPick: (id: string) => void
@@ -134,7 +129,6 @@ export function JobTable({
   onCallOff: (id: string) => Promise<EncodeWrite>
   waiting?: boolean
   picking?: JobPicking
-  /** Why a job was not run again, by its id, said on its row after `まとめて再実行`. */
   reasons?: ReadonlyMap<string, string>
 }) {
   return (
@@ -236,7 +230,6 @@ function JobMade({ job }: { job: EncodeJob }) {
   )
 }
 
-/** The check at the head of a row while the failed jobs are being chosen, the same mark the library puts on a picture. */
 function JobPick({ job, picking }: { job: EncodeJob; picking: JobPicking }) {
   const taken = picking.picked.has(job.id)
 

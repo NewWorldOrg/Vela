@@ -28,7 +28,6 @@ function Dot({ className }: { className?: string }) {
   return <span className={cn('text-ink-2', className)}>・</span>
 }
 
-/** How the recording's information is laid: in the page under the player, or in the face a phone held on its side opens at the picture's right, which is as narrow as an upright phone and lays it the same way. */
 type InfoLaid = 'page' | 'face'
 
 function Sep() {

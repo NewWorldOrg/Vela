@@ -2,7 +2,6 @@ import { withGlobalFunctions } from '@/lib/bml/declarations'
 import { withIntegerDivision } from '@/lib/bml/integers'
 import { ownOf, Realm, sameDescriptor, type Own } from '@/lib/bml/realm'
 
-/** Thrown out of `browser.launchDocument` and `reloadActiveDocument`, so the script that left its document runs no further. */
 export class DocumentLeft extends Error {
   constructor() {
     super('the document was left')
@@ -10,7 +9,6 @@ export class DocumentLeft extends Error {
   }
 }
 
-/** Thrown out of `browser.transmitTextDataOverIP` when the answer is still on its way: the script stops there, and is run again from its start once the answer is in, with the answers it has had given back in the order it asked. */
 export class LineAwaited extends Error {
   constructor() {
     super('the answer over the line is awaited')
@@ -18,7 +16,6 @@ export class LineAwaited extends Error {
   }
 }
 
-/** What a script may not reach by name: the frame's own window and what it opens onto. Inside a document's scope each is the document's own, what it wrote by that name or else nothing. */
 export const SHADOWED_GLOBALS = [
   'window',
   'self',
@@ -76,14 +73,12 @@ export type ScriptGlobals = Record<string, unknown>
 
 export { MOST_RUN_MS } from '@/lib/bml/run-limit'
 
-/** Names and what they held at one moment: a document's own global bindings, the names its declarations put on the global object, or what it wrote by the names its scope hides. */
 export type Bindings = Map<string, unknown>
 
 const KEPT = new WeakMap<object, Bindings>()
 
 const GIVEN = new WeakMap<object, ReadonlySet<object>>()
 
-/** The object a document's code is run `with`. A name the runtime gives resolves to what it gave, and stays so whatever the code writes to it. A name the frame must not be reached by is the document's own: it resolves to what the document wrote to it, or to nothing, and never to the frame's. Every other name goes on to the frame's own globals, where the document's declarations live. */
 export function scopeOf(globals: ScriptGlobals): object {
   const given = new Map(Object.entries(globals))
   const hidden = new Set<string>(SHADOWED_GLOBALS)
@@ -129,7 +124,6 @@ export function scopeOf(globals: ScriptGlobals): object {
   return scope
 }
 
-/** Runs a document's code with its scope, the names the scope hides laid over the global object while it runs. */
 export type Hiding = (scope: object, run: () => void) => void
 
 interface Held {
@@ -153,7 +147,6 @@ function layOver(global: object, held: Held, scope: () => object): void {
   })
 }
 
-/** Lays each name the scope hides that the global object may redefine over it, adding each to `laid` once it is laid. */
 function layAllOver(global: object, laid: Held[], scope: () => object): void {
   SHADOWED_GLOBALS.forEach((name) => {
     const held = {
@@ -168,7 +161,6 @@ function layAllOver(global: object, laid: Held[], scope: () => object): void {
   })
 }
 
-/** Puts back on the global object each name laid over it as it was, each on its own, and gives what kept any from being put back. */
 function putAllBack(global: object, laid: Held[]): unknown[] {
   return laid.flatMap(({ name, described }) => {
     try {
@@ -185,7 +177,6 @@ function putAllBack(global: object, laid: Held[]): unknown[] {
   })
 }
 
-/** Keeps in the scope what a document's code writes on the global object by a name the scope hides. The code is wrapped in a block, and a function it declares there is also written on the global object, past the scope: a name held there behind a getter alone drops it, and any other takes it in place of the frame's own. So while the code runs each such name on the global object reads as it did and hands what is written to it to the scope, and afterwards holds what it held. A name the global object holds unconfigurable cannot be laid over: a window's `window` and `top` drop what is written to them, and its `location` navigates the frame to it. A name the global object will not have laid over fails the run before it starts, with the names laid before it put back; one it will not have put back fails a run that went well, once every other is put back. */
 export function hidingOn(global: object): Hiding {
   const running: object[] = []
   const current = () => running[running.length - 1]
@@ -219,31 +210,26 @@ export function hidingOn(global: object): Hiding {
 
 const TABLE_CONSTRUCTION = /\bnew\s+(BinaryTable|CSVTable)\s*\(/g
 
-/** A document's code with `new` taken off `BinaryTable` and `CSVTable`: the runtime answers null for a table it cannot make, which a constructor called with `new` cannot. */
 export function withoutTableNew(code: string): string {
   return code.replace(TABLE_CONSTRUCTION, '$1(')
 }
 
-/** The most objects a document's state is taken of; what lies past them is not put back. */
 export const MOST_STATE_OBJECTS = 10_000
 
 const HELD_WHOLE = new WeakSet<object>()
 
-/** Marks what the runtime makes for a document to read, a table say, as held whole in the document's state: where the document holds it, it is compared by identity, and what it holds is never gone into. */
 export function heldWhole<T extends object>(value: T): T {
   HELD_WHOLE.add(value)
 
   return value
 }
 
-/** One property found not as it was: by what key, what it was then, and what it is now. */
 export interface PropertyChange {
   key: PropertyKey
   before: PropertyDescriptor | undefined
   after: PropertyDescriptor | undefined
 }
 
-/** The bindings documents declared on a global object, and the means to put one back. */
 export interface GlobalBindings {
   readonly global: object
   take(): Own
@@ -256,7 +242,6 @@ function isObject(value: unknown): value is object {
   )
 }
 
-/** An object's own properties, or null for one that throws when they are asked after. */
 function readOwn(target: object): Own | null {
   try {
     return ownOf(target)
@@ -265,7 +250,6 @@ function readOwn(target: object): Own | null {
   }
 }
 
-/** One own property of an object, or null when it throws when asked after. */
 function readProperty(
   target: object,
   key: PropertyKey,
@@ -281,7 +265,6 @@ function writableData(described: PropertyDescriptor | undefined): boolean {
   return described !== undefined && 'value' in described && !!described.writable
 }
 
-/** Whether a property is a writable value now as it was before, alike in the rest, so that putting it back is setting its value. */
 function sameKindOfData(
   now: PropertyDescriptor | undefined,
   was: PropertyDescriptor,
@@ -294,7 +277,6 @@ function sameKindOfData(
   )
 }
 
-/** Puts one property back as it was before a change, unless it has changed again since. One that was not there is taken off, or, where it cannot be, as a global binding cannot, left with nothing. */
 function putPropertyBack(
   on: object,
   { key, before, after }: PropertyChange,
@@ -329,7 +311,6 @@ function changesOf(before: Own, after: Own): PropertyChange[] {
     .map((key) => ({ key, before: before.get(key), after: after.get(key) }))
 }
 
-/** The own properties of each object the values lead to through data properties, each once, as many as a state takes, and whether there were more. What is `aside` or held whole is not gone into. */
 function objectsFrom(
   values: Iterable<unknown>,
   aside: ReadonlySet<object>,
@@ -382,14 +363,12 @@ function keptProperty(value: unknown): PropertyDescriptor {
   return { value, writable: true, enumerable: true, configurable: true }
 }
 
-/** What a document wrote by the names its scope hides, read as the properties of an object would be. */
 function keptOwn(kept: Bindings | undefined): Own {
   return new Map(
     [...(kept ?? [])].map(([name, value]) => [name, keptProperty(value)]),
   )
 }
 
-/** The bindings of a global object that were not on it when this was called, nor named `aside`, nor by a name the scope hides: what the documents declared on it since. A name the scope hides is the frame's own on the global object, and the document's in its scope, so it is neither taken nor put back here. A binding declared since a change is left with nothing when it is put back, as it cannot be taken off. */
 export function globalBindingsOf(
   global: object,
   aside: readonly string[] = [],
@@ -412,21 +391,18 @@ export function globalBindingsOf(
   }
 }
 
-/** A document's state at one moment: the bindings its declarations put on the global object, where the evaluator reaches them, what it wrote by the names its scope hides, and the own properties of each object those lead to through data properties, functions among them, but for what the runtime gave it. */
 export interface DocumentState {
   declared: Own | null
   kept: Own
   objects: Map<object, Own>
 }
 
-/** What changed of a document's state since it was taken: its declared bindings, what it wrote by hidden names, and the properties of its objects. */
 export interface StateChanges {
   declared: PropertyChange[]
   kept: PropertyChange[]
   objects: [object, PropertyChange][]
 }
 
-/** Runs one piece of a document's code with its scope, and throws what it threw. `bindings`, where the evaluator has it, reaches the global object the code declares on. */
 export type Evaluate = ((code: string, scope: object) => void) & {
   bindings?: (scope: object) => GlobalBindings
 }
@@ -437,7 +413,6 @@ export type ScriptOutcome =
   | { outcome: 'awaiting'; tookMs: number }
   | { outcome: 'failed'; error: unknown; tookMs: number }
 
-/** Runs a document's scripts and handlers one at a time, timing each and dividing in integers as a receiver does, with the document's writes on the built-ins in place only while its code runs. */
 export class ScriptScope {
   private readonly evaluate: Evaluate
 
@@ -465,7 +440,6 @@ export class ScriptScope {
     this.warn = warn
   }
 
-  /** The document's state as it stands. A document that holds more objects than a state takes is warned of once: what lies past them is not put back. */
   state(): DocumentState {
     const bindings = this.evaluate.bindings?.(this.scope)
     const declared = bindings?.take() ?? null
@@ -494,7 +468,6 @@ export class ScriptScope {
     return { declared, kept, objects }
   }
 
-  /** What changed of the document's state since it was taken. */
   changedSince(taken: DocumentState | null): StateChanges | null {
     if (!taken) {
       return null
@@ -514,7 +487,6 @@ export class ScriptScope {
     }
   }
 
-  /** Puts what changed of the document's state back as it was, each change that still stands: a binding declared since is left with nothing, and what it first wrote by a hidden name since, or put on an object, is taken off. */
   putBack(changes: StateChanges | null): void {
     if (!changes) {
       return

@@ -4,7 +4,6 @@ import type { Reservation } from '@/repository/reservations'
 import { EditReservationDialog } from '@/components/reservations/edit-reservation-dialog'
 import type { ReservationActions } from '@/components/reservations/reservation-row'
 
-/** The change of one reservation, in the place it opens: its priority, margins and encoding, saved where it stands. */
 export function ReservationChange({
   reservation,
   actions,

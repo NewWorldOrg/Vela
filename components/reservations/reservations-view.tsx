@@ -92,7 +92,6 @@ function DriftButton({
   )
 }
 
-/** What a conflicting reservation goes without, read from the overlap of its broadcast with the ones that keep the tuner. */
 function lossOf(reservation: Reservation): string | undefined {
   const kept = (reservation.conflict?.entries ?? []).flatMap((entry) =>
     entry.span ? [entry.span] : [],
@@ -111,7 +110,6 @@ function startOf(line: ReservationLine): string | undefined {
 
 type ListRow = AmongWatches<ReservationLine>
 
-/** The rows in the order given, gathered under the day each starts on; a day keeps the place of its first row. */
 function daysOf(rows: readonly ListRow[]): { day: string; rows: ListRow[] }[] {
   const days: { day: string; rows: ListRow[] }[] = []
 
@@ -140,9 +138,7 @@ export function ReservationsView({
   result: ReservationsResult
   actions: ReservationActions
   bulk: ReservationBulkActions
-  /** The tuners as they stand, for the chips under the next recording; left out when they cannot be read. */
   tuners?: TunerRow[]
-  /** The notices waiting for a programme to start; a list narrowed to what drifted from the guide shows none. */
   notices?: WaitingNotices
 }) {
   const { items, total, drift, filter } = result

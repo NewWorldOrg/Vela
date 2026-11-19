@@ -38,7 +38,6 @@ class UnreadFrame extends Component<
   }
 }
 
-/** The data broadcast's frame, read only when the data broadcast is opened. A frame that cannot be read is told to the player as the runtime failing, and is read again the next time the data broadcast opens. */
 export function FrameOnDemand({
   load = readFrame,
   ...props

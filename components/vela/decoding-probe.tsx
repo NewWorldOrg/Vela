@@ -20,7 +20,6 @@ function thisBrowser(): Probe {
   }
 }
 
-/** Asks the browser which artefacts it plays as they are, and keeps the answer in a cookie for the server. */
 export function DecodingProbe() {
   useEffect(() => {
     void browserDecodes(thisBrowser()).then((decodes) => {

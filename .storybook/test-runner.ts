@@ -946,7 +946,6 @@ const turns = new StoryTurns()
 
 const touched = new WeakSet<Page>()
 
-/** Gives the page a finger for its pointer: `(pointer: coarse)` holds from here on, so a page that was touched is left for a fresh one before a story for a mouse. */
 async function touchScreen(page: Page): Promise<void> {
   const session = await page.context().newCDPSession(page)
 

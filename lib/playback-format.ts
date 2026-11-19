@@ -21,7 +21,6 @@ const LABELS: Record<FormatChoice, string> = {
   av1: 'AV1',
 }
 
-/** The types a browser is asked about, as Carina writes them: H.265 tagged hvc1, Main, level 4.1, and AV1 Main, level 4.1, 8 bits. */
 export const FORMAT_IN_MP4 = {
   h265: 'video/mp4; codecs="hvc1.1.6.L123.B0"',
   av1: 'video/mp4; codecs="av01.0.09M.08"',
@@ -41,7 +40,6 @@ export interface FormatAnswer {
 }
 
 export interface FormatAnswers {
-  /** Whether the media capabilities answered; a browser without them is asked whether its media source takes the type. */
   byCapabilities: boolean
   h265: FormatAnswer
   av1: FormatAnswer
@@ -121,7 +119,6 @@ function taken(probe: FormatProbe, type: string): FormatAnswer {
   }
 }
 
-/** Asks the browser whether it plays H.265 and AV1 fed through a media source, at the size and rate of the picture. */
 export async function askFormats(
   probe: FormatProbe,
   picture: PictureSize,
@@ -169,14 +166,12 @@ function playsLightly(format: PlaybackFormat, answers: FormatAnswers): boolean {
   return answer.powerEfficient
 }
 
-/** Whether the browser has to be asked before a format is settled: only where Carina transcodes in more than H.264. */
 export function asksTheBrowser(
   offered: readonly PlaybackFormat[] | undefined,
 ): boolean {
   return offered?.some((one) => one !== H264) ?? false
 }
 
-/** 自動, H.264 and each format Carina transcodes in that the browser plays at all; none where that leaves only 自動 and H.264. */
 export function formatChoices(
   offered: readonly PlaybackFormat[] | undefined,
   answers: FormatAnswers | undefined,
@@ -207,7 +202,6 @@ export function choiceShown(
   return choices.includes(choice) ? choice : AUTO
 }
 
-/** The format a picture is asked for in: the one chosen while it can be played, and otherwise the first of AV1, H.265 and H.264 that plays in the hardware. */
 export function formatToPlay(
   choice: FormatChoice,
   offered: readonly PlaybackFormat[] | undefined,

@@ -1,6 +1,5 @@
 import type { Routed } from '@/lib/hybridcast/relay'
 
-/** Where an address the application asks for goes. */
 export type Route = (written: string | URL) => Routed
 
 const REFUSED = 'Hybridcast: the application may not reach that address'
@@ -9,7 +8,6 @@ function addressOf(input: RequestInfo | URL): string | URL {
   return typeof input === 'object' && 'url' in input ? input.url : input
 }
 
-/** `fetch` as the application is given it: what it asks for inside the boundary is asked of the relay, what names no server is left to the browser, and the rest fails as a fetch that reached nothing does. Nothing is sent with credentials: the relay is on Vela's origin, and the application has no business with what the browser keeps for it. */
 export function relayedFetch(native: typeof fetch, route: Route): typeof fetch {
   return (input, init) => {
     const routed = route(addressOf(input))
@@ -32,7 +30,6 @@ export function relayedFetch(native: typeof fetch, route: Route): typeof fetch {
   }
 }
 
-/** `XMLHttpRequest` as the application is given it: opened on the relay for an address inside the boundary, as asked for one that names no server, and for any other, sent nowhere and ended as a request that reached nothing: state 4, status 0, `error` and `loadend`, and a synchronous one throws. It never sends credentials. */
 export function relayedXhr(
   Native: typeof XMLHttpRequest,
   route: Route,
@@ -102,7 +99,6 @@ export function relayedXhr(
   }
 }
 
-/** `WebSocket` as the application is given it: carried by the relay inside the boundary, and refused outside it. */
 export function relayedWebSocket(
   Native: typeof WebSocket,
   route: Route,
@@ -120,7 +116,6 @@ export function relayedWebSocket(
   }
 }
 
-/** `navigator.sendBeacon` as the application is given it: sent through the relay inside the boundary, and not sent otherwise. */
 export function relayedBeacon(
   native: (url: string | URL, data?: BodyInit | null) => boolean,
   route: Route,

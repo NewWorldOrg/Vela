@@ -17,7 +17,6 @@ const CHIP_VARIANT: Record<
   warn: 'warn',
 }
 
-/** One line of a hardware group: what it is at the left, how it stands in the middle, its switches at the right. */
 export function HardwareLine({
   id,
   title,
@@ -80,7 +79,6 @@ export function HardwareLine({
   )
 }
 
-/** A state as plain words, or as a chip when it asks for a hand, with since or until when beside or under it. */
 export function StatusSaid({
   status,
   why,

@@ -13,11 +13,9 @@ import {
   type LocalSignInPlacement,
 } from '@/components/login/local-sign-in'
 
-/** The ground of the screens outside the app: the plain page, the theme at its corner, one column at its middle. */
 export const SIGN_IN_GROUND =
   'relative flex min-h-dvh flex-col items-center justify-center bg-bg px-6 py-16 max-[480px]:px-4 max-[480px]:pt-14 max-[480px]:pb-10'
 
-/** The column of a screen outside the app, with nothing round it. */
 export const SIGN_IN_COLUMN = 'w-full max-w-[calc(360rem/16)] text-center'
 
 export function LoginView({

@@ -61,10 +61,8 @@ export interface TunerSession {
   endsAt?: string
 }
 
-/** How a state is drawn: plain words, or a chip in red for recording or trouble, or in amber for a warning. */
 export type StatusTone = 'plain' | 'ok' | 'rec' | 'warn' | 'err'
 
-/** A state in one word or phrase, and the line under it that says since when, or what it is busy with and `until` when. */
 export interface StatusLine {
   word: string
   tone: StatusTone
@@ -75,11 +73,8 @@ export interface StatusLine {
 export interface TunerRow {
   id: string
   device: string
-  /** The machine the tuner belongs to when it is not the driver's own. */
   machine?: string
-  /** What the hardware calls itself, when the driver says. */
   name?: string
-  /** Where it sits: its kernel driver and device path, or the USB port. */
   place?: string
   status: StatusLine
   kind?: '地上波' | '衛星'
@@ -102,7 +97,6 @@ export interface DetectionDiffRow {
   kind: 'add' | 'del' | 'kind'
   tag: string
   device: string
-  /** What the hardware calls itself and where it sits, for a device found anew. */
   name?: string
   place?: string
   note: string
@@ -141,7 +135,6 @@ export interface DriverRestartOffer {
 
 export type DriverLink = 'connected' | 'draining' | 'disconnected' | 'unknown'
 
-/** What the driver says of itself, spelled for the screen. */
 export interface DriverFacts {
   version?: string
   startedAt?: string
@@ -163,7 +156,6 @@ interface DriverState {
 }
 
 export interface TunerResult extends DriverState {
-  /** The card reader, or undefined where the driver does not answer for it. */
   cardReaders?: CardReaderRow[]
   notices: TunerNotice[]
   thresholdHours: number

@@ -7,7 +7,6 @@ import { cn } from '@/lib/utils'
 import { PHONE_BAR_BUTTON } from '@/components/vela/app-shell'
 import { iconButtonVariants } from '@/components/vela/icon-button'
 
-/** A tool in the bar that goes to another screen. */
 export function PhoneBarLink({
   className,
   ...props

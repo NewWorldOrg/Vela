@@ -4,7 +4,6 @@ import { cn } from '@/lib/utils'
 
 const EVERY = 'すべて'
 
-/** A row of pills that narrows a list to one of its values, `すべて` first: the chosen pill in the ink, the others on the surface. */
 export function FilterChips({
   label,
   options,

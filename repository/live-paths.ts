@@ -53,12 +53,10 @@ export function liveChannelsHref(): string {
 
 const LIVE_STREAM_PATH = '/api/live'
 
-/** How the live routes name a channel: its network and service. */
 export function liveChannelOf(networkId: number, serviceId: number): string {
   return `${networkId}-${serviceId}`
 }
 
-/** The playlist a browser without a media source plays a channel from, at a profile and with a sound. */
 export function livePlaylistHref(
   networkId: number,
   serviceId: number,
@@ -74,7 +72,6 @@ export function liveStreamHref(networkId: number, serviceId: number): string {
   return `${LIVE_STREAM_PATH}/${liveChannelOf(networkId, serviceId)}/stream`
 }
 
-/** The channel with the ticket in the path and a name at the end that a player shows as the title. */
 export function liveStreamWithTicketHref(
   networkId: number,
   serviceId: number,

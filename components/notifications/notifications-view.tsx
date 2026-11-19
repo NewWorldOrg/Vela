@@ -66,7 +66,6 @@ function Nothing({ children }: { children: string }) {
   )
 }
 
-/** Settings > notifications: where notices go, which events go where, how early a programme's start is told, and what was sent lately. */
 export function NotificationsView({
   screen,
   actions,
@@ -75,9 +74,7 @@ export function NotificationsView({
 }: {
   screen: NotificationsScreen
   actions: NotificationActions
-  /** This browser as a destination, where it can be one. */
   browser?: BrowserChoice
-  /** The present held still, for a picture. */
   now?: number
 }) {
   const { settings, destinations, ruleSets } = screen

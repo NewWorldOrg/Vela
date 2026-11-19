@@ -1,4 +1,3 @@
-/** Resolves `@/` to the repository root for the unit tests. */
 import { existsSync } from 'node:fs'
 import { registerHooks } from 'node:module'
 import path from 'node:path'

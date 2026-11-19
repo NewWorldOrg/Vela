@@ -33,7 +33,6 @@ export interface LiveSeat {
   networkId: number
   serviceId: number
   profile: string
-  /** The format the wire asked for; none asks for H.264. */
   format?: PlaybackFormat
   sound: SoundTrack
 }

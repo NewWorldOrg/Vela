@@ -1,6 +1,5 @@
 import { crc32, deflateSync } from 'node:zlib'
 
-/** Synthetic MNG files for the tests, built chunk by chunk from the MNG 1.0 layout. */
 const SIGNATURE = Buffer.from([0x8a, 0x4d, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 
 export const PNG_SIGNATURE = Buffer.from([
@@ -33,7 +32,6 @@ export function chunk(type: string, data: Buffer = Buffer.alloc(0)): Buffer {
   ])
 }
 
-/** The chunks of a PNG of one colour, IHDR to IEND, without the signature, as an MNG embeds it. */
 export function picture(
   width: number,
   height: number,

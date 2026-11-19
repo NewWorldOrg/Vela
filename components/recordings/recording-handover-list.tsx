@@ -23,7 +23,6 @@ import {
 } from '@/components/recordings/handing-over'
 import { WhatHappened } from '@/components/recordings/what-happened'
 
-/** The same choices as the menu, laid out in a face rather than dropped from a button: what is handed, then a button for each player and for the URL. */
 function HandoverList({
   choices,
   only,
@@ -77,7 +76,6 @@ function HandoverList({
   )
 }
 
-/** The recording's ways out to another player, as a face's list: what is handed, each player, and the URL. */
 export function RecordingHandoverList({
   recording,
   plan,

@@ -18,7 +18,6 @@ export type { Cell } from '@/lib/bml/fields'
 
 export const MOST_ROWS = 65536
 
-/** The rows of a binary table: each row begins with its length when the structure says so, and its fields are read in turn. A row cut short is left out, and so is everything after it. */
 export function binaryRowsOf(
   bytes: Uint8Array,
   structure: TableStructure,
@@ -70,7 +69,6 @@ function csvCell(field: Field, text: string): Cell {
   }
 }
 
-/** The rows of a comma-separated table: one line per row, each cell read as its field says. A line with too few cells is left out. */
 export function csvRowsOf(source: string, fields: Field[]): Cell[][] {
   return source
     .split(/\r?\n/)
@@ -99,7 +97,6 @@ function masked(value: number, field: Field): number {
   return bits >= 32 ? value >>> 0 : value & (2 ** bits - 1)
 }
 
-/** How numbers are compared by value. */
 const NUMERIC: Record<number, (cell: number, compared: number) => boolean> = {
   0: (cell, compared) => cell === compared,
   1: (cell, compared) => cell !== compared,
@@ -109,7 +106,6 @@ const NUMERIC: Record<number, (cell: number, compared: number) => boolean> = {
   5: (cell, compared) => cell >= compared,
 }
 
-/** How numbers are compared bit by bit: the condition holds when a bit of the result is set within the width of the field. */
 const BITWISE: Record<number, (cell: number, compared: number) => number> = {
   6: (cell, compared) => cell & compared,
   7: (cell, compared) => cell | compared,
@@ -119,7 +115,6 @@ const BITWISE: Record<number, (cell: number, compared: number) => number> = {
   11: (cell, compared) => ~(cell ^ compared),
 }
 
-/** How text is compared: whole, by a part, by its start or its end, and the two denials. */
 const TEXT: Record<number, (cell: string, compared: string) => boolean> = {
   32: (cell, compared) => cell === compared,
   33: (cell, compared) => cell.includes(compared),
@@ -150,7 +145,6 @@ function numericCompare(operator: number, field: Field): Compare | null {
     : null
 }
 
-/** The comparison an operator names for a column, or null when the operator is not one for that column's kind. */
 function compareOf(operator: number, field: Field): Compare | null {
   switch (field.type) {
     case 'U':
@@ -243,7 +237,6 @@ function matches(row: Cell[], search: Search): boolean {
     : search.conditions.every((condition) => holds(row, condition))
 }
 
-/** A row as a search gives it back: a zip code column becomes whether the row's conditions on it held, and false where there was none. */
 function found(row: Cell[], search: Search): unknown[] {
   return row.map((cell, column) => {
     if (!isZipCode(cell)) {
@@ -263,7 +256,6 @@ function plain(cell: Cell | undefined): number | string | boolean | undefined {
   return isZipCode(cell) ? undefined : cell
 }
 
-/** A table a document reads: rows of cells, each cell by its row and column. A document's state holds it whole, as it holds up to tens of thousands of rows the document only reads. */
 export class Table {
   readonly nrow: number
 
@@ -301,7 +293,6 @@ export class Table {
     return cell === undefined ? null : String(cell)
   }
 
-  /** The rows from one for as many as asked, as far as the table goes; a zip code is given as null. */
   toArray(startRow: unknown, numRow: unknown): unknown[][] | null {
     if (
       !Number.isInteger(startRow) ||
@@ -319,7 +310,6 @@ export class Table {
       .map((row) => row.map((cell) => plain(cell) ?? null))
   }
 
-  /** Searches from a row by conditions of three each (column, compared, operator), then whether any one condition is enough, how many rows to find and the array to fill with them. The row at which the count was reached, -1 when the table ended first, or NaN when the call is not one. */
   search(...args: unknown[]): number {
     const search = searchOf(this.columns, args)
 
@@ -352,7 +342,6 @@ export interface TableSource {
 
 export type TableLookup = (reference: unknown) => TableSource | null
 
-/** The `BinaryTable` and `CSVTable` a document makes, over the resources the runtime holds: a table that is not there, or a structure that is not one, is null, as a receiver answers when it cannot generate one. A script writes `new` before them, which the runtime takes away before running it, as `new` cannot answer null. */
 export function tableClassesOf(lookup: TableLookup) {
   const BinaryTable = (
     reference: unknown,

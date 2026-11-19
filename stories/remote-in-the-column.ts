@@ -7,7 +7,6 @@ import {
   SHORT_WINDOW,
 } from '@/components/data-broadcast/data-broadcast-palette'
 
-/** Every key on the remote in the column, in the order it lays them out. */
 export const REMOTE_KEYS = [
   '上',
   '下',
@@ -48,7 +47,6 @@ function headOf(remote: HTMLElement): HTMLElement {
   return head
 }
 
-/** The remote stands at its own height under the column's head: its groups a fixed gap apart, the card as tall as they are, never stretched to the window. */
 export async function compact(remote: HTMLElement) {
   const gap =
     window.innerHeight < SHORT_WINDOW

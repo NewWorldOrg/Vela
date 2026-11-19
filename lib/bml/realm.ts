@@ -1,4 +1,3 @@
-/** The own properties of an object, by key. */
 export type Own = Map<PropertyKey, PropertyDescriptor | undefined>
 
 type Snapshot = Map<object, Own>
@@ -13,7 +12,6 @@ export function ownOf(target: object): Own {
   return own
 }
 
-/** Whether two readings of a property are the same, a value that is not a number counted as the same as itself. */
 export function sameDescriptor(
   one: PropertyDescriptor | undefined,
   other: PropertyDescriptor | undefined,
@@ -50,7 +48,6 @@ function apply(
   }
 }
 
-/** The built-in objects a document's scripts share with the runtime, kept as the runtime found them: what a document writes on them (a `String.prototype.trim` of its own, say) is put in place while its code runs and taken off again after, so that the runtime's own parsing is not run with the document's versions. */
 export class Realm {
   private readonly pristine: Snapshot = new Map()
 
@@ -62,7 +59,6 @@ export class Realm {
     targets.forEach((target) => this.pristine.set(target, ownOf(target)))
   }
 
-  /** Puts the document's writes in place; nested entries are counted and only the outermost takes them off again. */
   enter(): void {
     this.depth += 1
 
@@ -75,7 +71,6 @@ export class Realm {
     })
   }
 
-  /** Records what the document changed on the built-ins and restores them as they were. */
   leave(): void {
     this.depth -= 1
 
@@ -106,7 +101,6 @@ export class Realm {
   }
 }
 
-/** The built-ins of a window that documents are known to write on: the prototypes of the primitive wrappers and collections, and the objects of utilities. */
 export function builtinsOf(window: object): object[] {
   const globals = window as Record<string, unknown>
   const names = [

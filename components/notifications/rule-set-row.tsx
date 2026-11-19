@@ -15,7 +15,6 @@ import type { RuleSetActions } from '@/components/notifications/rule-set-list'
 
 const SIGNED_OUT = signedOut('操作')
 
-/** The name, its events and destinations on the left; the switch and the `…` on the right, beside the name on a phone. */
 const ROW_AREAS = cn(
   'grid min-h-[calc(76rem/16)] grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-x-2 px-4 py-3',
   "[grid-template-areas:'info_sw_more']",

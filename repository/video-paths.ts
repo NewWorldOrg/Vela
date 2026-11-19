@@ -112,7 +112,6 @@ function toTheMillisecond(seconds: number) {
     : 0
 }
 
-/** The playlist a browser without a media source plays the recording from, transcoded from that second on. */
 export function videoPlaylistHref(
   id: string,
   from: number,
@@ -148,7 +147,6 @@ export function videoFileHref(id: string, source?: PlaybackSource) {
   return asked(`${VIDEOS}/${encodeURIComponent(id)}`, source)
 }
 
-/** The recording's file with the ticket in the path and a name at the end that a player shows as the title. */
 export function videoFileWithTicketHref(
   id: string,
   ticket: string,

@@ -11,7 +11,6 @@ export interface SegmentedOption {
   value: string
   label: string
   href?: Route
-  /** Drawn in place of the label, which is then only read out. */
   icon?: ReactNode
 }
 
@@ -74,7 +73,6 @@ export function SegmentedControl({
     value?: string
     onValueChange?: (value: string) => void
     disabled?: boolean
-    /** `band` sits among the 32px controls of a filter band. */
     size?: keyof typeof TRACK
   }) {
   const labelId = useId()

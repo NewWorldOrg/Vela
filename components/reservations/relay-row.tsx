@@ -25,10 +25,6 @@ import {
   reservationStateLabelOf,
 } from '@/components/reservations/reservation-state-chip'
 
-/**
- * The one line a relayed broadcast is listed as: its whole span, its segments counted, and the state of the segment to
- * look at first. Pressing it lays its segments out under it.
- */
 export function RelayRow({
   segments,
   nth,

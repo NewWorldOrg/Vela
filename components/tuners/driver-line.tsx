@@ -9,7 +9,6 @@ const DRIVER_LINK: Record<DriverLink, Pick<StatusLine, 'word' | 'tone'>> = {
   unknown: { word: '接続状態不明', tone: 'warn' },
 }
 
-/** The driver itself: which version runs, since when, and whether it answers. */
 export function DriverLine({
   facts,
   connection,

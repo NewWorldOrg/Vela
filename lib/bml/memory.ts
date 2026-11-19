@@ -1,20 +1,16 @@
 import { BitReader, UTF8, readCells, writeCells } from '@/lib/bml/fields'
 import { fieldsOf, fitsField } from '@/lib/bml/structure'
 
-/** How much one broadcaster may keep, over every name together. */
 export const MOST_MEMORY_BYTES = 64 * 1024
 
 export const MOST_MEMORY_NAME = 256
 
 export const MOST_MEMORY_ENTRIES = 1024
 
-/** What one name holds: a block of this many bytes, read as zeros until written. */
 export const AREA_BYTES = 64
 
-/** A broadcaster's memory as the player keeps it: each name with its block, written out as base64. */
 export type MemoryEntries = [string, string][]
 
-/** The part of `Storage` the player keeps a broadcaster's memory in. */
 export interface MemoryStorage {
   readonly length: number
   key(index: number): string | null
@@ -27,12 +23,10 @@ function head(service: number): string {
   return `bml:${service}:`
 }
 
-/** Where the player keeps one name of one broadcaster. */
 export function memoryKey(service: number, name: string): string {
   return `${head(service)}${name}`
 }
 
-/** Everything the player keeps for one broadcaster, and nothing of another. */
 export function memoryEntriesOf(
   storage: MemoryStorage,
   service: number,
@@ -52,7 +46,6 @@ export function memoryEntriesOf(
   return entries
 }
 
-/** Keeps, or with null forgets, one name of one broadcaster. A storage that refuses is left as it is. */
 export function keepMemory(
   storage: MemoryStorage,
   service: number,
@@ -78,12 +71,10 @@ function bytesOfName(name: string): number {
   return utf8.encode(name).length
 }
 
-/** A block written out as base64, the form the player keeps. */
 export function blockToText(block: Uint8Array): string {
   return btoa(Array.from(block, (byte) => String.fromCharCode(byte)).join(''))
 }
 
-/** A block read back from base64, or null when the text is not one. */
 export function blockOfText(text: string): Uint8Array | null {
   try {
     const decoded = atob(text)
@@ -96,7 +87,6 @@ export function blockOfText(text: string): Uint8Array | null {
   }
 }
 
-/** Whether keeping a block under a name leaves all one broadcaster keeps within the limit. Forgetting always does; what is not a block never fits. */
 export function fitsTheBroadcaster(
   storage: MemoryStorage,
   service: number,
@@ -126,7 +116,6 @@ export function fitsTheBroadcaster(
 
 export type OnWrite = (name: string, value: string | null) => void
 
-/** The runtime's copy of one broadcaster's memory: what the player handed it, and what the document writes, within the limit. A name never written reads as a block of zeros. */
 export class PersistentMemory {
   private readonly entries = new Map<string, Uint8Array>()
 
@@ -156,7 +145,6 @@ export class PersistentMemory {
     return this.held
   }
 
-  /** The block under a name, zeros when none was written. */
   read(name: string): Uint8Array {
     const block = new Uint8Array(AREA_BYTES)
 
@@ -169,7 +157,6 @@ export class PersistentMemory {
     return this.entries.has(name)
   }
 
-  /** Writes a block under a name when it fits its area and the broadcaster's total stays within the limit; false, and nothing changed, otherwise. */
   write(name: string, block: Uint8Array): boolean {
     if (
       name.length === 0 ||
@@ -196,7 +183,6 @@ export class PersistentMemory {
   }
 }
 
-/** The values a document reads under a name as a structure says, or null when the structure is not one. */
 export function readArray(
   memory: PersistentMemory,
   name: unknown,
@@ -211,7 +197,6 @@ export function readArray(
   return readCells(new BitReader(memory.read(name)), fields, UTF8)
 }
 
-/** Writes values under a name as a structure says: how many bytes were written, or null when the values do not fit the structure, the area or the limit. */
 export function writeArray(
   memory: PersistentMemory,
   name: unknown,

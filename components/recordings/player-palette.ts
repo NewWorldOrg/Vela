@@ -6,7 +6,6 @@ export const PLAYER_SCRIM = 'var(--pl-scrim)'
 export const PLAYER_CHROME_FADE =
   'transition-[opacity,translate] duration-100 ease-[cubic-bezier(.4,0,1,1)] data-[up]:duration-[250ms] data-[up]:ease-[cubic-bezier(0,0,.2,1)]'
 
-/** The control row over the picture: on the board's bottom, which is the picture's, above the safe area when the page fills the screen, and fading out when the pointer rests. */
 export const PLAYER_CHROME_OVER = cn(
   'absolute inset-x-0 bottom-0 z-10',
   '[[data-fill]_&]:right-[env(safe-area-inset-right)] [[data-fill]_&]:bottom-[env(safe-area-inset-bottom)] [[data-fill]_&]:left-[env(safe-area-inset-left)]',
@@ -16,7 +15,6 @@ export const PLAYER_CHROME_OVER = cn(
   'has-[:focus-visible]:pointer-events-auto has-[:focus-visible]:translate-y-0 has-[:focus-visible]:opacity-100',
 )
 
-/** The control row under the picture, while the data broadcast's face is open in a window: in the board's flow on the box's own ground, and always there, so nothing lies over the face. */
 export const PLAYER_CHROME_UNDER = 'relative z-10 bg-(--pl-bg)'
 
 export const PLAYER_BREAK_BAND = 'var(--pl-break-band)'
@@ -50,15 +48,12 @@ export const PLAYER_GLYPH_BUTTON_ON =
 export const PLAYER_BUTTON_ON =
   'border-(--pl-accent)/55 bg-(--pl-accent)/22 text-(--pl-accent-ink)'
 
-/** The picture's column: the window's height less the bar above and the band below, and on a phone held on its side the window's whole height, with nothing above or below it. */
 export const PLAYER_COLUMN =
   'mx-auto w-full max-w-[calc((100svh_-_210px)*16/9)] sideways:max-w-[calc(100dvh*16/9)] upright:max-w-none'
 
-/** On a phone held upright the picture is the window's width and stays at the top while what is under it is sent past, the top's safe area laid in the picture's ink; it goes with the page while a face is open under it, so the face can be read to its end. */
 export const PLAYER_KEPT_AT_THE_TOP =
   'upright:sticky upright:top-0 upright:z-20 upright:bg-(--pl-video) upright:pt-[env(safe-area-inset-top)] upright:has-[[data-slot=player-dock]:not([hidden])]:static upright:has-[[data-slot=player-dock]:not([hidden])]:bg-transparent'
 
-/** On a phone held on its side the picture, and the column at its right, take the window's height: the picture in the middle of what the column leaves, the left's safe area laid in the picture's ink. */
 export const PLAYER_ROW_ON_ITS_SIDE =
   'sideways:flex sideways:h-dvh sideways:flex-row sideways:items-center sideways:bg-(--pl-video) sideways:pl-[env(safe-area-inset-left)]'
 
@@ -77,30 +72,25 @@ export const PLAYER_PICTURE_BOX = 'size-full'
 
 export const PLAYER_PICTURE = cn(PLAYER_PICTURE_BOX, 'object-contain')
 
-/** The element over a caption that takes the pointer to move it: as large as the caption drawn, shown only while one is, and outlined faintly while it is held. */
 export const CAPTION_GRIP = cn(
   'absolute hidden touch-none rounded-[calc(4rem/16)] data-[shown]:block',
   'data-[holding]:cursor-move data-[holding]:outline data-[holding]:outline-1 data-[holding]:outline-white/55',
 )
 
-/** A layer of the compact bar over the picture — the gear's company at the top, the sends in the middle: it takes no press of its own, and comes and goes with the bar. */
 export const PLAYER_LAYER = cn(
   'pointer-events-none absolute z-10 opacity-0',
   PLAYER_CHROME_FADE,
   'data-[up]:opacity-100 has-[:focus-visible]:opacity-100',
 )
 
-/** What a compact layer holds that can be pressed: only while the bar is up. */
 export const PLAYER_LAYER_HANDS = 'in-data-[up]:pointer-events-auto'
 
-/** The sends in the middle of a compact picture: a glyph on a round of the picture's ink, larger than the bar's. */
 export const PLAYER_SEND = cn(
   PLAYER_GLYPH_BUTTON,
   PLAYER_LAYER_HANDS,
   'size-11 rounded-full bg-black/45 [&_svg]:size-6',
 )
 
-/** The play and pause among the sends: the size of the mark that stands in the middle while the picture is stopped. */
 export const PLAYER_SEND_MAIN = cn(
   PLAYER_SEND,
   'size-14 [&_svg]:size-[calc(30rem/16)]',

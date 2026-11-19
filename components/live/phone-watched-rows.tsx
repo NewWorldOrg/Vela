@@ -29,7 +29,6 @@ function Preparing() {
   )
 }
 
-/** The channels while one is watched: a row each under the picture, the programme on now, the channel and the minutes it has left. The one watched is in the accent's soft ground with a line at its left; the one being made ready says so. Pressing another switches to it without closing the picture. */
 export function PhoneWatchedRows({
   channels,
   watchingId,

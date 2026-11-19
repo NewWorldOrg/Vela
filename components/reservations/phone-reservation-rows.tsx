@@ -54,7 +54,6 @@ const ROW_LINE =
 const TAKE_BACK =
   'flex size-11 shrink-0 items-center justify-center self-center rounded-full text-ink-2 outline-none hover:bg-surface-2 focus-visible:shadow-ring [&_svg]:size-[calc(17rem/16)]'
 
-/** A notice that a programme starts, among the reservations of a phone: a bell for the genre's dot, `通知` at its end, and the × that takes it back. */
 function WatchRow({
   watch,
   onCancel,
@@ -108,7 +107,6 @@ function WatchRow({
   )
 }
 
-/** The reservations on a phone held upright: under the day each starts on, a row each of its start and end, its title, channel and where it came from, a chip only for what needs attention, and the × that takes it back. Pressing the row opens its change under it. */
 export function PhoneReservationRows({
   reservations,
   notices,
@@ -119,13 +117,10 @@ export function PhoneReservationRows({
   className,
 }: {
   reservations: Reservation[]
-  /** The notices waiting for a programme to start, shown among the reservations by their start. */
   notices?: WaitingNotices
   now: Date
   actions: ReservationActions
-  /** The reservation whose detail stands beside the list, on a phone held on its side: ringed. */
   chosenId?: string
-  /** Pressing a row shows its detail and change beside the list rather than under the row. */
   onChoose?: (reservation: Reservation) => void
   className?: string
 }) {

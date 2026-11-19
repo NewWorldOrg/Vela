@@ -26,7 +26,6 @@ const MARK_SAYS: Record<BookingMark, string> = {
   recording: RECORDING_IN_PROGRESS_TERM.label,
 }
 
-/** The gap between two programmes, laid as half inside each. */
 const HALF_GAP = '2px'
 
 export const ProgramCell = memo(function ProgramCell({
@@ -38,7 +37,6 @@ export const ProgramCell = memo(function ProgramCell({
 }: {
   program: Program
   time: CellTime
-  /** How far down the cell the now line crosses it, while it is on the air. */
   splitAt?: string
   selected: boolean
   onSelect: (program: Program) => void
@@ -124,13 +122,11 @@ export const ProgramCell = memo(function ProgramCell({
   )
 })
 
-/** 予約 is a ring and its word, 録画中 a lit dot and its word, both in the accent. */
 export function BookingMarkOf({
   mark,
   glyphOnly = false,
 }: {
   mark: BookingMark
-  /** A cell too short for a line of its own carries the ring or the dot before its title. */
   glyphOnly?: boolean
 }) {
   return (

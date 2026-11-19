@@ -33,13 +33,11 @@ export type { RawSearchCondition, SearchCondition }
 
 export interface SearchHit {
   id: string
-  /** The channel's `{network}-{service}`, which the series a hit belongs to is asked by. */
   channelId?: string
   channelName: string
   channelNo?: string
   channelLogo?: StationLogo
   dayLabel: string
-  /** `今日` or `明日`, when the hit is on one of those days. */
   dayNear?: string
   startLabel: string
   endLabel?: string
@@ -49,11 +47,8 @@ export interface SearchHit {
   genre: Genre
   genreLabel: string
   booked?: boolean
-  /** The reservation a booked programme holds, so the phone's circle can take it back. */
   booking?: ProgramBooking
-  /** Set while the programme has not started, which is when a notice of its start can be asked. */
   ahead?: true
-  /** The notice of its start already asked, on a programme that has not started. */
   watch?: ProgrammeWatch
 }
 
@@ -87,7 +82,6 @@ function dayEndOf(date: string): Date {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
-/** `今日` or `明日` for a hit on today or tomorrow in Tokyo, which the list heads its day with. */
 function nearDayOf(day: string, now: Date): string | undefined {
   if (day === calendarDateOf(now)) {
     return '今日'

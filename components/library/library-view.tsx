@@ -78,7 +78,6 @@ const EVERY_CHANNEL = ''
 
 const GRID_VIEW: View = { by: 'date', as: 'grid' }
 
-/** The first of the elements under `root` that `selector` finds and the window draws. */
 function drawnIn(
   root: HTMLElement | null,
   selector: string,

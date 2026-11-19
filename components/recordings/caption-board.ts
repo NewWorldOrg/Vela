@@ -10,25 +10,20 @@ import {
 } from '@/lib/caption-style'
 import { movesNow } from '@/lib/motion'
 
-/** What lies over the bottom of the picture while the control row is up, in the window's coordinates, where the target of each thing's own motion is. */
 export type MeasureClearance = () => Rect[]
 
-/** What the surface drawing the captions answers to the board. */
 export interface CaptionDrawing {
   repaint: () => void
   restyle: () => void
-  /** The move as it lands for the caption standing now, kept inside the picture. */
   keptInside: (shift: CaptionShift) => CaptionShift
 }
 
-/** How far a pointer moves, holding, before the caption is taken to be moved rather than pressed. */
 export const MOVES_FROM: Record<string, number> = {
   mouse: 6,
   pen: 6,
   touch: 12,
 }
 
-/** How long after a caption is let go a click is the end of that move, not a press on the player. */
 const A_MOVE_ENDS_MS = 400
 
 interface Grab {
@@ -73,7 +68,6 @@ function inCanvas(rect: Rect, canvas: DOMRect): Rect {
   return { ...rect, left: rect.left - canvas.left, top: rect.top - canvas.top }
 }
 
-/** Everything about the captions that outlives a session of the player: the style chosen, the lift clear of the control row and its motion, and the grip that moves the caption. One surface at a time draws on it. */
 export class CaptionBoard {
   private chosen: CaptionStyle
 
@@ -107,7 +101,6 @@ export class CaptionBoard {
     this.chosen = style
   }
 
-  /** The style to draw with: the move being made while the caption is held. */
   get style(): CaptionStyle {
     return this.dragged ? { ...this.chosen, shift: this.dragged } : this.chosen
   }
@@ -121,7 +114,6 @@ export class CaptionBoard {
     this.surface?.restyle()
   }
 
-  /** What to tell when the caption has been moved and let go. */
   whenMoved(moved: ((shift: CaptionShift) => void) | null): void {
     this.moved = moved
   }
@@ -137,7 +129,6 @@ export class CaptionBoard {
     }
   }
 
-  /** Lift the captions clear of what `measure` finds while the control row is up over the picture, or let them down with null. */
   clearOf(measure: MeasureClearance | null): void {
     const was = this.measure
 
@@ -152,7 +143,6 @@ export class CaptionBoard {
     this.moveTo(measure ? 1 : 0)
   }
 
-  /** How far to lift a caption drawn at `image`, inside a picture shown at `shown`, on `canvas`. */
   liftFor(image: Rect, shown: Rect, canvas: HTMLCanvasElement): number {
     if (this.holding || (this.progress === 0 && this.motion === null)) {
       this.lifted = 0
@@ -173,7 +163,6 @@ export class CaptionBoard {
     return this.lifted
   }
 
-  /** Where the caption was drawn, so the grip can stand over it; null when nothing is drawn. */
   placed(placed: Placed | null): void {
     this.placedNow = placed
 
@@ -201,7 +190,6 @@ export class CaptionBoard {
     grip.style.height = `${placed.image.height}px`
   }
 
-  /** The element over the caption that takes the pointer, or null while the caption cannot be moved. */
   gripBy(grip: HTMLElement | null): void {
     if (grip === this.grip) {
       return
@@ -271,7 +259,6 @@ export class CaptionBoard {
     this.capture(event.pointerId, true)
   }
 
-  /** Keeps the pointer on the grip while the caption is held; a pointer already gone is still heard while it stays over the caption. */
   private capture(pointer: number, on: boolean): void {
     try {
       if (on) {

@@ -23,7 +23,6 @@ const A_BUTTON = /<Button\b([^>]*)>([\s\S]*?)<\/Button>/g
 
 const SPEAKS_FOR_ITSELF = /variant="(tone|play|process|redo|danger)"/
 
-/** Leaving a dialog does nothing, so it says only its word. */
 const DOES_NOTHING = ['キャンセル', '閉じる']
 
 const AN_ICON = /<[A-Z][A-Za-z]*Icon\b|<Spinner\b/

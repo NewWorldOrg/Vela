@@ -42,7 +42,6 @@ import {
 import { RemovalNotice } from '@/components/encode/removal-notice'
 import { RemoveDefinitionButton } from '@/components/encode/remove-definition-button'
 
-/** When a profile was made is said under its name, so the table fits the settings frame. */
 const COLUMNS: {
   label: string
   width: string | undefined

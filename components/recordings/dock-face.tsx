@@ -20,7 +20,6 @@ function focused(): HTMLElement | null {
     : null
 }
 
-/** One face in the dock: its name and the close at the top, the same for the gear, the caption's face, the data broadcast and a screen's own faces, and Esc closes it as the close does. A screen's face holds what an upright phone shows under the picture in the page's parts; it lays them on the same ink as the others, in the dark theme's colours whatever the theme. It takes the focus to its close when it opens, and gives it back on closing to what opened it (`returnTo`, or whatever had the focus when it opened). */
 export function DockFace({
   name,
   onClose,
@@ -33,7 +32,6 @@ export function DockFace({
   onClose: () => void
   returnTo?: RefObject<HTMLElement | null>
   flush?: boolean
-  /** It holds the page's parts rather than the player's, and lays them in the dark theme's colours. */
   inPageParts?: boolean
   children: ReactNode
 }) {

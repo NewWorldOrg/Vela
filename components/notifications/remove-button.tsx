@@ -6,7 +6,6 @@ import type { NotificationWrite } from '@/lib/notifications'
 import { Button } from '@/components/ui/button'
 import { RemoveDialog } from '@/components/notifications/remove-dialog'
 
-/** `削除` with its question, where it stands as a button of its own. */
 export function RemoveButton({
   what,
   name,

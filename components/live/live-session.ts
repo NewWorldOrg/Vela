@@ -76,7 +76,6 @@ function socketUrl(href: string): string {
 
 const openWebSocket: OpenSocket = (href) => new WebSocket(socketUrl(href))
 
-/** Opens the wire at the moment a channel is chosen; the session opened for the same address takes it. */
 export function openTheWireAhead(
   href: string,
   openSocket: OpenSocket = openWebSocket,

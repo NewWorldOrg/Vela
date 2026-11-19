@@ -1,12 +1,7 @@
-/** What a solid band is held to, against the black edges of letters that also touch the picture's border. */
 const BAND = {
-  /** Its height, as a part of the picture's, at least. */
   ofThePicture: 0.3,
-  /** Its height in pixels at least. */
   rows: 8,
-  /** Its width over its height at least. */
   wide: 0.8,
-  /** How much of its own rectangle it fills at least: letters take a share of a band, while an edge is a thin line around them. */
   fills: 0.55,
 } as const
 
@@ -106,7 +101,6 @@ function borderPixels(width: number, height: number): number[] {
   return border
 }
 
-/** The pixels of a solid band, from a mask of the opaque black pixels: the regions of them that reach the picture's border and are shaped like a band, wide, tall and mostly filled. A picture cut to its opaque pixels has its band on its border, while the black edges of letters only touch it here and there. Null when there is no such region. */
 export function solidBandOf(
   dark: Uint8Array,
   width: number,
@@ -203,7 +197,6 @@ function stretchesOf(
   return stretches
 }
 
-/** The bands to lay behind a caption that has none: one rectangle for each stretch of each line, from a mask of the pixels that show. Lines are the runs of rows with anything in them; within a line, stretches further apart than one and a half times the line's height become rectangles of their own, so nothing is painted between two places far apart. `stretch` is how much wider a pixel is drawn than it is tall, so the margins look even once drawn. */
 export function rowBandsOf(
   shown: Uint8Array,
   width: number,
@@ -232,10 +225,8 @@ export function rowBandsOf(
   })
 }
 
-/** The share of the canvas's height an added edge is thick: three pixels on a 1080-line canvas. */
 export const EDGE_OF_HEIGHT = 0.0028
 
-/** Where the letters' shape is laid, around them, to make an edge `across` pixels wide and `down` pixels tall: two rings, so the edge is whole. */
 export function edgeOffsets(
   across: number,
   down: number,

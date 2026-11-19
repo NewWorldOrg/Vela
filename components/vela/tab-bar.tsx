@@ -87,7 +87,6 @@ export function TabBarItem({
   )
 }
 
-/** A count a tab carries of things waiting on the person, in amber over the corner of its icon. Read aloud after the tab's name. */
 export function TabBadge({
   count,
   saying,

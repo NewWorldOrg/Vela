@@ -114,7 +114,6 @@ export function secondsBetween(fromIso: string, to: Date): number {
   )
 }
 
-/** The one line the toast says after `まとめて再実行`: how many were queued again, and how many were not. */
 export function rerunSaying(queued: number, left: number): string {
   if (left === 0) {
     return `${queued} 件を再実行しました。`

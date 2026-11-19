@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { playingOnHref } from '@/lib/playback-source'
 import type { Recording } from '@/repository/recordings'
 
-/** A recording left part-way, opened where it was left; while the library is choosing it is drawn without being something to press. */
 export function GoingOn({
   recording,
   still,

@@ -32,7 +32,6 @@ export function DestinationList({
 }: {
   destinations: NotificationDestination[]
   ruleSets: Pick<NotificationRuleSet, 'name' | 'destinations'>[]
-  /** The row of the browser the page is open in. */
   mine?: string
   actions: DestinationActions
   now?: number

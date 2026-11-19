@@ -38,7 +38,6 @@ function event(atSec: number, id = atSec, immediate = true): TimedEvent {
   }
 }
 
-/** Module 0 changes version at 101 with a second between the two. Module 1 is last seen at 40 and seen again at 150 as a new version. Module 2 is withdrawn at 80. Module 3 has two versions that overlap. The second carousel holds one module throughout. */
 const TIMELINE: DataBroadcastTimeline = {
   entryTag: 0x40,
   autoStart: false,

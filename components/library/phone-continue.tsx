@@ -6,13 +6,11 @@ import type { Recording } from '@/repository/recordings'
 import { GoingOn } from '@/components/library/going-on'
 import { Picture } from '@/components/library/picture'
 
-/** The recordings left part-way, across the phone in a row that is sent sideways: each opens where it was left. */
 export function PhoneContinue({
   recordings,
   dimmed = false,
 }: {
   recordings: Recording[]
-  /** While the library is choosing: drawn faint, and nothing in it can be pressed. */
   dimmed?: boolean
 }) {
   if (recordings.length === 0) {

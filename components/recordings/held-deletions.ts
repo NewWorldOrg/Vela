@@ -2,7 +2,6 @@
 
 import { useSyncExternalStore } from 'react'
 
-/** The recordings whose deletion a phone holds back while its toast stands, so the lists leave them out before the deletion is sent. */
 let held: ReadonlySet<string> = new Set()
 
 const listeners = new Set<() => void>()
@@ -35,7 +34,6 @@ function follow(listener: () => void): () => void {
 
 const NONE: ReadonlySet<string> = new Set()
 
-/** The recordings held back from deletion just now; none on the server. */
 export function useHeldDeletions(): ReadonlySet<string> {
   return useSyncExternalStore(
     follow,

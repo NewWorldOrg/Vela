@@ -41,9 +41,7 @@ export interface ConflictEntry {
   meta: string
   origin: string
   ruleName?: string
-  /** When the rival's broadcast starts and ends, for the line of the overlap. */
   span?: { startAt: string; endAt: string }
-  /** The genre of the rival's programme, for the dot before its title on the line of the overlap. */
   genre?: Genre
 }
 
@@ -79,13 +77,11 @@ export interface Reservation {
   id: string
   title: string
   note?: string
-  /** The genre of the programme, for the dot before its title. */
   genre?: Genre
   channelName: string
   channelNo?: string
   channelLogo?: StationLogo
   whenLabel: string
-  /** When the broadcast starts and ends, for the phone's list by day and its line of an overlap. */
   span?: { startAt: string; endAt: string }
   origin: OriginLabel
   ruleId?: string
@@ -183,7 +179,6 @@ const STILL_AHEAD: ReservationStanding[] = [
   'recording',
 ]
 
-/** How many reservations each rule still has ahead of it, recording or to come: the count beside a rule in the list of rules. */
 export async function countAheadByRule(): Promise<Map<string, number>> {
   const carried = await fetchEveryReservation()
   const counted = new Map<string, number>()
@@ -255,7 +250,6 @@ function isSettled(one: ReservationResponder, now: Date): boolean {
   return new Date(one.window.endAt).getTime() <= now.getTime()
 }
 
-/** How many reservations are left in a conflict that is still to come: the count the phone's reservations tab carries. */
 export async function countConflicts(now: Date = new Date()): Promise<number> {
   const { data, error } = await carinaClient().GET('/api/reservations', {
     params: {

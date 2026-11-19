@@ -27,7 +27,6 @@ export const BML_KEYS = [
 
 export type BmlKey = (typeof BML_KEYS)[number]
 
-/** The key codes a document reads from a key event, by the remote control's key. */
 export const BML_KEY_CODE: Record<BmlKey, number> = {
   up: 1,
   down: 2,
@@ -60,7 +59,6 @@ export const KEY_GROUP: Record<UsedKeyGroup, BmlKey[]> = {
   'numeric-tuning': DIGITS,
 }
 
-/** The keys a document takes, in the order of the remote control. */
 export function keysOf(groups: UsedKeyGroup[]): BmlKey[] {
   const taken = new Set(groups.flatMap((group) => KEY_GROUP[group]))
 
@@ -82,7 +80,6 @@ const KEYBOARD = new Map<string, BmlKey>([
   ...DIGITS.map((digit): [string, BmlKey] => [digit, digit]),
 ])
 
-/** The remote control's key a key on the keyboard stands for, or null. A key held with Ctrl, Meta or Alt is the browser's. */
 export function keyFromKeyboard(press: {
   key: string
   ctrlKey?: boolean
@@ -122,7 +119,6 @@ function walk(node: PageNode, into: Navigation): void {
   node.children.forEach((child) => walk(child, into))
 }
 
-/** Every element a document lets the focus land on, by its `nav-index`. The first of two with the same index wins. */
 export function navigationOf(body: PageElement): Navigation {
   const navigation: Navigation = new Map()
 
@@ -131,7 +127,6 @@ export function navigationOf(body: PageElement): Navigation {
   return navigation
 }
 
-/** Where the focus starts when a document opens: the lowest `nav-index`. */
 export function firstFocus(navigation: Navigation): number | null {
   const indices = [...navigation.keys()]
 
@@ -151,7 +146,6 @@ export type KeyAnswer =
   | { answer: 'decided'; on: number }
   | { answer: 'pressed'; code: number }
 
-/** What a key does to the focus: an arrow moves it where the focused element's `nav-*` says, or nowhere when it says nothing; Enter decides on it; any other key is handed to the document. */
 export function answerTo(
   key: BmlKey,
   navigation: Navigation,

@@ -14,17 +14,14 @@ import {
 import { readModule, type BmlModule } from '@/lib/bml/resources'
 import type { OwnedApplication } from '@/lib/hybridcast/messages'
 
-/** What the relay came to: the answer, the setting refusing the line (403), or the relay not reached or answering in a shape it does not have. */
 export type Relayed<Answer> =
   { said: 'answered'; answer: Answer } | { said: 'off' } | { said: 'unreached' }
 
-/** A Hybridcast application Carina started: the path on this server its frame opens, through the relay, and the address the application is entered at. */
 export interface HybridcastTicket {
   address: string
   entryUrl: string
 }
 
-/** How the player reaches the broadcaster's server for a document: through Carina, never from the document's frame. */
 export interface LineRelay {
   transmit(
     uri: string,
@@ -37,13 +34,11 @@ export interface LineRelay {
   startApplication(start: AppStart): Promise<Relayed<StartedApplication>>
 }
 
-/** A Hybridcast application started for the player: the address its frame opens, and the application as its AIT names it, with the boundary its permissions come from. */
 export interface StartedApplication {
   address: string
   application: OwnedApplication
 }
 
-/** What starting an application came to, from Carina's ticket and the AIT read for it: started only when both were answered and the AIT names the application with a boundary, as one read without it would permit everything. */
 export function startedApplicationOf(
   start: AppStart,
   ticket: Relayed<HybridcastTicket>,
@@ -80,12 +75,10 @@ export function startedApplicationOf(
   }
 }
 
-/** The route a document's text is sent to the broadcaster's server through, for the channel watched live. */
 export function liveDataBroadcastTransmitHref(channel: string): string {
   return `/api/live/${encodeURIComponent(channel)}/data-broadcast/transmit`
 }
 
-/** The route a document or resource over the line is fetched through, for the channel watched live, answered as a module of the side channel. */
 export function liveDataBroadcastFetchHref(
   channel: string,
   uri: string,
@@ -93,17 +86,14 @@ export function liveDataBroadcastFetchHref(
   return `/api/live/${encodeURIComponent(channel)}/data-broadcast/fetch?${new URLSearchParams({ uri }).toString()}`
 }
 
-/** The route Carina names the receiver's identifier on, for the channel watched live: the CA system and the ID of the card its driver last heard from, answered only while the browser's cookies allow the line and hand the identifier over. */
 export function liveDataBroadcastReceiverIdHref(channel: string): string {
   return `/api/live/${encodeURIComponent(channel)}/data-broadcast/receiver-id`
 }
 
-/** The route an AIT a document names is read through, for the channel watched live, answered as the applications in it this receiver can run. */
 export function liveDataBroadcastAitHref(channel: string, uri: string): string {
   return `/api/live/${encodeURIComponent(channel)}/data-broadcast/ait?${new URLSearchParams({ uri }).toString()}`
 }
 
-/** The route a Hybridcast application is started on, for the channel watched live: Carina reads the AIT again and issues the ticket its frame opens the relay with. */
 export function liveHybridcastTicketHref(channel: string): string {
   return `/api/live/${encodeURIComponent(channel)}/data-broadcast/app/ticket`
 }
@@ -114,7 +104,6 @@ function isCode(value: unknown): value is number {
   return Number.isSafeInteger(value)
 }
 
-/** What a transmission through the relay came to, from the relay's status and its JSON answer. */
 export function transmitRelayed(
   status: number,
   answer: unknown,
@@ -148,7 +137,6 @@ export function transmitRelayed(
   }
 }
 
-/** What a fetch through the relay came to, from the relay's status and the module it answered. */
 export function fetchRelayed(
   status: number,
   bytes: Uint8Array | null,
@@ -162,14 +150,12 @@ export function fetchRelayed(
   return carried ? { said: 'answered', answer: carried } : { said: 'unreached' }
 }
 
-/** The answer a document gets when the relay did not answer one: the setting refusing the line or the relay unreached alike. */
 export function transmitAnswerOf(
   relayed: Relayed<TransmitAnswer>,
 ): TransmitAnswer {
   return relayed.said === 'answered' ? relayed.answer : RELAY_FAILED
 }
 
-/** The identifier Carina named, from its status and its JSON answer. Anything but a success in the shape it has names none. */
 export function receiverIdRelayed(
   status: number,
   answer: unknown,
@@ -183,7 +169,6 @@ function dataOf(answer: unknown): unknown {
   return (answer as { data?: unknown } | null)?.data
 }
 
-/** What reading an AIT through the relay came to, from its status and its JSON answer. */
 export function aitRelayed(
   status: number,
   answer: unknown,
@@ -199,7 +184,6 @@ export function aitRelayed(
     : { said: 'unreached' }
 }
 
-/** A path on this server, and not one that leaves it as `//host` does. */
 function isPathHere(value: unknown): value is string {
   return (
     typeof value === 'string' &&
@@ -209,7 +193,6 @@ function isPathHere(value: unknown): value is string {
   )
 }
 
-/** What starting an application through Carina came to, from its status and its JSON answer: the address its frame opens, which has to be on this server. */
 export function ticketRelayed(
   status: number,
   answer: unknown,

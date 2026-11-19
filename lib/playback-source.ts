@@ -27,7 +27,6 @@ export function theHoldAsked(asked: string | string[] | undefined): boolean {
   return asked === HELD
 }
 
-/** Whether the address asks the recording to play on from where it was left as soon as it opens. */
 export function thePlayAsked(asked: string | string[] | undefined): boolean {
   return asked === PLAYING_ON
 }
@@ -36,7 +35,6 @@ export function playingOnHref(id: string): string {
   return `/recordings/${id}?${PLAY_ASKED_AS}=${PLAYING_ON}`
 }
 
-/** The address once playing on has been answered, by playing or by the browser refusing to: everything else it asked stays. */
 export function withoutThePlayAsked(pathname: string, asked: string): string {
   const params = new URLSearchParams(asked)
 
@@ -79,7 +77,6 @@ export function whereThatSourceOpens(
   return query ? `${pathname}?${query}` : pathname
 }
 
-/** Whether reopening there leaves the address, and with it the player, exactly as it stands. */
 export function theAddressStands(
   pathname: string,
   asked: string,
@@ -95,7 +92,6 @@ export function theAddressStands(
   )
 }
 
-/** The artefact the player is seated on, moved to the one it asked for once the page has read that one. */
 export function whichArtefactSeats(
   seated: string | undefined,
   asked: string | undefined,

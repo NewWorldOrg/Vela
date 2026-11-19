@@ -228,6 +228,7 @@ const THE_SUITE = [
   'tests/repository/videos.test.ts',
   'tests/scripts/bml-runtime.test.ts',
   'tests/scripts/eslint-rules.test.ts',
+  'tests/scripts/no-comments.test.ts',
   'tests/scripts/denpa-marks.test.ts',
   'tests/scripts/fetch-denpa-font.test.ts',
   'tests/storybook/a-story-left-running-takes-nothing-with-it.test.ts',

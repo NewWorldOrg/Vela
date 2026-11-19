@@ -205,7 +205,6 @@ function onTheScreen(canvasElement: HTMLElement, slot: string): HTMLElement {
   return found
 }
 
-/** The player, where the control bar's `データ放送` is; the remote in the column has a key of the same name. */
 function inThePlayer(canvasElement: HTMLElement) {
   return within(onTheScreen(canvasElement, 'live-player'))
 }
@@ -369,7 +368,6 @@ function stirs(player: HTMLElement) {
   player.dispatchEvent(new PointerEvent('pointermove', { bubbles: true }))
 }
 
-/** The pointer goes from the bar's control to the panel under the player, as React reads a leave: `pointerout` with where it went. */
 function leaves(canvasElement: HTMLElement, control: HTMLElement) {
   control.dispatchEvent(
     new PointerEvent('pointerout', {
@@ -379,7 +377,6 @@ function leaves(canvasElement: HTMLElement, control: HTMLElement) {
   )
 }
 
-/** One mock pixel at this player's width: the mock's own below its width, growing with the player, and one and a half at most. */
 function unit(playerWidth: number): number {
   return Math.min(BAND_MAX_SCALE, Math.max(1, playerWidth / BAND_MOCK_WIDTH))
 }
@@ -388,7 +385,6 @@ async function near(got: number, want: number) {
   await expect(Math.abs(got - want)).toBeLessThan(0.6)
 }
 
-/** The band drawn out of the control bar over the picture: standing on the bar's top, the scrim under both from the player's bottom up, the bar's own face gone, and the whole gone with the bar. */
 async function overThePicture(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -421,7 +417,6 @@ async function overThePicture(canvasElement: HTMLElement) {
   return band
 }
 
-/** The data broadcast open in a window: the control row right under the player's box on its own opaque ground with no scrim, staying when the pointer rests, the title over the picture gone, and the box grown by it with the programme below moved down, so nothing lies over the documents' face. */
 async function rowUnderTheBox(canvasElement: HTMLElement) {
   const player = onTheScreen(canvasElement, 'live-player')
   const face = onTheScreen(canvasElement, 'player-face').getBoundingClientRect()
@@ -460,7 +455,6 @@ async function rowUnderTheBox(canvasElement: HTMLElement) {
   await waitFor(() => expect(chrome).toHaveAttribute('data-up', 'true'))
 }
 
-/** The band in a window with no column beside the player: under the control row on the same ground, the station and `データ放送` at its left. */
 async function underTheBox(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -501,7 +495,6 @@ function theColumn(canvasElement: HTMLElement): HTMLElement {
   return found
 }
 
-/** Waits for the column to come to rest after it swapped or folded: nothing moving, and the swap between the remote and the channels over, since a press on the switch before then is not taken. */
 async function columnAtRest(canvasElement: HTMLElement) {
   const column = theColumn(canvasElement)
 
@@ -517,7 +510,6 @@ async function columnAtRest(canvasElement: HTMLElement) {
   )
 }
 
-/** Waits for the column to have taken the remote away, once a fold or a swap has settled. */
 async function remoteGone(canvasElement: HTMLElement) {
   await waitFor(
     () =>
@@ -530,7 +522,6 @@ async function remoteGone(canvasElement: HTMLElement) {
   )
 }
 
-/** The remote in the column beside the player: `リモコン` chosen at the column's head, the card under it down to the box's bottom, no band anywhere, the box as wide as when the data broadcast was closed, and the control row under it. */
 async function inTheColumn(canvasElement: HTMLElement, closedWidth?: number) {
   const column = theColumn(canvasElement)
   const remote = await within(column).findByRole(
@@ -581,7 +572,6 @@ async function closedFaceWidth(canvasElement: HTMLElement): Promise<number> {
   return faceWidth(canvasElement)
 }
 
-/** Fullscreen as a page fills the window where the browser has no fullscreen of its own. */
 async function filled(canvasElement: HTMLElement) {
   const board = onTheScreen(canvasElement, 'live-player')
 
@@ -1147,7 +1137,6 @@ export const 入口が移った番組のページがデータボタンで出る:
 
 const LINE = [catalogPayload(LINE_CATALOG), ...lineModules().map(modulePayload)]
 
-/** What the documents asked over the line in a story: each transmission with its channel, each URL fetched, each AIT read and each application started. */
 interface AskedOverTheLine {
   transmitted: string[][]
   fetched: string[]
@@ -1162,7 +1151,6 @@ const asked: AskedOverTheLine = {
   started: [],
 }
 
-/** The self-made application, served beside the stories in place of the relay, at the address Carina's frame would open; `asked` goes after the entry URL in `uri`, where the application reads what the story asks of it. */
 function startedAt(asked = ''): Relayed<StartedApplication> {
   return {
     said: 'answered',
@@ -1186,7 +1174,6 @@ const STARTED = startedAt()
 const STARTED_ADDRESS =
   STARTED.said === 'answered' ? STARTED.answer.address : ''
 
-/** What the self-made application last reported of itself, and what the player warned of while the story ran. */
 const probed: { report: Record<string, string>; warned: string[] } = {
   report: {},
   warned: [],
@@ -1231,7 +1218,6 @@ async function theApplicationSaid(name: string, value: string) {
   })
 }
 
-/** A relay that answers every transmission with `answer` and every fetch from the self-made pages, names `receiverId` as the receiver's identifier, reads the self-made AIT, starts its application as `started` says, and notes what it was asked. */
 function relayAnswering(
   answer: TransmitAnswer,
   receiverId: ReceiverId | null = null,
@@ -1413,7 +1399,6 @@ const HYBRIDCAST = [
 
 const STARTING = { ait: HYBRIDCAST_AIT, orgId: 16, appId: 1 }
 
-/** The band once the application runs: the station and Hybridcast at its left, `閉じる` beside them, and the keys as before. */
 async function runningOnTheBand(canvasElement: HTMLElement) {
   const canvas = within(canvasElement)
   const group = await canvas.findByRole(
@@ -1430,10 +1415,8 @@ async function runningOnTheBand(canvasElement: HTMLElement) {
   return group
 }
 
-/** Where the self-made application places the broadcast's picture, on the grid the box is laid by. */
 const IN_THE_APPLICATION = '480,60,400,225'
 
-/** The application's frame over the box, opened on the relay, with the picture where the application placed it. */
 async function theApplicationRuns(canvasElement: HTMLElement) {
   const face = await waitFor(
     () => onTheScreen(canvasElement, 'hybridcast-face'),
@@ -1452,7 +1435,6 @@ async function theApplicationRuns(canvasElement: HTMLElement) {
   return frame as HTMLIFrameElement
 }
 
-/** Back at the documents, with the one warning the player left saying why. */
 async function backAtTheDocuments(canvasElement: HTMLElement, why: string) {
   await shrunkTo(canvasElement, AT_THE_START)
   await waitFor(() =>
@@ -1787,16 +1769,13 @@ const SOUNDING = [
   ...soundingModules().map(modulePayload),
 ]
 
-/** Where the picture goes once the document was told its sound played. */
 const AFTER_THE_SOUND = '40,60,360,203'
 
-/** What the player played while the story ran, heard in place of the speakers, and how many audio contexts it made. */
 const sounds: { heard: () => HeardSound[]; made: () => number } = {
   heard: () => [],
   made: () => 0,
 }
 
-/** Hears the sounds in place of the speakers, with the sounds setting as the cookie says, or as it starts out without one, and the browser's audio kept suspended outside a press, as WebKit keeps it, when asked. */
 function hearingWith(setting?: 'yes' | 'no', asWebKit = false) {
   return () => {
     const hearing = hearingTheSounds({ asWebKit })
@@ -1933,7 +1912,6 @@ export const 効果音_押す前の音は後から鳴らさない: Story = {
   },
 }
 
-/** The sounding broadcast opened by itself, with no press to unlock the audio, its first sound dropped while WebKit holds the audio suspended. */
 async function openedWithoutAPress(canvasElement: HTMLElement) {
   const toggle = await inThePlayer(canvasElement).findByRole('button', {
     name: 'データ放送',

@@ -327,7 +327,6 @@ export const スクリプトで切り替わるページ: Story = {
   },
 }
 
-/** The page the document that keeps its own history last wrote it shows, read back from what the board heard of the persistent memory. */
 function pageWritten(board: HTMLElement): number | null {
   const heard = board.getAttribute('data-memory') ?? ''
   const memory = new PersistentMemory()
@@ -376,7 +375,6 @@ export const 自分で持つ履歴で戻る文書: Story = {
   },
 }
 
-/** The message id and version a document kept under `told` as `U:1B,U:1B`, read back from what the board heard of the persistent memory. */
 function toldOf(board: HTMLElement): string | null {
   const heard = board.getAttribute('data-memory') ?? ''
   const memory = new PersistentMemory()
@@ -390,7 +388,6 @@ function toldOf(board: HTMLElement): string | null {
   return readArray(memory, 'told', 'U:1B,U:1B')?.join(',') ?? null
 }
 
-/** An event message of group 1 on the stream tagged 0x48, with its 16-bit id. */
 function word(id: number): BroadcastEvent {
   return {
     group: 1,
@@ -444,10 +441,8 @@ export const イベントメッセージで移るページ: Story = {
   },
 }
 
-/** When the recording of the stories began. */
 const RECORDING_BEGAN = Date.parse('2026-08-08T12:29:45.250+09:00') / 1000
 
-/** A recording's data broadcast with everything in, held at a position and moved by hand as a seek moves it: each move tells the time on air there. */
 class HeldRecording implements DataBroadcastHeld {
   readonly availability: DataBroadcastAvailability = 'ready'
 
@@ -483,7 +478,6 @@ class HeldRecording implements DataBroadcastHeld {
   }
 }
 
-/** What a document kept under `seen` as `S:19B`, read back from the block the runtime told the player. */
 function seenOf(value: string | null): string | null {
   const memory = new PersistentMemory()
 
@@ -585,7 +579,6 @@ export const 録画の位置を動かすと文書が聞く経過時間もつい�
   },
 }
 
-/** A time printed as the self-made document prints it, in this browser's own time zone as the document's is. */
 function printed(seconds: number): string {
   const at = new Date(seconds * 1000)
   const two = (value: number) => String(value).padStart(2, '0')
@@ -736,7 +729,6 @@ export const 放送の文書から届かないもの: Story = {
   },
 }
 
-/** The runtime in a frame of its own with a probe beside it, drawing a document and saying what the probe measured of it. */
 function Measured({
   label,
   catalog,
@@ -933,10 +925,8 @@ export const MNGの動く画像: Story = {
   },
 }
 
-/** The bar's row under the box, as `h-16` draws it. */
 const BAR_HEIGHT = 64
 
-/** A player's box with the band drawn out of it, as the live player lays it: in a window the bar's row and the band stand under the box, which the column narrows to leave them their room; in fullscreen the band stands over the picture on the box's bottom, with the bar's row under it. */
 function Band({
   place,
   numbers: shownFirst,
@@ -1018,7 +1008,6 @@ const KEYS = [
 
 const DIGITS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 
-/** The mock's measures at its player's width: the band, the pills, the disc, Enter, the dots and the digits, and the pitch of the dots and the digits. */
 const MOCK = {
   band: 136,
   scrim: 256,
@@ -1032,7 +1021,6 @@ const MOCK = {
   gap: 20,
 }
 
-/** One mock pixel at this player's width: the mock's own below its width, growing with the player, and one and a half at most. */
 function unit(playerWidth: number): number {
   return Math.min(BAND_MAX_SCALE, Math.max(1, playerWidth / BAND_MOCK_WIDTH))
 }
@@ -1055,7 +1043,6 @@ async function near(got: number, want: number) {
   await expect(Math.abs(got - want)).toBeLessThan(0.6)
 }
 
-/** The band as the mock draws it, scaled to this player: each key's size, the pitch of the dots, the row's height, and its right edge 16px in from the player's. */
 async function asTheMock(canvasElement: HTMLElement, place: StripPlace) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -1137,7 +1124,6 @@ async function asTheMock(canvasElement: HTMLElement, place: StripPlace) {
   return { band, u }
 }
 
-/** The digits as the mock draws them: 44px discs at a 52px pitch, scaled, beside `123` when there is room and on the row above it when there is not. */
 async function digitsAsTheMock(band: HTMLElement, u: number) {
   const keys = within(band)
   const digits = DIGITS.map((name) => keys.getByRole('button', { name }))
@@ -1252,7 +1238,6 @@ export const 帯_PC_広い_数字: Story = {
   },
 }
 
-/** The bar's row and the band in a window leave the picture and the documents' face whole: they stand under the box, and the board grows by both and still fits the window's height. */
 async function underTheFace(canvasElement: HTMLElement) {
   const band = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -1381,7 +1366,6 @@ export const 帯_iPad_窓_局名: Story = {
   },
 }
 
-/** The column the remote stands in, at the mock's 370px and as tall as the window gives it: the remote stands at the top at its own height. */
 function InTheColumn({
   height,
   running,
@@ -1424,7 +1408,6 @@ const REMOTE_KEYS = [
   ...DIGITS,
 ]
 
-/** The remote as the mock draws it in the column: the disc of 184 with Enter of 65, a row right under it of `戻る` and `d` at 64x44 spanning the disc, the dots of 52 at a pitch of 70 in the middle, the digits three to a row with 0 alone in the middle of the fourth, no `123`; the groups a fixed 24 apart and the card as tall as they are, never stretched by its column. */
 async function asTheColumnMock(canvasElement: HTMLElement) {
   const remote = within(canvasElement).getByRole('group', {
     name: 'データ放送のリモコン',
@@ -1565,7 +1548,6 @@ export const リモコン_列_Hybridcast: Story = {
   },
 }
 
-/** The station's name is cut short only when it has no more room to take: then `閉じる` stands one gap from `戻る`, with nothing free between them. `Hybridcast` is never cut. */
 async function cutOnlyWithoutRoom(band: HTMLElement, u: number) {
   const group = within(band).getByRole('group', { name: 'Hybridcast' })
   const name = group.querySelector('b') as HTMLElement
@@ -1587,7 +1569,6 @@ async function cutOnlyWithoutRoom(band: HTMLElement, u: number) {
   return { name, cut: name.scrollWidth > name.clientWidth }
 }
 
-/** The band while a Hybridcast application runs: the station and Hybridcast at its left, `閉じる` at a finger's size beside them, the keys where the mock puts them, and `閉じる` taking it away. */
 async function withTheApplication(
   canvasElement: HTMLElement,
   place: StripPlace,
@@ -1672,7 +1653,6 @@ export const 帯_Hybridcast_PC_全画面: Story = {
 
 const LONG_STATION = 'とても長い名前の放送局のチャンネル第一テレビジョン'
 
-/** A long station's name: cut short where the keys leave no room for it, as on a finger's window, with `Hybridcast` whole under it and `閉じる` one gap from `戻る`; whole where there is room, as in fullscreen and on a wide player. */
 async function longName(
   canvasElement: HTMLElement,
   place: StripPlace,

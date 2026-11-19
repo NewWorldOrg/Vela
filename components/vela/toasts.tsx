@@ -13,14 +13,11 @@ import {
 import { cn } from '@/lib/utils'
 import { pressable } from '@/components/vela/tactile'
 
-/** How long a toast stays, and how long a deletion it holds back waits before it is sent. */
 export const TOAST_MS = 5_000
 
 export interface Toast {
   text: string
-  /** The one thing the toast offers: taking back what was just done. */
   action?: { label: string; onPress: () => void }
-  /** What happens when the toast leaves without its action pressed: a deletion held back until now is sent. */
   onExpire?: () => void
 }
 
@@ -30,7 +27,6 @@ interface Shown extends Toast {
 
 const Say = createContext<(toast: Toast) => void>(() => undefined)
 
-/** The toast's place: above the tabs at the foot of a phone, at the window's foot elsewhere. One toast at a time; a new one lets the one before leave as if its time had run out. */
 export function Toasts({ children }: { children: ReactNode }) {
   const [shown, setShown] = useState<Shown>()
   const standing = useRef<Shown | undefined>(undefined)
@@ -117,7 +113,6 @@ export function Toasts({ children }: { children: ReactNode }) {
   )
 }
 
-/** Puts up a toast: a short line of what was just done, and the press that takes it back. */
 export function useToast(): (toast: Toast) => void {
   return useContext(Say)
 }

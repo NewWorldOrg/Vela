@@ -21,14 +21,12 @@ import { Disc } from '@/components/data-broadcast/disc'
 import { Colours } from '@/components/data-broadcast/colours'
 import { Digits } from '@/components/data-broadcast/digits'
 
-/** One mock pixel, measured against the player's width: the mock's size at its width and below, growing with the player, and no more than one and a half times the mock. */
 const UNIT = `clamp(1px, 100cqw / ${BAND_MOCK_WIDTH}, ${BAND_MAX_SCALE}px)`
 
 function mock(px: number): string {
   return `calc(${px} * var(--u))`
 }
 
-/** The mock's measures: the band and its scrim, the pills, the disc and its wedges, the arrows, Enter, the colour dots and the digits. */
 const MEASURES = {
   '--u': UNIT,
   '--band': mock(136),
@@ -51,13 +49,11 @@ const MEASURES = {
   '--key-font': mock(15),
 } as CSSProperties
 
-/** The scrim under the band and the control bar, as the mock lays it: one gradient from the player's bottom up. */
 const SCRIM =
   'linear-gradient(to top, rgba(6,5,9,.92) 0%, rgba(6,5,9,.86) 30%, rgba(6,5,9,.8) 62%, rgba(6,5,9,.5) 78%, rgba(6,5,9,.18) 92%, rgba(6,5,9,0) 100%)'
 
 const PILL_ON = 'bg-white/28 text-white hover:bg-white/28'
 
-/** The Hybridcast application running, at the band's left: the station and `Hybridcast`, and `閉じる`, which goes back to the documents. It takes what room the keys leave. Where the station and `Hybridcast` do not fit on one line, `Hybridcast` goes under the station, and only a station that does not fit on its own line is cut short, before the keys move. */
 function OnTheBand({
   station,
   onClose,
@@ -95,7 +91,6 @@ function OnTheBand({
   )
 }
 
-/** The remote control's keys as a band, right-aligned with the bar's right-hand controls: `戻る`, the disc, the four colours and `123`, which draws the digits out beside it and puts them away again. While a Hybridcast application runs, its station and `閉じる` stand at the band's left. In a window the band is under the player's box on the box's own black, so nothing covers the documents' face; in fullscreen it stands on the bar with the scrim under both. Everything is measured against the player's width. */
 export function DataBroadcastBand({
   place,
   numbers,

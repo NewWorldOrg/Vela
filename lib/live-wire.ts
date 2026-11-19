@@ -503,7 +503,6 @@ function reversedBits(word: number): number {
   return reversed
 }
 
-/** ISO/IEC 14496-15 annex E: the sample entry, profile, compatibility flags, tier and level, and the constraint bytes up to the last one set. */
 function hevcCodec(entry: string, config: Uint8Array): string | null {
   if (config.length < HEVC_CONFIGURATION_HEAD) {
     return null
@@ -529,7 +528,6 @@ function hevcCodec(entry: string, config: Uint8Array): string | null {
   ].join('.')
 }
 
-/** The AV1 codecs parameter: profile, level, tier and bit depth; the optional fields after them are left to their defaults. */
 function av1Codec(config: Uint8Array): string | null {
   if (
     config.length < AV1_CONFIGURATION_HEAD ||

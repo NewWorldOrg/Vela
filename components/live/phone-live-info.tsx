@@ -12,7 +12,6 @@ import { pressable } from '@/components/vela/tactile'
 import { ProgramDescription } from '@/components/guide/program-description'
 import { ProgramExtended } from '@/components/guide/program-extended'
 
-/** The programme on now, under the picture on a phone held upright: its title, its progress and what is left of it, the way out to another player and the reservation; its description unfolds under the chevron. */
 export function PhoneLiveInfo({
   watching,
   external,

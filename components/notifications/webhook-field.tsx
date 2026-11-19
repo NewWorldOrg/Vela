@@ -11,7 +11,6 @@ import { NoticeLabel } from '@/components/notifications/notice-dialog-content'
 
 export const REFUSED_ADDRESS = 'この URL は受け付けられません'
 
-/** A webhook's address, saying under it as it is typed which service it is for, and once the field is left whether it would be refused. */
 export function WebhookField({
   id,
   value,

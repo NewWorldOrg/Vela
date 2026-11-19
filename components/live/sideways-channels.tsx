@@ -15,10 +15,8 @@ import {
   StripFaceButton,
 } from '@/components/recordings/strip-face-button'
 
-/** The name of the face the column's `番組` opens. */
 export const PROGRAMME_FACE = '番組'
 
-/** The kind after this one, in the order the kinds are offered, round to the first. */
 export function kindAfter(
   kind: ChannelKind,
   kinds: ChannelKind[],
@@ -29,7 +27,6 @@ export function kindAfter(
   return offered[(at + 1) % offered.length] ?? kind
 }
 
-/** The column at the picture's right while a channel is watched on a phone held on its side: the kind, which one press turns to the next, the stations of that kind by their mark and name, one press each to watch, and `番組`, which opens the programme on now in the column's place. The name is under the mark because a main channel and its sub channels share one number and most stations have no logo. The one watched is ringed in the player's accent, with the spinner in its corner while it is made ready. */
 export function SidewaysChannels({
   kind,
   kinds,

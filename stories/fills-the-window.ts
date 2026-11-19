@@ -49,7 +49,6 @@ async function givesTheWindowBack(shell: HTMLElement): Promise<void> {
   await waitFor(() => expect(document.documentElement.style.overflow).toBe(''))
 }
 
-/** Takes element fullscreen away from a player, then sees its fullscreen switch fill the window instead, captions and bar still drawn, and leave it again by the switch and by Escape. */
 export async function fillsTheWindowWithoutElementFullscreen(
   canvasElement: HTMLElement,
   shellSlot: string,

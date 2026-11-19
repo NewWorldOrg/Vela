@@ -39,7 +39,6 @@ const ACTION_CLASS =
 
 const DISABLED_MOTION = cn(still, 'opacity-40 hover:opacity-40')
 
-/** A notice sits on the quiet face like any group; only its sign wears the colour of what it says. */
 const TONE_SIGN: Record<BannerTone, string> = {
   info: 'text-ink-2',
   warn: 'text-warn',

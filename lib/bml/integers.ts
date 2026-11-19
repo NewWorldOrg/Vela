@@ -55,7 +55,6 @@ function unwrapped(node: Shaped): Shaped {
     : node
 }
 
-/** A place that reading twice reads the same and changes nothing: a name, `this`, a literal, or members of them named or indexed by a name or a literal. */
 function plain(node: Shaped | undefined): boolean {
   if (!node) {
     return false
@@ -77,7 +76,6 @@ function plain(node: Shaped | undefined): boolean {
   )
 }
 
-/** `target /= divisor`, read once and written once: a plain place is read again in place, and any other has its object and key worked out once and handed with the divisor to a function that divides there. */
 function dividedInPlace(node: Shaped, code: string): Edit[] {
   const target = node.left as Shaped
   const divisor = node.right as Shaped
@@ -167,7 +165,6 @@ function renderer(code: string, edits: Edit[]): Render {
   return render
 }
 
-/** A document's code with every division cut to an integer toward zero, as a receiver's script has integers for its only numbers; a division by zero still answers Infinity or NaN. Code that does not parse, or that cannot be rewritten, is given back as it was. */
 export function withIntegerDivision(code: string): string {
   try {
     const program = parse(code, {

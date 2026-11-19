@@ -85,7 +85,6 @@ export interface LiveProfile {
   height: number
   framerate: number
   unasked: boolean
-  /** The formats this machine transcodes the picture in; none where Carina does not name them. */
   formats?: PlaybackFormat[]
 }
 

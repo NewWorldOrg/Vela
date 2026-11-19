@@ -41,7 +41,6 @@ const EVERY = 'すべて'
 
 const EVERY_KIND = 'all'
 
-/** A condition's pill: its name, then what it is set to; tinted while it narrows the search. */
 export const CONDITION_CHIP =
   'tap-target inline-flex h-8 max-w-[calc(280rem/16)] min-w-0 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-3 text-ui whitespace-nowrap outline-none transition-[background-color,color,transform] duration-[140ms] ease-toy active:scale-[0.98] focus-visible:shadow-ring phone:h-10 [&_svg]:size-3.5 [&_svg]:shrink-0'
 
@@ -60,7 +59,6 @@ function ChipWords({ name, value }: { name: string; value: string }) {
   )
 }
 
-/** A choice pressed on and off inside a condition's panel. */
 export function TogglePill({
   on,
   disabled,
@@ -98,7 +96,6 @@ function PanelLabel({ children }: { children: ReactNode }) {
   )
 }
 
-/** A condition whose panel opens under its pill; what is set inside is searched when the panel closes. */
 function PanelChip({
   name,
   value,
@@ -145,7 +142,6 @@ function PanelChip({
   )
 }
 
-/** A condition with one answer, picked from a list under its pill and searched at once. */
 function ListChip({
   name,
   value,
@@ -194,7 +190,6 @@ function periodOf(date: string | undefined): string {
   return `${Number(date.slice(5, 7))}/${Number(date.slice(8, 10))}`
 }
 
-/** The conditions of a search as a row of pills, each opening what it sets: kind, genre, weekday, channel, where the words are looked for, period and the words to leave out. */
 export function ConditionChips({
   draft,
   channels,
@@ -206,13 +201,9 @@ export function ConditionChips({
 }: {
   draft: SearchDraft
   channels: GuideChannel[]
-  /** Changes the conditions being set, searching nothing yet. */
   amend: (part: Partial<SearchDraft>) => void
-  /** Searches the conditions as set, with `part` put in first. */
   settle: (part?: Partial<SearchDraft>) => void
-  /** The form the words left out are sent with. */
   formId: string
-  /** Puts every condition back, shown while any is set. */
   clear?: () => void
   className?: string
 }) {

@@ -34,7 +34,6 @@ export interface FullscreenShell {
   requestFullscreen?: () => Promise<void>
 }
 
-/** Leaves fullscreen, or takes it for the shell, or else fills the window with the shell where the page has no element fullscreen to give. */
 export function switchFullscreen(
   shell: FullscreenShell | null,
   filled: boolean,
@@ -70,7 +69,6 @@ export interface ScrollablePage {
   readonly style: { overflow: string }
 }
 
-/** Stops the page from scrolling, and hands back what puts it as it was. */
 export function holdStill(page: ScrollablePage): () => void {
   const was = page.style.overflow
 
@@ -100,7 +98,6 @@ export interface Fullscreen {
   toggle: () => void
 }
 
-/** Whether the shell is in fullscreen, either the element's own or filling the window, and the switch between them. */
 export function useFullscreen(shell: Element | null): Fullscreen {
   const whole = useSyncExternalStore(
     subscribeToFullscreen,

@@ -28,7 +28,6 @@ const Shared = createContext<SkipEvents | undefined>(undefined)
 
 const SharedSeeks = createContext<SeekEvents | undefined>(undefined)
 
-/** Sends what a person did without waiting on it: playback goes on whether it arrives or not. */
 function sending<T extends { event: string }>(
   what: string,
   id: string,
@@ -47,11 +46,6 @@ function sending<T extends { event: string }>(
   }
 }
 
-/**
- * Where the player of one recording sends what a person did with the button that skips a break, an opening or an
- * ending, and the seeks they made. When the page is hidden or put away, the seeks still held are sent the way that
- * outlives the page.
- */
 export function SkipEventsSeat({
   recordingId,
   modelVersion,

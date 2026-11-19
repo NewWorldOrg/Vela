@@ -11,7 +11,6 @@ const NONE = 'none'
 
 const JOINED_BY = '.'
 
-/** The type Carina writes an H.265 artefact as: tagged hvc1, Main, level 4.1. */
 export const H265_IN_MP4 = FORMAT_IN_MP4.h265
 
 export const AV1_IN_MP4 = FORMAT_IN_MP4.av1
@@ -47,7 +46,6 @@ export function decodesOf(said: string | null | undefined): BrowserDecoding[] {
   return BROWSER_DECODINGS.filter((one) => named.includes(one))
 }
 
-/** Whether both the element and the media capabilities say the browser plays a file in this coding. */
 export async function decodesWith(
   probe: DecodingProbe,
   decoding: BrowserDecoding,

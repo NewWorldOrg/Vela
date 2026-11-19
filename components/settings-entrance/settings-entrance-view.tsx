@@ -22,14 +22,12 @@ import {
 
 type Tone = 'ok' | 'warn' | 'err'
 
-/** A state that is well takes the success colour; one that wants a hand takes amber or red. */
 const TONE_DOT: Record<Tone, string> = {
   ok: 'bg-accent',
   warn: 'bg-warn',
   err: 'bg-rec',
 }
 
-/** Every setting's tile is the same quiet plate: colour on this screen is kept for what is chosen, what is recording and what needs a look. */
 const TILE = {
   viewing: 'bg-surface-2',
   display: 'bg-surface-2',
@@ -62,7 +60,6 @@ interface Group {
 interface Signal {
   name: ReactNode
   tone: Tone
-  /** Its dot drawn while it is well too: the API's and the driver's, which say only by it. */
   dotted?: boolean
 }
 
@@ -343,7 +340,6 @@ function ItemRow({
   )
 }
 
-/** The way into the settings: the system's state at the head, then each setting with its value, in four groups. A phone held upright opens it as a screen of its own; anywhere else it stays at the left of the setting open, which it marks (`current`). */
 export function SettingsEntranceView({
   status,
   values,
@@ -355,7 +351,6 @@ export function SettingsEntranceView({
   values: SettingsEntranceValues
   hasMigration: boolean
   current?: string
-  /** Each setting's value after its name; the wide screen leaves them to the setting open beside. */
   withValues?: boolean
 }) {
   const GroupTitle = current === undefined ? 'h2' : 'p'

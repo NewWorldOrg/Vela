@@ -8,7 +8,6 @@ import type { Channel } from '@/repository/channels'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { pressable, tactileQuiet } from '@/components/vela/tactile'
 
-/** Every channel of the guide in one row a thumb slides along, the ones on the screen picked out. */
 export function ChannelStrip({
   channels,
   shown,

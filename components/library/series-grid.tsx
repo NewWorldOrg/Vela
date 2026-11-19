@@ -14,7 +14,6 @@ import {
 import { SeriesCard } from '@/components/library/series-card'
 import { RecordingTile } from '@/components/library/recording-tile'
 
-/** How many columns a grid is laid in now, read from the grid itself as its width changes. */
 function useColumnsOf(grid: RefObject<HTMLElement | null>, first: number) {
   const [columns, setColumns] = useState(first)
 
@@ -40,7 +39,6 @@ function useColumnsOf(grid: RefObject<HTMLElement | null>, first: number) {
   return columns
 }
 
-/** The series, a card each with the sheets of its other episodes behind it; the chosen series opens its episodes under its row. */
 export function SeriesGrid({
   series,
   now,

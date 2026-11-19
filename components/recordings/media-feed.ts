@@ -20,7 +20,6 @@ function kindFor(order: SourceOrder): SourceKind | undefined {
     : (plainKind() ?? managedKind())
 }
 
-/** A media source fed with a fragmented MP4, a header and then its fragments. */
 export class MediaFeed {
   readonly source: MediaSource
 
@@ -91,7 +90,6 @@ export class MediaFeed {
     return kindFor(order) !== undefined
   }
 
-  /** Whether the media source a feed in this order is fed through takes the type. */
   static takes(order: SourceOrder, type: string): boolean {
     return kindFor(order)?.isTypeSupported(type) ?? false
   }

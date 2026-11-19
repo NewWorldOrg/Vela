@@ -236,10 +236,8 @@ export const 効果音が切: Story = {
   },
 }
 
-/** What hydrating the page's server HTML said was wrong with it, for the play to read. */
 const heardWhileHydrating: string[] = []
 
-/** The page as the server draws it from the cookies, then hydrated in the browser that holds the same cookies. */
 function FromTheServer() {
   const hydrated = useCallback((node: HTMLDivElement | null) => {
     if (node === null) {
@@ -404,7 +402,6 @@ export const 設置場所_登録済み: Story = {
   },
 }
 
-/** The page as the app holds it: what was saved is what the page draws next, as the page is drawn again from Carina after a save. */
 function Saving(props: ComponentProps<typeof ViewingView>) {
   const [residence, setResidence] = useState(props.residence)
 

@@ -14,7 +14,6 @@ function clipOf(band: Element): Element | null {
   return null
 }
 
-/** Where a clip stops drawing on its right: its box, and for `overflow: clip` the margin it keeps for rings and shadows. */
 function rightEdgeOf(clip: Element): number {
   const style = getComputedStyle(clip)
   const margin = /([\d.]+)px/.exec(style.overflowClipMargin)
@@ -23,7 +22,6 @@ function rightEdgeOf(clip: Element): number {
   return clip.getBoundingClientRect().right + kept
 }
 
-/** Runs every band's slide in the column to its end while the column has yet to narrow, finds no edge of a band left inside its clip, then lets the fold settle. */
 export async function slidOutWhole(column: HTMLElement): Promise<void> {
   const running = column.getAnimations({ subtree: true })
   const slides = running.filter(

@@ -1,7 +1,6 @@
 import { crc32 } from '@/lib/bml/crc32'
 import { withPalette, type Palette } from '@/lib/bml/palette'
 
-/** How much of an MNG is read: past any of these, it is malformed. */
 export const MNG_LIMITS = {
   bytes: 4 * 1024 * 1024,
   images: 256,
@@ -12,10 +11,8 @@ export const MNG_LIMITS = {
   nesting: 16,
 } as const
 
-/** The count of a LOOP, or of a TERM's rounds, that never runs out. */
 export const FOREVER = 0x7fffffff
 
-/** How many steps a pass may take without showing anything before it is cut short. */
 const MOST_STEPS_UNSEEN = 65_536
 
 const SIGNATURE = [0x8a, 0x4d, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]
@@ -35,7 +32,6 @@ export interface MngBox {
   bottom: number
 }
 
-/** One embedded image, as a PNG file of its own. */
 export interface MngImage {
   png: Uint8Array
   width: number
@@ -49,7 +45,6 @@ interface Change<T> {
   lasting: boolean
 }
 
-/** What the MNG says, in order, once its images are taken out: a FRAM, an image shown where its DEFI put it, and the two ends of a LOOP. */
 export type MngStep =
   | {
       kind: 'frame'
@@ -68,7 +63,6 @@ export type MngStep =
   | { kind: 'loop'; count: number; end: number }
   | { kind: 'end'; start: number }
 
-/** A TERM: 0 holds the last frame, 1 clears it, 2 goes back to the first, 3 plays it all again `iterations` times with `delay` ticks between, then does `after`. */
 export interface MngTermination {
   action: 0 | 1 | 2 | 3
   after: 0 | 1 | 2
@@ -90,7 +84,6 @@ export type MngReading =
   | { read: 'mng'; mng: MngAnimation; ignored: string[] }
   | { read: 'malformed'; why: string }
 
-/** An image drawn at its place, inside the boundaries it is clipped to. */
 export interface MngDraw {
   image: number
   x: number
@@ -98,7 +91,6 @@ export interface MngDraw {
   clip: MngBox
 }
 
-/** What changes on the frame at once: cleared first or not, the images laid on it, and how long it stays before the next. */
 export interface MngUpdate {
   clear: boolean
   draws: MngDraw[]
@@ -126,7 +118,6 @@ function viewOf(bytes: Uint8Array): DataView {
   return new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
 }
 
-/** Whether the bytes begin as an MNG does. */
 export function isMng(bytes: Uint8Array): boolean {
   return (
     bytes.length >= SIGNATURE.length &&
@@ -338,7 +329,6 @@ class Reading {
     }
   }
 
-  /** Takes one chunk, and says whether it was the last. */
   take(chunk: Chunk): boolean {
     if (this.embedding) {
       this.embed(this.embedding, chunk)
@@ -511,7 +501,6 @@ function pngOf(chunks: Uint8Array[]): Uint8Array {
   return png
 }
 
-/** Reads an MNG: its frame, its images as PNG files of their own and what it says to do with them, with the chunk types it does not draw named once each; or why it is malformed. Every CRC is checked, and nothing past MNG_LIMITS is taken. */
 export function readMng(bytes: Uint8Array): MngReading {
   if (bytes.length > MNG_LIMITS.bytes) {
     return { read: 'malformed', why: 'too large' }
@@ -551,7 +540,6 @@ export function readMng(bytes: Uint8Array): MngReading {
   }
 }
 
-/** The animation with every indexed image that leaves its palette to the document given the document's. */
 export function paintedWith(
   animation: MngAnimation,
   palette: Palette,
@@ -585,7 +573,6 @@ function moved(box: MngBox, by: MngBox): MngBox {
   }
 }
 
-/** The subframes of one pass through an MNG, under its framing modes: which images each lays down, whether the frame is cleared first, and how long it stays. */
 class Subframes {
   private mode: FramingMode = 1
 
@@ -669,7 +656,6 @@ class Subframes {
     return closed
   }
 
-  /** Ends the subframe open: what modes 2 and 4 held back is laid down, and in modes 3 and 4 a subframe a FRAM opened and closed with no image in it is a cleared frame. */
   close(byFrame: boolean): MngUpdate[] {
     const layers = this.layers
     const empty = byFrame && this.opened && this.shown === 0
@@ -705,7 +691,6 @@ interface Looping {
   seen: number
 }
 
-/** One pass through an MNG's steps. A loop goes round again only while it shows something, past its first time round, and a pass that goes too long showing nothing ends. */
 function* passOf(
   animation: MngAnimation,
   tickMs: number,
@@ -753,7 +738,6 @@ function* passOf(
   yield* subframes.close(false)
 }
 
-/** Where a loop's ENDL sends the pass: back past its LOOP while it has rounds left and showed something, or on. */
 function roundAgain(loops: Looping[], made: number): number | null {
   const loop = loops[loops.length - 1]
   const showed = loop.seen < 0 || made > loop.seen
@@ -771,7 +755,6 @@ function roundAgain(loops: Looping[], made: number): number | null {
   return loop.start + 1
 }
 
-/** The updates an MNG makes on its frame, in order, round after round as its TERM says, then what the TERM leaves on it at the end. Both an interframe delay and the TERM's delay before a round begins again are the least time to wait, so the last frame of a round stays for the longer of the two, and at least a tick. With no ticks in a second, only the first. */
 export function* updatesOf(animation: MngAnimation): Generator<MngUpdate> {
   if (animation.ticksPerSecond === 0) {
     const first = passOf(animation, 0).next()

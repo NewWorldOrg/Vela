@@ -7,7 +7,6 @@ import { BAND_PRESS } from '@/components/vela/band'
 import { IconButton } from '@/components/vela/icon-button'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/vela/icons'
 
-/** Steps a day at a time: a side without a day to go to cannot be pressed, and `今日` is there only away from today. */
 export function DatePager({
   label,
   onPrev,

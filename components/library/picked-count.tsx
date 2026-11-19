@@ -8,7 +8,6 @@ import {
   type PickedSubject,
 } from '@/lib/library-picking'
 
-/** How many are picked, or while none is, that recordings are to be chosen. On a phone's band the word after the count goes when the width is too narrow for the three presses beside it. */
 export function PickedCount({
   count,
   subject,

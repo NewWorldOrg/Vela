@@ -49,21 +49,18 @@ export interface ReservationActions {
 
 const SIGNED_OUT = signedOut('操作')
 
-/** The grid of a row in the list: the times, the title and its line, then the chips and the press at its end. With a check before them while reservations are being picked. */
 export const ROW_GRID =
   'grid min-h-[calc(62rem/16)] grid-cols-[calc(76rem/16)_minmax(0,1fr)_auto] items-center gap-x-5 px-2.5 py-2'
 
 export const PICKING_GRID =
   'grid-cols-[calc(24rem/16)_calc(76rem/16)_minmax(0,1fr)_auto]'
 
-/** A hairline between rows from the title on, gone beside a row a pointer rests on or one that is open. */
 export const ROW_LINE =
   "relative before:absolute before:top-0 before:right-2.5 before:left-[calc(116rem/16)] before:border-t before:border-hair before:content-[''] before:transition-opacity before:duration-[140ms] first:before:hidden has-[>div:first-child:hover]:before:opacity-0 data-open:before:opacity-0 [&:has(>div:first-child:hover)+li]:before:opacity-0 [&[data-open]+li]:before:opacity-0 data-[picking]:before:left-[calc(160rem/16)]"
 
 export const ROW_GROUND =
   'rounded-md transition-[background-color] duration-[140ms] ease-toy hover:bg-surface'
 
-/** The line under a title: the channel, then where the reservation came from, with the rule's name when a rule made it. */
 export function whereFrom(reservation: Reservation): string {
   return reservation.ruleName
     ? `${reservation.origin}「${reservation.ruleName}」`

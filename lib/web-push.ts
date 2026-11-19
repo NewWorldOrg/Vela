@@ -7,18 +7,15 @@ import type {
 } from '@/lib/notifications'
 import { couldNot } from '@/lib/try-again'
 
-/** What a push service hands Carina for one browser: where to send, and the keys the message is sealed with. */
 export interface PushSubscriptionDraft {
   endpoint: string
   keys: { p256dh: string; auth: string }
 }
 
-/** This browser's subscription, with the server key it was made under where the browser tells it. */
 export interface HeldSubscription extends PushSubscriptionDraft {
   serverKey?: string
 }
 
-/** A browser row as the renewal reads it. */
 export interface BrowserRow {
   id: string
   fingerprint?: string
@@ -32,7 +29,6 @@ export type PushKeyAnswer =
   | { state: 'unauthenticated' }
   | WriteRefusal
 
-/** What the browser can be asked: its grant, its worker and its subscription. */
 export interface PushHands {
   permission: () => BrowserPermission
   askPermission: () => Promise<BrowserPermission>
@@ -42,7 +38,6 @@ export interface PushHands {
   unsubscribe: () => Promise<void>
 }
 
-/** What Carina is asked through Vela's server. */
 export interface PushCarina {
   readKey: () => Promise<PushKeyAnswer>
   add: (
@@ -52,20 +47,17 @@ export interface PushCarina {
   replace: (id: string, draft: PushSubscriptionDraft) => Promise<BrowserWrite>
 }
 
-/** The row this browser added, kept in this browser alone. */
 export interface PushMemory {
   recall: () => string | undefined
   remember: (id: string) => void
   forget: () => void
 }
 
-/** What the browser's surroundings say about adding it: the features it has, its grant, and where it was opened from. */
 export interface PushSurroundings {
   serviceWorker: boolean
   pushManager: boolean
   notification: boolean
   permission: BrowserPermission
-  /** An iPhone or iPad, which takes notices only in the Vela added to its home screen. */
   appleTouch: boolean
   standalone: boolean
   publicOriginKnown: boolean
@@ -111,14 +103,12 @@ export function readinessOf(around: PushSurroundings): PushReadiness {
 
 const MAC = /\bMacintosh\b/
 
-/** The name this browser is offered under. An iPad's Safari says it is a Mac, and only its touch tells it apart. */
 export function hereOf(agent: string, touchPoints: number): string {
   return browserHere(
     touchPoints > 1 && MAC.test(agent) ? agent.replace(MAC, 'iPad') : agent,
   )
 }
 
-/** Whether the agent is an iPhone or an iPad, an iPad's Safari saying Mac. */
 export function appleTouchOf(agent: string, touchPoints: number): boolean {
   return (
     /\biPhone\b|\biPad\b|\biPod\b/.test(agent) ||
@@ -140,7 +130,6 @@ export async function fingerprintOf(
     .join('')
 }
 
-/** The browser row whose fingerprint is that of this browser's subscription. */
 export function ownRowOf(
   rows: readonly { id: string; kind: DestinationKind; fingerprint?: string }[],
   fingerprint: string | undefined,
@@ -219,7 +208,6 @@ async function givenUp(hands: PushHands): Promise<void> {
   } catch {}
 }
 
-/** Adds this browser: the prompt is asked first, while the press still counts, and a subscription Carina does not take is given up again. */
 export async function addThisBrowser(
   name: string,
   hands: PushHands,
@@ -274,7 +262,6 @@ export type Renewal =
   | { do: 'replace' }
   | { do: 'subscribeAgain' }
 
-/** What opening Vela does about the row this browser remembers, given the browser rows and the fingerprint of its subscription now. */
 export function renewalFor({
   remembered,
   rows,
@@ -325,7 +312,6 @@ async function put(
   }
 }
 
-/** Keeps the remembered row on this browser's subscription when Vela opens. It never asks for a grant and never says anything. */
 export async function renewThisBrowser(
   hands: PushHands,
   carina: Omit<PushCarina, 'add'>,

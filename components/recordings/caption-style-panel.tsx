@@ -50,7 +50,6 @@ function faceOfColour(colour: CaptionColour) {
   return colour === 'broadcast' ? undefined : <Swatch colour={colour} />
 }
 
-/** The caption's face of the gear: the background, the size, the colour of the letters, the edge, and putting the move or everything back. */
 export function CaptionStylePanel({
   style,
   onChange,

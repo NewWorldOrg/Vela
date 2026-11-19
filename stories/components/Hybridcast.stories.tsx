@@ -35,7 +35,6 @@ const AIT = 'http://example.test/hc/app.ait'
 
 const ENTRY = 'http://example.test/hc/index.html'
 
-/** The self-made application, served beside the stories in place of the relay: the address the frame opens, as Carina's would be, the relay's path and the broadcaster's URL in `uri`. */
 const AT_THE_APP = `/hybridcast-app/app.html?uri=${encodeURIComponent(ENTRY)}`
 
 const SERVICE = 1027
@@ -95,7 +94,6 @@ function heardAs(message: AppHeard): string {
   }
 }
 
-/** The application's frame over a player's box, with the keys of the remote beside it, reporting what the self-made application was answered and what the player heard of it. */
 function Harness({
   label,
   address = AT_THE_APP,

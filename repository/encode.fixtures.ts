@@ -242,14 +242,12 @@ export const FAILED_WITHOUT_A_SOURCE_JOB: EncodeJob = {
   },
 }
 
-/** The failed jobs the list shows when filtered to `失敗`, as `まとめて再実行` picks among them. */
 export const FAILED_JOBS: EncodeJob[] = [
   FAILED_JOB,
   FAILED_FOR_ROOM_JOB,
   FAILED_WITHOUT_A_SOURCE_JOB,
 ]
 
-/** What `まとめて再実行` says row by row when one of the three was queued again and the other two were not. */
 export const RERUN_ONE_OF_THREE: EncodeRerunRow[] = [
   { id: FAILED_JOB.id, outcome: 'queued' },
   {
@@ -264,7 +262,6 @@ export const RERUN_ONE_OF_THREE: EncodeRerunRow[] = [
   },
 ]
 
-/** The failed list as the API answers it when every job asked was queued again. */
 export function rerunAll(jobs: EncodeJob[]): EncodeRerunRow[] {
   return jobs.map((job) => ({ id: job.id, outcome: 'queued' }))
 }
@@ -419,7 +416,6 @@ export const RETIRED_DEFINITIONS: EncodeScreen = {
   destinations: [SHELF_DESTINATION, OLD_SHELF_DESTINATION],
 }
 
-/** The screen filtered to `失敗`, with three failed jobs to pick among. */
 export const FAILED_JOBS_SCREEN: EncodeScreen = {
   ...ENCODE_SCREEN,
   running: null,

@@ -41,7 +41,6 @@ const SIGNED_OUT = signedOut('追加')
 
 type Step = 'pick' | 'webhook' | 'browser'
 
-/** This browser as a destination: what a person calls it, why it cannot be added where it cannot, the fingerprint of its subscription, what adds it, and what is done once its own row is removed. */
 export interface BrowserChoice {
   here: string
   reason?: string
@@ -50,14 +49,12 @@ export interface BrowserChoice {
   onForget?: () => Promise<void>
 }
 
-/** `追加` and the dialog it opens: the form for a webhook, or, where this browser can be a destination too, the choice of kind first with a way back to it. */
 export function AddDestinationDialog({
   browser,
   held = false,
   onAddWebhook,
 }: {
   browser?: BrowserChoice
-  /** Whether this browser already has a row, so it is not offered a second time. */
   held?: boolean
   onAddWebhook: (draft: WebhookDraft) => Promise<NotificationWrite>
 }) {

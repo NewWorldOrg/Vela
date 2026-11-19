@@ -12,7 +12,6 @@
   }
 }
 
-/* A phone held upright: a window under 600px wide that is not a phone held on its side. */
 @custom-variant upright {
   @media (width < 600px) and (pointer: fine),
     (width < 600px) and (pointer: none),
@@ -22,7 +21,6 @@
   }
 }
 
-/* A phone held either way: upright, or on its side. */
 @custom-variant phone {
   @media (width < 600px) and (pointer: fine),
     (width < 600px) and (pointer: none),
@@ -33,21 +31,18 @@
   }
 }
 
-/* A phone held on its side: a finger's screen whose window is short and wide. */
 @custom-variant sideways {
   @media (pointer: coarse) and (orientation: landscape) and (height < 600px) {
     @slot;
   }
 }
 
-/* A screen whose pointer can rest over something before pressing it: a mouse or a trackpad. */
 @custom-variant mouse {
   @media (hover: hover) and (pointer: fine) {
     @slot;
   }
 }
 
-/* Dark, and inside anything marked `data-ink-face`: the panels beside the picture, which stay on the player's ink whatever the theme. */
 @custom-variant dark {
   &:where(.dark, .dark *) {
     @slot;
@@ -97,7 +92,6 @@
     }
   }
 
-  /* Past 2560px the whole screen grows with the window, so that 3840px draws what 1920px draws at twice the size: the root's size for every rem, and --px for every length still set in pixels. */
   @media (width > 2560px) {
     html {
       font-size: min(
@@ -111,7 +105,6 @@
     }
   }
 
-  /* The tab bar at the foot of a phone's window, and how much of the window it covers. */
   :root {
     --safe-bottom: env(safe-area-inset-bottom, 0px);
     --tab-bar: 0px;
@@ -147,7 +140,6 @@
     color: var(--ink);
   }
 
-  /* Figures and times line up by the digit. */
   .font-code,
   .tabular-nums {
     font-variant-numeric: tabular-nums;
@@ -167,7 +159,6 @@
     appearance: none;
   }
 
-  /* Shape, motion and type are theme-independent. */
   :root {
     --r-s: calc(9 * var(--px));
     --r-m: calc(12 * var(--px));
@@ -178,7 +169,6 @@
     --dur: 150ms;
   }
 
-  /* The player sits on ink in both themes. */
   :root {
     --pl-bg: #0e0e10;
     --pl-video: #000000;
@@ -231,7 +221,6 @@
     --glass: rgba(20, 20, 22, 0.5);
   }
 
-  /* v4: a neutral ground, one vermilion accent, and the genres as tints of the ground. */
   :root {
     color-scheme: light;
     --bg: #ffffff;
@@ -277,7 +266,6 @@
     --on-toast: #f4f4f6;
     --scrim: rgba(0, 0, 0, 0.32);
     --logo-plate: #ffffff;
-    /* The brand mark keeps the colours it was drawn in, outside the v4 palette: the blue keel, the green sail and the gold star where they cross. */
     --mark-keel: #356fa5;
     --mark-sail: #3f6461;
     --mark-star: #efb440;
@@ -412,8 +400,6 @@
     }
   }
 
-  /* The v3 names the screens still say, each resolved to the v4 token that
-     takes its place. A screen moves to the v4 names when it is redrawn. */
   :root,
   [data-ink-face] {
     --dot: transparent;
@@ -558,11 +544,6 @@
   }
 }
 
-/* The broadcast marks (字, 再, デ …) come from Denpa Font, the round gothic
-   bundled for data broadcasting, held to these blocks so the rest of the UI
-   keeps its own faces. The image carries the marks cut out of the font by
-   scripts/denpa-marks.sh; without them the whole font is read.
-   SIL Open Font License 1.1: http://scripts.sil.org/OFL */
 @font-face {
   font-family: 'Denpa Font';
   font-style: normal;
@@ -575,8 +556,6 @@
     U+1F110-1F16F, U+1F200-1F202, U+1F210-1F23B, U+1F240-1F248, U+1F250-1F251;
 }
 
-/* The device's own faces: nothing is downloaded. Denpa Font only answers for
-   the broadcast marks its unicode-range names. */
 @theme {
   --font-heading:
     'Denpa Font', system-ui, -apple-system, 'Segoe UI Variable Text',
@@ -597,7 +576,6 @@
   --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
 }
 
-/* The type steps. A phone reads the same steps as a wider window. */
 @theme {
   --text-display: calc(40rem / 16);
   --text-display--line-height: calc(44 / 40);
@@ -768,8 +746,6 @@
   --color-spark: var(--spark);
   --color-scrim: var(--scrim);
 
-  /* shadcn/ui primitives read these names; they are aliases of Vela tokens so
-     untouched primitives inherit the palette. */
   --color-background: var(--bg);
   --color-foreground: var(--ink);
   --color-card: var(--surface);
@@ -793,7 +769,6 @@
   --radius-lg: var(--r-l);
   --radius-xl: var(--r-xl);
 
-  /* Nothing that lies on the page casts a shadow. Only what floats does. */
   --shadow-pop: 2px 2px 0 var(--pop);
   --shadow-pop-lg: 3px 3px 0 var(--pop);
   --shadow-pop-none: 0 0 0 var(--pop);
@@ -904,12 +879,10 @@
   }
 }
 
-/* v4 lays nothing behind pages and panes; the name stays until the last screen drops it. */
 @utility dot-grid {
   background-image: none;
 }
 
-/* Headings are the device's face at 700, drawn a little tighter. */
 @utility heading {
   font-family: var(--font-heading);
   font-weight: 700;
@@ -917,7 +890,6 @@
   font-feature-settings: 'palt' 1;
 }
 
-/* The 44px area a press lands on, laid around a control without moving what is drawn. */
 @utility tap-target {
   position: relative;
 
@@ -934,7 +906,6 @@
   }
 }
 
-/* The same 44px for a field, carried by its wrapping label's padding. */
 @utility tap-area {
   position: relative;
   padding-block: 6px;
@@ -979,7 +950,6 @@
   }
 }
 
-/* One pixel of a length set in pixels: 1px up to 2560px, then growing with the window as the root's size does. */
 @property --px {
   syntax: '<length>';
   inherits: true;
@@ -1131,7 +1101,6 @@
   }
 }
 
-/* The colours the moments were drawn in before v4 (the curtain, the usher of the empty states and the opening of the guide): kept as they were, outside the v4 palette, in both themes. */
 @utility moment-colours {
   --bg: #f7f4ed;
   --surface: #fffdf8;
@@ -2684,9 +2653,6 @@
   --rise-stretch: 1;
 }
 
-/* A cell is sized by its programme's length and its words by rem, so the
-   cell asks its own height which form fits: a title of two lines with its
-   marks and as many lines of description as there is room for, or one line. */
 @utility guide-cell {
   @apply absolute right-0.5 left-0.5 z-[1] flex cursor-pointer flex-col overflow-hidden rounded-sm text-left outline-none focus-visible:shadow-ring;
   container-type: size;
@@ -2706,8 +2672,6 @@
   }
 }
 
-/* The `+` over a programme still to come shows while a pointer rests on the
-   programme, and is not there at all on a touch screen. */
 @utility guide-add {
   @apply absolute right-2 z-[3] grid size-[1.625rem] cursor-pointer place-items-center rounded-full bg-surface-2 text-ink opacity-0 outline-none focus-visible:opacity-100 focus-visible:shadow-ring;
   transition:
@@ -2803,8 +2767,6 @@
   }
 }
 
-/* The bell of a programme whose start is to be told sits in the cell's top
-   right corner, and in the middle of a cell of one line. */
 @utility guide-cell-bell {
   @apply pointer-events-none absolute right-2 text-warn;
   top: calc(7rem / 16);
@@ -3081,7 +3043,6 @@
   }
 }
 
-/* iOS enlarges the page when a field under 16px takes the focus: on a phone, held either way, no field is smaller. Unlayered, so it outranks the size a field is given. */
 @media (width < 600px), (pointer: coarse) and (height < 600px) {
   :where(
     input:not(
@@ -3102,7 +3063,6 @@
   }
 }
 
-/* A list on a phone: each row of a table marked `data-cards` is laid as a card of two or three lines, the name first, the values that say themselves next, the values that need their column's name after, and the row's buttons last. Unlayered, so it outranks the widths and paddings a cell is given for the table. */
 @media (width < 600px) {
   table[data-cards] {
     display: block;

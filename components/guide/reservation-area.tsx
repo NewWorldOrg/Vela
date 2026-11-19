@@ -19,7 +19,6 @@ export function useTellDisplaced(): TellDisplaced {
   return useContext(DisplacedTold)
 }
 
-/** The programme's actions in one row; `first` (watching it live while it is on air) leads as the main button, and recording it steps back to a toned one whose circle stays the recording's red. `notice` stands right after recording it, booked or not. */
 export function ReservationArea({
   programmeId,
   booked,

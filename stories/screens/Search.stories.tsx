@@ -211,7 +211,6 @@ function chipOf(canvas: ReturnType<typeof within>, name: string): HTMLElement {
   return canvas.getByRole('button', { name: new RegExp(`^${name} `) })
 }
 
-/** Opens a condition's panel from its pill and hands back the panel. */
 async function openPanel(
   canvas: ReturnType<typeof within>,
   name: string,
@@ -225,7 +224,6 @@ async function openPanel(
   return panel
 }
 
-/** Closes the panel open, which searches what was set in it. */
 async function closePanel(): Promise<void> {
   await userEvent.keyboard('{Escape}')
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
@@ -1652,7 +1650,6 @@ const STARTED: SearchHit = {
   endLabel: '17:30',
 }
 
-/** The detail beside the list once the row at a place in it is chosen. */
 async function besideTheRow(
   canvasElement: HTMLElement,
   at: number,
