@@ -1,4 +1,18 @@
 
+const DIRECTIVES = [
+  /^\s*eslint-(?:disable|enable|env)\b/,
+  /^\s*(?:global|globals|exported)\s/,
+  /^\s*@ts-(?:expect-error|ignore|nocheck|check)\b/,
+  /^\/\s*<reference\s/,
+  /^\s*prettier-ignore\b/,
+  /^\s*(?:webpack|turbopack)[A-Za-z]*\s*:/,
+  /^\s*[@#]__(?:PURE|NO_SIDE_EFFECTS)__\s*$/,
+]
+
+const PLAIN_SCRIPT = /\.(?:m?js|cjs)$/
+
+const TYPE_ANNOTATION = /^\*\s*@(?:type|satisfies)\s/
+
 const PARTS = ['test', 'consequent', 'alternate']
 
 const DIRECTIVE = /^\s*eslint-disable(?:-next-line|-line)?\s/
@@ -73,9 +87,47 @@ const maxTernaryChain = {
   },
 }
 
+function isRead(comment, filename) {
+  if (comment.type === 'Shebang') {
+    return true
+  }
+
+  if (DIRECTIVES.some((directive) => directive.test(comment.value))) {
+    return true
+  }
+
+  return PLAIN_SCRIPT.test(filename) && TYPE_ANNOTATION.test(comment.value)
+}
+
+const noComments = {
+  meta: {
+    type: 'suggestion',
+    docs: {
+      description: 'Forbid comments other than the directives a tool reads',
+    },
+    schema: [],
+    messages: {
+      comment:
+        'Code carries no comments. Say it in the names and the structure, or leave it out.',
+    },
+  },
+  create(context) {
+    return {
+      Program() {
+        for (const comment of context.sourceCode.getAllComments()) {
+          if (!isRead(comment, context.filename)) {
+            context.report({ loc: comment.loc, messageId: 'comment' })
+          }
+        }
+      },
+    }
+  },
+}
+
 /** @type {import('eslint').ESLint.Plugin} */
 const plugin = {
   rules: {
+    'no-comments': noComments,
     'max-ternary-chain': maxTernaryChain,
   },
 }

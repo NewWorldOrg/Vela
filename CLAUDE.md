@@ -166,6 +166,15 @@ and colour that comes from the pictures. What that means in the code:
   keeps shadcn's own layout, and `components/vela/icons.tsx` stays one file
 - A component used only inside its file may stay there while it is 60 lines or
   shorter. Past that it moves into a file of its own beside the one that uses it
+- Code carries no comments: not `//`, not `/* */`, not JSDoc, not `{/* */}` in
+  JSX, and not in CSS. What a reader needs comes from the names and the shape of
+  the code. Only a directive a tool reads stays: `eslint-disable` and its
+  `-next-line` and `-line` forms, `@ts-expect-error`, `@ts-ignore`,
+  `@ts-nocheck`, `/// <reference>`, `prettier-ignore`, bundler magic comments
+  such as `webpackChunkName`, `@__PURE__`, and `@type` in a plain `.js` or
+  `.mjs` file. `vela/no-comments` holds this for scripts and TypeScript, and
+  `tests/scripts/no-comments.test.ts` for stylesheets. `repository/client/schema.ts`
+  is generated and exempt
 
 ## Commands
 

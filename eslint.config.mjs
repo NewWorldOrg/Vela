@@ -22,6 +22,11 @@ const config = [
     },
   },
   {
+    files: ['**/*.{ts,tsx,mts,cts,js,mjs,cjs}'],
+    ignores: ['repository/client/schema.ts', 'next-env.d.ts'],
+    rules: { 'vela/no-comments': 'error' },
+  },
+  {
     files: ['**/*.ts', '**/*.tsx'],
     ignores: ['repository/**'],
     rules: {
