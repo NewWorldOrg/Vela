@@ -55,6 +55,11 @@ import {
 } from '@/repository/live.fixtures'
 import { FORMAT_COOKIE } from '@/lib/playback-format'
 import {
+  BUFFER_STEPS_SECONDS,
+  LIVE_BUFFER_COOKIE,
+  liveBufferSpelling,
+} from '@/lib/live-buffer'
+import {
   PLAYS_AV1_IN_SOFTWARE,
   PLAYS_EVERY_FORMAT_LIGHTLY,
   PLAYS_ONLY_H264,
@@ -579,6 +584,7 @@ const meta = {
     document.cookie = forgettingCookie(LIVE_CHANNELS_FOLDED)
     document.cookie = forgettingCookie(LIVE_SUB_CHANNELS_FOLDED)
     document.cookie = forgettingCookie(FORMAT_COOKIE)
+    document.cookie = forgettingCookie(LIVE_BUFFER_COOKIE)
   },
 } satisfies Meta<typeof LiveView>
 
@@ -2146,6 +2152,69 @@ export const バッファリング: Story = {
     await expect(
       canvasElement.querySelector('[data-slot="live-player"]'),
     ).toHaveAttribute('data-phase', 'buffering')
+  },
+}
+
+async function thePictureThatCame(
+  canvasElement: HTMLElement,
+): Promise<HTMLVideoElement> {
+  await within(canvasElement).findByText('バッファリング中')
+
+  const picture = canvasElement.querySelector('video')
+
+  if (!(picture instanceof HTMLVideoElement)) {
+    throw new Error('the picture is not on the screen')
+  }
+
+  return picture
+}
+
+export const 再生中に途切れた端末はバッファを増やして覚える: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const picture = await thePictureThatCame(canvasElement)
+    const player = canvasElement.querySelector('[data-slot="live-player"]')
+
+    await expect(cookieIn(document.cookie, LIVE_BUFFER_COOKIE)).toBeUndefined()
+
+    picture.dispatchEvent(new Event('playing'))
+    await waitFor(() => expect(player).toHaveAttribute('data-phase', 'playing'))
+
+    picture.dispatchEvent(new Event('waiting'))
+    await waitFor(() =>
+      expect(player).toHaveAttribute('data-phase', 'buffering'),
+    )
+    await expect(cookieIn(document.cookie, LIVE_BUFFER_COOKIE)).toBe(
+      liveBufferSpelling(BUFFER_STEPS_SECONDS[1]),
+    )
+
+    picture.dispatchEvent(new Event('playing'))
+    picture.dispatchEvent(new Event('waiting'))
+    await waitFor(() =>
+      expect(player).toHaveAttribute('data-phase', 'buffering'),
+    )
+    await expect(cookieIn(document.cookie, LIVE_BUFFER_COOKIE)).toBe(
+      liveBufferSpelling(BUFFER_STEPS_SECONDS[1]),
+    )
+  },
+}
+
+export const シークの待ちと再生前の待ちではバッファを増やさない: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const picture = await thePictureThatCame(canvasElement)
+    const player = canvasElement.querySelector('[data-slot="live-player"]')
+
+    picture.dispatchEvent(new Event('waiting'))
+    picture.dispatchEvent(new Event('playing'))
+    await waitFor(() => expect(player).toHaveAttribute('data-phase', 'playing'))
+
+    picture.dispatchEvent(new Event('seeking'))
+    picture.dispatchEvent(new Event('waiting'))
+    await waitFor(() =>
+      expect(player).toHaveAttribute('data-phase', 'buffering'),
+    )
+    await expect(cookieIn(document.cookie, LIVE_BUFFER_COOKIE)).toBeUndefined()
   },
 }
 
