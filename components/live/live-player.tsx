@@ -80,6 +80,12 @@ import {
   reachOf,
 } from '@/lib/live-latency'
 import {
+  LIVE_BUFFER_COOKIE,
+  LiveBuffer,
+  START_BUFFER_SECONDS,
+  liveBufferSpelling,
+} from '@/lib/live-buffer'
+import {
   CaptionsGlyph,
   CaptureIcon,
   FullscreenIcon,
@@ -156,6 +162,7 @@ import {
   type OpenPlaylist,
 } from '@/components/live/live-playlist'
 import { useLiveCarriage } from '@/hooks/useLiveCarriage'
+import { LiveStalls } from '@/components/live/live-stalls'
 import { LiveStart } from '@/components/live/live-start'
 import {
   askLiveBacklog,
@@ -256,6 +263,7 @@ export function LivePlayer({
   onDataBroadcastOpen,
   captionStyle: storedCaptionStyle = PLAIN_CAPTION_STYLE,
   formatChoice: storedFormat = 'auto',
+  startBuffer: storedBuffer = START_BUFFER_SECONDS,
   askBrowser,
   lead,
   side,
@@ -294,6 +302,7 @@ export function LivePlayer({
   onDataBroadcastOpen?: (open: boolean) => void
   captionStyle?: CaptionStyle
   formatChoice?: FormatChoice
+  startBuffer?: number
   askBrowser?: FormatProbe
 }) {
   const video = useRef<HTMLVideoElement>(null)
@@ -355,7 +364,14 @@ export function LivePlayer({
   )
   const [settingsOpen, setSettingsOpen] = useState(false)
   const settling = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const stalls = useRef(0)
+  const [buffer] = useState(
+    () =>
+      new LiveBuffer(
+        storedBuffer,
+        () => performance.now(),
+        (seconds) => storeText(LIVE_BUFFER_COOKIE, liveBufferSpelling(seconds)),
+      ),
+  )
 
   const networkId = channel?.networkId
   const serviceId = channel?.serviceId
@@ -481,7 +497,6 @@ export function LivePlayer({
     let settled = false
 
     element.playbackRate = 1
-    stalls.current = 0
 
     const fail = (why: LiveFault) => {
       if (settled || gone) {
@@ -618,8 +633,20 @@ export function LivePlayer({
 
     let edge = -1
     let edgeMovedAt = performance.now()
+    let tickedAt = edgeMovedAt
+    let supplied = true
     let quickenedSince: number | null = null
     let gapWhenQuickened = 0
+
+    const stalls = new LiveStalls(
+      element,
+      () => performance.now(),
+      () => {
+        if (supplied && !settled) {
+          buffer.stalled()
+        }
+      },
+    )
 
     const feed = new LiveFeed(
       element,
@@ -634,8 +661,12 @@ export function LivePlayer({
       },
     )
 
-    const starter = new LiveStart(element, feed, () =>
-      change((was) => ({ ...was, phase: 'paused' })),
+    const starter = new LiveStart(
+      element,
+      feed,
+      () => buffer.seconds,
+      () => performance.now(),
+      () => change((was) => ({ ...was, phase: 'paused' })),
     )
 
     const layer = overlay.current
@@ -670,7 +701,10 @@ export function LivePlayer({
         onRefusal: (refusal, over) =>
           fail({ kind: 'refused', refusal, ...over }),
         onEnding: (why) => fail({ kind: 'ended', why }),
-        onDropped: droppedOrSignedOut,
+        onDropped: () => {
+          supplied = false
+          droppedOrSignedOut()
+        },
       },
       openSocket,
     )
@@ -689,6 +723,12 @@ export function LivePlayer({
 
       const now = performance.now()
       const elapsedMs = now - openedAt
+
+      if (stalls.playing) {
+        buffer.played((now - tickedAt) / 1000)
+      }
+
+      tickedAt = now
 
       if (!startedInTime(elapsedMs, session.leave)) {
         clearInterval(ticking)
@@ -727,7 +767,7 @@ export function LivePlayer({
           edge: end,
           reach: reachOf(runs, element.currentTime),
           from: start,
-          stalls: stalls.current,
+          target: buffer.seconds,
         })
 
         if (hold.seekTo !== undefined) {
@@ -775,6 +815,7 @@ export function LivePlayer({
       gone = true
       clearInterval(ticking)
       clearInterval(following)
+      stalls.leave()
       session.leave()
       feed.close()
       layer?.close()
@@ -783,6 +824,7 @@ export function LivePlayer({
     }
   }, [
     broadcastFeed,
+    buffer,
     captionBoard,
     key,
     networkId,
@@ -1398,17 +1440,13 @@ export function LivePlayer({
                         : was,
                     )
                   }
-                  onWaiting={() => {
-                    if (phase === 'playing') {
-                      stalls.current += 1
-                    }
-
+                  onWaiting={() =>
                     heard((was) =>
                       was.phase === 'playing'
                         ? { ...was, phase: 'buffering' }
                         : was,
                     )
-                  }}
+                  }
                   className={cn(
                     'size-full object-contain',
                     !hasPicture && 'invisible',

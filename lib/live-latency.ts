@@ -1,10 +1,8 @@
 export const PART_SECONDS = 0.05
 
-export const TARGET_SECONDS = 0.6
-
 export const TOLERANCE_SECONDS = 0.4
 
-export const NEAR_TOLERANCE_SECONDS = 0.2
+export const NEAR_TOLERANCE_SECONDS = 0.1
 
 export const CATCH_UP_RATE = 1.05
 
@@ -12,9 +10,7 @@ export const EASE_OFF_RATE = 0.95
 
 export const SEEK_FROM_SECONDS = 8
 
-export const STALL_ALLOWANCE_SECONDS = 0.2
-
-export const STALL_ALLOWANCE_CAP_SECONDS = 1.0
+export const WARN_FROM_SECONDS = 1
 
 export interface LivePlayhead {
   rate: number
@@ -22,7 +18,7 @@ export interface LivePlayhead {
   edge: number
   reach: number
   from: number
-  stalls: number
+  target: number
 }
 
 export interface LiveHold {
@@ -30,33 +26,22 @@ export interface LiveHold {
   seekTo?: number
 }
 
-export function targetOf(stalls: number): number {
-  return (
-    TARGET_SECONDS +
-    Math.min(stalls * STALL_ALLOWANCE_SECONDS, STALL_ALLOWANCE_CAP_SECONDS)
-  )
-}
-
-export function windowOf(stalls: number): { start: number; stop: number } {
-  const target = targetOf(stalls)
-
+export function windowOf(target: number): { start: number; stop: number } {
   return { start: target + TOLERANCE_SECONDS, stop: target }
 }
 
-export function nearWindowOf(stalls: number): { start: number; stop: number } {
-  const target = targetOf(stalls)
-
+export function nearWindowOf(target: number): { start: number; stop: number } {
   return { start: target - NEAR_TOLERANCE_SECONDS, stop: target }
 }
 
 export function holdOf(playhead: LivePlayhead): LiveHold {
-  const { at, edge, reach, from, stalls, rate } = playhead
+  const { at, edge, reach, from, target, rate } = playhead
   const behind = Math.max(0, edge - at)
-  const window = windowOf(stalls)
-  const near = nearWindowOf(stalls)
+  const window = windowOf(target)
+  const near = nearWindowOf(target)
   const toTheEdge = {
     rate: 1,
-    seekTo: Math.max(from, edge - targetOf(stalls)),
+    seekTo: Math.max(from, edge - target),
   }
 
   if (behind >= SEEK_FROM_SECONDS) {
@@ -124,5 +109,5 @@ export function latencyTone(
     return 'err'
   }
 
-  return seconds > windowOf(0).start ? 'warn' : 'ok'
+  return seconds > WARN_FROM_SECONDS ? 'warn' : 'ok'
 }
