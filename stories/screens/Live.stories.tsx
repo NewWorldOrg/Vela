@@ -57,6 +57,7 @@ import { FORMAT_COOKIE } from '@/lib/playback-format'
 import {
   BUFFER_STEPS_SECONDS,
   LIVE_BUFFER_COOKIE,
+  START_SETTLES_SECONDS,
   liveBufferSpelling,
 } from '@/lib/live-buffer'
 import {
@@ -2169,6 +2170,12 @@ async function thePictureThatCame(
   return picture
 }
 
+function theStartHasSettled(): Promise<void> {
+  return new Promise((settle) =>
+    setTimeout(settle, START_SETTLES_SECONDS * 1000 + 100),
+  )
+}
+
 export const 再生中に途切れた端末はバッファを増やして覚える: Story = {
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
@@ -2179,6 +2186,7 @@ export const 再生中に途切れた端末はバッファを増やして覚え�
 
     picture.dispatchEvent(new Event('playing'))
     await waitFor(() => expect(player).toHaveAttribute('data-phase', 'playing'))
+    await theStartHasSettled()
 
     picture.dispatchEvent(new Event('waiting'))
     await waitFor(() =>
@@ -2199,7 +2207,7 @@ export const 再生中に途切れた端末はバッファを増やして覚え�
   },
 }
 
-export const シークの待ちと再生前の待ちではバッファを増やさない: Story = {
+export const 再生前と始めた直後とシークの待ちではバッファを増やさない: Story = {
   args: { openSocket: stalling },
   play: async ({ canvasElement }) => {
     const picture = await thePictureThatCame(canvasElement)
@@ -2208,6 +2216,16 @@ export const シークの待ちと再生前の待ちではバッファを増や�
     picture.dispatchEvent(new Event('waiting'))
     picture.dispatchEvent(new Event('playing'))
     await waitFor(() => expect(player).toHaveAttribute('data-phase', 'playing'))
+
+    picture.dispatchEvent(new Event('waiting'))
+    await waitFor(() =>
+      expect(player).toHaveAttribute('data-phase', 'buffering'),
+    )
+    await expect(cookieIn(document.cookie, LIVE_BUFFER_COOKIE)).toBeUndefined()
+
+    picture.dispatchEvent(new Event('playing'))
+    await waitFor(() => expect(player).toHaveAttribute('data-phase', 'playing'))
+    await theStartHasSettled()
 
     picture.dispatchEvent(new Event('seeking'))
     picture.dispatchEvent(new Event('waiting'))

@@ -1,4 +1,4 @@
-import { SEEK_SETTLES_SECONDS } from '@/lib/live-buffer'
+import { SEEK_SETTLES_SECONDS, START_SETTLES_SECONDS } from '@/lib/live-buffer'
 
 export interface WatchedPicture {
   readonly seeking: boolean
@@ -16,6 +16,8 @@ export class LiveStalls {
   private rolling = false
 
   private soughtAt: number | null = null
+
+  private firstPlayedAt: number | null = null
 
   private readonly heard: [string, () => void][]
 
@@ -49,6 +51,7 @@ export class LiveStalls {
 
   private played(): void {
     this.rolling = true
+    this.firstPlayedAt ??= this.now()
   }
 
   private paused(): void {
@@ -70,9 +73,13 @@ export class LiveStalls {
   }
 
   private settled(): boolean {
+    const at = this.now()
+
     return (
-      this.soughtAt === null ||
-      this.now() - this.soughtAt >= SEEK_SETTLES_SECONDS * 1000
+      this.firstPlayedAt !== null &&
+      at - this.firstPlayedAt >= START_SETTLES_SECONDS * 1000 &&
+      (this.soughtAt === null ||
+        at - this.soughtAt >= SEEK_SETTLES_SECONDS * 1000)
     )
   }
 }

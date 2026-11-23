@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
-import { SEEK_SETTLES_SECONDS } from '@/lib/live-buffer'
+import { SEEK_SETTLES_SECONDS, START_SETTLES_SECONDS } from '@/lib/live-buffer'
 import { LiveStalls } from '@/components/live/live-stalls'
 
 class Picture {
@@ -46,20 +46,26 @@ function bench() {
     },
   )
 
+  const pass = (seconds: number) => {
+    clock.ms += seconds * 1000
+  }
+
   return {
     picture,
     watch,
     stalls: () => stalls,
-    pass: (seconds: number) => {
-      clock.ms += seconds * 1000
+    pass,
+    plays: () => {
+      picture.says('playing')
+      pass(START_SETTLES_SECONDS)
     },
   }
 }
 
 test('a wait while the picture is playing is a stall', () => {
-  const { picture, stalls } = bench()
+  const { picture, stalls, plays } = bench()
 
-  picture.says('playing')
+  plays()
   picture.says('waiting')
 
   assert.equal(stalls(), 1)
@@ -73,10 +79,40 @@ test('the wait before the picture first plays is not a stall', () => {
   assert.equal(stalls(), 0)
 })
 
-test('one wait is one stall until the picture plays again', () => {
-  const { picture, stalls } = bench()
+test('a wait in the first seconds of a play is part of starting, not a stall', () => {
+  const { picture, stalls, pass } = bench()
 
   picture.says('playing')
+  picture.says('waiting')
+  picture.says('playing')
+  pass(START_SETTLES_SECONDS - 0.1)
+  picture.says('waiting')
+
+  assert.equal(stalls(), 0)
+})
+
+test('the first seconds are counted from the first time the picture plays, and a wait after them is a stall', () => {
+  const { picture, stalls, pass } = bench()
+
+  picture.says('waiting')
+  pass(30)
+  picture.says('playing')
+  pass(START_SETTLES_SECONDS - 0.1)
+  picture.says('waiting')
+
+  assert.equal(stalls(), 0)
+
+  picture.says('playing')
+  pass(0.1)
+  picture.says('waiting')
+
+  assert.equal(stalls(), 1)
+})
+
+test('one wait is one stall until the picture plays again', () => {
+  const { picture, stalls, plays } = bench()
+
+  plays()
   picture.says('waiting')
   picture.says('waiting')
 
@@ -89,9 +125,9 @@ test('one wait is one stall until the picture plays again', () => {
 })
 
 test('a wait while the picture is seeking is not a stall', () => {
-  const { picture, stalls } = bench()
+  const { picture, stalls, plays } = bench()
 
-  picture.says('playing')
+  plays()
   picture.seeking = true
   picture.says('seeking')
   picture.says('waiting')
@@ -100,9 +136,9 @@ test('a wait while the picture is seeking is not a stall', () => {
 })
 
 test('a wait just after a seek has finished is not a stall', () => {
-  const { picture, stalls, pass } = bench()
+  const { picture, stalls, pass, plays } = bench()
 
-  picture.says('playing')
+  plays()
   picture.says('seeking')
   pass(SEEK_SETTLES_SECONDS - 0.1)
   picture.says('waiting')
@@ -111,9 +147,9 @@ test('a wait just after a seek has finished is not a stall', () => {
 })
 
 test('a wait after the seek has settled is a stall', () => {
-  const { picture, stalls, pass } = bench()
+  const { picture, stalls, pass, plays } = bench()
 
-  picture.says('playing')
+  plays()
   picture.says('seeking')
   picture.says('waiting')
   picture.says('playing')
@@ -124,9 +160,9 @@ test('a wait after the seek has settled is a stall', () => {
 })
 
 test('a wait after a pause is not a stall until the picture plays again', () => {
-  const { picture, stalls } = bench()
+  const { picture, stalls, plays } = bench()
 
-  picture.says('playing')
+  plays()
   picture.says('pause')
   picture.says('waiting')
 
