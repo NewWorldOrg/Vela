@@ -5,6 +5,8 @@ import {
   BUFFER_CEILING_SECONDS,
   BUFFER_STEPS_SECONDS,
   LATE_START_SECONDS,
+  OVERDUE_BEHIND_SECONDS,
+  OVERDUE_START_SECONDS,
   START_BUFFER_SECONDS,
 } from '@/lib/live-buffer'
 import { LiveStart } from '@/components/live/live-start'
@@ -38,9 +40,16 @@ class Held {
 
   to?: number
 
-  constructor(from?: number, to?: number) {
+  oldest?: number
+
+  constructor(from?: number, to?: number, oldest?: number) {
     this.from = from
     this.to = to
+    this.oldest = oldest
+  }
+
+  start(): number | undefined {
+    return this.oldest ?? this.from
   }
 
   pictureFrom(): number | undefined {
@@ -273,11 +282,11 @@ test('a span with nothing in it is never played, however long it has been', () =
 })
 
 test('sound held from before the first picture is not counted: nothing is played until the figure is held from the first picture on', () => {
-  const held = new Held(ON_AIR_AT, ON_AIR_AT - 0.04)
+  const held = new Held(ON_AIR_AT, ON_AIR_AT - 0.04, ON_AIR_AT - 0.9)
   const { picture, starter, pass } = bench(held)
 
   starter.check()
-  pass(30)
+  pass(LATE_START_SECONDS + START_BUFFER_SECONDS + 0.5)
   starter.check()
 
   assert.equal(picture.plays, 0)
@@ -333,4 +342,129 @@ test('a device at the ceiling is given its figure and the same second, so it is 
 
   assert.equal(picture.plays, 1)
   assert.equal(picture.currentTime, ON_AIR_AT)
+})
+
+test('a first picture that never comes into what is held does not keep the start waiting for ever: past the bound it starts the way it did before, behind the edge of what the browser holds', () => {
+  const held = new Held(ON_AIR_AT + 3600, ON_AIR_AT + 0.5, ON_AIR_AT)
+  const { picture, starter, pass } = bench(held)
+
+  starter.check()
+  pass(OVERDUE_START_SECONDS)
+  held.to = ON_AIR_AT + 3.6
+  starter.check()
+
+  assert.equal(picture.plays, 0)
+
+  pass(START_BUFFER_SECONDS)
+  held.to = ON_AIR_AT + 3.7
+  starter.check()
+
+  assert.equal(picture.plays, 1)
+  assert.equal(starter.started, true)
+  assert.equal(picture.currentTime, ON_AIR_AT + 3.7 - OVERDUE_BEHIND_SECONDS)
+})
+
+test('a forced start is counted from the first thing the browser holds, not from before anything came', () => {
+  const held = new Held()
+  const { picture, starter, pass } = bench(held)
+
+  starter.check()
+  pass(60)
+  starter.check()
+
+  assert.equal(picture.plays, 0)
+
+  held.oldest = ON_AIR_AT
+  held.from = ON_AIR_AT + 3600
+  held.to = ON_AIR_AT + 0.3
+  starter.check()
+  pass(OVERDUE_START_SECONDS)
+  starter.check()
+
+  assert.equal(picture.plays, 0)
+
+  pass(START_BUFFER_SECONDS)
+  starter.check()
+
+  assert.equal(picture.plays, 1)
+  assert.equal(picture.currentTime, ON_AIR_AT)
+})
+
+test('a forced start does not wait for where picture and sound begin to be known at all', () => {
+  const held = new Held(undefined, ON_AIR_AT + 2, ON_AIR_AT)
+  const { picture, starter, pass } = bench(held)
+
+  starter.check()
+  pass(START_BUFFER_SECONDS + OVERDUE_START_SECONDS)
+  held.to = ON_AIR_AT + 5
+  starter.check()
+
+  assert.equal(picture.plays, 1)
+  assert.equal(picture.currentTime, ON_AIR_AT + 5 - OVERDUE_BEHIND_SECONDS)
+})
+
+test('a forced start does not wait for the picture to say it is ready either, as the start before did not', () => {
+  const held = new Held(ON_AIR_AT, ON_AIR_AT + 1)
+  const { picture, starter, pass } = bench(held)
+
+  picture.readyState = HAVE_NOTHING
+  starter.check()
+  pass(START_BUFFER_SECONDS + OVERDUE_START_SECONDS)
+  held.to = ON_AIR_AT + 4
+  starter.check()
+
+  assert.equal(picture.plays, 1)
+  assert.equal(picture.currentTime, ON_AIR_AT + 4 - OVERDUE_BEHIND_SECONDS)
+})
+
+test('a device that holds more than the old figure is forced that much behind the edge, and its bound is that much later', () => {
+  const raised = BUFFER_STEPS_SECONDS[4]
+  const held = new Held(ON_AIR_AT + 3600, ON_AIR_AT + 0.5, ON_AIR_AT)
+  const { picture, starter, pass } = bench(held, raised)
+
+  assert.ok(raised > OVERDUE_BEHIND_SECONDS)
+
+  starter.check()
+  pass(OVERDUE_START_SECONDS)
+  held.to = ON_AIR_AT + 3.7
+  starter.check()
+
+  assert.equal(picture.plays, 0)
+
+  pass(raised)
+  held.to = ON_AIR_AT + 5
+  starter.check()
+
+  assert.equal(picture.plays, 1)
+  assert.equal(picture.currentTime, ON_AIR_AT + 5 - raised)
+})
+
+test('a start that comes in time is never the forced one: the bound is past every ordinary start', () => {
+  for (const target of BUFFER_STEPS_SECONDS) {
+    const held = new Held(ON_AIR_AT, ON_AIR_AT + 0.05, ON_AIR_AT - 0.9)
+    const { picture, starter, pass } = bench(held, target)
+
+    starter.check()
+    pass(target + LATE_START_SECONDS)
+    held.to = ON_AIR_AT + 0.1
+    starter.check()
+
+    assert.equal(picture.plays, 1, `${target} s wanted`)
+    assert.equal(picture.currentTime, ON_AIR_AT, `${target} s wanted`)
+  }
+})
+
+test('a forced start happens once, and a refusal of it is told once', async () => {
+  const held = new Held(ON_AIR_AT + 3600, ON_AIR_AT + 4, ON_AIR_AT)
+  const { picture, starter, pass, refusals } = bench(held)
+
+  picture.refuses = true
+  starter.check()
+  pass(START_BUFFER_SECONDS + OVERDUE_START_SECONDS)
+  starter.check()
+  starter.check()
+  await new Promise((settle) => setImmediate(settle))
+
+  assert.equal(picture.plays, 1)
+  assert.equal(refusals(), 1)
 })

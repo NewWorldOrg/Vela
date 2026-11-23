@@ -1,10 +1,15 @@
-import { LATE_START_SECONDS } from '@/lib/live-buffer'
+import {
+  LATE_START_SECONDS,
+  OVERDUE_BEHIND_SECONDS,
+  OVERDUE_START_SECONDS,
+} from '@/lib/live-buffer'
 
 const HAVE_METADATA = 1
 
 const ROUNDING_SECONDS = 0.001
 
 export interface LiveBuffered {
+  start(): number | undefined
   pictureFrom(): number | undefined
   end(): number | undefined
 }
@@ -30,6 +35,8 @@ export class LiveStart {
 
   private heldSince: number | null = null
 
+  private picturedSince: number | null = null
+
   constructor(
     picture: LivePlayhead,
     buffered: LiveBuffered,
@@ -49,35 +56,54 @@ export class LiveStart {
   }
 
   check(): void {
-    const from = this.buffered.pictureFrom()
+    const start = this.buffered.start()
     const end = this.buffered.end()
 
     if (
       this.begun ||
-      from === undefined ||
+      start === undefined ||
       end === undefined ||
+      end <= start
+    ) {
+      return
+    }
+
+    const at = this.now()
+    const target = this.target()
+
+    this.heldSince ??= at
+
+    if (at - this.heldSince >= (target + OVERDUE_START_SECONDS) * 1000) {
+      this.begin(
+        Math.max(start, end - Math.max(target, OVERDUE_BEHIND_SECONDS)),
+      )
+
+      return
+    }
+
+    const from = this.buffered.pictureFrom()
+
+    if (
+      from === undefined ||
       end <= from ||
       this.picture.readyState < HAVE_METADATA
     ) {
       return
     }
 
-    const target = this.target()
+    this.picturedSince ??= at
 
-    if (end - from + ROUNDING_SECONDS < target && !this.waitedOut(target)) {
-      return
+    if (
+      end - from + ROUNDING_SECONDS >= target ||
+      at - this.picturedSince >= (target + LATE_START_SECONDS) * 1000
+    ) {
+      this.begin(Math.max(from, end - target))
     }
-
-    this.begun = true
-    this.picture.currentTime = Math.max(from, end - target)
-    void this.picture.play().catch(this.onRefused)
   }
 
-  private waitedOut(target: number): boolean {
-    const at = this.now()
-
-    this.heldSince ??= at
-
-    return at - this.heldSince >= (target + LATE_START_SECONDS) * 1000
+  private begin(at: number): void {
+    this.begun = true
+    this.picture.currentTime = at
+    void this.picture.play().catch(this.onRefused)
   }
 }
