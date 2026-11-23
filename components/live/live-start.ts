@@ -5,7 +5,7 @@ const HAVE_METADATA = 1
 const ROUNDING_SECONDS = 0.001
 
 export interface LiveBuffered {
-  start(): number | undefined
+  pictureFrom(): number | undefined
   end(): number | undefined
 }
 
@@ -49,14 +49,14 @@ export class LiveStart {
   }
 
   check(): void {
-    const start = this.buffered.start()
+    const from = this.buffered.pictureFrom()
     const end = this.buffered.end()
 
     if (
       this.begun ||
-      start === undefined ||
+      from === undefined ||
       end === undefined ||
-      end <= start ||
+      end <= from ||
       this.picture.readyState < HAVE_METADATA
     ) {
       return
@@ -64,12 +64,12 @@ export class LiveStart {
 
     const target = this.target()
 
-    if (end - start + ROUNDING_SECONDS < target && !this.waitedOut(target)) {
+    if (end - from + ROUNDING_SECONDS < target && !this.waitedOut(target)) {
       return
     }
 
     this.begun = true
-    this.picture.currentTime = Math.max(start, end - target)
+    this.picture.currentTime = Math.max(from, end - target)
     void this.picture.play().catch(this.onRefused)
   }
 

@@ -766,7 +766,7 @@ export function LivePlayer({
           at: element.currentTime,
           edge: end,
           reach: reachOf(runs, element.currentTime),
-          from: start,
+          from: feed.pictureFrom() ?? start,
           target: buffer.seconds,
         })
 

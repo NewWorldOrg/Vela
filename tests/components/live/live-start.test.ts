@@ -43,7 +43,7 @@ class Held {
     this.to = to
   }
 
-  start(): number | undefined {
+  pictureFrom(): number | undefined {
     return this.from
   }
 
@@ -270,6 +270,51 @@ test('a span with nothing in it is never played, however long it has been', () =
 
   assert.equal(picture.plays, 0)
   assert.equal(starter.started, false)
+})
+
+test('sound held from before the first picture is not counted: nothing is played until the figure is held from the first picture on', () => {
+  const held = new Held(ON_AIR_AT, ON_AIR_AT - 0.04)
+  const { picture, starter, pass } = bench(held)
+
+  starter.check()
+  pass(30)
+  starter.check()
+
+  assert.equal(picture.plays, 0)
+  assert.equal(starter.started, false)
+
+  held.to = ON_AIR_AT + 0.15
+  starter.check()
+
+  assert.equal(picture.plays, 0)
+
+  held.to = ON_AIR_AT + 0.21
+  starter.check()
+
+  assert.equal(picture.plays, 1)
+  assert.ok(picture.currentTime >= ON_AIR_AT)
+  assert.equal(picture.currentTime, ON_AIR_AT + 0.21 - START_BUFFER_SECONDS)
+})
+
+test('the playhead is never put before the first picture, whatever is held', () => {
+  for (const ahead of [0.2, 0.21, 0.3, 0.6, 1.5, 4]) {
+    for (const target of BUFFER_STEPS_SECONDS) {
+      const { picture, starter, pass } = bench(
+        new Held(ON_AIR_AT, ON_AIR_AT + ahead),
+        target,
+      )
+
+      starter.check()
+      pass(target + LATE_START_SECONDS)
+      starter.check()
+
+      assert.equal(picture.plays, 1)
+      assert.ok(
+        picture.currentTime >= ON_AIR_AT,
+        `${ahead} s held, ${target} s wanted`,
+      )
+    }
+  }
 })
 
 test('a device at the ceiling is given its figure and the same second, so it is not started short while the supply is still filling it', () => {
