@@ -16,6 +16,7 @@ import {
   latencyTone,
   losingGround,
   nearWindowOf,
+  pictureFromOf,
   reachOf,
   windowOf,
 } from '@/lib/live-latency'
@@ -321,6 +322,96 @@ test('the parts the wire sends move the edge without the playhead being eased or
 test('the whole window sits inside a second, and no nearer the edge than the wire sends', () => {
   assert.ok(windowOf(TARGET).start <= 1)
   assert.ok(TARGET >= PART_SECONDS * 3)
+})
+
+test('with nothing held, picture and sound begin nowhere', () => {
+  assert.equal(pictureFromOf([], [10]), undefined)
+})
+
+test('a run whose sound starts before its first picture begins, for playing, at that picture', () => {
+  assert.equal(pictureFromOf([{ from: 9.1, to: 10.4 }], [10, 10.05, 10.1]), 10)
+})
+
+test('while the sound that came first is all there is, picture and sound begin past the end of what is held', () => {
+  const run = { from: 9.4, to: 9.95 }
+  const from = pictureFromOf([run], [10])
+
+  assert.equal(from, 10)
+  assert.ok(from > run.to)
+})
+
+test('a run whose picture was already running where it starts begins where it starts', () => {
+  assert.equal(pictureFromOf([{ from: 10, to: 10.4 }], [10, 10.05]), 10)
+  assert.equal(pictureFromOf([{ from: 10.02, to: 10.4 }], [10, 10.05]), 10.02)
+  assert.equal(
+    pictureFromOf([{ from: 150, to: 210 }], [149.95, 150, 150.05]),
+    150,
+  )
+})
+
+test('after a break the run that reaches the edge begins at the first picture that came after the break', () => {
+  const runs = [
+    { from: 10, to: 12 },
+    { from: 19.3, to: 20.4 },
+  ]
+
+  assert.equal(pictureFromOf(runs, [10, 11.95, 20, 20.05]), 20)
+  assert.equal(pictureFromOf(runs, [10, 11.95, 12.05, 19.25, 19.3]), 19.3)
+})
+
+test('a run no picture time is known for begins where the browser says it does', () => {
+  assert.equal(pictureFromOf([{ from: 9.1, to: 10.4 }], []), 9.1)
+  assert.equal(
+    pictureFromOf(
+      [
+        { from: 10, to: 12 },
+        { from: 19.3, to: 20.4 },
+      ],
+      [10, 11.95],
+    ),
+    19.3,
+  )
+})
+
+test('a seek to the edge after a break lands on the first picture of the new run, not in the sound that came before it', () => {
+  const runs = [
+    { from: 590, to: 597.5 },
+    { from: 599.4, to: 600.05 },
+  ]
+  const from = pictureFromOf(runs, [590, 597.45, 600])
+
+  assert.equal(from, 600)
+  assert.deepEqual(
+    holdOf({
+      rate: 1,
+      at: 597,
+      edge: 600.05,
+      reach: 597.5,
+      from: 600,
+      target: TARGET,
+    }),
+    { rate: 1, seekTo: 600 },
+  )
+})
+
+test('a seek to the edge of a run shorter than the figure lands on its start, not in the break before it', () => {
+  assert.deepEqual(
+    holdOf({
+      rate: 1,
+      at: 597,
+      edge: 600.05,
+      reach: 597.5,
+      from: pictureFromOf(
+        [
+          { from: 590, to: 597.5 },
+          { from: 599.95, to: 600.05 },
+        ],
+        [590, 597.45, 599.95, 600],
+      ) as number,
+      target: TARGET,
+    }),
+    { rate: 1, seekTo: 599.95 },
+  )
 })
 
 test('the reach is where the run holding the playhead ends', () => {

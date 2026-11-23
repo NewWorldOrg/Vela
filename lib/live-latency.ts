@@ -74,6 +74,22 @@ export function reachOf(runs: readonly LiveRun[], at: number): number {
   return holding ? holding.to : at
 }
 
+export function pictureFromOf(
+  runs: readonly LiveRun[],
+  pictures: readonly number[],
+): number | undefined {
+  const run = runs.at(-1)
+
+  if (!run) {
+    return undefined
+  }
+
+  const heldBefore = runs.at(-2)?.to ?? Number.NEGATIVE_INFINITY
+  const since = pictures.filter((picture) => picture > heldBefore)
+
+  return since.length === 0 ? run.from : Math.max(run.from, Math.min(...since))
+}
+
 export const SUPPLY_GRACE_SECONDS = 0.5
 
 export const NOT_GAINING_AFTER_SECONDS = 60

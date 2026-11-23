@@ -131,6 +131,7 @@ const THE_SUITE = [
   'tests/lib/library-view.test.ts',
   'tests/lib/live-clock.test.ts',
   'tests/lib/live-fold.test.ts',
+  'tests/lib/live-fragment.test.ts',
   'tests/lib/live-latency.test.ts',
   'tests/lib/live-lineup.test.ts',
   'tests/lib/live-profiles.test.ts',

@@ -424,13 +424,17 @@ const AV1_CONFIGURATION_HEAD = 3
 
 const AV1_MARKER = 0x80
 
-interface Box {
+export interface Box {
   type: string
   start: number
   end: number
 }
 
-function* boxesIn(bytes: Uint8Array, from: number, to: number): Generator<Box> {
+export function* boxesIn(
+  bytes: Uint8Array,
+  from: number,
+  to: number,
+): Generator<Box> {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength)
   let at = from
 
