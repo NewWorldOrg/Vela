@@ -360,14 +360,14 @@ test('after a break the run that reaches the edge begins at the first picture th
   assert.equal(pictureFromOf(runs, [10, 11.95, 12.05, 19.25, 19.3]), 19.3)
 })
 
-test('a first picture read far past what the browser holds is not believed, and the run begins where the browser says it does', () => {
+test('a first picture read far past what the browser holds is not believed, and where picture and sound begin is not known', () => {
   const run = { from: 43_209.6, to: 43_210.3 }
 
-  assert.equal(pictureFromOf([run], [run.to * 2]), run.from)
-  assert.equal(pictureFromOf([run], [run.to + 60, run.to + 60.05]), run.from)
+  assert.equal(pictureFromOf([run], [run.to * 2]), undefined)
+  assert.equal(pictureFromOf([run], [run.to + 60, run.to + 60.05]), undefined)
   assert.equal(
     pictureFromOf([run], [run.to + PICTURE_NEAR_SECONDS + 0.01]),
-    run.from,
+    undefined,
   )
 })
 
@@ -381,14 +381,34 @@ test('a first picture read a little past what the browser holds is believed, sin
   )
 })
 
-test('a first picture read far before what the browser holds leaves the run to begin where the browser says it does', () => {
+test('a first picture read far before what the browser holds is not believed either', () => {
   const run = { from: 43_209.6, to: 43_211 }
 
-  assert.equal(pictureFromOf([run], [21_604.8, 21_604.85]), run.from)
+  assert.equal(
+    pictureFromOf([run], [run.from / 2, run.from / 2 + 0.05]),
+    undefined,
+  )
+  assert.equal(
+    pictureFromOf([run], [run.from - PICTURE_NEAR_SECONDS - 0.01]),
+    undefined,
+  )
 })
 
-test('a run no picture time is known for begins where the browser says it does', () => {
-  assert.equal(pictureFromOf([{ from: 9.1, to: 10.4 }], []), 9.1)
+test('a first picture read a little before what the browser holds is a picture already running there', () => {
+  const run = { from: 43_209.6, to: 43_211 }
+
+  assert.equal(
+    pictureFromOf([run], [run.from - 0.3, run.from + 0.02]),
+    run.from,
+  )
+  assert.equal(
+    pictureFromOf([run], [run.from - PICTURE_NEAR_SECONDS]),
+    run.from,
+  )
+})
+
+test('a run no picture time is known for has no place where picture and sound are known to begin', () => {
+  assert.equal(pictureFromOf([{ from: 9.1, to: 10.4 }], []), undefined)
   assert.equal(
     pictureFromOf(
       [
@@ -397,7 +417,7 @@ test('a run no picture time is known for begins where the browser says it does',
       ],
       [10, 11.95],
     ),
-    19.3,
+    undefined,
   )
 })
 

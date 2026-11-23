@@ -332,7 +332,7 @@ test('pictures read out of order from one fragment to the next leave picture and
   )
 })
 
-test('a header that names another timescale than the browser counts in puts every picture far from what is held, and the run begins where the browser says', () => {
+test('a header that names another timescale than the browser counts in puts every picture far from what is held, and where picture and sound begin is not known', () => {
   const pictures = new LivePictures()
   const held = { from: SOUND_AT / 48_000, to: (DECODED_AT + 12_012) / 60_000 }
 
@@ -344,7 +344,7 @@ test('a header that names another timescale than the browser counts in puts ever
     undefined,
   )
 
-  assert.equal(pictures.fromOf([held]), held.from)
+  assert.equal(pictures.fromOf([held]), undefined)
 
   const slower = new LivePictures()
 
@@ -356,7 +356,7 @@ test('a header that names another timescale than the browser counts in puts ever
     undefined,
   )
 
-  assert.equal(slower.fromOf([held]), held.from)
+  assert.equal(slower.fromOf([held]), undefined)
 })
 
 function watching(...tracks: Parameters<typeof header>) {
@@ -414,13 +414,13 @@ test('after a break, picture and sound begin at the first picture that came afte
   )
 })
 
-test('a header that cannot be read leaves the run to begin where the browser says it does', () => {
+test('a header that cannot be read leaves where picture and sound begin unknown', () => {
   const pictures = new LivePictures()
 
   pictures.header(new Uint8Array([1, 2, 3]))
   pictures.fragment(fragment({ track: 1, at: 900_000 }), undefined)
 
-  assert.equal(pictures.fromOf([{ from: 9.1, to: 9.96 }]), 9.1)
+  assert.equal(pictures.fromOf([{ from: 9.1, to: 9.96 }]), undefined)
 })
 
 test('the first header is the one that names the picture track', () => {

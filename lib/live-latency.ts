@@ -88,11 +88,14 @@ export function pictureFromOf(
 
   const heldBefore = runs.at(-2)?.to ?? Number.NEGATIVE_INFINITY
   const since = pictures.filter((picture) => picture > heldBefore)
-  const first = Math.min(...since)
+  const running = Math.max(...since.filter((picture) => picture <= run.from))
+  const coming = Math.min(...since.filter((picture) => picture > run.from))
 
-  return since.length === 0 || first > run.to + PICTURE_NEAR_SECONDS
-    ? run.from
-    : Math.max(run.from, first)
+  if (running >= run.from - PICTURE_NEAR_SECONDS) {
+    return run.from
+  }
+
+  return coming <= run.to + PICTURE_NEAR_SECONDS ? coming : undefined
 }
 
 export const SUPPLY_GRACE_SECONDS = 0.5

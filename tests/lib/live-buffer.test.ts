@@ -7,17 +7,19 @@ import {
   CALM_SECONDS,
   LATE_START_SECONDS,
   LIVE_BUFFER_COOKIE,
+  BLIND_START_SECONDS,
   LiveBuffer,
-  OVERDUE_BEHIND_SECONDS,
   OVERDUE_START_SECONDS,
   PICTURE_NEAR_SECONDS,
   SAME_STALL_SECONDS,
   SEEK_SETTLES_SECONDS,
   START_BUFFER_SECONDS,
+  START_SETTLES_SECONDS,
   liveBufferOf,
   liveBufferSpelling,
   loweredFrom,
   raisedFrom,
+  startHoldOf,
 } from '@/lib/live-buffer'
 
 function bench(seconds = START_BUFFER_SECONDS) {
@@ -222,9 +224,24 @@ test('a start that has not come is forced well after the late start would have c
   assert.ok(OVERDUE_START_SECONDS <= 5)
 })
 
-test('a forced start goes as far behind the edge as playback started before the figure came down', () => {
-  assert.equal(OVERDUE_BEHIND_SECONDS, 0.6)
-  assert.ok(OVERDUE_BEHIND_SECONDS > START_BUFFER_SECONDS)
+test('a start that cannot tell where the picture begins goes as far behind the edge as playback started before the figure came down', () => {
+  assert.equal(BLIND_START_SECONDS, 0.6)
+  assert.ok(BLIND_START_SECONDS > START_BUFFER_SECONDS)
+})
+
+test('a device at the start figure plays the first picture without holding anything back', () => {
+  assert.equal(startHoldOf(START_BUFFER_SECONDS), 0)
+})
+
+test('a device that has raised its figure holds that much before it plays', () => {
+  for (const step of BUFFER_STEPS_SECONDS.slice(1)) {
+    assert.equal(startHoldOf(step), step)
+  }
+})
+
+test('a wait in the first seconds of a play is part of starting, and that stretch is short beside the time stalls are counted as one', () => {
+  assert.ok(START_SETTLES_SECONDS >= 1)
+  assert.ok(START_SETTLES_SECONDS < SAME_STALL_SECONDS)
 })
 
 test('a first picture is believed only when it is no more than a couple of seconds past what the browser holds', () => {

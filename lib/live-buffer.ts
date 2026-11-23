@@ -22,11 +22,17 @@ export const LATE_START_SECONDS = 1
 
 export const SEEK_SETTLES_SECONDS = 1
 
+export const START_SETTLES_SECONDS = 2
+
 export const PICTURE_NEAR_SECONDS = 2
 
 export const OVERDUE_START_SECONDS = 3
 
-export const OVERDUE_BEHIND_SECONDS = 0.6
+export const BLIND_START_SECONDS = 0.6
+
+export function startHoldOf(seconds: number): number {
+  return seconds > START_BUFFER_SECONDS ? seconds : 0
+}
 
 export function raisedFrom(seconds: number): number {
   return (

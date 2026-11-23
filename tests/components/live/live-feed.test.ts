@@ -2,8 +2,9 @@ import assert from 'node:assert/strict'
 import { test, type TestContext } from 'node:test'
 
 import {
+  BLIND_START_SECONDS,
+  BUFFER_STEPS_SECONDS,
   LATE_START_SECONDS,
-  OVERDUE_BEHIND_SECONDS,
   OVERDUE_START_SECONDS,
   START_BUFFER_SECONDS,
 } from '@/lib/live-buffer'
@@ -201,8 +202,6 @@ const FIRST_PICTURE_AT = 10
 const SOUND_AHEAD_SECONDS = 0.9
 
 class Picture {
-  currentTime = 0
-
   readyState = 1
 
   disableRemotePlayback = false
@@ -211,6 +210,16 @@ class Picture {
 
   plays = 0
 
+  readonly put: number[] = []
+
+  get currentTime(): number {
+    return this.put.at(-1) ?? 0
+  }
+
+  set currentTime(at: number) {
+    this.put.push(at)
+  }
+
   play(): Promise<void> {
     this.plays += 1
 
@@ -218,7 +227,7 @@ class Picture {
   }
 }
 
-async function onAir(context: TestContext, soundFrom: number) {
+function watched(context: TestContext, target: number) {
   inABrowser(context)
 
   const picture = new Picture()
@@ -232,12 +241,23 @@ async function onAir(context: TestContext, soundFrom: number) {
   const starter = new LiveStart(
     picture,
     feed,
-    () => START_BUFFER_SECONDS,
+    () => target,
     () => clock.ms,
     () => assert.fail('the play was refused'),
   )
 
   source.open()
+
+  return { picture, clock, feed, source, starter }
+}
+
+async function onAir(
+  context: TestContext,
+  soundFrom: number,
+  target = START_BUFFER_SECONDS,
+) {
+  const { picture, clock, feed, source, starter } = watched(context, target)
+
   feed.header(header(...TRACKS))
   await settled()
   feed.append(
@@ -274,7 +294,7 @@ test('sound that starts 0.9 s before the picture: the browser holds the run from
   feed.close()
 })
 
-test('sound that starts 0.9 s before the picture: the sound alone, however much of it, starts nothing while the picture can still be waited for', async (context) => {
+test('sound that starts 0.9 s before the picture: the sound alone, however much of it, moves nothing and plays nothing while the picture can still be waited for', async (context) => {
   const soundFrom = FIRST_PICTURE_AT - SOUND_AHEAD_SECONDS
   const { picture, starter, feed, holds, pass } = await onAir(
     context,
@@ -283,14 +303,53 @@ test('sound that starts 0.9 s before the picture: the sound alone, however much 
 
   holds(soundFrom, FIRST_PICTURE_AT - 0.04)
 
-  assert.ok(FIRST_PICTURE_AT - 0.04 - soundFrom > START_BUFFER_SECONDS)
+  assert.ok(FIRST_PICTURE_AT - 0.04 - soundFrom > BLIND_START_SECONDS)
   assert.equal(picture.plays, 0)
 
   pass(START_BUFFER_SECONDS + LATE_START_SECONDS + 1)
   holds(soundFrom, FIRST_PICTURE_AT - 0.04)
 
   assert.equal(picture.plays, 0)
+  assert.deepEqual(picture.put, [])
   assert.equal(starter.started, false)
+
+  feed.close()
+})
+
+test('sound that starts 0.9 s before the picture: the moment the first picture is held, playback starts on that picture', async (context) => {
+  const soundFrom = FIRST_PICTURE_AT - SOUND_AHEAD_SECONDS
+  const { picture, feed, holds } = await onAir(context, soundFrom)
+
+  holds(soundFrom, FIRST_PICTURE_AT - 0.04)
+
+  assert.equal(picture.plays, 0)
+
+  holds(soundFrom, FIRST_PICTURE_AT + 0.02)
+
+  assert.equal(picture.plays, 1)
+  assert.deepEqual(picture.put, [FIRST_PICTURE_AT])
+
+  feed.close()
+})
+
+test('sound that starts 0.9 s before the picture: on a device that has raised its figure the first picture is shown at once and played when the figure is held from it', async (context) => {
+  const soundFrom = FIRST_PICTURE_AT - SOUND_AHEAD_SECONDS
+  const raised = BUFFER_STEPS_SECONDS[2]
+  const { picture, feed, holds } = await onAir(context, soundFrom, raised)
+
+  holds(soundFrom, FIRST_PICTURE_AT + 0.02)
+
+  assert.deepEqual(picture.put, [FIRST_PICTURE_AT])
+  assert.equal(picture.plays, 0)
+
+  holds(soundFrom, FIRST_PICTURE_AT + raised - 0.05)
+
+  assert.equal(picture.plays, 0)
+
+  holds(soundFrom, FIRST_PICTURE_AT + raised)
+
+  assert.equal(picture.plays, 1)
+  assert.deepEqual(picture.put, [FIRST_PICTURE_AT])
 
   feed.close()
 })
@@ -309,99 +368,32 @@ test('sound that starts 0.9 s before the picture: a picture that never comes doe
   holds(soundFrom, FIRST_PICTURE_AT - 0.04)
 
   assert.equal(picture.plays, 1)
-  assert.equal(
-    picture.currentTime,
-    FIRST_PICTURE_AT - 0.04 - OVERDUE_BEHIND_SECONDS,
-  )
+  assert.deepEqual(picture.put, [FIRST_PICTURE_AT - 0.04 - BLIND_START_SECONDS])
 
   feed.close()
 })
 
-test('sound that starts 0.9 s before the picture: the start waits until the figure is held from the first picture on, and plays from the first picture', async (context) => {
-  const soundFrom = FIRST_PICTURE_AT - SOUND_AHEAD_SECONDS
-  const { picture, feed, holds } = await onAir(context, soundFrom)
-
-  holds(soundFrom, FIRST_PICTURE_AT - 0.04)
-  holds(soundFrom, FIRST_PICTURE_AT + 0.05)
-  holds(soundFrom, FIRST_PICTURE_AT + 0.15)
-
-  assert.equal(picture.plays, 0)
-
-  holds(soundFrom, FIRST_PICTURE_AT + START_BUFFER_SECONDS)
-
-  assert.equal(picture.plays, 1)
-  assert.equal(picture.currentTime, FIRST_PICTURE_AT)
-
-  feed.close()
-})
-
-test('sound that starts 0.9 s before the picture: with more than the figure held, the playhead is the figure behind the edge and still not before the first picture', async (context) => {
-  const soundFrom = FIRST_PICTURE_AT - SOUND_AHEAD_SECONDS
-  const { picture, feed, holds } = await onAir(context, soundFrom)
-
-  holds(soundFrom, FIRST_PICTURE_AT + 0.5)
-
-  assert.equal(picture.plays, 1)
-  assert.equal(
-    picture.currentTime,
-    FIRST_PICTURE_AT + 0.5 - START_BUFFER_SECONDS,
-  )
-  assert.ok(picture.currentTime >= FIRST_PICTURE_AT)
-
-  feed.close()
-})
-
-test('sound that starts 0.9 s before the picture: a picture that stays short is played from its first frame once the wait is out', async (context) => {
-  const soundFrom = FIRST_PICTURE_AT - SOUND_AHEAD_SECONDS
-  const { picture, feed, holds, pass } = await onAir(context, soundFrom)
-
-  holds(soundFrom, FIRST_PICTURE_AT + 0.05)
-  pass(LATE_START_SECONDS)
-  holds(soundFrom, FIRST_PICTURE_AT + 0.08)
-
-  assert.equal(picture.plays, 0)
-
-  pass(START_BUFFER_SECONDS)
-  holds(soundFrom, FIRST_PICTURE_AT + 0.08)
-
-  assert.equal(picture.plays, 1)
-  assert.equal(picture.currentTime, FIRST_PICTURE_AT)
-
-  feed.close()
-})
-
-test('picture and sound that start together: the start is as it was, the figure behind the edge from where the run begins', async (context) => {
+test('picture and sound that start together: playback starts where the run begins, the first time anything is held', async (context) => {
   const { picture, feed, holds } = await onAir(context, FIRST_PICTURE_AT)
 
-  holds(FIRST_PICTURE_AT, FIRST_PICTURE_AT + 0.15)
+  holds(FIRST_PICTURE_AT, FIRST_PICTURE_AT + 0.03)
 
   assert.equal(feed.pictureFrom(), FIRST_PICTURE_AT)
-  assert.equal(picture.plays, 0)
-
-  holds(FIRST_PICTURE_AT, FIRST_PICTURE_AT + 1.5)
-
   assert.equal(picture.plays, 1)
-  assert.equal(
-    picture.currentTime,
-    FIRST_PICTURE_AT + 1.5 - START_BUFFER_SECONDS,
-  )
+  assert.deepEqual(picture.put, [FIRST_PICTURE_AT])
 
   feed.close()
 })
 
-test('a picture that starts before the sound: the run begins where both are held, and the start is counted from there', async (context) => {
+test('a picture that starts before the sound: the run begins where both are held, and playback starts there', async (context) => {
   const soundFrom = FIRST_PICTURE_AT + 0.3
   const { picture, feed, holds } = await onAir(context, soundFrom)
 
-  holds(soundFrom, soundFrom + 0.1)
+  holds(soundFrom, soundFrom + 0.02)
 
   assert.equal(feed.pictureFrom(), soundFrom)
-  assert.equal(picture.plays, 0)
-
-  holds(soundFrom, soundFrom + START_BUFFER_SECONDS)
-
   assert.equal(picture.plays, 1)
-  assert.equal(picture.currentTime, soundFrom)
+  assert.deepEqual(picture.put, [soundFrom])
 
   feed.close()
 })
@@ -491,25 +483,11 @@ async function asSent(
   context: TestContext,
   init: Uint8Array = headerAsSent(...SENT_TRACKS),
 ) {
-  inABrowser(context)
-
-  const picture = new Picture()
-  const clock = { ms: 0 }
-  const feed = new LiveFeed(
-    picture as unknown as HTMLVideoElement,
-    (fault) => assert.fail(`the feed faulted: ${fault}`),
-    () => {},
-  )
-  const source = Source.made.at(-1)!
-  const starter = new LiveStart(
-    picture,
-    feed,
-    () => START_BUFFER_SECONDS,
-    () => clock.ms,
-    () => assert.fail('the play was refused'),
+  const { picture, clock, feed, source, starter } = watched(
+    context,
+    START_BUFFER_SECONDS,
   )
 
-  source.open()
   feed.header(init)
   await settled()
 
@@ -534,7 +512,7 @@ async function asSent(
   }
 }
 
-test('the stream as it is sent, tens of thousands of seconds in: the start waits for the figure from the key frame on and plays from it', async (context) => {
+test('the stream as it is sent, tens of thousands of seconds in: nothing moves while the sound that came first is all that is held, and playback starts on the key frame the moment it is held', async (context) => {
   const { picture, feed, arrives } = await asSent(context)
 
   assert.ok(SENT_FIRST_PICTURE_AT > 30_000)
@@ -544,42 +522,41 @@ test('the stream as it is sent, tens of thousands of seconds in: the start waits
 
   assert.equal(feed.pictureFrom(), SENT_FIRST_PICTURE_AT)
   assert.equal(picture.plays, 0)
+  assert.deepEqual(picture.put, [])
 
-  await arrives(SENT_FIRST_PICTURE_AT + 0.05)
-  await arrives(SENT_FIRST_PICTURE_AT + 0.1)
-  await arrives(SENT_FIRST_PICTURE_AT + 0.15)
+  await arrives(SENT_FIRST_PICTURE_AT - 0.03)
 
-  assert.equal(feed.pictureFrom(), SENT_FIRST_PICTURE_AT)
   assert.equal(picture.plays, 0)
 
-  await arrives(SENT_FIRST_PICTURE_AT + 0.21)
+  await arrives(SENT_FIRST_PICTURE_AT + 0.03)
 
+  assert.equal(feed.pictureFrom(), SENT_FIRST_PICTURE_AT)
   assert.equal(picture.plays, 1)
-  assert.ok(picture.currentTime >= SENT_FIRST_PICTURE_AT)
-  assert.ok(picture.currentTime - SENT_FIRST_PICTURE_AT < 0.02)
+  assert.deepEqual(picture.put, [SENT_FIRST_PICTURE_AT])
 
   feed.close()
 })
 
-test('the stream as it is sent, with a header no picture time can be read by: the start is the one from before, counted from where the browser says the run begins', async (context) => {
+test('the stream as it is sent, with a header no picture time can be read by: the start is the one from before the figure came down', async (context) => {
   const { picture, feed, arrives } = await asSent(
     context,
     headerAsSent({ ...SENT_TRACKS[0], timescale: 0 }, SENT_TRACKS[1]),
   )
 
+  await arrives(SENT_SOUND_FROM + 0.3)
+
+  assert.equal(feed.pictureFrom(), undefined)
+  assert.equal(picture.plays, 0)
+
   await arrives(SENT_SOUND_FROM + 0.64)
 
-  assert.equal(feed.pictureFrom(), SENT_SOUND_FROM)
   assert.equal(picture.plays, 1)
-  assert.equal(
-    picture.currentTime,
-    SENT_SOUND_FROM + 0.64 - START_BUFFER_SECONDS,
-  )
+  assert.deepEqual(picture.put, [SENT_SOUND_FROM + 0.64 - BLIND_START_SECONDS])
 
   feed.close()
 })
 
-test('the stream as it is sent, with fragments that cannot be read: the start is the one from before', async (context) => {
+test('the stream as it is sent, with fragments that cannot be read: the start is the one from before the figure came down', async (context) => {
   const { picture, feed, arrives } = await asSent(context)
 
   await arrives(
@@ -587,13 +564,14 @@ test('the stream as it is sent, with fragments that cannot be read: the start is
     new Uint8Array([0, 0, 0, 8, 1, 2, 3, 4]),
   )
 
-  assert.equal(feed.pictureFrom(), SENT_SOUND_FROM)
+  assert.equal(feed.pictureFrom(), undefined)
   assert.equal(picture.plays, 1)
+  assert.deepEqual(picture.put, [SENT_SOUND_FROM + 0.64 - BLIND_START_SECONDS])
 
   feed.close()
 })
 
-test('the stream as it is sent, read in a timescale the browser does not count in: the pictures are far from what is held, and the start still comes at once', async (context) => {
+test('the stream as it is sent, read in a timescale the browser does not count in: the pictures are far from what is held, and the start is the one from before the figure came down', async (context) => {
   const { picture, feed, arrives } = await asSent(
     context,
     headerAsSent(
@@ -604,34 +582,47 @@ test('the stream as it is sent, read in a timescale the browser does not count i
 
   await arrives(SENT_SOUND_FROM + 0.64)
 
-  assert.equal(feed.pictureFrom(), SENT_SOUND_FROM)
+  assert.equal(feed.pictureFrom(), undefined)
   assert.equal(picture.plays, 1)
+  assert.deepEqual(picture.put, [SENT_SOUND_FROM + 0.64 - BLIND_START_SECONDS])
 
   feed.close()
 })
 
-test('the stream as it is sent, read a second and a half ahead of what the browser holds: the start comes late, and it comes', async (context) => {
+test('the stream as it is sent, read a second and a half ahead of what the browser holds: the start comes late, on the picture as it was read, and it comes', async (context) => {
   const ahead = 1.5
+  const readAt = SENT_FIRST_PICTURE_AT + ahead
+  const unread = new Uint8Array([0, 0, 0, 8, 1, 2, 3, 4])
   const { picture, feed, arrives } = await asSent(context)
 
-  await arrives(SENT_FIRST_PICTURE_AT - ahead + 0.1)
+  await arrives(
+    SENT_SOUND_FROM + 0.64,
+    fragment({
+      track: 1,
+      at: SENT_DECODED_AT,
+      offset: SENT_SHOWN_LATER + ahead * SENT_PICTURE_SCALE,
+      version: 1,
+      defaults: true,
+    }),
+  )
 
-  assert.equal(feed.pictureFrom(), SENT_FIRST_PICTURE_AT)
+  assert.equal(feed.pictureFrom(), readAt)
   assert.equal(picture.plays, 0)
 
-  await arrives(SENT_FIRST_PICTURE_AT - ahead + 1)
+  await arrives(SENT_FIRST_PICTURE_AT + 1, unread)
 
   assert.equal(picture.plays, 0)
+  assert.deepEqual(picture.put, [])
 
-  await arrives(SENT_FIRST_PICTURE_AT + START_BUFFER_SECONDS)
+  await arrives(readAt + 0.02, unread)
 
   assert.equal(picture.plays, 1)
-  assert.equal(picture.currentTime, SENT_FIRST_PICTURE_AT)
+  assert.deepEqual(picture.put, [readAt])
 
   feed.close()
 })
 
-test('the stream as it is sent, with a picture the browser never comes to hold: past the bound the start is the one from before', async (context) => {
+test('the stream as it is sent, with a picture the browser never comes to hold: past the bound the start is the one from before the figure came down', async (context) => {
   const { picture, feed, arrives, pass } = await asSent(context)
 
   await arrives(SENT_SOUND_FROM + 0.64)
@@ -642,10 +633,7 @@ test('the stream as it is sent, with a picture the browser never comes to hold: 
   pass(START_BUFFER_SECONDS + 0.5)
 
   assert.equal(picture.plays, 1)
-  assert.equal(
-    picture.currentTime,
-    SENT_SOUND_FROM + 0.64 - OVERDUE_BEHIND_SECONDS,
-  )
+  assert.deepEqual(picture.put, [SENT_SOUND_FROM + 0.64 - BLIND_START_SECONDS])
 
   feed.close()
 })
