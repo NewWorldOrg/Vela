@@ -61,6 +61,8 @@ export interface TrackSaid {
   handler: 'vide' | 'soun'
   timescale: number
   version?: 0 | 1
+  mediaVersion?: 0 | 1
+  edit?: number
 }
 
 const AVC_ENTRY = box(
@@ -71,21 +73,42 @@ const AVC_ENTRY = box(
 
 const AAC_ENTRY = box('mp4a', new Uint8Array(28))
 
+function stamps(version: 0 | 1): Uint8Array {
+  return version === 1 ? new Uint8Array(16) : new Uint8Array(8)
+}
+
 export function track({
   id,
   handler,
   timescale,
   version = 0,
+  mediaVersion = version,
+  edit,
 }: TrackSaid): Uint8Array {
-  const stamps = version === 1 ? new Uint8Array(16) : new Uint8Array(8)
-
   return box(
     'trak',
-    box('tkhd', [version, 0, 0, 3], stamps, u32(id), new Uint8Array(60)),
+    box('tkhd', [version, 0, 0, 3], stamps(version), u32(id), [
+      ...new Uint8Array(68),
+    ]),
+    ...(edit === undefined
+      ? []
+      : [
+          box(
+            'edts',
+            box('elst', u32(0), u32(1), u32(0), u32(edit), u32(0x10000)),
+          ),
+        ]),
     box(
       'mdia',
-      box('mdhd', [version, 0, 0, 0], stamps, u32(timescale), u32(0), u32(0)),
-      box('hdlr', u32(0), u32(0), named(handler), new Uint8Array(13)),
+      box(
+        'mdhd',
+        [mediaVersion, 0, 0, 0],
+        stamps(mediaVersion),
+        u32(timescale),
+        mediaVersion === 1 ? u64(0) : u32(0),
+        u32(0),
+      ),
+      box('hdlr', u32(0), u32(0), named(handler), new Uint8Array(25)),
       box(
         'minf',
         box(
@@ -109,13 +132,33 @@ export function header(...tracks: TrackSaid[]): Uint8Array {
   )
 }
 
+export function headerAsSent(...tracks: TrackSaid[]): Uint8Array {
+  return joined(
+    box('ftyp', named('isom'), u32(0x200), named('isomiso6')),
+    box(
+      'moov',
+      box('mvhd', new Uint8Array(100)),
+      ...tracks.map(track),
+      box(
+        'mvex',
+        ...tracks.map(({ id }) =>
+          box('trex', u32(0), u32(id), u32(1), u32(0), u32(0), u32(0)),
+        ),
+      ),
+      box('udta', new Uint8Array(82)),
+    ),
+  )
+}
+
 export interface RunSaid {
   track: number
   at?: number
   samples?: number
   offset?: number
+  offsets?: number[]
   version?: 0 | 1
   flags?: number
+  defaults?: boolean
 }
 
 const DATA_OFFSET = 0x000001
@@ -142,16 +185,23 @@ function sampleOf(flags: number, offset: number): number[] {
 export function run({
   track: id,
   at,
-  samples = 1,
   offset,
+  offsets,
+  samples = offsets?.length ?? 1,
   version = 0,
   flags = DATA_OFFSET | SAMPLE_DURATION | SAMPLE_SIZE | SAMPLE_FLAGS,
+  defaults = false,
 }: RunSaid): Uint8Array {
-  const said = offset === undefined ? flags : flags | SAMPLE_OFFSET
+  const said =
+    offset === undefined && offsets === undefined
+      ? flags
+      : flags | SAMPLE_OFFSET
 
   return box(
     'traf',
-    box('tfhd', [0, 0x02, 0, 0], u32(id)),
+    defaults
+      ? box('tfhd', [0, 0x02, 0, 0x38], u32(id), u32(1001), u32(0), u32(0))
+      : box('tfhd', [0, 0x02, 0, 0], u32(id)),
     ...(at === undefined
       ? []
       : [
@@ -165,7 +215,9 @@ export function run({
       u32(samples),
       said & DATA_OFFSET ? u32(0) : [],
       said & FIRST_SAMPLE_FLAGS ? u32(0x02000000) : [],
-      ...Array.from({ length: samples }, () => sampleOf(said, offset ?? 0)),
+      ...Array.from({ length: samples }, (_, nth) =>
+        sampleOf(said, offsets?.[nth] ?? offset ?? 0),
+      ),
     ),
   )
 }

@@ -198,13 +198,15 @@ export class LivePictures {
   }
 
   header(init: Uint8Array): void {
-    this.track ??= pictureTrackOf(init)
+    try {
+      this.track ??= pictureTrackOf(init)
+    } catch {}
   }
 
   fragment(bytes: Uint8Array, oldestHeld: number | undefined): void {
-    const at = this.track ? firstPictureAt(bytes, this.track) : undefined
+    const at = this.readIn(bytes)
 
-    if (at === undefined) {
+    if (at === undefined || !Number.isFinite(at)) {
       return
     }
 
@@ -221,5 +223,13 @@ export class LivePictures {
 
   fromOf(runs: readonly LiveRun[]): number | undefined {
     return pictureFromOf(runs, this.starts)
+  }
+
+  private readIn(bytes: Uint8Array): number | undefined {
+    try {
+      return this.track ? firstPictureAt(bytes, this.track) : undefined
+    } catch {
+      return undefined
+    }
   }
 }

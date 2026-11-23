@@ -8,6 +8,9 @@ import {
   LATE_START_SECONDS,
   LIVE_BUFFER_COOKIE,
   LiveBuffer,
+  OVERDUE_BEHIND_SECONDS,
+  OVERDUE_START_SECONDS,
+  PICTURE_NEAR_SECONDS,
   SAME_STALL_SECONDS,
   SEEK_SETTLES_SECONDS,
   START_BUFFER_SECONDS,
@@ -212,6 +215,21 @@ test('the stretch that lowers the figure is far longer than the time stalls are 
 test('the start waits no longer than a second past the figure for a supply that comes slowly', () => {
   assert.ok(LATE_START_SECONDS > 0)
   assert.ok(LATE_START_SECONDS <= 1)
+})
+
+test('a start that has not come is forced well after the late start would have come, so the two never race', () => {
+  assert.ok(OVERDUE_START_SECONDS >= LATE_START_SECONDS + 1)
+  assert.ok(OVERDUE_START_SECONDS <= 5)
+})
+
+test('a forced start goes as far behind the edge as playback started before the figure came down', () => {
+  assert.equal(OVERDUE_BEHIND_SECONDS, 0.6)
+  assert.ok(OVERDUE_BEHIND_SECONDS > START_BUFFER_SECONDS)
+})
+
+test('a first picture is believed only when it is no more than a couple of seconds past what the browser holds', () => {
+  assert.ok(PICTURE_NEAR_SECONDS >= 1)
+  assert.ok(PICTURE_NEAR_SECONDS < OVERDUE_START_SECONDS)
 })
 
 test('a seek is given a second to settle before a wait counts as a stall', () => {

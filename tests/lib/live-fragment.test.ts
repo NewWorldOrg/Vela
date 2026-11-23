@@ -11,6 +11,7 @@ import {
   box,
   fragment,
   header,
+  headerAsSent,
   joined,
 } from '@/tests/lib/live-fragments'
 
@@ -197,6 +198,165 @@ test('a fragment read out of the middle of a larger buffer is read from its own 
     firstPictureAt(padded.subarray(13, 13 + whole.length), TRACK),
     10,
   )
+})
+
+const SENT_PICTURE = {
+  id: 1,
+  handler: 'vide',
+  timescale: 60_000,
+  mediaVersion: 1,
+  edit: 3003,
+} as const
+
+const SENT_SOUND = {
+  id: 2,
+  handler: 'soun',
+  timescale: 48_000,
+  mediaVersion: 1,
+  edit: 0,
+} as const
+
+const SENT_TRACK = { id: 1, timescale: 60_000 }
+
+const DECODED_AT = 2_400_000_000
+
+const SOUND_AT = 1_919_964_480
+
+const KEY_FRAME_RUN =
+  RUN_FLAGS.DATA_OFFSET | RUN_FLAGS.FIRST_SAMPLE_FLAGS | RUN_FLAGS.SAMPLE_OFFSET
+
+const PICTURE_RUN =
+  RUN_FLAGS.DATA_OFFSET | RUN_FLAGS.SAMPLE_SIZE | RUN_FLAGS.SAMPLE_OFFSET
+
+const FIRST_SOUND_RUN =
+  RUN_FLAGS.DATA_OFFSET | RUN_FLAGS.SAMPLE_DURATION | RUN_FLAGS.SAMPLE_SIZE
+
+const SOUND_RUN = RUN_FLAGS.DATA_OFFSET | RUN_FLAGS.SAMPLE_SIZE
+
+test('the header as the transcoder sends it, with its edit lists, long media times, track defaults and user data, names the picture track', () => {
+  assert.deepEqual(
+    pictureTrackOf(headerAsSent(SENT_PICTURE, SENT_SOUND)),
+    SENT_TRACK,
+  )
+  assert.deepEqual(
+    pictureTrackOf(
+      headerAsSent({ ...SENT_PICTURE, mediaVersion: 0, timescale: 30_000 }),
+    ),
+    { id: 1, timescale: 30_000 },
+  )
+})
+
+test('the first fragment as it is sent, one key frame and a long head of sound, at times tens of thousands of seconds in, is read at the key frame', () => {
+  assert.equal(
+    firstPictureAt(
+      fragment(
+        {
+          track: 1,
+          at: DECODED_AT,
+          offset: 3003,
+          version: 1,
+          flags: KEY_FRAME_RUN,
+          defaults: true,
+        },
+        {
+          track: 2,
+          at: SOUND_AT,
+          samples: 31,
+          version: 1,
+          flags: FIRST_SOUND_RUN,
+          defaults: true,
+        },
+      ),
+      SENT_TRACK,
+    ),
+    (DECODED_AT + 3003) / 60_000,
+  )
+})
+
+test('a later fragment as it is sent, whose pictures are decoded in another order than they are shown, is read at the picture decoded first', () => {
+  assert.equal(
+    firstPictureAt(
+      fragment(
+        {
+          track: 1,
+          at: DECODED_AT + 1001,
+          offsets: [7007, 3003, 3003],
+          version: 1,
+          flags: PICTURE_RUN,
+          defaults: true,
+        },
+        {
+          track: 2,
+          at: SOUND_AT + 30_720,
+          samples: 3,
+          version: 1,
+          flags: SOUND_RUN,
+          defaults: true,
+        },
+      ),
+      SENT_TRACK,
+    ),
+    (DECODED_AT + 1001 + 7007) / 60_000,
+  )
+})
+
+test('pictures read out of order from one fragment to the next leave picture and sound beginning at the earliest of them', () => {
+  const pictures = new LivePictures()
+
+  pictures.header(headerAsSent(SENT_PICTURE, SENT_SOUND))
+
+  for (const [nth, offsets] of [
+    [3003],
+    [7007, 3003, 3003],
+    [3003, 7007, 3003],
+    [3003, 3003, 9009],
+  ].entries()) {
+    pictures.fragment(
+      fragment({
+        track: 1,
+        at: DECODED_AT + nth * 3003,
+        offsets,
+        version: 1,
+        flags: PICTURE_RUN,
+        defaults: true,
+      }),
+      nth === 0 ? undefined : SOUND_AT / 48_000,
+    )
+  }
+
+  assert.equal(
+    pictures.fromOf([
+      { from: SOUND_AT / 48_000, to: (DECODED_AT + 12_012) / 60_000 },
+    ]),
+    (DECODED_AT + 3003) / 60_000,
+  )
+})
+
+test('a header that names another timescale than the browser counts in puts every picture far from what is held, and the run begins where the browser says', () => {
+  const pictures = new LivePictures()
+  const held = { from: SOUND_AT / 48_000, to: (DECODED_AT + 12_012) / 60_000 }
+
+  pictures.header(
+    headerAsSent({ ...SENT_PICTURE, timescale: 30_000 }, SENT_SOUND),
+  )
+  pictures.fragment(
+    fragment({ track: 1, at: DECODED_AT, offset: 3003, version: 1 }),
+    undefined,
+  )
+
+  assert.equal(pictures.fromOf([held]), held.from)
+
+  const slower = new LivePictures()
+
+  slower.header(
+    headerAsSent({ ...SENT_PICTURE, timescale: 120_000 }, SENT_SOUND),
+  )
+  slower.fragment(
+    fragment({ track: 1, at: DECODED_AT, offset: 3003, version: 1 }),
+    undefined,
+  )
+
+  assert.equal(slower.fromOf([held]), held.from)
 })
 
 function watching(...tracks: Parameters<typeof header>) {

@@ -1,3 +1,5 @@
+import { PICTURE_NEAR_SECONDS } from '@/lib/live-buffer'
+
 export const PART_SECONDS = 0.05
 
 export const TOLERANCE_SECONDS = 0.4
@@ -86,8 +88,11 @@ export function pictureFromOf(
 
   const heldBefore = runs.at(-2)?.to ?? Number.NEGATIVE_INFINITY
   const since = pictures.filter((picture) => picture > heldBefore)
+  const first = Math.min(...since)
 
-  return since.length === 0 ? run.from : Math.max(run.from, Math.min(...since))
+  return since.length === 0 || first > run.to + PICTURE_NEAR_SECONDS
+    ? run.from
+    : Math.max(run.from, first)
 }
 
 export const SUPPLY_GRACE_SECONDS = 0.5

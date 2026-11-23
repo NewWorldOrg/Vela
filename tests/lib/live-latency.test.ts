@@ -23,6 +23,7 @@ import {
 import {
   BUFFER_CEILING_SECONDS,
   BUFFER_STEPS_SECONDS,
+  PICTURE_NEAR_SECONDS,
   START_BUFFER_SECONDS,
 } from '@/lib/live-buffer'
 
@@ -357,6 +358,33 @@ test('after a break the run that reaches the edge begins at the first picture th
 
   assert.equal(pictureFromOf(runs, [10, 11.95, 20, 20.05]), 20)
   assert.equal(pictureFromOf(runs, [10, 11.95, 12.05, 19.25, 19.3]), 19.3)
+})
+
+test('a first picture read far past what the browser holds is not believed, and the run begins where the browser says it does', () => {
+  const run = { from: 43_209.6, to: 43_210.3 }
+
+  assert.equal(pictureFromOf([run], [run.to * 2]), run.from)
+  assert.equal(pictureFromOf([run], [run.to + 60, run.to + 60.05]), run.from)
+  assert.equal(
+    pictureFromOf([run], [run.to + PICTURE_NEAR_SECONDS + 0.01]),
+    run.from,
+  )
+})
+
+test('a first picture read a little past what the browser holds is believed, since the sound that came first ends before it', () => {
+  const run = { from: 43_209.6, to: 43_210.3 }
+
+  assert.equal(pictureFromOf([run], [43_210.4]), 43_210.4)
+  assert.equal(
+    pictureFromOf([run], [run.to + PICTURE_NEAR_SECONDS]),
+    run.to + PICTURE_NEAR_SECONDS,
+  )
+})
+
+test('a first picture read far before what the browser holds leaves the run to begin where the browser says it does', () => {
+  const run = { from: 43_209.6, to: 43_211 }
+
+  assert.equal(pictureFromOf([run], [21_604.8, 21_604.85]), run.from)
 })
 
 test('a run no picture time is known for begins where the browser says it does', () => {

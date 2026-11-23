@@ -22,6 +22,12 @@ export const LATE_START_SECONDS = 1
 
 export const SEEK_SETTLES_SECONDS = 1
 
+export const PICTURE_NEAR_SECONDS = 2
+
+export const OVERDUE_START_SECONDS = 3
+
+export const OVERDUE_BEHIND_SECONDS = 0.6
+
 export function raisedFrom(seconds: number): number {
   return (
     BUFFER_STEPS_SECONDS.find((step) => step > seconds) ??
