@@ -7,6 +7,7 @@ import {
   pictureTrackOf,
 } from '@/lib/live-fragment'
 import {
+  EMPTY_EDIT,
   RUN_FLAGS,
   box,
   fragment,
@@ -19,7 +20,7 @@ const PICTURE = { id: 1, handler: 'vide', timescale: 90_000 } as const
 
 const SOUND = { id: 2, handler: 'soun', timescale: 48_000 } as const
 
-const TRACK = { id: 1, timescale: 90_000 }
+const TRACK = { id: 1, timescale: 90_000, edit: 0 }
 
 test('the picture track is the one whose handler is a picture, with the timescale its times are counted in', () => {
   assert.deepEqual(pictureTrackOf(header(PICTURE, SOUND)), TRACK)
@@ -33,14 +34,14 @@ test('the picture track is found wherever it sits among the tracks', () => {
         { id: 9, handler: 'vide', timescale: 60_000 },
       ),
     ),
-    { id: 9, timescale: 60_000 },
+    { id: 9, timescale: 60_000, edit: 0 },
   )
 })
 
 test('a track written with the long times is read where the long times put it', () => {
   assert.deepEqual(
     pictureTrackOf(header({ ...PICTURE, id: 3, version: 1 }, SOUND)),
-    { id: 3, timescale: 90_000 },
+    { id: 3, timescale: 90_000, edit: 0 },
   )
 })
 
@@ -216,7 +217,7 @@ const SENT_SOUND = {
   edit: 0,
 } as const
 
-const SENT_TRACK = { id: 1, timescale: 60_000 }
+const SENT_TRACK = { id: 1, timescale: 60_000, edit: 3003 }
 
 const DECODED_AT = 2_400_000_000
 
@@ -242,11 +243,11 @@ test('the header as the transcoder sends it, with its edit lists, long media tim
     pictureTrackOf(
       headerAsSent({ ...SENT_PICTURE, mediaVersion: 0, timescale: 30_000 }),
     ),
-    { id: 1, timescale: 30_000 },
+    { id: 1, timescale: 30_000, edit: 3003 },
   )
 })
 
-test('the first fragment as it is sent, one key frame and a long head of sound, at times tens of thousands of seconds in, is read at the key frame', () => {
+test('the first fragment as it is sent, one key frame and a long head of sound, at times tens of thousands of seconds in, is read where the edit list has the key frame shown', () => {
   assert.equal(
     firstPictureAt(
       fragment(
@@ -269,7 +270,7 @@ test('the first fragment as it is sent, one key frame and a long head of sound, 
       ),
       SENT_TRACK,
     ),
-    (DECODED_AT + 3003) / 60_000,
+    DECODED_AT / 60_000,
   )
 })
 
@@ -296,7 +297,7 @@ test('a later fragment as it is sent, whose pictures are decoded in another orde
       ),
       SENT_TRACK,
     ),
-    (DECODED_AT + 1001 + 7007) / 60_000,
+    (DECODED_AT + 1001 + 7007 - 3003) / 60_000,
   )
 })
 
@@ -328,7 +329,7 @@ test('pictures read out of order from one fragment to the next leave picture and
     pictures.fromOf([
       { from: SOUND_AT / 48_000, to: (DECODED_AT + 12_012) / 60_000 },
     ]),
-    (DECODED_AT + 3003) / 60_000,
+    DECODED_AT / 60_000,
   )
 })
 
@@ -357,6 +358,117 @@ test('a header that names another timescale than the browser counts in puts ever
   )
 
   assert.equal(slower.fromOf([held]), undefined)
+})
+
+test('a picture track with no edit list shows each picture where its fragment says', () => {
+  const track = pictureTrackOf(header(PICTURE, SOUND))
+
+  assert.deepEqual(track, { id: 1, timescale: 90_000, edit: 0 })
+  assert.equal(
+    firstPictureAt(fragment({ track: 1, at: 900_000, offset: 6006 }), track!),
+    (900_000 + 6006) / 90_000,
+  )
+})
+
+test('a picture track whose edit list starts the show a few pictures in shows each picture that much earlier', () => {
+  for (const editVersion of [0, 1] as const) {
+    const track = pictureTrackOf(
+      header({ ...PICTURE, edit: 6006, editVersion }, { ...SOUND, edit: 0 }),
+    )
+
+    assert.deepEqual(track, { id: 1, timescale: 90_000, edit: 6006 })
+    assert.equal(
+      firstPictureAt(fragment({ track: 1, at: 900_000, offset: 6006 }), track!),
+      10,
+      `version ${editVersion}`,
+    )
+    assert.equal(
+      firstPictureAt(
+        fragment({ track: 1, at: 903_003, offsets: [9009, 3003] }),
+        track!,
+      ),
+      (903_003 + 9009 - 6006) / 90_000,
+      `version ${editVersion}`,
+    )
+  }
+})
+
+test('an empty edit at the head of the list is passed over, and the edit after it is the one that counts', () => {
+  for (const editVersion of [0, 1] as const) {
+    const track = pictureTrackOf(
+      header({ ...PICTURE, edits: [EMPTY_EDIT, 6006], editVersion }, SOUND),
+    )
+
+    assert.deepEqual(
+      track,
+      { id: 1, timescale: 90_000, edit: 6006 },
+      `version ${editVersion}`,
+    )
+    assert.equal(
+      firstPictureAt(fragment({ track: 1, at: 900_000, offset: 6006 }), track!),
+      10,
+    )
+  }
+})
+
+test('an edit list of empty edits only moves nothing', () => {
+  for (const editVersion of [0, 1] as const) {
+    assert.deepEqual(
+      pictureTrackOf(
+        header({ ...PICTURE, edits: [EMPTY_EDIT], editVersion }, SOUND),
+      ),
+      { id: 1, timescale: 90_000, edit: 0 },
+    )
+  }
+})
+
+test('of several edits the first that is not empty is the one that counts', () => {
+  assert.deepEqual(
+    pictureTrackOf(header({ ...PICTURE, edits: [3003, 9009] }, SOUND)),
+    { id: 1, timescale: 90_000, edit: 3003 },
+  )
+})
+
+test('the edit list of the sound track is not the one the picture track is read by', () => {
+  assert.deepEqual(pictureTrackOf(header(PICTURE, { ...SOUND, edit: 1024 })), {
+    id: 1,
+    timescale: 90_000,
+    edit: 0,
+  })
+  assert.deepEqual(
+    pictureTrackOf(
+      header({ ...SOUND, edit: 1024 }, { ...PICTURE, id: 2, edit: 3003 }),
+    ),
+    { id: 2, timescale: 90_000, edit: 3003 },
+  )
+})
+
+test('a long edit past what 32 bits hold is read whole', () => {
+  assert.deepEqual(
+    pictureTrackOf(
+      header({ ...PICTURE, edits: [2 ** 33 + 3003], editVersion: 1 }, SOUND),
+    ),
+    { id: 1, timescale: 90_000, edit: 2 ** 33 + 3003 },
+  )
+})
+
+test('an edit list cut short is read as far as it goes and no further', () => {
+  const whole = header({ ...PICTURE, edits: [EMPTY_EDIT, 6006] }, SOUND)
+  const at = whole.findIndex(
+    (_, index) =>
+      String.fromCharCode(...whole.subarray(index, index + 4)) === 'elst',
+  )
+
+  for (const said of [0, 1, 2, 3, 0xffffffff]) {
+    const cut = whole.slice()
+
+    new DataView(cut.buffer).setUint32(at + 8, said)
+
+    const track = pictureTrackOf(cut)
+
+    assert.equal(track?.id, 1)
+    assert.ok(track?.edit === 0 || track?.edit === 6006, `${said} edits said`)
+  }
 })
 
 function watching(...tracks: Parameters<typeof header>) {

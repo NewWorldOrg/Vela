@@ -406,8 +406,7 @@ const SENT_DECODED_AT = 2_400_000_000
 
 const SENT_SHOWN_LATER = 3003
 
-const SENT_FIRST_PICTURE_AT =
-  (SENT_DECODED_AT + SENT_SHOWN_LATER) / SENT_PICTURE_SCALE
+const SENT_FIRST_PICTURE_AT = SENT_DECODED_AT / SENT_PICTURE_SCALE
 
 const SENT_SOUND_AT = 1_919_964_480
 
@@ -531,6 +530,46 @@ test('the stream as it is sent, tens of thousands of seconds in: nothing moves w
   await arrives(SENT_FIRST_PICTURE_AT + 0.03)
 
   assert.equal(feed.pictureFrom(), SENT_FIRST_PICTURE_AT)
+  assert.equal(picture.plays, 1)
+  assert.deepEqual(picture.put, [SENT_FIRST_PICTURE_AT])
+
+  feed.close()
+})
+
+test('the stream as it is sent, without its edit list: the key frame is where its fragment says, later than the browser of the edit list would show it', async (context) => {
+  const { picture, feed, arrives } = await asSent(
+    context,
+    headerAsSent(
+      { ...SENT_TRACKS[0], edit: undefined },
+      { ...SENT_TRACKS[1], edit: undefined },
+    ),
+  )
+  const shownAt = (SENT_DECODED_AT + SENT_SHOWN_LATER) / SENT_PICTURE_SCALE
+
+  await arrives(SENT_FIRST_PICTURE_AT + 0.03)
+
+  assert.equal(feed.pictureFrom(), shownAt)
+  assert.equal(picture.plays, 0)
+
+  await arrives(shownAt + 0.03)
+
+  assert.equal(picture.plays, 1)
+  assert.deepEqual(picture.put, [shownAt])
+
+  feed.close()
+})
+
+test('the stream as it is sent, with an empty edit ahead of its edit: playback starts on the key frame where the edit has it shown', async (context) => {
+  const { picture, feed, arrives } = await asSent(
+    context,
+    headerAsSent(
+      { ...SENT_TRACKS[0], edit: undefined, edits: [-1, SENT_SHOWN_LATER] },
+      SENT_TRACKS[1],
+    ),
+  )
+
+  await arrives(SENT_FIRST_PICTURE_AT + 0.03)
+
   assert.equal(picture.plays, 1)
   assert.deepEqual(picture.put, [SENT_FIRST_PICTURE_AT])
 

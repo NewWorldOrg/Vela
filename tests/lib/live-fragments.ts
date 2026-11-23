@@ -63,7 +63,33 @@ export interface TrackSaid {
   version?: 0 | 1
   mediaVersion?: 0 | 1
   edit?: number
+  edits?: number[]
+  editVersion?: 0 | 1
 }
+
+const EMPTY_EDIT = -1
+
+function longSigned(value: number): number[] {
+  return value < 0 ? new Array<number>(8).fill(0xff) : u64(value)
+}
+
+function editList(mediaTimes: number[], version: 0 | 1): Uint8Array {
+  return box(
+    'edts',
+    box(
+      'elst',
+      [version, 0, 0, 0],
+      u32(mediaTimes.length),
+      ...mediaTimes.map((mediaTime) =>
+        version === 1
+          ? [...u64(90_000), ...longSigned(mediaTime), ...u32(0x10000)]
+          : [...u32(90_000), ...u32(mediaTime >>> 0), ...u32(0x10000)],
+      ),
+    ),
+  )
+}
+
+export { EMPTY_EDIT }
 
 const AVC_ENTRY = box(
   'avc1',
@@ -84,20 +110,15 @@ export function track({
   version = 0,
   mediaVersion = version,
   edit,
+  edits = edit === undefined ? [] : [edit],
+  editVersion = 0,
 }: TrackSaid): Uint8Array {
   return box(
     'trak',
     box('tkhd', [version, 0, 0, 3], stamps(version), u32(id), [
       ...new Uint8Array(68),
     ]),
-    ...(edit === undefined
-      ? []
-      : [
-          box(
-            'edts',
-            box('elst', u32(0), u32(1), u32(0), u32(edit), u32(0x10000)),
-          ),
-        ]),
+    ...(edits.length === 0 ? [] : [editList(edits, editVersion)]),
     box(
       'mdia',
       box(

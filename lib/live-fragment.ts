@@ -4,6 +4,7 @@ import { boxesIn, type Box } from '@/lib/live-wire'
 export interface PictureTrack {
   id: number
   timescale: number
+  edit: number
 }
 
 const PICTURE_HANDLER = 'vide'
@@ -73,6 +74,53 @@ function handlerOf(bytes: Uint8Array, box: Box | undefined): string {
     : ''
 }
 
+function signedLong(high: number, low: number): number {
+  return high >= 2 ** 31 ? -1 : high * 2 ** 32 + low
+}
+
+function mediaTimeAt(
+  bytes: Uint8Array,
+  elst: Box,
+  nth: number,
+): number | undefined {
+  if (bytes[elst.start] !== LONG_TIMES) {
+    const short = wordAt(bytes, elst, 8 + nth * 12 + 4)
+
+    return short === undefined ? undefined : short | 0
+  }
+
+  const high = wordAt(bytes, elst, 8 + nth * 20 + 8)
+  const low = wordAt(bytes, elst, 8 + nth * 20 + 12)
+
+  return high === undefined || low === undefined
+    ? undefined
+    : signedLong(high, low)
+}
+
+function editOf(bytes: Uint8Array, trak: Box): number {
+  const elst = childOf(bytes, childOf(bytes, trak, 'edts'), 'elst')
+
+  if (!elst || elst.start >= elst.end) {
+    return 0
+  }
+
+  const said = wordAt(bytes, elst, 4) ?? 0
+
+  for (let nth = 0; nth < said; nth += 1) {
+    const mediaTime = mediaTimeAt(bytes, elst, nth)
+
+    if (mediaTime === undefined) {
+      return 0
+    }
+
+    if (mediaTime >= 0) {
+      return mediaTime
+    }
+  }
+
+  return 0
+}
+
 function trackOf(bytes: Uint8Array, trak: Box): PictureTrack | null {
   const mdia = childOf(bytes, trak, 'mdia')
   const id = afterTheTimes(bytes, childOf(bytes, trak, 'tkhd'))
@@ -86,7 +134,7 @@ function trackOf(bytes: Uint8Array, trak: Box): PictureTrack | null {
     return null
   }
 
-  return { id, timescale }
+  return { id, timescale, edit: editOf(bytes, trak) }
 }
 
 export function pictureTrackOf(init: Uint8Array): PictureTrack | null {
@@ -168,7 +216,7 @@ function pictureIn(
 
   return decoded === undefined || offset === undefined
     ? undefined
-    : (decoded + offset) / track.timescale
+    : (decoded + offset - track.edit) / track.timescale
 }
 
 export function firstPictureAt(
