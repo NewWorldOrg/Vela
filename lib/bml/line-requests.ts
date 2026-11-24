@@ -200,8 +200,12 @@ export class LineRequests<Seen> {
     return this.fetched.get(url) ?? undefined
   }
 
-  fetch(urls: Iterable<string>, before = 0): number {
+  fetch(
+    urls: Iterable<string>,
+    before = 0,
+  ): { asked: number; refused: string[] } {
     const asking = new Set(this.fetching.values())
+    const refused: string[] = []
     let asked = before
 
     for (const url of urls) {
@@ -211,6 +215,7 @@ export class LineRequests<Seen> {
 
       if (asked >= MOST_FETCHES_FOR_A_PAGE) {
         this.keep(url, null)
+        refused.push(url)
         continue
       }
 
@@ -222,7 +227,11 @@ export class LineRequests<Seen> {
       this.ask({ kind: 'fetch', id, uri: url })
     }
 
-    return asked - before
+    return { asked: asked - before, refused }
+  }
+
+  forget(urls: string[]): void {
+    urls.forEach((url) => this.fetched.delete(url))
   }
 
   took(id: number, module: BmlModule | null): boolean {

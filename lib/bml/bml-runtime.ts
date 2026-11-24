@@ -119,6 +119,8 @@ const MOST_DATA_BUTTON_PRESSES = 20
 
 const MOST_ANIMATED_PIXELS = 2 * MNG_LIMITS.pixels
 
+const PICTURES_COUNTED_FOR_MS = 60_000
+
 const LOCKED = 0
 
 const NOT_FOUND = -2
@@ -152,7 +154,7 @@ interface Shown {
   urls: string[]
   players: Map<HTMLElement, MngPlayer<MngBitmap>>
   wanted: Map<HTMLElement, string>
-  fetches: number
+  askedAt: number[]
   videoRect: Rect | null
   toldRect: Rect | null | undefined
   usedKeys: UsedKeyGroup[]
@@ -691,7 +693,7 @@ export class BmlRuntime {
       urls,
       players: new Map(),
       wanted: new Map(),
-      fetches: 0,
+      askedAt: [],
       videoRect: page.videoRect,
       toldRect: undefined,
       usedKeys: page.usedKeys,
@@ -1074,9 +1076,10 @@ export class BmlRuntime {
       return
     }
 
-    if (this.pending === null && !this.requests.awaiting) {
-      shown.fetches += this.requests.fetch(shown.wanted.values(), shown.fetches)
-    }
+    const refused =
+      this.pending === null && !this.requests.awaiting
+        ? this.askForPictures(shown)
+        : []
 
     shown.wanted.forEach((url, element) => {
       if (this.requests.has(url)) {
@@ -1084,6 +1087,22 @@ export class BmlRuntime {
         shown.document.pictureCame(element)
       }
     })
+    this.requests.forget(refused)
+  }
+
+  private askForPictures(shown: Shown): string[] {
+    const now = this.now()
+    const recent = shown.askedAt.filter(
+      (at) => now - at < PICTURES_COUNTED_FOR_MS,
+    )
+    const { asked, refused } = this.requests.fetch(
+      shown.wanted.values(),
+      recent.length,
+    )
+
+    shown.askedAt = [...recent, ...Array.from({ length: asked }, () => now)]
+
+    return refused
   }
 
   private settle(): void {

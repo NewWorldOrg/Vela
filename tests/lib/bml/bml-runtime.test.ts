@@ -2931,33 +2931,57 @@ test('with the setting off, and where there is no line, a picture a script gives
   }
 })
 
-test('the pictures a document’s scripts give it are fetched no more often than a page may fetch, one given after that is a missing image though earlier ones have come, and the next document begins the count again', () => {
-  const { heard, send, forget, warnings } = overTheLine(DRAWS_A_MAP, 'on')
+function atTheMost() {
+  const opening = overTheLine(DRAWS_A_MAP, 'on')
 
-  forget()
+  opening.forget()
 
   for (let press = 0; press < MOST_FETCHES_FOR_A_PAGE; press += 1) {
-    send({ kind: 'key', key: '1' })
+    opening.send({ kind: 'key', key: '1' })
   }
 
-  assert.equal(fetchesOf(heard()).length, MOST_FETCHES_FOR_A_PAGE)
+  assert.equal(fetchesOf(opening.heard()).length, MOST_FETCHES_FOR_A_PAGE)
+  opening.send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+  opening.forget()
 
-  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
-  forget()
-  send({ kind: 'key', key: '1' })
+  return opening
+}
+
+test('the pictures a document’s scripts give it are fetched no more often within a minute than a page may fetch, one given after that is a missing image though earlier ones have come, and the same one is fetched when given again once the minute has passed', () => {
+  const { heard, send, timers, warnings } = atTheMost()
+  const missing = `data broadcast: missing image: ${MAP}?at=2`
+
+  send({ kind: 'key', key: 'red' })
 
   assert.deepEqual(heard(), [])
-  assert.deepEqual(warnings, [
-    `data broadcast: missing image: ${MAP}?n=${MOST_FETCHES_FOR_A_PAGE + 1}`,
+  assert.deepEqual(warnings, [missing])
+
+  timers.tick(59_000)
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(heard(), [])
+  assert.deepEqual(warnings, [missing, missing])
+
+  timers.tick(1_000)
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(fetchesOf(heard()), [
+    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?at=2`,
   ])
+  assert.deepEqual(warnings, [missing, missing])
+})
+
+test('a document drawn again begins the count of the pictures its scripts give it again', () => {
+  const { heard, send, forget, warnings } = atTheMost()
 
   send({ kind: 'key', key: '2' })
   forget()
-  send({ kind: 'key', key: '1' })
+  send({ kind: 'key', key: 'red' })
 
   assert.deepEqual(fetchesOf(heard()), [
-    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?n=${MOST_FETCHES_FOR_A_PAGE + 2}`,
+    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?at=2`,
   ])
+  assert.deepEqual(warnings, [])
 })
 
 test('a picture a script gives a document that is set to give way to one still awaited is not fetched, and is once the other turns out not to come', () => {
