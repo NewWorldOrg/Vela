@@ -92,7 +92,6 @@ import { tableClassesOf } from '@/lib/bml/tables'
 import { frameEvaluator } from '@/lib/bml/evaluator'
 import {
   LineRequests,
-  MOST_FETCHES_FOR_A_PAGE,
   type Awaited,
   type LineAnswer,
 } from '@/lib/bml/line-requests'
@@ -153,7 +152,7 @@ interface Shown {
   urls: string[]
   players: Map<HTMLElement, MngPlayer<MngBitmap>>
   wanted: Map<HTMLElement, string>
-  asked: Set<string>
+  fetches: number
   videoRect: Rect | null
   toldRect: Rect | null | undefined
   usedKeys: UsedKeyGroup[]
@@ -692,7 +691,7 @@ export class BmlRuntime {
       urls,
       players: new Map(),
       wanted: new Map(),
-      asked: new Set(),
+      fetches: 0,
       videoRect: page.videoRect,
       toldRect: undefined,
       usedKeys: page.usedKeys,
@@ -1043,15 +1042,13 @@ export class BmlRuntime {
     const pending = this.pending
     const allIn = this.requests.took(id, module)
 
-    this.followPictures()
-
-    if (!allIn || pending?.url === undefined) {
-      return
+    if (allIn && pending?.url !== undefined) {
+      this.launch(pending, false)
+      this.presses = 0
+      this.nudge()
     }
 
-    this.launch(pending, false)
-    this.presses = 0
-    this.nudge()
+    this.followPictures()
   }
 
   private sendFor(element: HTMLElement, reference: string): boolean {
@@ -1077,22 +1074,16 @@ export class BmlRuntime {
       return
     }
 
-    const settled = !this.requests.awaiting
+    if (this.pending === null && !this.requests.awaiting) {
+      shown.fetches += this.requests.fetch(shown.wanted.values(), shown.fetches)
+    }
 
-    shown.asked.forEach((url) => {
-      if (this.requests.has(url)) {
-        shown.asked.delete(url)
-      }
-    })
     shown.wanted.forEach((url, element) => {
       if (this.requests.has(url)) {
         shown.wanted.delete(element)
         shown.document.pictureCame(element)
-      } else if (settled && shown.asked.size < MOST_FETCHES_FOR_A_PAGE) {
-        shown.asked.add(url)
       }
     })
-    this.requests.fetch(shown.asked)
   }
 
   private settle(): void {

@@ -2789,6 +2789,9 @@ const DRAWS_A_MAP = bml(
     '  if (code == 23) { map.data = MAP + "?try=" + counted(1); browser.transmitTextDataOverIP("http://example.test/time", "", "EUC-JP"); }' +
     '  if (code == 24) { map.data = "ftp://example.test/maps/map.jpg"; map.data = "http://example.test/" + new Array(2100).join("m") + ".jpg"; }' +
     '  if (code == 6) { map.data = MAP + "?n=" + counted(2); }' +
+    '  if (code == 7) { browser.reloadActiveDocument(); }' +
+    '  if (code == 8) { map.data = MAP + "?at=3"; browser.launchDocument("~/0001/next.bml", "cut"); }' +
+    '  if (code == 9) { map.data = MAP + "?at=4"; browser.launchDocument("http://example.test/bml/gone.bml"); }' +
     '}' +
     '</script>',
 )
@@ -2928,23 +2931,62 @@ test('with the setting off, and where there is no line, a picture a script gives
   }
 })
 
-test('no more pictures a script gives are being fetched at once than a page may fetch, and the last given is asked for as one of them comes', () => {
-  const { heard, send, forget } = overTheLine(DRAWS_A_MAP, 'on')
+test('the pictures a document’s scripts give it are fetched no more often than a page may fetch, one given after that is a missing image though earlier ones have come, and the next document begins the count again', () => {
+  const { heard, send, forget, warnings } = overTheLine(DRAWS_A_MAP, 'on')
 
   forget()
 
-  for (let press = 0; press < MOST_FETCHES_FOR_A_PAGE + 6; press += 1) {
+  for (let press = 0; press < MOST_FETCHES_FOR_A_PAGE; press += 1) {
     send({ kind: 'key', key: '1' })
   }
 
   assert.equal(fetchesOf(heard()).length, MOST_FETCHES_FOR_A_PAGE)
 
-  forget()
   send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+  forget()
+  send({ kind: 'key', key: '1' })
+
+  assert.deepEqual(heard(), [])
+  assert.deepEqual(warnings, [
+    `data broadcast: missing image: ${MAP}?n=${MOST_FETCHES_FOR_A_PAGE + 1}`,
+  ])
+
+  send({ kind: 'key', key: '2' })
+  forget()
+  send({ kind: 'key', key: '1' })
 
   assert.deepEqual(fetchesOf(heard()), [
-    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?n=${MOST_FETCHES_FOR_A_PAGE + 6}`,
+    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?n=${MOST_FETCHES_FOR_A_PAGE + 2}`,
   ])
+})
+
+test('a picture a script gives a document that is set to give way to one still awaited is not fetched, and is once the other turns out not to come', () => {
+  const awaited = overTheLine(DRAWS_A_MAP, 'on')
+
+  awaited.forget()
+  awaited.send({ kind: 'key', key: '3' })
+  awaited.send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(awaited.heard(), [{ kind: 'waiting', waiting: true }])
+
+  const refused = overTheLine(DRAWS_A_MAP, 'on')
+
+  refused.forget()
+  refused.send({ kind: 'key', key: '4' })
+
+  assert.deepEqual(refused.heard(), [
+    { kind: 'fetch', id: 1, uri: 'http://example.test/bml/gone.bml' },
+    { kind: 'waiting', waiting: true },
+  ])
+
+  refused.forget()
+  refused.send({ kind: 'fetched', id: 1, module: null })
+
+  assert.deepEqual(refused.heard(), [
+    { kind: 'waiting', waiting: false },
+    { kind: 'fetch', id: 2, uri: `${MAP}?at=4` },
+  ])
+  assert.ok(refused.element('map'))
 })
 
 test('a picture that comes for a page already left goes nowhere', () => {

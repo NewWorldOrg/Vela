@@ -200,9 +200,9 @@ export class LineRequests<Seen> {
     return this.fetched.get(url) ?? undefined
   }
 
-  fetch(urls: Iterable<string>): void {
+  fetch(urls: Iterable<string>, before = 0): number {
     const asking = new Set(this.fetching.values())
-    let asked = 0
+    let asked = before
 
     for (const url of urls) {
       if (this.fetched.has(url) || asking.has(url)) {
@@ -221,6 +221,8 @@ export class LineRequests<Seen> {
       this.fetching.set(id, url)
       this.ask({ kind: 'fetch', id, uri: url })
     }
+
+    return asked - before
   }
 
   took(id: number, module: BmlModule | null): boolean {
