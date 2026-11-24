@@ -414,6 +414,92 @@ test('a video inside a box a script moves is told to the player where the box ha
   ])
 })
 
+function boxed(box = '', video = ''): string {
+  return bml(
+    `<div id="box" style="left: 100px; top: 50px; width: 800px; height: 400px${box}">` +
+      `<object id="video" type="video/X-arib-mpeg2" style="left: 20px; top: 10px; width: 480px; height: 270px${video}"/>` +
+      '</div>' +
+      '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+    '<script>' +
+      'var box = document.getElementById("box").normalStyle;' +
+      'var video = document.getElementById("video").normalStyle;' +
+      'function pressed(code) {' +
+      '  if (code == 21) { box.visibility = "hidden"; }' +
+      '  if (code == 22) { box.visibility = "visible"; }' +
+      '  if (code == 23) { box.display = "none"; }' +
+      '  if (code == 24) { box.display = "block"; }' +
+      '  if (code == 6) { video.visibility = "visible"; }' +
+      '}' +
+      '</script>',
+  )
+}
+
+const BOXED_RECT = { left: 120, top: 60, width: 480, height: 270 }
+
+const BOXED_HOLE = {
+  '--bml-hole-top': '60px',
+  '--bml-hole-right': '360px',
+  '--bml-hole-bottom': '210px',
+  '--bml-hole-left': '120px',
+}
+
+test('a video inside a box a script hides, or takes out of the layout, is told to the player as no rectangle and the ground is whole until the script shows the box again', () => {
+  for (const [hide, show] of [
+    ['blue', 'red'],
+    ['green', 'yellow'],
+  ] as const) {
+    const { heard, send, forget, plane } = opened(boxed())
+
+    forget()
+    send({ kind: 'key', key: hide })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }], hide)
+    assert.equal(holeOf(plane), null, hide)
+
+    forget()
+    send({ kind: 'key', key: show })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: BOXED_RECT }], show)
+    assert.deepEqual(holeOf(plane), BOXED_HOLE, show)
+  }
+})
+
+test('a video that says it is visible stays where it lies while the box around it is hidden, and goes with a box taken out of the layout', () => {
+  const { heard, send, forget, plane } = opened(
+    boxed('', '; visibility: visible'),
+  )
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [])
+  assert.deepEqual(holeOf(plane), BOXED_HOLE)
+
+  send({ kind: 'key', key: 'green' })
+
+  assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }])
+  assert.equal(holeOf(plane), null)
+})
+
+test('a video the document itself hides, or holds in a box it hides or takes out of the layout, has no rectangle from the start and the ground is whole, until a script shows it', () => {
+  for (const [box, video, show] of [
+    ['', '; visibility: hidden', '1'],
+    ['; visibility: hidden', '', 'red'],
+    ['; display: none', '', 'yellow'],
+  ] as const) {
+    const { heard, send, forget, plane } = opened(boxed(box, video))
+
+    assert.deepEqual(videoRectsOf(heard()), [null], show)
+    assert.equal(holeOf(plane), null, show)
+
+    forget()
+    send({ kind: 'key', key: show })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: BOXED_RECT }], show)
+    assert.deepEqual(holeOf(plane), BOXED_HOLE, show)
+  }
+})
+
 const MOVES_ITS_VIDEO_OVER_STILLS = bml(
   '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>' +
     '<div style="left: 100px; top: 50px; width: 400px; height: 300px">' +

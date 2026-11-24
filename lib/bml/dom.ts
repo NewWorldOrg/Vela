@@ -241,18 +241,24 @@ class Inner {
   private rectOf(video: HTMLElement, resolution: Size): Rect | null {
     const width = this.pixels(video, 'width')
     const height = this.pixels(video, 'height')
+    const chain = this.upFrom(video)
+    const visibility = chain
+      .map((element) => this.styleOf(element, 'normal', 'visibility'))
+      .find((value) => value === 'visible' || value === 'hidden')
 
     if (
       width === null ||
       height === null ||
-      this.styleOf(video, 'normal', 'visibility') === 'hidden' ||
-      this.styleOf(video, 'normal', 'display') === 'none'
+      visibility === 'hidden' ||
+      chain.some(
+        (element) => this.styleOf(element, 'normal', 'display') === 'none',
+      )
     ) {
       return null
     }
 
     const placed = (property: string) =>
-      this.upFrom(video).reduce(
+      chain.reduce(
         (sum, element) => sum + (this.pixels(element, property) ?? 0),
         0,
       )
@@ -795,6 +801,10 @@ export class BmlDocument {
 
     this.inner.videoMoved = false
 
+    return this.inner.videoRect(resolution)
+  }
+
+  videoRect(resolution: Size): Rect | null {
     return this.inner.videoRect(resolution)
   }
 

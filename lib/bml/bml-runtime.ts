@@ -701,6 +701,7 @@ export class BmlRuntime {
 
     this.shown = shown
     this.fit()
+    this.placeVideo(shown, document.videoRect(page.resolution))
     mounted.nodes.forEach((node, element) => {
       if (node.mng) {
         this.animate(shown, element, node.mng)
@@ -774,7 +775,13 @@ export class BmlRuntime {
     const shown = this.shown
     const rect = shown?.document.movedVideoRect(shown.page.resolution)
 
-    if (!shown || rect === undefined || sameRect(rect, shown.videoRect)) {
+    if (shown && rect !== undefined) {
+      this.placeVideo(shown, rect)
+    }
+  }
+
+  private placeVideo(shown: Shown, rect: Rect | null): void {
+    if (sameRect(rect, shown.videoRect)) {
       return
     }
 
