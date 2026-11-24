@@ -13,7 +13,9 @@ const ROOT = path.resolve(
   '..',
 )
 
-const READ = ['app', 'components']
+const SCREENS = ['app', 'components']
+
+const READ = [...SCREENS, 'hooks', 'lib']
 
 const NOT_SOURCE = new Set([
   '.git',
@@ -180,7 +182,7 @@ test('the sign for a value that is not there is named once', async () => {
 
   const dashes = new Set<string>()
 
-  for (const { file, source } of await everySource()) {
+  for (const { file, source } of await everySource(SCREENS)) {
     for (const dash of source.matchAll(A_DASH)) {
       dashes.add(dash[1])
       assert.equal(
@@ -230,11 +232,7 @@ test('a way of speaking that is never used is not wired up', async () => {
 test('the kinds of broadcast are spelt from the one table', async () => {
   assert.equal(BROADCAST_KIND_LABEL.terrestrial, '地上波')
 
-  for (const { file, source } of await everySource([
-    ...READ,
-    'lib',
-    'repository',
-  ])) {
+  for (const { file, source } of await everySource([...READ, 'repository'])) {
     if (file === THE_KINDS || file.includes('client/schema')) {
       continue
     }

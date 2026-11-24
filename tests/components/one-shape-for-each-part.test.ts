@@ -401,6 +401,8 @@ test('live and a recording take their colours from named tokens', async () => {
   const files = [
     ...(await sourceFiles('components/live', /\.tsx?$/)),
     ...(await sourceFiles('components/recordings', /\.tsx?$/)),
+    'lib/player-palette.ts',
+    'lib/remote-column-palette.ts',
   ]
 
   assert.ok(files.length > 30, `only ${files.length} files were read`)

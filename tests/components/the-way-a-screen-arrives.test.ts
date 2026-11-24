@@ -29,7 +29,9 @@ const THE_LONG_LISTS = [
   'components/live/channel-grid.tsx',
 ]
 
-const READ = ['app', 'components']
+const SCREENS = ['app', 'components']
+
+const READ = [...SCREENS, 'hooks', 'lib']
 
 const NOT_SOURCE = new Set([
   '.git',
@@ -184,10 +186,12 @@ async function sourceFiles(dir: string): Promise<string[]> {
   return found
 }
 
-async function everySource(): Promise<{ file: string; source: string }[]> {
+async function everySource(
+  dirs: string[] = READ,
+): Promise<{ file: string; source: string }[]> {
   const read: { file: string; source: string }[] = []
 
-  for (const dir of READ) {
+  for (const dir of dirs) {
     for (const file of await sourceFiles(dir)) {
       read.push({ file, source: await readFile(path.join(ROOT, file), 'utf8') })
     }
@@ -288,7 +292,7 @@ test('every delay is handed down through the variables, not written on a part', 
 })
 
 test('no screen declares a movement of its own', async () => {
-  for (const { file, source } of await everySource()) {
+  for (const { file, source } of await everySource(SCREENS)) {
     assert.doesNotMatch(
       source,
       WRITES_ITS_OWN_ANIMATION,
@@ -705,7 +709,11 @@ test('the guide builds its other columns once its opening is over', async () => 
 })
 
 test('the spark colour is kept to the moments: the opening of the guide, the curtain and the usher', async () => {
-  const files = await sourceFiles('components')
+  const files = [
+    ...(await sourceFiles('components')),
+    ...(await sourceFiles('hooks')),
+    ...(await sourceFiles('lib')),
+  ]
   const users: string[] = []
 
   for (const file of files) {
