@@ -36,10 +36,7 @@ import {
   SEARCH_HIT_FIXTURES,
 } from '@/repository/search.fixtures'
 import { SearchView } from '@/components/search/search-view'
-import {
-  NOTIFY_START,
-  STOP_NOTIFYING,
-} from '@/components/notifications/wording'
+import { NOTIFY_START, STOP_NOTIFYING } from '@/lib/notifications-wording'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'
 import { inTheApp } from '@/stories/frames'

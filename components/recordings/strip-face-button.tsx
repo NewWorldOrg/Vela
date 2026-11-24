@@ -3,7 +3,7 @@
 import { useContext, type ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import { pressable, still } from '@/components/vela/tactile'
+import { pressable, still } from '@/lib/tactile'
 import { OpensAFace } from '@/components/recordings/player-dock'
 
 export const STRIP_BUTTON = cn(

@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import type { Said } from '@/components/recordings/handing-over'
+import type { Said } from '@/hooks/useHandingOver'
 
 const SAID_INK: Record<'page' | 'player', Record<Said['tone'], string>> = {
   page: { done: 'text-ink-2', failed: 'text-coral' },

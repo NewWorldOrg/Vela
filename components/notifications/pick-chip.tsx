@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
 import { CheckIcon } from '@/components/vela/icons'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 
 export function PickChip({
   on,

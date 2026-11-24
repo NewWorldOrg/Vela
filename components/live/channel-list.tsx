@@ -7,10 +7,10 @@ import { foldBand, foldBandDelay, type FoldMotion } from '@/lib/live-fold'
 import type { ChannelKind } from '@/repository/channels'
 import type { LiveChannel } from '@/repository/live'
 import { ChannelsMissing } from '@/components/live/channels-missing'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChannelKinds } from '@/components/live/channel-kinds'
-import { useSettled } from '@/components/live/channel-fold'
+import { useSettled } from '@/hooks/useFoldingChannels'
 import { FoldButton } from '@/components/live/fold-button'
 
 function drawsALogo(logo: LiveChannel['logo']): boolean {

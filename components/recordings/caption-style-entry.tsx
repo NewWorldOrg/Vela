@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react'
 
-import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON } from '@/lib/player-palette'
 import { Setting } from '@/components/recordings/setting'
 
 export type GearPanel = 'main' | 'captions'

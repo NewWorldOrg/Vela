@@ -690,7 +690,7 @@ test('the usher is troubled only where the page could not be shown', async () =>
 
 test('only the drawing in a control turns under the pointer, and only a picture grows, by the one amount', async () => {
   assert.match(
-    await read('components/vela/tactile.ts'),
+    await read('lib/tactile.ts'),
     /export const iconTilt =\s*'\[&_svg\]:transition-transform \[&_svg\]:duration-150 \[&_svg\]:ease-toy hover:\[&_svg\]:scale-\[1\.08\] hover:\[&_svg\]:rotate-\[-7deg\]'/,
     'the drawing in a control no longer grows and turns under the pointer',
   )
@@ -706,7 +706,7 @@ test('only the drawing in a control turns under the pointer, and only a picture 
       if (
         found[0] !== 'hover:scale-[1.04]' &&
         !(
-          file === 'components/vela/tactile.ts' &&
+          file === 'lib/tactile.ts' &&
           /^hover:\[&_svg\]:(scale-\[1\.08\]|rotate-\[-7deg\])$/.test(found[0])
         )
       ) {

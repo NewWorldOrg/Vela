@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { pressable, still, tactile } from '@/components/vela/tactile'
+import { pressable, still, tactile } from '@/lib/tactile'
 
 export function Tile({ className, ...props }: ComponentProps<'button'>) {
   return (

@@ -78,15 +78,11 @@ import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
 } from '@/stories/fixtures/captions'
-import type {
-  AskBacklog,
-  LiveSocket,
-  OpenSocket,
-} from '@/components/live/live-session'
+import type { AskBacklog, LiveSocket, OpenSocket } from '@/lib/live-session'
 import { LiveView } from '@/components/live/live-view'
-import type { OpenPlaylist } from '@/components/live/live-playlist'
+import type { OpenPlaylist } from '@/lib/live-playlist'
 import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'
-import type { TakeCapture } from '@/components/recordings/take-capture'
+import type { TakeCapture } from '@/lib/take-capture'
 import { inTheApp } from '@/stories/frames'
 import { withoutAMediaSource } from '@/stories/fixtures/without-a-media-source'
 import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'

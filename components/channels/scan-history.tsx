@@ -17,7 +17,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
+import { cardPlace } from '@/lib/table-cards'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { EmptyState } from '@/components/vela/empty-state'
 import { SectionHeading } from '@/components/vela/section-heading'

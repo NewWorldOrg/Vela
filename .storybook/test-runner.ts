@@ -1266,7 +1266,7 @@ const config: TestRunnerConfig = {
             .join('\n') +
           '\nTailwind v4 draws a button with `cursor: default`, so a pressable ' +
           'control has to say `cursor-pointer` itself — `pressable` in ' +
-          'components/vela/tactile.ts is the pair to reach for, with `still` ' +
+          'lib/tactile.ts is the pair to reach for, with `still` ' +
           'beside it wherever hover moves something. A switched-off control ' +
           'says `not-allowed`, which it cannot do while it is also out of the ' +
           'pointer events: drop `pointer-events-none` rather than write a ' +
@@ -1291,7 +1291,7 @@ const config: TestRunnerConfig = {
             .join('\n') +
           '\nA control that is off keeps taking pointer events so that it can ' +
           'say `not-allowed`, which puts it back in reach of every `hover:` ' +
-          'rule it has. Lay `still` from components/vela/tactile.ts on it for ' +
+          'rule it has. Lay `still` from lib/tactile.ts on it for ' +
           'the movement, and freeze whatever colour, border or shadow the ' +
           'hover changes with a `disabled:hover:` of its own.',
       )

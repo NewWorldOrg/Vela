@@ -12,15 +12,11 @@ import {
 } from '@/lib/state-terms'
 import { cn } from '@/lib/utils'
 import type { Program } from '@/repository/programs'
-import {
-  GENRE_MARK_CLASS,
-  cellTimeOf,
-  groundOf,
-} from '@/components/guide/guide-metrics'
+import { GENRE_MARK_CLASS, cellTimeOf, groundOf } from '@/lib/guide-metrics'
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
 import { WATCHED_SAYS } from '@/components/guide/program-cell'
 import { NotifyBell } from '@/components/notifications/notify-bell'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 
 const ROOM_ABOVE_NOW_PX = 48
 

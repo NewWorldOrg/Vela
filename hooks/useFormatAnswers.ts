@@ -16,7 +16,7 @@ import {
   picturesToAsk,
   sizeOf,
   type OfferedPicture,
-} from '@/components/vela/format-answers'
+} from '@/lib/format-answers'
 
 const NOT_YET_HYDRATED = -1
 

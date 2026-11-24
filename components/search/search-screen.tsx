@@ -50,18 +50,14 @@ import {
   SearchIcon,
 } from '@/components/vela/icons'
 import { ScreenMain } from '@/components/vela/screen-main'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { PhoneBarLead } from '@/components/vela/phone-bar-lead'
 import { OnAnUprightPhone } from '@/components/vela/on-an-upright-phone'
 import { PhoneSearchHits } from '@/components/search/phone-search-hits'
 import { HitDetail } from '@/components/search/hit-detail'
 import { SearchHits } from '@/components/search/search-hits'
 import { ConditionChips } from '@/components/search/condition-chips'
-import {
-  draftOf,
-  termsOf,
-  type SearchDraft,
-} from '@/components/search/search-draft'
+import { draftOf, termsOf, type SearchDraft } from '@/lib/search-draft'
 import { SidewaysPanes } from '@/components/vela/sideways-panes'
 import { useToast } from '@/components/vela/toasts'
 import { usePhoneOnItsSide } from '@/hooks/usePhone'

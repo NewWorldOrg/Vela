@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react'
 import { cva, type VariantProps } from 'class-variance-authority'
 
 import { cn } from '@/lib/utils'
-import { iconTilt, pressable, still, tactile } from '@/components/vela/tactile'
+import { iconTilt, pressable, still, tactile } from '@/lib/tactile'
 
 const iconButtonVariants = cva(
   cn(

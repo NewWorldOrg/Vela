@@ -20,7 +20,7 @@ import {
   useHandingOver,
   WHAT_IS_HANDED,
   COPY_THE_URL,
-} from '@/components/recordings/handing-over'
+} from '@/hooks/useHandingOver'
 import { WhatHappened } from '@/components/recordings/what-happened'
 
 function HandoverList({

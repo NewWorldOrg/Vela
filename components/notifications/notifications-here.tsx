@@ -18,7 +18,7 @@ import {
   PUSH_MEMORY,
   forgetThisBrowser,
   readTheFingerprint,
-} from '@/components/notifications/this-browser'
+} from '@/lib/this-browser'
 
 export function NotificationsHere({
   screen,

@@ -1,5 +1,5 @@
 import { TabBadge } from '@/components/vela/tab-bar'
-import { conflictsLeft } from '@/app/(app)/_shell/conflicts-left'
+import { conflictsLeft } from '@/repository/conflicts-left'
 
 export async function ConflictsBadge() {
   const count = await conflictsLeft()

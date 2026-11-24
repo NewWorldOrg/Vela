@@ -15,7 +15,7 @@ import {
 } from '@/lib/bml/messages'
 import { RUNTIME_SANDBOX, runtimeDocument } from '@/lib/bml/runtime-document'
 import { cn } from '@/lib/utils'
-import { RUNTIME_SCRIPT } from '@/components/data-broadcast/runtime-script.generated'
+import { RUNTIME_SCRIPT } from '@/lib/bml/runtime-script.generated'
 
 export type SendToRuntime = (
   message: PlayerMessage,

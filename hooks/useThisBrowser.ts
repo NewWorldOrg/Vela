@@ -6,7 +6,7 @@ import {
   followThisBrowser,
   thisBrowserNow,
   type ThisBrowser,
-} from '@/components/notifications/this-browser'
+} from '@/lib/this-browser'
 
 function notOnTheServer(): undefined {
   return undefined

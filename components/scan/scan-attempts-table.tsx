@@ -16,7 +16,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
+import { cardPlace } from '@/lib/table-cards'
 import { CheckIcon } from '@/components/vela/icons'
 import { FailureLabel } from '@/components/scan/failure-label'
 import { WHEN_LABELS } from '@/lib/when-terms'

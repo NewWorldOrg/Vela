@@ -40,15 +40,12 @@ import {
   type FormatProbe,
 } from '@/lib/playback-format'
 import { useFormatAnswers } from '@/hooks/useFormatAnswers'
-import { browserProbe } from '@/components/vela/format-answers'
+import { browserProbe } from '@/lib/format-answers'
 import { Button } from '@/components/ui/button'
 import { ScreenMain } from '@/components/vela/screen-main'
 import { ChevronDownIcon, LiveIcon } from '@/components/vela/icons'
 import { EmptyState } from '@/components/vela/empty-state'
-import {
-  PLAYER_COLUMN,
-  PLAYER_GLYPH_BUTTON,
-} from '@/components/recordings/player-palette'
+import { PLAYER_COLUMN, PLAYER_GLYPH_BUTTON } from '@/lib/player-palette'
 import { OpenExternally } from '@/components/recordings/open-externally'
 import { ChannelGrid } from '@/components/live/channel-grid'
 import { ChannelsMissing } from '@/components/live/channels-missing'
@@ -59,27 +56,21 @@ import {
   atOnce,
   useFoldingChannels,
   useSettled,
-} from '@/components/live/channel-fold'
-import {
-  COLUMN_BODY,
-  PLAYER_SIDE_COLUMN,
-} from '@/components/live/remote-column-palette'
+} from '@/hooks/useFoldingChannels'
+import { COLUMN_BODY, PLAYER_SIDE_COLUMN } from '@/lib/remote-column-palette'
 import { ColumnSwitch, type ColumnShows } from '@/components/live/column-switch'
 import { RemoteSlot } from '@/components/live/remote-slot'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 import { LivePlayer } from '@/components/live/live-player'
-import { LiveFeed } from '@/components/live/live-feed'
-import type { OpenPlaylist } from '@/components/live/live-playlist'
+import { LiveFeed } from '@/lib/live-feed'
+import type { OpenPlaylist } from '@/lib/live-playlist'
 import {
   openTheWireAhead,
   type AskBacklog,
   type OpenSocket,
-} from '@/components/live/live-session'
-import {
-  wireFormatInUse,
-  wireProfileInUse,
-} from '@/components/live/live-wire-ahead'
-import type { TakeCapture } from '@/components/recordings/take-capture'
+} from '@/lib/live-session'
+import { wireFormatInUse, wireProfileInUse } from '@/lib/live-wire-ahead'
+import type { TakeCapture } from '@/lib/take-capture'
 import { NowNext } from '@/components/live/now-next'
 import { PhoneChannelRows } from '@/components/live/phone-channel-rows'
 import { PhoneKinds } from '@/components/live/phone-kinds'

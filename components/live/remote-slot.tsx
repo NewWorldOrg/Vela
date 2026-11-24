@@ -4,8 +4,8 @@ import { useRef, type Ref } from 'react'
 
 import { cn } from '@/lib/utils'
 import { foldBand, type FoldMotion } from '@/lib/live-fold'
-import { useSettled } from '@/components/live/channel-fold'
-import { stepOf } from '@/components/live/remote-column-palette'
+import { useSettled } from '@/hooks/useFoldingChannels'
+import { stepOf } from '@/lib/remote-column-palette'
 
 export function RemoteSlot({
   id,

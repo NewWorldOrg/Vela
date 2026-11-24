@@ -3,11 +3,7 @@
 import { useEffect } from 'react'
 
 import { renewThisBrowser, type PushCarina } from '@/lib/web-push'
-import {
-  PUSH_HANDS,
-  PUSH_MEMORY,
-  readTheFingerprint,
-} from '@/components/notifications/this-browser'
+import { PUSH_HANDS, PUSH_MEMORY, readTheFingerprint } from '@/lib/this-browser'
 
 let renewed = false
 

@@ -8,7 +8,7 @@ const config = [
       '.next/**',
       'storybook-static/**',
       'test-results/**',
-      'components/data-broadcast/runtime-script.generated.ts',
+      'lib/bml/runtime-script.generated.ts',
       'public/data-broadcast/hybridcast-receiver.js',
     ],
   },

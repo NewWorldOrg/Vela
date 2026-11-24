@@ -18,7 +18,7 @@ import {
 import { Badge } from '@/components/ui/badge'
 import { CloseIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toasts'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { ReservationStateChip } from '@/components/reservations/reservation-state-chip'
 import { GenreDot } from '@/components/reservations/genre-dot'
 import type { ReservationActions } from '@/components/reservations/reservation-row'

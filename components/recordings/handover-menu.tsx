@@ -21,12 +21,12 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ChevronDownIcon, DevicePlayerIcon } from '@/components/vela/icons'
-import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON } from '@/lib/player-palette'
 import {
   useHandingOver,
   WHAT_IS_HANDED,
   COPY_THE_URL,
-} from '@/components/recordings/handing-over'
+} from '@/hooks/useHandingOver'
 import { WhatHappened } from '@/components/recordings/what-happened'
 
 const OPEN_EXTERNALLY = '外部プレイヤーで再生'

@@ -3,7 +3,7 @@
 import { foldBand, type FoldMotion } from '@/lib/live-fold'
 import { SegmentedControl } from '@/components/vela/segmented-control'
 import { ColumnHead } from '@/components/live/column-head'
-import { stepOf } from '@/components/live/remote-column-palette'
+import { stepOf } from '@/lib/remote-column-palette'
 
 export type ColumnShows = 'remote' | 'channels'
 

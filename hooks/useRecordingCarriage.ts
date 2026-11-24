@@ -5,7 +5,7 @@ import { useSyncExternalStore } from 'react'
 import {
   recordingCarriage,
   type RecordingCarriage,
-} from '@/components/recordings/recording-carriage'
+} from '@/lib/recording-carriage'
 
 const nothingToFollow = () => () => {}
 

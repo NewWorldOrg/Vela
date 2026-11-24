@@ -3,7 +3,7 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import { pressable, still } from '@/components/vela/tactile'
+import { pressable, still } from '@/lib/tactile'
 
 export function PlayerSegmentedControl<T extends string>({
   label,

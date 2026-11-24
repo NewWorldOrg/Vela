@@ -29,7 +29,7 @@ import {
 import type { LiveProfile } from '@/repository/live'
 import { useFormatAnswers } from '@/hooks/useFormatAnswers'
 import { storeText } from '@/hooks/useStoredText'
-import { browserProbe } from '@/components/vela/format-answers'
+import { browserProbe } from '@/lib/format-answers'
 import {
   SAID_FAILED,
   bandPlace,
@@ -127,7 +127,7 @@ import {
   PLAYER_SCRIM_TOP,
   PLAYER_SEND,
   PLAYER_SEND_MAIN,
-} from '@/components/recordings/player-palette'
+} from '@/lib/player-palette'
 import {
   KEY_CAP,
   aimsAtThePlayer,
@@ -159,7 +159,7 @@ import {
   type SideColumn,
 } from '@/components/recordings/player-dock'
 import { PlayerStrip } from '@/components/recordings/player-strip'
-import { CAPTION_GRIP } from '@/components/recordings/player-palette'
+import { CAPTION_GRIP } from '@/lib/player-palette'
 import { PlayerSkip } from '@/components/recordings/player-skip'
 import { PlayerSkipInTheRow } from '@/components/recordings/player-skip-in-the-row'
 import {
@@ -167,7 +167,7 @@ import {
   SAID_NOT_CAPTURED,
   takeCapture as takeItNow,
   type TakeCapture,
-} from '@/components/recordings/take-capture'
+} from '@/lib/take-capture'
 import { capturedAt, capturedName } from '@/lib/capture-name'
 import { useFullscreen } from '@/hooks/useFullscreen'
 import { useHeight } from '@/hooks/useHeight'
@@ -187,37 +187,37 @@ import {
   PlaybackFaultNotice,
   type PlaybackFault,
 } from '@/components/recordings/playback-fault-notice'
-import { still } from '@/components/vela/tactile'
-import { RecordingCaptions } from '@/components/recordings/recording-captions'
-import { clearanceOf } from '@/components/recordings/caption-clearance'
+import { still } from '@/lib/tactile'
+import { RecordingCaptions } from '@/lib/recording-captions'
+import { clearanceOf } from '@/lib/caption-clearance'
 import { useCaptionBoard } from '@/hooks/useCaptionBoard'
 import { PLAIN_CAPTION_STYLE, type CaptionStyle } from '@/lib/caption-style'
 import {
   readCaptions as readTheCaptions,
   type ReadCaptions,
-} from '@/components/recordings/read-captions'
+} from '@/lib/read-captions'
 import {
   feedRecording as feedTheRecording,
   type FeedRecording,
-} from '@/components/recordings/recording-feed'
+} from '@/lib/recording-feed'
 import {
   openRecordingPlaylist,
   type OpenRecordingPlaylist,
   type RecordingPlaylistFault,
-} from '@/components/recordings/recording-playlist'
+} from '@/lib/recording-playlist'
 import { useRecordingCarriage } from '@/hooks/useRecordingCarriage'
-import { RecordingDataBroadcast } from '@/components/recordings/recording-data-broadcast'
+import { RecordingDataBroadcast } from '@/lib/recording-data-broadcast'
 import {
   readDataBroadcast as readTheDataBroadcast,
   readDataBroadcastModule as readTheModule,
   type ReadDataBroadcast,
   type ReadDataBroadcastModule,
-} from '@/components/recordings/read-data-broadcast'
+} from '@/lib/read-data-broadcast'
 import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
 import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
 import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
 import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
-import { widestColumn } from '@/components/data-broadcast/data-broadcast-palette'
+import { widestColumn } from '@/lib/data-broadcast-palette'
 import { RecordingRemoteColumn } from '@/components/recordings/recording-remote-column'
 import {
   useSeekEvents,

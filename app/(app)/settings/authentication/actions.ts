@@ -10,7 +10,7 @@ import type {
   RevokeResult,
 } from '@/repository/sessions'
 import { changePassword, revokeSession } from '@/repository/sessions'
-import { AUTHENTICATION_PATH } from '@/components/authentication/wording'
+import { AUTHENTICATION_PATH } from '@/lib/authentication-wording'
 
 export async function revokeOneSession(id: string): Promise<RevokeResult> {
   const result = await revokeSession(id)

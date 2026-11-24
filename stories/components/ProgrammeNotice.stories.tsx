@@ -10,10 +10,7 @@ import type {
   WatchOffer,
   WatchWrite,
 } from '@/lib/notifications'
-import {
-  NOTIFY_START,
-  STOP_NOTIFYING,
-} from '@/components/notifications/wording'
+import { NOTIFY_START, STOP_NOTIFYING } from '@/lib/notifications-wording'
 import { NotifyBell } from '@/components/notifications/notify-bell'
 import { NotifyLeadChip } from '@/components/notifications/notify-lead-chip'
 import { NotifyStartButton } from '@/components/notifications/notify-start-button'

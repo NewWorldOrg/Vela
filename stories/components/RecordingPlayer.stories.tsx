@@ -38,7 +38,7 @@ import {
   SUBTITLED_FRAME,
 } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
-import type { ReadCaptions } from '@/components/recordings/read-captions'
+import type { ReadCaptions } from '@/lib/read-captions'
 import type { CaptionWindow } from '@/lib/recording-caption-timeline'
 import type { CaptionPicture } from '@/lib/live-wire'
 import { containedIn, placedOn } from '@/lib/caption-placement'
@@ -53,27 +53,21 @@ import {
   CAPTION_PICTURE_FIXTURE,
 } from '@/stories/fixtures/captions'
 import { PlayerSeat } from '@/components/recordings/player-seat'
-import {
-  drawCapture,
-  type TakeCapture,
-} from '@/components/recordings/take-capture'
+import { drawCapture, type TakeCapture } from '@/lib/take-capture'
 import { ScreenMain } from '@/components/vela/screen-main'
 import { fillsTheWindowWithoutElementFullscreen } from '@/stories/fills-the-window'
 import type { PlaybackFault } from '@/components/recordings/playback-fault-notice'
-import type {
-  FeedRecording,
-  RecordingFeedEvents,
-} from '@/components/recordings/recording-feed'
+import type { FeedRecording, RecordingFeedEvents } from '@/lib/recording-feed'
 import type {
   OpenRecordingPlaylist,
   RecordingPlaylistEvents,
-} from '@/components/recordings/recording-playlist'
+} from '@/lib/recording-playlist'
 import { withoutAMediaSource } from '@/stories/fixtures/without-a-media-source'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
 import type {
   ReadDataBroadcast,
   ReadDataBroadcastModule,
-} from '@/components/recordings/read-data-broadcast'
+} from '@/lib/read-data-broadcast'
 import {
   DATA_BROADCAST_CATALOG,
   PROGRAMME_READING_CATALOG,

@@ -4,7 +4,7 @@ import { getOidcConfig } from '@/repository/oidc'
 import { getSessions, getSignedIn } from '@/repository/sessions'
 import type { AuthenticationNotice } from '@/components/authentication/authentication-view'
 import { AuthenticationView } from '@/components/authentication/authentication-view'
-import { ENDED_KEY, REVOKED_KEY } from '@/components/authentication/wording'
+import { ENDED_KEY, REVOKED_KEY } from '@/lib/authentication-wording'
 import {
   changeLocalPassword,
   revokeOneSession,

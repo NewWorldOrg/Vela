@@ -2,11 +2,8 @@
 
 import type { BmlKey } from '@/lib/bml/keys'
 import { cn } from '@/lib/utils'
-import { pressable } from '@/components/vela/tactile'
-import {
-  type Pressing,
-  aiming,
-} from '@/components/data-broadcast/data-broadcast-palette'
+import { pressable } from '@/lib/tactile'
+import { type Pressing, aiming } from '@/lib/data-broadcast-palette'
 
 const COLOURS: { key: BmlKey; name: string; fill: string }[] = [
   { key: 'blue', name: '青', fill: 'bg-(--remote-blue)' },

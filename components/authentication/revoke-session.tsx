@@ -17,7 +17,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { InlineAlert } from '@/components/vela/inline-alert'
 import { CloseIcon } from '@/components/vela/icons'
-import { METHOD_LABEL, revokedHref } from '@/components/authentication/wording'
+import { METHOD_LABEL, revokedHref } from '@/lib/authentication-wording'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 export function RevokeSession({

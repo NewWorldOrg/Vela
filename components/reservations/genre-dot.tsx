@@ -1,6 +1,6 @@
 import { cn } from '@/lib/utils'
 import type { Genre } from '@/repository/programs'
-import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
+import { GENRE_MARK_CLASS } from '@/lib/guide-metrics'
 
 export function GenreDot({
   genre,

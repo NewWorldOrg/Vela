@@ -3,7 +3,7 @@ import { cva, type VariantProps } from 'class-variance-authority'
 import { Slot } from 'radix-ui'
 
 import { cn } from '@/lib/utils'
-import { iconTilt, pressable, still, tactile } from '@/components/vela/tactile'
+import { iconTilt, pressable, still, tactile } from '@/lib/tactile'
 
 const buttonVariants = cva(
   cn(

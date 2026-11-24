@@ -25,8 +25,8 @@ import { moduleToHand, type BmlModule } from '@/lib/bml/resources'
 import type { DataBroadcastHeld } from '@/lib/data-broadcast-feed'
 import type { SendToRuntime } from '@/components/data-broadcast/bml-frame'
 import { FrameOnDemand } from '@/components/data-broadcast/frame-on-demand'
-import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
-import { residenceFromCarina } from '@/components/data-broadcast/residence'
+import { fontsForTheRuntime } from '@/lib/bml/fonts'
+import { residenceFromCarina } from '@/lib/data-broadcast-residence'
 import {
   transmitAnswerOf,
   type Relayed,

@@ -17,7 +17,7 @@ import {
   refusalOf,
   STOP_NOTIFYING,
   NOTIFY_START,
-} from '@/components/notifications/wording'
+} from '@/lib/notifications-wording'
 import { AskForm } from '@/components/notifications/ask-form'
 
 export function NotifyStartButton({

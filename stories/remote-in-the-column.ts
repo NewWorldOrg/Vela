@@ -5,7 +5,7 @@ import {
   REMOTE_GROUP_GAP,
   REMOTE_GROUP_GAP_SHORT,
   SHORT_WINDOW,
-} from '@/components/data-broadcast/data-broadcast-palette'
+} from '@/lib/data-broadcast-palette'
 
 export const REMOTE_KEYS = [
   '上',

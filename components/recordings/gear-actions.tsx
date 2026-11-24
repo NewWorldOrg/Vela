@@ -3,10 +3,7 @@
 import type { ReactNode } from 'react'
 
 import { cn } from '@/lib/utils'
-import {
-  PLAYER_BUTTON,
-  PLAYER_BUTTON_ON,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON, PLAYER_BUTTON_ON } from '@/lib/player-palette'
 
 export type GearAction = {
   name: string

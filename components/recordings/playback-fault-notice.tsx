@@ -21,7 +21,7 @@ import {
   PlayIcon,
   WarningIcon,
 } from '@/components/vela/icons'
-import { PLAYER_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON } from '@/lib/player-palette'
 import { PlaybackNotice } from '@/components/recordings/playback-notice'
 import { ExternalPlayerOpener } from '@/components/recordings/external-player-opener'
 

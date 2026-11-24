@@ -17,10 +17,7 @@ import {
 } from '@/repository/programs.fixtures'
 import type { ReservationWrite } from '@/repository/reservations'
 import { ProgramDetailView } from '@/components/guide/program-detail-view'
-import {
-  NOTIFY_START,
-  STOP_NOTIFYING,
-} from '@/components/notifications/wording'
+import { NOTIFY_START, STOP_NOTIFYING } from '@/lib/notifications-wording'
 import { inTheApp } from '@/stories/frames'
 import { NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 import { standsOnAGround } from '@/stories/stands-on-a-ground'

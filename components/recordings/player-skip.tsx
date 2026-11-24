@@ -2,7 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { skipWords } from '@/lib/player-chapters'
 import type { SkippableKind } from '@/repository/videos'
