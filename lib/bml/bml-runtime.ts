@@ -1,3 +1,4 @@
+import type { Rect } from '@/lib/caption-placement'
 import {
   browserOf,
   registersOf,
@@ -101,7 +102,7 @@ import {
   type MngBitmap,
   type MngCanvas,
 } from '@/lib/bml/mng-player'
-import { mountPage, type MountedPage } from '@/lib/bml/page'
+import { mountPage, moveVideo, type MountedPage } from '@/lib/bml/page'
 
 const ACTIVE_MS = 150
 
@@ -153,6 +154,8 @@ interface Shown {
   players: Map<HTMLElement, MngPlayer<MngBitmap>>
   wanted: Map<HTMLElement, string>
   asked: Set<string>
+  videoRect: Rect | null
+  toldRect: Rect | null | undefined
   usedKeys: UsedKeyGroup[]
   nptTold: Set<EventItem>
 }
@@ -690,6 +693,8 @@ export class BmlRuntime {
       players: new Map(),
       wanted: new Map(),
       asked: new Set(),
+      videoRect: page.videoRect,
+      toldRect: undefined,
       usedKeys: page.usedKeys,
       nptTold: new Set(),
     }
@@ -754,16 +759,34 @@ export class BmlRuntime {
     }, 0)
   }
 
-  private tellVideoRect(shown: Shown): void {
-    const rect = shown.page.videoRect
+  private rectToTell(shown: Shown): Rect | null {
+    return shown.videoRect && !shown.document.cannotBeSeen()
+      ? onGrid(shown.videoRect, shown.page.resolution, shown.page.aspect)
+      : null
+  }
 
-    this.say({
-      kind: 'videoRect',
-      rect:
-        rect && !shown.document.cannotBeSeen()
-          ? onGrid(rect, shown.page.resolution, shown.page.aspect)
-          : null,
-    })
+  private tellVideoRect(shown: Shown): void {
+    shown.toldRect = this.rectToTell(shown)
+    this.say({ kind: 'videoRect', rect: shown.toldRect })
+  }
+
+  private followVideo(): void {
+    const shown = this.shown
+    const rect = shown?.document.movedVideoRect(shown.page.resolution)
+
+    if (!shown || rect === undefined || sameRect(rect, shown.videoRect)) {
+      return
+    }
+
+    shown.videoRect = rect
+    moveVideo(shown.page, shown.mounted, rect)
+
+    if (
+      shown.toldRect !== undefined &&
+      !sameRect(shown.toldRect, this.rectToTell(shown))
+    ) {
+      this.tellVideoRect(shown)
+    }
   }
 
   private scriptAt(path: string): string | null {
@@ -972,6 +995,7 @@ export class BmlRuntime {
     if (this.depth === 0) {
       this.settle()
       this.followPictures()
+      this.followVideo()
     }
 
     return (
@@ -1740,6 +1764,18 @@ export class BmlRuntime {
 }
 
 const MOST_REASON = 200
+
+function sameRect(one: Rect | null, other: Rect | null): boolean {
+  return (
+    one === other ||
+    (one !== null &&
+      other !== null &&
+      one.left === other.left &&
+      one.top === other.top &&
+      one.width === other.width &&
+      one.height === other.height)
+  )
+}
 
 function registerText(value: unknown): string {
   const text =

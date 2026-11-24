@@ -223,6 +223,261 @@ test('a JPEG drawn over the whole page has the video’s rectangle cut out of it
   assert.deepEqual(mark?.style.properties, {})
 })
 
+function named(
+  element: FakeElement | null | undefined,
+  prefix: string,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(element?.style.properties ?? {}).filter(([name]) =>
+      name.startsWith(prefix),
+    ),
+  )
+}
+
+function holeOf(plane: FakeElement): Record<string, string> | null {
+  const body = plane.find('data-bml-tag', 'body')
+
+  return body?.hasAttribute('data-bml-hole') ? named(body, '--bml-hole-') : null
+}
+
+function videoRectsOf(heard: RuntimeMessage[]): unknown[] {
+  return heard.flatMap((message) =>
+    message.kind === 'videoRect' ? [message.rect] : [],
+  )
+}
+
+const MOVES_ITS_VIDEO = bml(
+  '<object id="video" type="video/X-arib-mpeg2" style="left: 480px; top: 0px; width: 480px; height: 270px"/>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+  '<script>' +
+    'var video = document.getElementById("video").normalStyle;' +
+    'var body = document.getElementById("body");' +
+    'function pressed(code) {' +
+    '  if (code == 21) { video.width = "240px"; video.height = "135px"; video.left = "666px"; video.top = "30px"; }' +
+    '  if (code == 22) { video.left = "0px"; video.left = "100px"; video.left = "666px"; }' +
+    '  if (code == 23) { video.visibility = "hidden"; }' +
+    '  if (code == 24) { video.visibility = "visible"; }' +
+    '  if (code == 6) { video.display = "none"; }' +
+    '  if (code == 7) { video.display = "block"; }' +
+    '  if (code == 8) { video.left = "800px"; video.top = "-35px"; }' +
+    '  if (code == 9) { document.getElementById("keys").normalStyle.left = "10px"; }' +
+    '  if (code == 10) { body.invisible = true; video.left = "0px"; }' +
+    '  if (code == 11) { body.invisible = false; }' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body id="body">')
+
+test('a script that moves and resizes the video has the player told once where it now lies, and the ground is cut there', () => {
+  const { heard, send, forget, plane } = opened(MOVES_ITS_VIDEO)
+
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '0px',
+    '--bml-hole-right': '0px',
+    '--bml-hole-bottom': '270px',
+    '--bml-hole-left': '480px',
+  })
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'videoRect',
+      rect: { left: 666, top: 30, width: 240, height: 135 },
+    },
+  ])
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '30px',
+    '--bml-hole-right': '54px',
+    '--bml-hole-bottom': '375px',
+    '--bml-hole-left': '666px',
+  })
+})
+
+test('a script that leaves the video where it lay, by writing what it already held, by coming back to it within one run or by moving something else, has the player told nothing', () => {
+  const { heard, send, forget } = opened(MOVES_ITS_VIDEO)
+
+  send({ kind: 'key', key: 'blue' })
+  forget()
+  send({ kind: 'key', key: 'blue' })
+  send({ kind: 'key', key: 'red' })
+  send({ kind: 'key', key: '4' })
+
+  assert.deepEqual(heard(), [])
+})
+
+test('a video a script moves past the plane’s edge is cut to the plane', () => {
+  const { heard, send, forget, plane } = opened(MOVES_ITS_VIDEO)
+
+  forget()
+  send({ kind: 'key', key: '3' })
+
+  assert.deepEqual(videoRectsOf(heard()), [
+    { left: 800, top: 0, width: 160, height: 235 },
+  ])
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '0px',
+    '--bml-hole-right': '0px',
+    '--bml-hole-bottom': '305px',
+    '--bml-hole-left': '800px',
+  })
+})
+
+test('a video a script hides, or takes out of the layout, is told to the player as no rectangle and the ground is whole, as with a body that cannot be seen, until the script shows it again', () => {
+  for (const [hide, show] of [
+    ['green', 'yellow'],
+    ['1', '2'],
+  ] as const) {
+    const { heard, send, forget, plane } = opened(MOVES_ITS_VIDEO)
+
+    forget()
+    send({ kind: 'key', key: hide })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }], hide)
+    assert.equal(holeOf(plane), null, hide)
+
+    forget()
+    send({ kind: 'key', key: show })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: START_RECT }], show)
+    assert.deepEqual(
+      holeOf(plane),
+      {
+        '--bml-hole-top': '0px',
+        '--bml-hole-right': '0px',
+        '--bml-hole-bottom': '270px',
+        '--bml-hole-left': '480px',
+      },
+      show,
+    )
+  }
+})
+
+test('a video moved while the body cannot be seen is told to the player where it lies once the body shows', () => {
+  const { heard, send, forget } = opened(MOVES_ITS_VIDEO)
+
+  forget()
+  send({ kind: 'key', key: '5' })
+
+  assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }])
+
+  forget()
+  send({ kind: 'key', key: '6' })
+
+  assert.deepEqual(heard(), [
+    { kind: 'videoRect', rect: { left: 0, top: 0, width: 480, height: 270 } },
+  ])
+})
+
+const PLACES_ITS_VIDEO_AT_ONCE = bml(
+  '<object id="video" type="video/X-arib-mpeg2" style="left: 480px; top: 0px; width: 480px; height: 270px"/>',
+  '<script>' +
+    'var video = document.getElementById("video").normalStyle;' +
+    'video.left = "0px"; video.width = "320px"; video.height = "180px";' +
+    '</script>',
+)
+
+test('a video the document’s first script moves is told to the player once, where the script left it', () => {
+  const { heard, plane } = opened(PLACES_ITS_VIDEO_AT_ONCE)
+
+  assert.deepEqual(videoRectsOf(heard()), [NEXT_RECT])
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '0px',
+    '--bml-hole-right': '640px',
+    '--bml-hole-bottom': '360px',
+    '--bml-hole-left': '0px',
+  })
+})
+
+const VIDEO_IN_A_BOX = bml(
+  '<div id="box" style="left: 100px; top: 50px; width: 800px; height: 400px">' +
+    '<object type="video/X-arib-mpeg2" style="left: 20px; top: 10px; width: 480px; height: 270px"/>' +
+    '</div>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="document.getElementById(&quot;box&quot;).normalStyle.left = &quot;200px&quot;">keys</p>',
+)
+
+test('a video inside a box a script moves is told to the player where the box has carried it', () => {
+  const { heard, send, forget } = opened(VIDEO_IN_A_BOX)
+
+  assert.deepEqual(videoRectsOf(heard()), [
+    { left: 120, top: 60, width: 480, height: 270 },
+  ])
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'videoRect',
+      rect: { left: 220, top: 60, width: 480, height: 270 },
+    },
+  ])
+})
+
+const MOVES_ITS_VIDEO_OVER_STILLS = bml(
+  '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>' +
+    '<div style="left: 100px; top: 50px; width: 400px; height: 300px">' +
+    '<object id="inset" type="image/jpeg" data="ground.jpg" style="left: 10px; top: 10px; width: 200px; height: 100px"/>' +
+    '</div>' +
+    '<object id="video" type="video/X-arib-mpeg2" style="left: 24px; top: 14px; width: 720px; height: 405px"/>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+  '<script>' +
+    'var video = document.getElementById("video").normalStyle;' +
+    'function pressed(code) {' +
+    '  if (code == 21) { video.left = "600px"; video.top = "20px"; video.width = "320px"; video.height = "180px"; }' +
+    '  if (code == 23) { video.visibility = "hidden"; }' +
+    '  if (code == 24) { video.visibility = "visible"; }' +
+    '}' +
+    '</script>',
+)
+
+test('the JPEGs behind a video a script moves are cut where it now lies, each in its own place, and are whole while it is hidden', () => {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, {
+      'startup.bml': ['bml', MOVES_ITS_VIDEO_OVER_STILLS],
+      'ground.jpg': ['jpeg', 'jpeg'],
+    }),
+  })
+  opening.send({ kind: 'open' })
+  opening.send({ kind: 'key', key: 'blue' })
+
+  const moved = {
+    ground: {
+      '--bml-cut-left': '600px',
+      '--bml-cut-top': '20px',
+      '--bml-cut-width': '320px',
+      '--bml-cut-height': '180px',
+    },
+    inset: {
+      '--bml-cut-left': '490px',
+      '--bml-cut-top': '-40px',
+      '--bml-cut-width': '320px',
+      '--bml-cut-height': '180px',
+    },
+  }
+
+  for (const id of ['ground', 'inset'] as const) {
+    assert.deepEqual(named(opening.element(id), '--bml-cut-'), moved[id], id)
+  }
+
+  opening.send({ kind: 'key', key: 'green' })
+
+  for (const id of ['ground', 'inset'] as const) {
+    assert.equal(opening.element(id)?.getAttribute('data-bml-still'), null, id)
+  }
+
+  opening.send({ kind: 'key', key: 'yellow' })
+
+  for (const id of ['ground', 'inset'] as const) {
+    assert.equal(opening.element(id)?.getAttribute('data-bml-still'), '', id)
+    assert.deepEqual(named(opening.element(id), '--bml-cut-'), moved[id], id)
+  }
+})
+
 test('opening at the start document of another component draws that one', () => {
   const opening = frame()
 

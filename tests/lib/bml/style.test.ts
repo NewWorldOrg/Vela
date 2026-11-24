@@ -17,6 +17,7 @@ import {
   stillCut,
   styleSheetOf,
   videoHole,
+  withinPlane,
   type StyledElement,
 } from '@/lib/bml/style'
 
@@ -398,6 +399,27 @@ test('a rectangle of the document is given on the 960x540 grid of the box', () =
       '4v3',
     ),
     { left: 120, top: 0, width: 720, height: 540 },
+  )
+})
+
+test('a rectangle reaching past the plane is cut to it, and one that lies outside it or has no area is none', () => {
+  const plane = { width: 960, height: 540 }
+
+  assert.deepEqual(
+    withinPlane({ left: 800, top: -35, width: 480, height: 270 }, plane),
+    { left: 800, top: 0, width: 160, height: 235 },
+  )
+  assert.deepEqual(
+    withinPlane({ left: 10, top: 20, width: 30, height: 40 }, plane),
+    { left: 10, top: 20, width: 30, height: 40 },
+  )
+  assert.equal(
+    withinPlane({ left: 960, top: 0, width: 480, height: 270 }, plane),
+    null,
+  )
+  assert.equal(
+    withinPlane({ left: 0, top: 0, width: 0, height: 270 }, plane),
+    null,
   )
 })
 

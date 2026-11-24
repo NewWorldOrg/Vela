@@ -1,3 +1,4 @@
+import type { Rect, Size } from '@/lib/caption-placement'
 import type { PageElement, PageEvent } from '@/lib/bml/document'
 import { eventItemsOf, type EventItem } from '@/lib/bml/events'
 import type { Palette } from '@/lib/bml/palette'
@@ -5,6 +6,8 @@ import {
   BML_PROPERTIES,
   cssPairsOf,
   featuresOf,
+  pixelsOf,
+  withinPlane,
   type UsedKeyGroup,
 } from '@/lib/bml/style'
 
@@ -55,6 +58,15 @@ const STATE_MARK: Record<Exclude<StyleState, 'normal'>, string> = {
   active: 'data-bml-active',
 }
 
+const PLACES_THE_VIDEO = new Set([
+  'left',
+  'top',
+  'width',
+  'height',
+  'visibility',
+  'display',
+])
+
 const INERT_ATTRIBUTES = new Set(['id', 'style', 'src', 'data', 'href'])
 
 function kebab(name: string): string {
@@ -88,6 +100,10 @@ class Inner {
 
   readonly references = new Map<HTMLElement, string>()
 
+  readonly videos: HTMLElement[]
+
+  videoMoved = false
+
   focused: HTMLElement | null = null
 
   event: BmlEvent | null = null
@@ -102,6 +118,9 @@ class Inner {
     this.palette = palette
     this.hooks = hooks
     this.items = eventItemsOf(events)
+    this.videos = [...stage.nodes.keys()].filter(
+      (element) => element.getAttribute('data-bml-video') !== null,
+    )
   }
 
   wrap(node: Node | null | undefined): BmlElement | BmlText | null {
@@ -170,6 +189,14 @@ class Inner {
     set.set(`${state}:${property}`, value)
     this.set.set(element, set)
 
+    if (
+      state === 'normal' &&
+      PLACES_THE_VIDEO.has(property) &&
+      this.videos.some((video) => this.upFrom(video).includes(element))
+    ) {
+      this.videoMoved = true
+    }
+
     if (BML_PROPERTIES.has(property)) {
       this.feature(element, property, value)
 
@@ -193,6 +220,59 @@ class Inner {
     }
 
     this.rule(element, state, converted.pairs)
+  }
+
+  private upFrom(element: HTMLElement): HTMLElement[] {
+    const chain: HTMLElement[] = []
+    let at: Node | null = element
+
+    while (isElement(at) && at !== this.stage.body) {
+      chain.push(at)
+      at = at.parentNode
+    }
+
+    return chain
+  }
+
+  private pixels(element: HTMLElement, property: string): number | null {
+    return pixelsOf(this.styleOf(element, 'normal', property))
+  }
+
+  private rectOf(video: HTMLElement, resolution: Size): Rect | null {
+    const width = this.pixels(video, 'width')
+    const height = this.pixels(video, 'height')
+
+    if (
+      width === null ||
+      height === null ||
+      this.styleOf(video, 'normal', 'visibility') === 'hidden' ||
+      this.styleOf(video, 'normal', 'display') === 'none'
+    ) {
+      return null
+    }
+
+    const placed = (property: string) =>
+      this.upFrom(video).reduce(
+        (sum, element) => sum + (this.pixels(element, property) ?? 0),
+        0,
+      )
+
+    return withinPlane(
+      { left: placed('left'), top: placed('top'), width, height },
+      resolution,
+    )
+  }
+
+  videoRect(resolution: Size): Rect | null {
+    for (const video of this.videos) {
+      const rect = this.rectOf(video, resolution)
+
+      if (rect) {
+        return rect
+      }
+    }
+
+    return null
   }
 
   private rule(
@@ -706,6 +786,16 @@ export class BmlDocument {
       body.getAttribute('data-bml-attr-invisible') !== null ||
       this.inner.styleOf(body, 'normal', 'visibility') === 'hidden'
     )
+  }
+
+  movedVideoRect(resolution: Size): Rect | null | undefined {
+    if (!this.inner.videoMoved) {
+      return undefined
+    }
+
+    this.inner.videoMoved = false
+
+    return this.inner.videoRect(resolution)
   }
 
   pictureCame(element: HTMLElement): void {
