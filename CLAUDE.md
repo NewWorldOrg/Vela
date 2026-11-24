@@ -34,8 +34,9 @@ app/_components/            Parts used only under app/, too specific for compone
 components/ui/*             shadcn primitives, dressed in Vela's look
 components/vela/*           Vela's own components and hand-drawn SVG icons
 components/theme/*          light / dark / system
-components/{domain}/        A domain: its screens and the parts they are made of.
-                            A screen is {name}-page.tsx exporting {Name}View; data
+components/{domain}/        A domain: its screens and the parts they are made of,
+                            in .tsx files and nothing else.
+                            A screen is {name}-view.tsx exporting {Name}View; data
                             arrives as props from the RSC in app/, and the Client
                             boundary is pushed out to the leaves that need it
 repository/                 Data access, and the only type boundary
@@ -50,8 +51,11 @@ scripts/                    codegen-verify (the client matches the document),
                             the one script its sandboxed frame is given, and the
                             receiver a Hybridcast application's documents are
                             served under public/)
-lib/                        Pure functions, no React: display formatting, path
-                            matching, cn, and the small per-domain derivations
+lib/                        Code without React: functions, constants and classes.
+                            Display formatting, path matching, cn, the per-domain
+                            derivations, the wording and class strings parts
+                            share, and the players and data broadcast
+                            (lib/bml/, lib/hybridcast/) behind the screens
 hooks/                      React hooks shared across screens
 stories/{foundations,components,screens,theme}/
 tests/                      Every test. tests/lib/ and tests/repository/ mirror the
@@ -129,7 +133,7 @@ and colour that comes from the pictures. What that means in the code:
   hand (`--accent-soft` and `--acc-text`) or states a quiet fact (`--surface-2`)
 - **A press steps its ground up under the pointer and gives to 98% when
   pressed.** Nothing lifts, tilts or bounces. Motion is 140ms on
-  `cubic-bezier(.2,.7,.2,1)`. The shared feel lives in `components/vela/tactile.ts`
+  `cubic-bezier(.2,.7,.2,1)`. The shared feel lives in `lib/tactile.ts`
 - **The genres are tints of the ground**, three per genre (`--g-*-light`,
   `--g-*-deep`, `--g-*-dot`), used by the guide only
 - **Small words are `--ink` or `--ink-2`.** `--ink-3` is for large words,
@@ -166,6 +170,10 @@ and colour that comes from the pictures. What that means in the code:
   keeps shadcn's own layout, and `components/vela/icons.tsx` stays one file
 - A component used only inside its file may stay there while it is 60 lines or
   shorter. Past that it moves into a file of its own beside the one that uses it
+- `components/` holds `.tsx` files only. Code without React goes to `lib/`, a
+  hook to `hooks/`. `tests/storybook/a-file-sits-with-its-kind.test.ts` holds this
+- A constant that nothing else reuses stays in the file that uses it, not in a
+  file of its own
 - Code carries no comments: not `//`, not `/* */`, not JSDoc, not `{/* */}` in
   JSX, and not in CSS. What a reader needs comes from the names and the shape of
   the code. Only a directive a tool reads stays: `eslint-disable` and its
