@@ -21,6 +21,7 @@ export interface DocumentHooks {
   seenChanged(): void
   usedKeys(groups: UsedKeyGroup[]): void
   image(reference: string): string | null
+  sentFor(element: HTMLElement, reference: string): boolean
   animate(element: HTMLElement, reference: string): void
   resolve(reference: string): string | null
   warn(message: string): void
@@ -282,6 +283,10 @@ class Inner {
     if (element.getAttribute('data-bml-tag') === null) {
       this.hooks.warn(`missing image: ${reference}`)
 
+      return
+    }
+
+    if (this.hooks.sentFor(element, reference)) {
       return
     }
 
@@ -701,6 +706,14 @@ export class BmlDocument {
       body.getAttribute('data-bml-attr-invisible') !== null ||
       this.inner.styleOf(body, 'normal', 'visibility') === 'hidden'
     )
+  }
+
+  pictureCame(element: HTMLElement): void {
+    const reference = this.inner.references.get(element)
+
+    if (reference !== undefined) {
+      this.inner.picture(element, reference)
+    }
   }
 
   elementTarget(element: HTMLElement | null): BmlElement | null {

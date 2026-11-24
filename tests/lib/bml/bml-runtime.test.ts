@@ -4,6 +4,7 @@ import { mock, test } from 'node:test'
 import { BmlRuntime, type RuntimeOptions } from '@/lib/bml/bml-runtime'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { ReceiverId } from '@/lib/bml/line'
+import { MOST_FETCHES_FOR_A_PAGE } from '@/lib/bml/line-requests'
 import {
   MOST_REGISTER,
   RUNTIME_ORIGIN,
@@ -2430,6 +2431,200 @@ test('with the setting off a document over the line is not fetched', () => {
 
   assert.deepEqual(heard(), [{ kind: 'line', said: 'off' }])
   assert.ok(element('go'))
+})
+
+const MAP = 'http://example.test/maps/map.jpg'
+
+const DRAWS_A_MAP = bml(
+  '<object id="map" type="image/jpeg"/>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+  '<script>' +
+    'var map = document.getElementById("map");' +
+    'var MAP = "http://example.test/maps/map.jpg";' +
+    'function counted(register) { browser.Ureg[register] = String(Number(browser.Ureg[register] || "0") + 1); return browser.Ureg[register]; }' +
+    'function pressed(code) {' +
+    '  if (code == 21) { map.data = MAP + "?at=1"; map.data = MAP + "?at=1"; }' +
+    '  if (code == 22) { map.data = MAP + "?at=2"; }' +
+    '  if (code == 23) { map.data = MAP + "?try=" + counted(1); browser.transmitTextDataOverIP("http://example.test/time", "", "EUC-JP"); }' +
+    '  if (code == 24) { map.data = "ftp://example.test/maps/map.jpg"; map.data = "http://example.test/" + new Array(2100).join("m") + ".jpg"; }' +
+    '  if (code == 6) { map.data = MAP + "?n=" + counted(2); }' +
+    '}' +
+    '</script>',
+)
+
+const MAP_FETCHED = fetchedModule({ 'map.jpg': ['jpeg', JPEG] })
+
+function fetchesOf(heard: RuntimeMessage[]): string[] {
+  return heard.flatMap((message) =>
+    message.kind === 'fetch' ? [`${message.id} ${message.uri}`] : [],
+  )
+}
+
+test('a picture over the line a script gives an image is fetched once however often it is given, and goes in when it comes without a warning', () => {
+  const { heard, send, forget, element, warnings } = overTheLine(
+    DRAWS_A_MAP,
+    'on',
+  )
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [{ kind: 'fetch', id: 1, uri: `${MAP}?at=1` }])
+  assert.equal(element('map')?.getAttribute('src'), null)
+
+  forget()
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  const first = element('map')?.getAttribute('src') ?? ''
+
+  assert.match(first, /^blob:/)
+  assert.deepEqual(heard(), [])
+
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [])
+  assert.match(element('map')?.getAttribute('src') ?? '', /^blob:/)
+  assert.deepEqual(warnings, [])
+})
+
+test('a picture over the line that comes after the script gave the image another does not go in, and the other does when it comes', () => {
+  const { heard, send, forget, element } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(fetchesOf(heard()), [`1 ${MAP}?at=1`, `2 ${MAP}?at=2`])
+
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  assert.equal(element('map')?.getAttribute('src'), null)
+
+  send({ kind: 'fetched', id: 2, module: MAP_FETCHED })
+
+  assert.match(element('map')?.getAttribute('src') ?? '', /^blob:/)
+})
+
+test('a handler run again after each answer it waited on names its picture anew each time, and only the last it named is fetched', () => {
+  const { heard, send, forget, element } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'green' })
+
+  assert.deepEqual(
+    heard().map((message) => message.kind),
+    ['transmit'],
+  )
+
+  forget()
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+
+  assert.deepEqual(heard(), [{ kind: 'fetch', id: 2, uri: `${MAP}?try=2` }])
+
+  send({ kind: 'fetched', id: 2, module: MAP_FETCHED })
+
+  assert.match(element('map')?.getAttribute('src') ?? '', /^blob:/)
+})
+
+test('a picture over the line that could not be fetched is a missing image, as one the document names from the start is, and is not asked for again', () => {
+  const { heard, send, forget, element, warnings } = overTheLine(
+    DRAWS_A_MAP,
+    'on',
+  )
+
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(warnings, [])
+
+  forget()
+  send({ kind: 'fetched', id: 1, module: null })
+
+  assert.equal(element('map')?.getAttribute('src'), null)
+  assert.deepEqual(warnings, [`data broadcast: missing image: ${MAP}?at=2`])
+
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(heard(), [])
+  assert.equal(warnings.length, 2)
+})
+
+test('a reference a script gives an image that is not one over the line, or is too long for one, is a missing image and nothing is asked', () => {
+  const { heard, send, forget, warnings } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'yellow' })
+
+  assert.deepEqual(heard(), [])
+  assert.equal(warnings.length, 2)
+  assert.match(warnings[0], /^data broadcast: missing image: ftp:/)
+  assert.match(warnings[1], /^data broadcast: missing image: http:/)
+})
+
+const NAMES_A_MAP = bml(
+  `<object id="map" type="image/jpeg" data="${MAP}?at=2"/>`,
+)
+
+test('with the setting off, and where there is no line, a picture a script gives an image is asked of the player as one the document names from the start is, and the player’s refusal leaves it missing', () => {
+  for (const line of ['off', 'none'] as const) {
+    const named = overTheLine(NAMES_A_MAP, line)
+    const given = overTheLine(DRAWS_A_MAP, line)
+
+    given.forget()
+    given.send({ kind: 'key', key: 'red' })
+
+    assert.deepEqual(fetchesOf(named.heard()), [`1 ${MAP}?at=2`], line)
+    assert.deepEqual(fetchesOf(given.heard()), [`1 ${MAP}?at=2`], line)
+
+    given.send({ kind: 'fetched', id: 1, module: null })
+
+    assert.equal(given.element('map')?.getAttribute('src'), null, line)
+    assert.deepEqual(
+      given.warnings,
+      [`data broadcast: missing image: ${MAP}?at=2`],
+      line,
+    )
+  }
+})
+
+test('no more pictures a script gives are being fetched at once than a page may fetch, and the last given is asked for as one of them comes', () => {
+  const { heard, send, forget } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+
+  for (let press = 0; press < MOST_FETCHES_FOR_A_PAGE + 6; press += 1) {
+    send({ kind: 'key', key: '1' })
+  }
+
+  assert.equal(fetchesOf(heard()).length, MOST_FETCHES_FOR_A_PAGE)
+
+  forget()
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  assert.deepEqual(fetchesOf(heard()), [
+    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?n=${MOST_FETCHES_FOR_A_PAGE + 6}`,
+  ])
+})
+
+test('a picture that comes for a page already left goes nowhere', () => {
+  const { send, element, warnings } = overTheLine(
+    DRAWS_A_MAP.replace(
+      'function pressed(code) {',
+      'function pressed(code) { if (code == 18) { browser.launchDocument("~/0001/next.bml", "cut"); }',
+    ),
+    'on',
+  )
+
+  send({
+    kind: 'module',
+    module: module(1, { 'next.bml': ['bml', NEXT] }),
+  })
+  send({ kind: 'key', key: 'red' })
+  send({ kind: 'key', key: 'enter' })
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  assert.equal(element('map'), null)
+  assert.deepEqual(warnings, [])
 })
 
 test('the bundled face is loaded with its line box as tall as its em square', (t) => {

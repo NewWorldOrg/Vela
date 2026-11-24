@@ -91,6 +91,7 @@ import { tableClassesOf } from '@/lib/bml/tables'
 import { frameEvaluator } from '@/lib/bml/evaluator'
 import {
   LineRequests,
+  MOST_FETCHES_FOR_A_PAGE,
   type Awaited,
   type LineAnswer,
 } from '@/lib/bml/line-requests'
@@ -150,6 +151,8 @@ interface Shown {
   focused: HTMLElement | null
   urls: string[]
   players: Map<HTMLElement, MngPlayer<MngBitmap>>
+  wanted: Map<HTMLElement, string>
+  asked: Set<string>
   usedKeys: UsedKeyGroup[]
   nptTold: Set<EventItem>
 }
@@ -685,6 +688,8 @@ export class BmlRuntime {
       focused: null,
       urls,
       players: new Map(),
+      wanted: new Map(),
+      asked: new Set(),
       usedKeys: page.usedKeys,
       nptTold: new Set(),
     }
@@ -820,6 +825,7 @@ export class BmlRuntime {
           ? this.urlOf(resource, shown.page.palette, shown.urls)
           : null
       },
+      sentFor: (element, reference) => this.sendFor(element, reference),
       animate: (element, reference) => this.animateFrom(element, reference),
       resolve: (reference) => {
         const base = this.shown?.page.address
@@ -965,6 +971,7 @@ export class BmlRuntime {
 
     if (this.depth === 0) {
       this.settle()
+      this.followPictures()
     }
 
     return (
@@ -1003,14 +1010,58 @@ export class BmlRuntime {
 
   private took(id: number, module: BmlModule | null): void {
     const pending = this.pending
+    const allIn = this.requests.took(id, module)
 
-    if (!this.requests.took(id, module) || pending?.url === undefined) {
+    this.followPictures()
+
+    if (!allIn || pending?.url === undefined) {
       return
     }
 
     this.launch(pending, false)
     this.presses = 0
     this.nudge()
+  }
+
+  private sendFor(element: HTMLElement, reference: string): boolean {
+    const shown = this.shown
+    const base = shown?.page.address
+    const url = base ? resolveReference(reference, base)?.url : undefined
+
+    shown?.wanted.delete(element)
+
+    if (!shown || url === undefined || this.requests.has(url)) {
+      return false
+    }
+
+    shown.wanted.set(element, url)
+
+    return true
+  }
+
+  private followPictures(): void {
+    const shown = this.shown
+
+    if (!shown) {
+      return
+    }
+
+    const settled = !this.requests.awaiting
+
+    shown.asked.forEach((url) => {
+      if (this.requests.has(url)) {
+        shown.asked.delete(url)
+      }
+    })
+    shown.wanted.forEach((url, element) => {
+      if (this.requests.has(url)) {
+        shown.wanted.delete(element)
+        shown.document.pictureCame(element)
+      } else if (settled && shown.asked.size < MOST_FETCHES_FOR_A_PAGE) {
+        shown.asked.add(url)
+      }
+    })
+    this.requests.fetch(shown.asked)
   }
 
   private settle(): void {

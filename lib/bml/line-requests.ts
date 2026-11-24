@@ -253,6 +253,10 @@ export class LineRequests<Seen> {
     return this.fetching.size > 0
   }
 
+  get awaiting(): boolean {
+    return this.awaited.size > 0
+  }
+
   drop(): void {
     this.awaited.clear()
     this.fetching.clear()
