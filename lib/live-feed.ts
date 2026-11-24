@@ -1,4 +1,4 @@
-import { LivePictures } from '@/lib/live-fragment'
+import { LivePictures } from '@/lib/live-pictures'
 import { codecsOf, mimeOf } from '@/lib/live-wire'
 import { MediaFeed, type FeedFault } from '@/lib/media-feed'
 

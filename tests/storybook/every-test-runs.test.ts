@@ -123,6 +123,7 @@ const THE_SUITE = [
   'tests/lib/live-fragment.test.ts',
   'tests/lib/live-latency.test.ts',
   'tests/lib/live-lineup.test.ts',
+  'tests/lib/live-pictures.test.ts',
   'tests/lib/live-playlist.test.ts',
   'tests/lib/live-profiles.test.ts',
   'tests/lib/live-seat.test.ts',
