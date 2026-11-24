@@ -39,7 +39,7 @@ import type {
   AppHeard,
   SendToApp,
 } from '@/components/data-broadcast/hybridcast-frame'
-import type { RomSounds } from '@/components/data-broadcast/rom-sound'
+import type { RomSounds } from '@/lib/rom-sounder'
 
 interface Kept {
   of: string | null

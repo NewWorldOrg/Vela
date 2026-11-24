@@ -2,11 +2,7 @@
 
 import type { BmlKey } from '@/lib/bml/keys'
 import { cn } from '@/lib/utils'
-import {
-  type Pressing,
-  aiming,
-  KEY_LOOK,
-} from '@/components/data-broadcast/data-broadcast-palette'
+import { type Pressing, aiming, KEY_LOOK } from '@/lib/data-broadcast-palette'
 
 const DIGITS: BmlKey[] = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0']
 

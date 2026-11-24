@@ -8,7 +8,7 @@ import type { LiveWatching } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress-bar'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ChevronDownIcon, ChevronUpIcon } from '@/components/vela/icons'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { ProgramDescription } from '@/components/guide/program-description'
 import { ProgramExtended } from '@/components/guide/program-extended'
 

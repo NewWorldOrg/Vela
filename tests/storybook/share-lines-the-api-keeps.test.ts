@@ -5,7 +5,7 @@ import path from 'node:path'
 import { test } from 'node:test'
 import ts from 'typescript'
 
-const WALKED = ['components', 'lib', 'repository']
+const WALKED = ['components', 'hooks', 'lib', 'repository']
 
 const GENERATED = 'repository/client'
 

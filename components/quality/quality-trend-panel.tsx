@@ -5,7 +5,7 @@ import { EmptyState } from '@/components/vela/empty-state'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { Surface } from '@/components/vela/surface'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { chosenOf, segmentsOf } from '@/components/quality/window-segments'
+import { chosenOf, segmentsOf } from '@/lib/quality-window-segments'
 import { FIGURES, HEADING, Row } from '@/components/quality/row'
 
 const SUBJECT = '対象'

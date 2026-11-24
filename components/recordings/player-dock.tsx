@@ -3,7 +3,7 @@
 import { createContext, type ReactNode, type Ref } from 'react'
 
 import { cn } from '@/lib/utils'
-import { PLAYER_COLUMN } from '@/components/recordings/player-palette'
+import { PLAYER_COLUMN } from '@/lib/player-palette'
 
 export type DockSide = 'under' | 'right'
 

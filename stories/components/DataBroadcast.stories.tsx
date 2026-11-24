@@ -26,9 +26,9 @@ import {
   BmlFrame,
   type SendToRuntime,
 } from '@/components/data-broadcast/bml-frame'
-import { fontsForTheRuntime } from '@/components/data-broadcast/bml-fonts'
+import { fontsForTheRuntime } from '@/lib/bml/fonts'
 import { FrameOnDemand } from '@/components/data-broadcast/frame-on-demand'
-import { RUNTIME_SCRIPT } from '@/components/data-broadcast/runtime-script.generated'
+import { RUNTIME_SCRIPT } from '@/lib/bml/runtime-script.generated'
 import {
   BAND_MAX_SCALE,
   BAND_MOCK_WIDTH,
@@ -36,14 +36,11 @@ import {
   REMOTE_GROUP_GAP,
   REMOTE_UNDER_THE_DISC,
   columnOverTheBand,
-} from '@/components/data-broadcast/data-broadcast-palette'
+} from '@/lib/data-broadcast-palette'
 import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-band'
 import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
 import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
-import {
-  PLAYER_BOARD,
-  PLAYER_FACE,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BOARD, PLAYER_FACE } from '@/lib/player-palette'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import { PersistentMemory, readArray } from '@/lib/bml/memory'
 import type { Residence } from '@/lib/bml/receiver-info'

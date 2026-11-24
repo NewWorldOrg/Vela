@@ -6,11 +6,7 @@ import { fallsWithin, type MinuteRange, unscheduledSpansOf } from '@/lib/guide'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
-import {
-  HOUR_REM,
-  cellTimeOf,
-  remOfMinutes,
-} from '@/components/guide/guide-metrics'
+import { HOUR_REM, cellTimeOf, remOfMinutes } from '@/lib/guide-metrics'
 import { ProgramCell } from '@/components/guide/program-cell'
 import { ReservePlus } from '@/components/guide/reserve-plus'
 import type { GridReserving } from '@/components/guide/guide-grid'

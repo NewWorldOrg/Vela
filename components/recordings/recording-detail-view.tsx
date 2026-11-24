@@ -46,7 +46,7 @@ import {
   PLAYER_BUTTON,
   PLAYER_COLUMN,
   PLAYER_GLYPH_BUTTON,
-} from '@/components/recordings/player-palette'
+} from '@/lib/player-palette'
 import { PlayerSeat } from '@/components/recordings/player-seat'
 import type { Player } from '@/components/recordings/player'
 import { DetailStat } from '@/components/recordings/detail-stat'
@@ -61,7 +61,7 @@ import {
   type NoteSeek,
   type NoteSkip,
 } from '@/components/recordings/skip-events-seat'
-import type { SendSeekWhileLeaving } from '@/components/recordings/send-seek-while-leaving'
+import type { SendSeekWhileLeaving } from '@/lib/send-seek-while-leaving'
 import { ScreenMain } from '@/components/vela/screen-main'
 import { SeriesEpisodes } from '@/components/recordings/series-episodes'
 import type { CaptionStyle } from '@/lib/caption-style'

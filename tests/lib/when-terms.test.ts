@@ -8,7 +8,7 @@ import { WHEN_LABELS, WHEN_MARKS } from '@/lib/when-terms'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
-const READS = ['app', 'components', 'lib', 'repository']
+const READS = ['app', 'components', 'hooks', 'lib', 'repository']
 
 const RETIRED = ['記録日時', '最終利用', '最終確認', '最終サービス取得', '破棄']
 

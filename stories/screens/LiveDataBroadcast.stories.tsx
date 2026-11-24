@@ -43,8 +43,8 @@ import {
   BAND_MOCK_WIDTH,
   BAND_UNDER_THE_BOX,
   DATA_BROADCAST_NAME,
-} from '@/components/data-broadcast/data-broadcast-palette'
-import type { LiveSocket, OpenSocket } from '@/components/live/live-session'
+} from '@/lib/data-broadcast-palette'
+import type { LiveSocket, OpenSocket } from '@/lib/live-session'
 import { LiveView } from '@/components/live/live-view'
 import { afterTheArrival } from '@/stories/after-the-arrival'
 import { slidOutWhole } from '@/stories/slid-out-whole'

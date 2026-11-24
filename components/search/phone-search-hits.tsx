@@ -6,12 +6,12 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
+import { GENRE_MARK_CLASS } from '@/lib/guide-metrics'
 import type { SearchHit } from '@/repository/search'
 import type { ReservationWrite } from '@/repository/reservations'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { ReserveCircle } from '@/components/guide/reserve-circle'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { hitsByDay, marked } from '@/components/search/hit-parts'
 
 export function PhoneSearchHits({

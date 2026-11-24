@@ -4,10 +4,7 @@ import { useRef, useState, type KeyboardEvent, type PointerEvent } from 'react'
 
 import { formatPlayhead, formatPlayerTime } from '@/lib/format'
 import { chapterBoundaries, isSkippableKind } from '@/lib/player-chapters'
-import {
-  PLAYER_BREAK_BAND,
-  PLAYER_THEME_BAND,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BREAK_BAND, PLAYER_THEME_BAND } from '@/lib/player-palette'
 import type { SeekMeans } from '@/repository/recording-segments'
 import { videoFrameHref } from '@/repository/video-paths'
 import type { PlaybackChapter, SkippableKind } from '@/repository/videos'

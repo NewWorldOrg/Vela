@@ -16,7 +16,7 @@ import {
   groundOf,
   remOfMinutes,
   type CellTime,
-} from '@/components/guide/guide-metrics'
+} from '@/lib/guide-metrics'
 import { BellIcon } from '@/components/vela/icons'
 
 export const WATCHED_SAYS = '放送開始を通知'

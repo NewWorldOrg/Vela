@@ -13,16 +13,13 @@ import { Button } from '@/components/ui/button'
 import { ChevronUpIcon, MoreIcon, TrashIcon } from '@/components/vela/icons'
 import { InlineAlert } from '@/components/vela/inline-alert'
 import { useToast } from '@/components/vela/toasts'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import { Picture } from '@/components/library/picture'
-import { type Picking } from '@/components/library/library-tiles'
+import { type Picking } from '@/lib/library-tiles'
 import { PickMark } from '@/components/library/pick-mark'
 import { PickShade } from '@/components/library/pick-shade'
 import { AttentionChips } from '@/components/library/attention-chips'
-import {
-  holdDeletion,
-  releaseDeletion,
-} from '@/components/recordings/held-deletions'
+import { holdDeletion, releaseDeletion } from '@/hooks/useHeldDeletions'
 
 function recordingHref(id: string): Route {
   return `/recordings/${id}` as Route

@@ -26,11 +26,7 @@ import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import type { Program } from '@/repository/programs'
 import type { ReservationWrite } from '@/repository/reservations'
-import {
-  HOUR_REM,
-  hourPxIn,
-  remOfMinutes,
-} from '@/components/guide/guide-metrics'
+import { HOUR_REM, hourPxIn, remOfMinutes } from '@/lib/guide-metrics'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InFull } from '@/components/vela/in-full'
 import { useCameWithTheHtml } from '@/hooks/useCameWithTheHtml'

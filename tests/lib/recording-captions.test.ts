@@ -1,27 +1,50 @@
 import assert from 'node:assert/strict'
-import { test } from 'node:test'
+import { mock, test, type TestContext } from 'node:test'
 
 import {
-  captionAt,
-  extended,
-  READS_AHEAD_WITHIN_SEC,
-  standingAt,
-  timelineOf,
-  whatTheCaptionsNeed,
-  type CaptionWindow,
-  type TimedCaption,
+  RecordingCaptions,
+  RESTS_AFTER_A_REFUSAL_MS,
 } from '@/lib/recording-captions'
+import type {
+  CaptionWindow,
+  TimedCaption,
+} from '@/lib/recording-caption-timeline'
+import type { CaptionWindowRead } from '@/repository/video-captions'
 
-const CANVAS = { width: 1440, height: 1080 }
+const READ_MS = 100
+
+class NoticesNothing {
+  observe(): void {}
+
+  disconnect(): void {}
+}
+
+Object.assign(globalThis, {
+  MutationObserver: NoticesNothing,
+  createImageBitmap: async (blob: Blob) => ({
+    tag: new Uint8Array(await blob.arrayBuffer())[0],
+    close: () => {},
+  }),
+  window: { devicePixelRatio: 1 },
+})
+
+function settled(): Promise<void> {
+  return new Promise((resolve) => setImmediate(resolve))
+}
+
+async function settledTwice(): Promise<void> {
+  await settled()
+  await settled()
+}
 
 function said(atSec: number, tag: number): TimedCaption {
   return {
     atSec,
     picture: {
-      left: 0,
-      top: 0,
-      width: 10,
-      height: 10,
+      left: 360,
+      top: 940,
+      width: 720,
+      height: 88,
       png: new Uint8Array([tag]),
     },
   }
@@ -32,154 +55,283 @@ function cleared(atSec: number): TimedCaption {
 }
 
 function windowOf(untilSec: number, cues: TimedCaption[]): CaptionWindow {
-  return { canvas: CANVAS, untilSec, cues }
+  return { canvas: { width: 1440, height: 1080 }, untilSec, cues }
 }
 
-function tagOf(cue: TimedCaption | null): number | null {
-  return cue?.picture ? cue.picture.png[0] : null
+interface Asked {
+  fromSec: number
+  signal: AbortSignal
+  answer: (read: CaptionWindowRead) => void
 }
 
-const TEN_MINUTES = windowOf(700, [
-  said(95, 1),
-  cleared(104),
-  said(110, 2),
-  said(130.5, 3),
-  cleared(140),
+function bench() {
+  const drawn: number[] = []
+  const context = {
+    clearRect: () => {},
+    drawImage: (bitmap: { tag: number }) => drawn.push(bitmap.tag),
+  }
+  const canvas = {
+    dataset: {} as Record<string, string>,
+    clientWidth: 960,
+    clientHeight: 540,
+    width: 0,
+    height: 0,
+    getContext: () => context,
+    getAttribute: (): string | null => canvasDrawn,
+  }
+  let canvasDrawn: string | null = 'yes'
+  let seconds: number | null = null
+  const video = {
+    videoWidth: 1920,
+    videoHeight: 1080,
+    addEventListener: () => {},
+    removeEventListener: () => {},
+  }
+  const asked: Asked[] = []
+
+  return {
+    canvas: canvas as unknown as HTMLCanvasElement,
+    video: video as unknown as HTMLVideoElement,
+    clock: () => seconds,
+    read: (fromSec: number, signal: AbortSignal) =>
+      new Promise<CaptionWindowRead>((answer) => {
+        asked.push({ fromSec, signal, answer })
+      }),
+    asked,
+    said: () => canvas.dataset.caption,
+    lastDrawn: () => drawn.at(-1),
+    at: (given: number | null) => {
+      seconds = given
+    },
+    hide: () => {
+      canvasDrawn = 'no'
+    },
+  }
+}
+
+function playing(t: TestContext) {
+  mock.timers.enable({ apis: ['setInterval', 'Date'] })
+
+  const stand = bench()
+  const layer = new RecordingCaptions(
+    stand.canvas,
+    stand.video,
+    stand.clock,
+    stand.read,
+  )
+
+  t.after(() => {
+    layer.close()
+    mock.timers.reset()
+  })
+
+  const tick = async (at: number | null) => {
+    stand.at(at)
+    mock.timers.tick(READ_MS)
+    await settledTwice()
+  }
+
+  return { stand, layer, tick }
+}
+
+const OPENING = windowOf(600, [
+  said(0, 1),
+  cleared(4),
+  said(10, 2),
+  cleared(14),
 ])
 
-test('the caption on screen is the last to have started at or before the second', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+test('nothing is asked for until a picture is on screen', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(tagOf(captionAt(timeline, 100)), 1)
-  assert.equal(tagOf(captionAt(timeline, 103.99)), 1)
-  assert.equal(tagOf(captionAt(timeline, 125)), 2)
+  await tick(null)
+
+  assert.equal(stand.asked.length, 0)
 })
 
-test('a caption comes up on its own second, not a moment after', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+test('the caption drawn is the one the second on screen calls for', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(tagOf(captionAt(timeline, 130.49)), 2)
-  assert.equal(tagOf(captionAt(timeline, 130.5)), 3)
+  await tick(0)
+  assert.equal(stand.asked[0].fromSec, 0)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
+
+  await tick(1)
+  assert.equal(stand.said(), 'shown')
+  assert.equal(stand.lastDrawn(), 1)
+
+  await tick(5)
+  assert.equal(stand.said(), 'none')
+
+  await tick(10)
+  assert.equal(stand.said(), 'shown')
+  assert.equal(stand.lastDrawn(), 2)
 })
 
-test('where the caption was taken off there is nothing to draw', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+test('played faster, the captions change as much faster as the seconds do', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(captionAt(timeline, 104)?.picture, null)
-  assert.equal(captionAt(timeline, 600)?.picture, null)
+  await tick(0)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
+
+  const seen: (string | undefined)[] = []
+
+  for (let second = 0; second < 15; second += 1.5) {
+    await tick(second)
+    seen.push(stand.said())
+  }
+
+  assert.deepEqual(seen, [
+    'shown',
+    'shown',
+    'shown',
+    'none',
+    'none',
+    'none',
+    'none',
+    'shown',
+    'shown',
+    'shown',
+  ])
 })
 
-test('before the first caption there is nothing to draw', () => {
-  const timeline = timelineOf(windowOf(600, [said(12, 1)]), 0)
+test('with no second to read, the caption that was showing stays with the picture that is held', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(captionAt(timeline, 11.9), null)
-  assert.equal(standingAt(timeline, 11.9), -1)
+  await tick(1)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
+  assert.equal(stand.said(), 'shown')
+
+  await tick(null)
+  assert.equal(stand.said(), 'shown')
+  assert.equal(stand.asked.length, 1)
 })
 
-test('the cues are put in the order of their seconds, whatever order they came in', () => {
-  const timeline = timelineOf(windowOf(600, [said(30, 2), said(10, 1)]), 0)
+test('two minutes from the end of what is held, the next ten minutes are read and joined on', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(tagOf(captionAt(timeline, 20)), 1)
-  assert.equal(tagOf(captionAt(timeline, 31)), 2)
-})
+  await tick(0)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
 
-test('a second the captions held cover needs nothing read', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+  await tick(470)
+  assert.equal(stand.asked.length, 1)
 
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 300), { need: 'nothing' })
-})
+  await tick(481)
+  assert.equal(stand.asked.length, 2)
+  assert.equal(stand.asked[1].fromSec, 600)
 
-test('two minutes from the end of what is held, the next ten minutes are read', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+  await tick(482)
+  assert.equal(stand.asked.length, 2)
 
-  assert.deepEqual(
-    whatTheCaptionsNeed(timeline, 700 - READS_AHEAD_WITHIN_SEC - 0.1),
-    { need: 'nothing' },
-  )
-  assert.deepEqual(
-    whatTheCaptionsNeed(timeline, 700 - READS_AHEAD_WITHIN_SEC + 0.1),
-    { need: 'ahead', fromSec: 700 },
-  )
-})
-
-test('the next ten minutes are not asked for twice while they are on their way', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
-
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 650, 700), {
-    need: 'nothing',
+  stand.asked[1].answer({
+    state: 'read',
+    window: windowOf(1200, [cleared(14), said(601, 3)]),
   })
+  await settledTwice()
+
+  await tick(600.5)
+  assert.equal(stand.said(), 'none')
+  await tick(602)
+  assert.equal(stand.said(), 'shown')
+  assert.equal(stand.lastDrawn(), 3)
+  assert.equal(stand.asked.length, 2)
 })
 
-test('a second outside what is held is read anew from that second', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+test('a jump past what is held draws nothing until that second has been read', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 2400), {
-    need: 'anew',
-    fromSec: 2400,
+  await tick(1)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
+  assert.equal(stand.said(), 'shown')
+
+  await tick(2401)
+  assert.equal(stand.said(), 'none')
+  assert.equal(stand.asked.at(-1)?.fromSec, 2401)
+
+  await tick(2401.5)
+  assert.equal(stand.asked.length, 2)
+
+  stand.asked[1].answer({
+    state: 'read',
+    window: windowOf(3001, [said(2399, 4)]),
   })
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 99), {
-    need: 'anew',
-    fromSec: 99,
-  })
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 700), {
-    need: 'anew',
-    fromSec: 700,
-  })
-  assert.deepEqual(whatTheCaptionsNeed(null, 0), { need: 'anew', fromSec: 0 })
+  await settledTwice()
+  await tick(2402)
+  assert.equal(stand.lastDrawn(), 4)
 })
 
-test('while a read is on its way, the seconds it will cover wait for it', () => {
-  assert.deepEqual(whatTheCaptionsNeed(null, 2400.4, 2400), { need: 'wait' })
-  assert.deepEqual(whatTheCaptionsNeed(null, 3000, 2400), {
-    need: 'anew',
-    fromSec: 3000,
-  })
+test('a jump back into what is held needs no read, and the read on its way is dropped', async (t) => {
+  const { stand, tick } = playing(t)
+
+  await tick(1)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
+
+  await tick(2401)
+  const far = stand.asked[1]
+
+  await tick(11)
+  assert.equal(far.signal.aborted, true)
+  assert.equal(stand.lastDrawn(), 2)
+
+  far.answer({ state: 'read', window: windowOf(3001, [said(2399, 4)]) })
+  await settledTwice()
+  await tick(12)
+  assert.equal(stand.lastDrawn(), 2)
+  assert.equal(stand.asked.length, 2)
 })
 
-test('the next ten minutes join on where the last left off', () => {
-  const timeline = extended(
-    timelineOf(TEN_MINUTES, 100),
-    windowOf(1300, [said(130.5, 3), cleared(140), said(705, 4), cleared(712)]),
-    700,
-  )
+test('captions still being taken are asked for again after a rest', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(timeline.untilSec, 1300)
-  assert.equal(captionAt(timeline, 699)?.picture, null)
-  assert.equal(tagOf(captionAt(timeline, 706)), 4)
-  assert.equal(captionAt(timeline, 800)?.picture, null)
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 300), { need: 'nothing' })
+  await tick(0)
+  stand.asked[0].answer({ state: 'coming' })
+  await settledTwice()
+
+  await tick(1)
+  assert.equal(stand.asked.length, 1)
+
+  mock.timers.tick(RESTS_AFTER_A_REFUSAL_MS)
+  await tick(2)
+  assert.equal(stand.asked.length, 2)
 })
 
-test('the captions do not pile up: only the last two stretches are kept', () => {
-  const twice = extended(
-    timelineOf(TEN_MINUTES, 100),
-    windowOf(1300, [cleared(140), said(705, 4)]),
-    700,
-  )
-  const thrice = extended(
-    twice,
-    windowOf(1900, [said(705, 4), said(1350, 5)]),
-    1300,
-  )
+test('a recording found to have no captions is not asked again', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(thrice.fromSec, 700)
-  assert.equal(tagOf(captionAt(thrice, 700)), null)
-  assert.equal(tagOf(captionAt(thrice, 706)), 4)
-  assert.equal(tagOf(captionAt(thrice, 1351)), 5)
-  assert.deepEqual(whatTheCaptionsNeed(thrice, 300), {
-    need: 'anew',
-    fromSec: 300,
-  })
+  await tick(0)
+  stand.asked[0].answer({ state: 'none' })
+  await settledTwice()
+
+  mock.timers.tick(RESTS_AFTER_A_REFUSAL_MS)
+  await tick(700)
+
+  assert.equal(stand.asked.length, 1)
+  assert.equal(stand.said(), 'none')
 })
 
-test('ten minutes that do not join on where the last left off are not joined', () => {
-  const timeline = timelineOf(TEN_MINUTES, 100)
+test('switched off, the caption is followed but not drawn', async (t) => {
+  const { stand, tick } = playing(t)
 
-  assert.equal(extended(timeline, windowOf(2000, []), 1400), timeline)
+  stand.hide()
+  await tick(1)
+  stand.asked[0].answer({ state: 'read', window: OPENING })
+  await settledTwice()
+  await tick(2)
+
+  assert.equal(stand.said(), 'off')
 })
 
-test('an answer that covers nothing past where it was asked from leaves nothing more to read', () => {
-  const timeline = timelineOf(windowOf(3600, []), 3600)
+test('closing drops the read on its way', async (t) => {
+  const { stand, layer, tick } = playing(t)
 
-  assert.deepEqual(whatTheCaptionsNeed(timeline, 3700), { need: 'nothing' })
+  await tick(0)
+  layer.close()
+
+  assert.equal(stand.asked[0].signal.aborted, true)
 })

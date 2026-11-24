@@ -1,5 +1,5 @@
 import { NavCount } from '@/components/vela/global-nav'
-import { conflictsLeft } from './conflicts-left'
+import { conflictsLeft } from '@/repository/conflicts-left'
 
 export async function ConflictsCount() {
   const count = await conflictsLeft()

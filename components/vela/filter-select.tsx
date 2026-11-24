@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from '@/components/ui/select'
-import { BAND_CONTROL } from '@/components/vela/band'
+import { BAND_CONTROL } from '@/lib/band'
 import { ChoiceLabel } from '@/components/vela/choice-label'
 
 const ALL = '__all__'

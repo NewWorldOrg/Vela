@@ -1,7 +1,7 @@
 import type { ComponentProps, CSSProperties } from 'react'
 
 import { cn } from '@/lib/utils'
-import { tactileQuiet } from '@/components/vela/tactile'
+import { tactileQuiet } from '@/lib/tactile'
 
 type ListVars = CSSProperties & {
   '--data-list-cols'?: string

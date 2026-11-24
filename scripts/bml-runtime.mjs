@@ -6,20 +6,11 @@ import { buildSync } from 'esbuild'
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 
-export const ENTRY = resolve(
-  root,
-  'components/data-broadcast/bml-runtime-entry.ts',
-)
+export const ENTRY = resolve(root, 'lib/bml/runtime-entry.ts')
 
-export const BUNDLE = resolve(
-  root,
-  'components/data-broadcast/runtime-script.generated.ts',
-)
+export const BUNDLE = resolve(root, 'lib/bml/runtime-script.generated.ts')
 
-export const RECEIVER_ENTRY = resolve(
-  root,
-  'components/data-broadcast/hybridcast-receiver-entry.ts',
-)
+export const RECEIVER_ENTRY = resolve(root, 'lib/hybridcast/receiver-entry.ts')
 
 export const RECEIVER_BUNDLE = resolve(
   root,

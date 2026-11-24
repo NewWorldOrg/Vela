@@ -6,7 +6,7 @@ import { halfWidthOf } from '@/lib/guide-cell'
 import { cn } from '@/lib/utils'
 import type { Channel } from '@/repository/channels'
 import { ChannelMark } from '@/components/vela/channel-mark'
-import { pressable, tactileQuiet } from '@/components/vela/tactile'
+import { pressable, tactileQuiet } from '@/lib/tactile'
 
 export function ChannelStrip({
   channels,

@@ -30,7 +30,7 @@ import {
   ValueRow,
   ValueRows,
 } from '@/components/segments/value-rows'
-import { SKIP_THRESHOLD_SLOT } from '@/components/segments/wording'
+import { SKIP_THRESHOLD_SLOT } from '@/lib/segments-wording'
 
 const THRESHOLD = '閾値'
 

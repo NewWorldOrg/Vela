@@ -4,11 +4,7 @@ import { useEffect, useState } from 'react'
 
 import { romSoundGain } from '@/lib/data-broadcast-sound'
 import { DATA_BROADCAST_SOUNDS, SOUNDS_SPELLING } from '@/lib/stored-flag'
-import {
-  RomSounder,
-  audioContextOf,
-  type RomSounds,
-} from '@/components/data-broadcast/rom-sound'
+import { RomSounder, audioContextOf, type RomSounds } from '@/lib/rom-sounder'
 import { useStoredFlag } from '@/hooks/useStoredFlag'
 
 export function useRomSound(level: number): RomSounds {

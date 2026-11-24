@@ -5,10 +5,10 @@ import { cn } from '@/lib/utils'
 import {
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
-} from '@/components/recordings/player-palette'
+} from '@/lib/player-palette'
 import { PlayerTip } from '@/components/recordings/player-tip'
 import { DataBroadcastIcon } from '@/components/vela/icons'
-import { DATA_BROADCAST_NAME } from '@/components/data-broadcast/data-broadcast-palette'
+import { DATA_BROADCAST_NAME } from '@/lib/data-broadcast-palette'
 
 export function DataBroadcastToggle({
   open,

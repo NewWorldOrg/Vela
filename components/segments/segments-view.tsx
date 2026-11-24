@@ -25,10 +25,7 @@ import type {
   LeaveSegmentVersionToLearning,
 } from '@/components/segments/version-history'
 import { VersionHistory } from '@/components/segments/version-history'
-import {
-  SKIP_THRESHOLD_SLOT,
-  VERSIONS_HEADING,
-} from '@/components/segments/wording'
+import { SKIP_THRESHOLD_SLOT, VERSIONS_HEADING } from '@/lib/segments-wording'
 
 const SEGMENTS = 'CM・OP・ED の検出'
 

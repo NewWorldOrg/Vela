@@ -1,7 +1,7 @@
 'use client'
 
 import { cn } from '@/lib/utils'
-import { BAND_CONTROL, BAND_PRESS } from '@/components/vela/band'
+import { BAND_CONTROL, BAND_PRESS } from '@/lib/band'
 
 export function SubChannelToggle({
   shown,

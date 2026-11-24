@@ -11,7 +11,7 @@ import {
 
 import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
-import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
+import { PLAYER_GLYPH_BUTTON } from '@/lib/player-palette'
 
 function focused(): HTMLElement | null {
   return typeof document !== 'undefined' &&

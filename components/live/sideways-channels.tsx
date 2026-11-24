@@ -9,7 +9,7 @@ import type { LiveChannel } from '@/repository/live'
 import { ChannelMark } from '@/components/vela/channel-mark'
 import { InfoIcon, SwapIcon } from '@/components/vela/icons'
 import { Spinner } from '@/components/vela/spinner'
-import { pressable, still } from '@/components/vela/tactile'
+import { pressable, still } from '@/lib/tactile'
 import {
   STRIP_BUTTON,
   StripFaceButton,

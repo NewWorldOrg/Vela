@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from 'react'
 
 import type { CaptionStyle } from '@/lib/caption-style'
 import { useCaptionStyle } from '@/hooks/useCaptionStyle'
-import { CaptionBoard } from '@/components/recordings/caption-board'
+import { CaptionBoard } from '@/lib/caption-board'
 
 export function useCaptionBoard(stored: CaptionStyle) {
   const [style, setStyle] = useCaptionStyle(stored)

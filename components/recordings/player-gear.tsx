@@ -14,7 +14,7 @@ import {
 import {
   PLAYER_GLYPH_BUTTON,
   PLAYER_GLYPH_BUTTON_ON,
-} from '@/components/recordings/player-palette'
+} from '@/lib/player-palette'
 import { DockFace } from '@/components/recordings/dock-face'
 import {
   gearWidth,

@@ -16,10 +16,7 @@ const PLAYERS = [
   'components/live/live-player.tsx',
 ]
 
-const LEFT_FOR_LATER = [
-  'components/data-broadcast/runtime-script.generated.ts',
-  'acorn',
-]
+const LEFT_FOR_LATER = ['lib/bml/runtime-script.generated.ts', 'acorn']
 
 const STATIC_IMPORT =
   /^\s*(?:import|export)\s+(?!type\b)(?:[^'"]*?\sfrom\s+)?['"]([^'"]+)['"]/gm
@@ -89,7 +86,7 @@ test('a player page loads neither the data broadcast runtime nor the parser unti
     const loaded = await loadedWith(player)
 
     assert.ok(
-      loaded.has('components/data-broadcast/data-broadcast-palette.ts'),
+      loaded.has('lib/data-broadcast-palette.ts'),
       `${player} no longer reaches the data broadcast at all`,
     )
 

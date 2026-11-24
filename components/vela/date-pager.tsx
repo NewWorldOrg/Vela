@@ -3,7 +3,7 @@
 import type { ComponentProps } from 'react'
 
 import { cn } from '@/lib/utils'
-import { BAND_PRESS } from '@/components/vela/band'
+import { BAND_PRESS } from '@/lib/band'
 import { IconButton } from '@/components/vela/icon-button'
 import { ChevronLeftIcon, ChevronRightIcon } from '@/components/vela/icons'
 

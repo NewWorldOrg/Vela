@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
+import { cardPlace } from '@/lib/table-cards'
 import {
   DeviceDesktopIcon,
   DevicePhoneIcon,
@@ -24,7 +24,7 @@ import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { ChipDot } from '@/components/vela/chip-dot'
 import { RevokeSession } from '@/components/authentication/revoke-session'
 import { SignOut } from '@/components/authentication/sign-out'
-import { METHOD_LABEL } from '@/components/authentication/wording'
+import { METHOD_LABEL } from '@/lib/authentication-wording'
 import { WHEN_LABELS } from '@/lib/when-terms'
 
 const DEVICE_ICON: Record<

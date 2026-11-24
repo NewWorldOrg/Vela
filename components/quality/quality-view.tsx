@@ -22,7 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
+import { cardPlace } from '@/lib/table-cards'
 import { ADMIN_LIST_HEIGHT_CAP } from '@/components/vela/app-shell'
 import { Crumb, CrumbCurrent } from '@/components/vela/crumb'
 import { EmptyState } from '@/components/vela/empty-state'
@@ -39,7 +39,7 @@ import type { QualitySaveThresholds } from '@/components/quality/threshold-panel
 import { ThresholdPanel } from '@/components/quality/threshold-panel'
 import { AnomalyList } from '@/components/quality/anomaly-list'
 import { SegmentedControl } from '@/components/vela/segmented-control'
-import { chosenOf, segmentsOf } from '@/components/quality/window-segments'
+import { chosenOf, segmentsOf } from '@/lib/quality-window-segments'
 import { QualityTrendPanel } from '@/components/quality/quality-trend-panel'
 import { QualityChip } from '@/components/quality/quality-chip'
 import { QualityHealthCell } from '@/components/quality/quality-health-cell'

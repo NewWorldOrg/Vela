@@ -6,7 +6,7 @@ import Link from 'next/link'
 
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
-import { still } from '@/components/vela/tactile'
+import { still } from '@/lib/tactile'
 import {
   DangerIcon,
   InfoIcon,

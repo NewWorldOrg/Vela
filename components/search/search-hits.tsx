@@ -7,10 +7,10 @@ import { cn } from '@/lib/utils'
 import { SPAN_DASH } from '@/lib/format'
 import type { SearchHit } from '@/repository/search'
 import type { ReservationWrite } from '@/repository/reservations'
-import { GENRE_MARK_CLASS } from '@/components/guide/guide-metrics'
+import { GENRE_MARK_CLASS } from '@/lib/guide-metrics'
 import { useOneTapReserve } from '@/components/guide/reserve-circle'
 import { hitsByDay, marked } from '@/components/search/hit-parts'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 
 interface Reserving {
   onReserve?: (programmeId: string) => Promise<ReservationWrite>

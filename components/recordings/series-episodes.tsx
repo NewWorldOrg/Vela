@@ -13,7 +13,7 @@ import type { Recording } from '@/repository/recordings'
 import { useSeriesFolded } from '@/hooks/useSeriesFolded'
 import { Picture } from '@/components/library/picture'
 import { FoldButton } from '@/components/live/fold-button'
-import { useFoldingChannels, useSettled } from '@/components/live/channel-fold'
+import { useFoldingChannels, useSettled } from '@/hooks/useFoldingChannels'
 
 const SERIES_FOLD = '同じシリーズの回'
 

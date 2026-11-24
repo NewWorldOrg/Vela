@@ -25,7 +25,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
+import { cardPlace } from '@/lib/table-cards'
 import { StateSay } from '@/components/recordings/state-say'
 import { StatusCell, type StateTone } from '@/components/recordings/status-cell'
 import { InlineAlert } from '@/components/vela/inline-alert'
@@ -33,7 +33,7 @@ import { InFull } from '@/components/vela/in-full'
 import { Spinner } from '@/components/vela/spinner'
 import { SectionHeading } from '@/components/vela/section-heading'
 import { LearningRounds } from '@/components/segments/learning-rounds'
-import { VERSIONS_HEADING } from '@/components/segments/wording'
+import { VERSIONS_HEADING } from '@/lib/segments-wording'
 import { SwitchVersionButton } from '@/components/segments/switch-version-button'
 
 const STATES: Record<SegmentVersionState, { word: string; tone: StateTone }> = {

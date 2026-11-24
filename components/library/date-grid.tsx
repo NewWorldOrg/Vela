@@ -3,11 +3,7 @@
 import { cn } from '@/lib/utils'
 import { byDay, dayHeadingOf } from '@/lib/library-days'
 import type { Recording } from '@/repository/recordings'
-import {
-  type Picking,
-  type PickStarting,
-  clockOf,
-} from '@/components/library/library-tiles'
+import { type Picking, type PickStarting, clockOf } from '@/lib/library-tiles'
 import { RecordingTile } from '@/components/library/recording-tile'
 
 const TILE_GRID =

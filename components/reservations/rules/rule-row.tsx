@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils'
 import type { Rule, RuleWrite } from '@/repository/rules'
 import { Switch } from '@/components/ui/switch'
 import { InlineAlert } from '@/components/vela/inline-alert'
-import { SIGNED_OUT } from '@/components/reservations/rules/signed-out'
+import { SIGNED_OUT } from '@/lib/rules-signed-out'
 
 export function RuleRow({
   rule,

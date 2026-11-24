@@ -18,10 +18,7 @@ import {
   type AppHeard,
   type SendToApp,
 } from '@/components/data-broadcast/hybridcast-frame'
-import {
-  PLAYER_BOARD,
-  PLAYER_FACE,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BOARD, PLAYER_FACE } from '@/lib/player-palette'
 
 const meta = {
   title: 'Components/データ放送/Hybridcast',

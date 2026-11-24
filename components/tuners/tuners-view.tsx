@@ -30,11 +30,7 @@ import { LnbPowerSwitch } from '@/components/tuners/lnb-power-switch'
 import { CardReaderLine } from '@/components/tuners/card-reader-line'
 import { DriverLine } from '@/components/tuners/driver-line'
 import { HardwareLine } from '@/components/tuners/hardware-line'
-import {
-  tunerSubOf,
-  tunerTitleOf,
-  tunerWhyOf,
-} from '@/components/tuners/wording'
+import { tunerSubOf, tunerTitleOf, tunerWhyOf } from '@/lib/tuners-wording'
 import { DetectionPanel } from '@/components/tuners/detection-panel'
 
 const DETECT_HREF = '/settings/tuners?detect=1' as Route

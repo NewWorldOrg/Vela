@@ -70,7 +70,7 @@ import {
 } from '@/lib/playback-format'
 import { useFormatAnswers } from '@/hooks/useFormatAnswers'
 import { storeText } from '@/hooks/useStoredText'
-import { browserProbe } from '@/components/vela/format-answers'
+import { browserProbe } from '@/lib/format-answers'
 import {
   CATCH_UP_RATE,
   delayOf,
@@ -107,14 +107,14 @@ import {
   PLAYER_SCRIM,
   PLAYER_SCRIM_TOP,
   PLAYER_SEND_MAIN,
-} from '@/components/recordings/player-palette'
+} from '@/lib/player-palette'
 import { PlayerVolume } from '@/components/recordings/player-volume'
 import {
   SAID_CAPTURED,
   SAID_NOT_CAPTURED,
   takeCapture as takeItNow,
   type TakeCapture,
-} from '@/components/recordings/take-capture'
+} from '@/lib/take-capture'
 import { capturedName, capturedOn } from '@/lib/capture-name'
 import { useDataBroadcast } from '@/hooks/useDataBroadcast'
 import { useRomSound } from '@/hooks/useRomSound'
@@ -138,40 +138,37 @@ import { DataBroadcastBand } from '@/components/data-broadcast/data-broadcast-ba
 import { DataBroadcastFace } from '@/components/data-broadcast/data-broadcast-face'
 import { DataBroadcastToggle } from '@/components/data-broadcast/data-broadcast-toggle'
 import { DataBroadcastRemote } from '@/components/data-broadcast/data-broadcast-remote'
-import { widestColumn } from '@/components/data-broadcast/data-broadcast-palette'
+import { widestColumn } from '@/lib/data-broadcast-palette'
 import { HybridcastFace } from '@/components/data-broadcast/hybridcast-face'
 import { eventInformationOf } from '@/lib/hybridcast/event-information'
 import { applicationStarter, liveLine } from '@/lib/data-broadcast-line'
-import { liveLineRelay } from '@/components/data-broadcast/line-relay'
+import { liveLineRelay } from '@/lib/data-broadcast-line-relay'
 import type { LineRelay } from '@/repository/live-data-broadcast'
 
-import { CaptionLayer } from '@/components/live/live-captions'
-import { clearanceOf } from '@/components/recordings/caption-clearance'
-import { CAPTION_GRIP } from '@/components/recordings/player-palette'
+import { CaptionLayer } from '@/lib/caption-layer'
+import { clearanceOf } from '@/lib/caption-clearance'
+import { CAPTION_GRIP } from '@/lib/player-palette'
 import { useCaptionBoard } from '@/hooks/useCaptionBoard'
 import { PLAIN_CAPTION_STYLE, type CaptionStyle } from '@/lib/caption-style'
-import { LiveFeed } from '@/components/live/live-feed'
+import { LiveFeed } from '@/lib/live-feed'
 import {
   openPlaylist as openThePlaylist,
   type OpenPlaylist,
-} from '@/components/live/live-playlist'
+} from '@/lib/live-playlist'
 import { useLiveCarriage } from '@/hooks/useLiveCarriage'
-import { LiveStart } from '@/components/live/live-start'
+import { LiveStart } from '@/lib/live-start'
 import {
   askLiveBacklog,
   askWhetherSignedOut,
   openLiveSession,
   type AskBacklog,
   type OpenSocket,
-} from '@/components/live/live-session'
+} from '@/lib/live-session'
 import {
   LiveFaultNotice,
   type LiveFault,
 } from '@/components/live/live-fault-notice'
-import {
-  holdWireFormat,
-  holdWireProfile,
-} from '@/components/live/live-wire-ahead'
+import { holdWireFormat, holdWireProfile } from '@/lib/live-wire-ahead'
 import { LiveSettings } from '@/components/live/live-settings'
 import type { GearAction } from '@/components/recordings/gear-actions'
 import { DockFace } from '@/components/recordings/dock-face'

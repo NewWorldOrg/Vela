@@ -18,7 +18,7 @@ import { InlineAlert } from '@/components/vela/inline-alert'
 import { Field, FieldLabel } from '@/components/vela/field'
 import { LockIcon } from '@/components/vela/icons'
 import { PasswordInput } from '@/components/vela/password-input'
-import { passwordChangedHref } from '@/components/authentication/wording'
+import { passwordChangedHref } from '@/lib/authentication-wording'
 
 export function ChangePassword({
   username,

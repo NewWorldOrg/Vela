@@ -7,7 +7,7 @@ import {
   slotNamed,
   nothingToFollow,
   noSlotOnTheServer,
-} from '@/components/vela/phone-bar-slot'
+} from '@/lib/phone-bar-slot'
 
 export const PHONE_BAR_LEAD = 'phone-bar-lead'
 

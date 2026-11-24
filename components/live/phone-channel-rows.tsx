@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils'
 import type { LiveChannel } from '@/repository/live'
 import { ProgressBar } from '@/components/vela/progress-bar'
 import { ChannelMark } from '@/components/vela/channel-mark'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 
 export const ROW =
   'flex w-full items-center gap-3 py-3 pr-3.5 pl-4 text-left outline-none transition-[background-color] duration-150 ease-out hover:bg-surface focus-visible:shadow-ring'

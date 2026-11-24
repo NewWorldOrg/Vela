@@ -1,122 +1,171 @@
-import type { CaptionCanvas, CaptionPicture } from '@/lib/live-wire'
+import {
+  captionAt,
+  extended,
+  timelineOf,
+  whatTheCaptionsNeed,
+  type CaptionTimeline,
+  type TimedCaption,
+} from '@/lib/recording-caption-timeline'
+import type { CaptionWindowRead } from '@/repository/video-captions'
+import { CaptionSurface, decodeCaption } from '@/lib/caption-surface'
+import type { CaptionBoard } from '@/lib/caption-board'
 
-export const READS_AHEAD_WITHIN_SEC = 120
+export type CaptionClock = () => number | null
 
-export interface TimedCaption {
-  atSec: number
-  picture: CaptionPicture | null
-}
+export type ReadCaptionWindow = (
+  fromSec: number,
+  signal: AbortSignal,
+) => Promise<CaptionWindowRead>
 
-export interface CaptionWindow {
-  canvas: CaptionCanvas
-  untilSec: number
-  cues: TimedCaption[]
-}
+export const RESTS_AFTER_A_REFUSAL_MS = 10_000
 
-export interface CaptionTimeline {
+interface Asking {
   fromSec: number
-  untilSec: number
-  lastFromSec: number
-  cues: TimedCaption[]
+  anew: boolean
+  abort: AbortController
 }
 
-export type CaptionNeed =
-  | { need: 'nothing' }
-  | { need: 'ahead'; fromSec: number }
-  | { need: 'wait' }
-  | { need: 'anew'; fromSec: number }
+export class RecordingCaptions {
+  private readonly clock: CaptionClock
 
-function inOrder(cues: readonly TimedCaption[]): TimedCaption[] {
-  return [...cues].sort((one, other) => one.atSec - other.atSec)
-}
+  private readonly read: ReadCaptionWindow
 
-function endOf(window: CaptionWindow, fromSec: number): number {
-  return window.untilSec > fromSec ? window.untilSec : Infinity
-}
+  private readonly surface: CaptionSurface
 
-export function timelineOf(
-  window: CaptionWindow,
-  fromSec: number,
-): CaptionTimeline {
-  return {
-    fromSec,
-    untilSec: endOf(window, fromSec),
-    lastFromSec: fromSec,
-    cues: inOrder(window.cues),
+  private timeline: CaptionTimeline | null = null
+
+  private standing: TimedCaption | null = null
+
+  private asking: Asking | null = null
+
+  private restsUntil = 0
+
+  private none = false
+
+  private closed = false
+
+  constructor(
+    canvas: HTMLCanvasElement,
+    video: HTMLVideoElement,
+    clock: CaptionClock,
+    read: ReadCaptionWindow,
+    board?: CaptionBoard,
+  ) {
+    this.clock = clock
+    this.read = read
+    this.surface = new CaptionSurface(canvas, video, () => this.tick(), board)
+    this.tick()
   }
-}
 
-export function standingAt(timeline: CaptionTimeline, second: number): number {
-  let low = 0
-  let high = timeline.cues.length
+  drawOn(
+    context: CanvasRenderingContext2D,
+    size: { width: number; height: number },
+  ): void {
+    this.surface.drawOn(context, size)
+  }
 
-  while (low < high) {
-    const middle = (low + high) >> 1
+  close(): void {
+    this.closed = true
+    this.asking?.abort.abort()
+    this.asking = null
+    this.surface.close()
+  }
 
-    if (timeline.cues[middle].atSec <= second) {
-      low = middle + 1
-    } else {
-      high = middle
+  private tick(): void {
+    const second = this.clock()
+
+    if (second === null || this.closed || this.none) {
+      return
     }
+
+    const need = whatTheCaptionsNeed(
+      this.timeline,
+      second,
+      this.asking?.fromSec,
+    )
+
+    if (need.need === 'anew' || need.need === 'wait') {
+      this.stand(null)
+
+      if (need.need === 'anew') {
+        this.ask(need.fromSec, true)
+      }
+
+      return
+    }
+
+    if (this.asking?.anew) {
+      this.drop()
+    }
+
+    if (need.need === 'ahead') {
+      this.ask(need.fromSec, false)
+    }
+
+    this.stand(this.timeline ? captionAt(this.timeline, second) : null)
   }
 
-  return low - 1
-}
+  private stand(cue: TimedCaption | null): void {
+    if (cue === this.standing) {
+      return
+    }
 
-export function captionAt(
-  timeline: CaptionTimeline,
-  second: number,
-): TimedCaption | null {
-  const at = standingAt(timeline, second)
-
-  return at < 0 ? null : timeline.cues[at]
-}
-
-export function extended(
-  timeline: CaptionTimeline,
-  window: CaptionWindow,
-  fromSec: number,
-): CaptionTimeline {
-  if (fromSec !== timeline.untilSec) {
-    return timeline
+    this.standing = cue
+    this.surface.show(cue?.picture ? decodeCaption(cue.picture) : null)
   }
 
-  const kept = Math.max(0, standingAt(timeline, timeline.lastFromSec))
-
-  return {
-    fromSec: timeline.lastFromSec,
-    untilSec: endOf(window, fromSec),
-    lastFromSec: fromSec,
-    cues: [
-      ...timeline.cues.slice(kept),
-      ...inOrder(window.cues).filter((cue) => cue.atSec >= fromSec),
-    ],
-  }
-}
-
-function covers(timeline: CaptionTimeline, second: number): boolean {
-  return second >= timeline.fromSec && second < timeline.untilSec
-}
-
-export function whatTheCaptionsNeed(
-  timeline: CaptionTimeline | null,
-  second: number,
-  asking?: number,
-): CaptionNeed {
-  if (timeline === null || !covers(timeline, second)) {
-    const awaited =
-      asking !== undefined &&
-      second >= asking &&
-      second < asking + READS_AHEAD_WITHIN_SEC
-
-    return awaited ? { need: 'wait' } : { need: 'anew', fromSec: second }
+  private drop(): void {
+    this.asking?.abort.abort()
+    this.asking = null
   }
 
-  const until = timeline.untilSec
+  private ask(fromSec: number, anew: boolean): void {
+    if (Date.now() < this.restsUntil) {
+      return
+    }
 
-  if (until - second < READS_AHEAD_WITHIN_SEC && asking !== until) {
-    return { need: 'ahead', fromSec: until }
+    this.drop()
+
+    const asked: Asking = { fromSec, anew, abort: new AbortController() }
+
+    this.asking = asked
+
+    void this.read(fromSec, asked.abort.signal)
+      .catch((error: unknown): CaptionWindowRead => {
+        if (!asked.abort.signal.aborted) {
+          console.warn('[captions] the captions were not read', error)
+        }
+
+        return { state: 'failed' }
+      })
+      .then((answer) => this.heard(asked, answer))
   }
 
-  return { need: 'nothing' }
+  private heard(asked: Asking, answer: CaptionWindowRead): void {
+    if (this.asking !== asked || this.closed) {
+      return
+    }
+
+    this.asking = null
+
+    if (answer.state === 'none') {
+      this.none = true
+      this.stand(null)
+
+      return
+    }
+
+    if (answer.state !== 'read') {
+      this.restsUntil = Date.now() + RESTS_AFTER_A_REFUSAL_MS
+
+      return
+    }
+
+    this.surface.canvasOf(answer.window.canvas)
+    this.timeline =
+      asked.anew || this.timeline === null
+        ? timelineOf(answer.window, asked.fromSec)
+        : extended(this.timeline, answer.window, asked.fromSec)
+    this.tick()
+  }
 }

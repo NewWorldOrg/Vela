@@ -6,6 +6,8 @@ import { test } from 'node:test'
 
 const THE_LIBRARY = ['components/library', 'app/(app)/library']
 
+const NAMED_FOR_THE_LIBRARY = /^lib\/library-[^/]+$/
+
 const ANOTHER_SCREEN = new Set(['integrity'])
 
 const WHERE_THE_FILTER_IS_DECLARED = 'repository/recordings.ts'
@@ -77,6 +79,12 @@ test('the library draws none of what it put away', async () => {
   for (const dir of THE_LIBRARY) {
     files.push(...(await sourceFiles(dir)))
   }
+
+  files.push(
+    ...(await sourceFiles('lib')).filter((file) =>
+      NAMED_FOR_THE_LIBRARY.test(file),
+    ),
+  )
 
   assert.ok(
     files.includes('components/library/library-view.tsx') &&

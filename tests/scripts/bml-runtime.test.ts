@@ -8,9 +8,9 @@ import {
   bundled,
   receiverBundled,
 } from '@/scripts/bml-runtime.mjs'
-import { RUNTIME_SCRIPT } from '@/components/data-broadcast/runtime-script.generated'
+import { RUNTIME_SCRIPT } from '@/lib/bml/runtime-script.generated'
 import { runtimeDocument } from '@/lib/bml/runtime-document'
-import { HYBRIDCAST_RECEIVER_SCRIPT } from '@/components/data-broadcast/line-relay'
+import { HYBRIDCAST_RECEIVER_SCRIPT } from '@/lib/data-broadcast-line-relay'
 
 test('the committed runtime script is the runtime as it stands; yarn bml-runtime writes it again', () => {
   assert.equal(readFileSync(BUNDLE, 'utf8'), bundled())

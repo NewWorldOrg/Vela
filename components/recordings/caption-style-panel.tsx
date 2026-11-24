@@ -22,7 +22,7 @@ import {
   PLAYER_BUTTON,
   PLAYER_BUTTON_ON,
   PLAYER_GLYPH_BUTTON,
-} from '@/components/recordings/player-palette'
+} from '@/lib/player-palette'
 import { PlayerSegmentedControl } from '@/components/recordings/player-segmented-control'
 import { Setting } from '@/components/recordings/setting'
 

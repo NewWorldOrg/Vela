@@ -6,11 +6,7 @@ import { formatCalendarDate } from '@/lib/format'
 import { calendarDayOf, watchStateOf } from '@/lib/library-days'
 import { episodeOf, type Series } from '@/lib/library-series'
 import type { Recording } from '@/repository/recordings'
-import {
-  type Picking,
-  type PickStarting,
-  clockOf,
-} from '@/components/library/library-tiles'
+import { type Picking, type PickStarting, clockOf } from '@/lib/library-tiles'
 import { SeriesCard } from '@/components/library/series-card'
 import { RecordingTile } from '@/components/library/recording-tile'
 

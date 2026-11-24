@@ -397,11 +397,21 @@ test('the shared parts are dressed in the canon’s own names, not the kit’s',
 
 const A_WRITTEN_COLOUR = /#[0-9A-Fa-f]{3,8}\b|rgba?\(/g
 
+const THE_DATA_BROADCAST = /^lib\/(?:bml|hybridcast)\//
+
+const THE_COLOURS_THE_BROWSER_IS_TOLD = 'lib/app-colours.ts'
+
 test('live and a recording take their colours from named tokens', async () => {
   const files = [
     ...(await sourceFiles('components/live', /\.tsx?$/)),
     ...(await sourceFiles('components/recordings', /\.tsx?$/)),
-  ]
+    ...(await sourceFiles('hooks', /\.tsx?$/)),
+    ...(await sourceFiles('lib', /\.tsx?$/)),
+  ].filter(
+    (file) =>
+      !THE_DATA_BROADCAST.test(file) &&
+      file !== THE_COLOURS_THE_BROWSER_IS_TOLD,
+  )
 
   assert.ok(files.length > 30, `only ${files.length} files were read`)
 
@@ -690,7 +700,7 @@ test('the usher is troubled only where the page could not be shown', async () =>
 
 test('only the drawing in a control turns under the pointer, and only a picture grows, by the one amount', async () => {
   assert.match(
-    await read('components/vela/tactile.ts'),
+    await read('lib/tactile.ts'),
     /export const iconTilt =\s*'\[&_svg\]:transition-transform \[&_svg\]:duration-150 \[&_svg\]:ease-toy hover:\[&_svg\]:scale-\[1\.08\] hover:\[&_svg\]:rotate-\[-7deg\]'/,
     'the drawing in a control no longer grows and turns under the pointer',
   )
@@ -706,7 +716,7 @@ test('only the drawing in a control turns under the pointer, and only a picture 
       if (
         found[0] !== 'hover:scale-[1.04]' &&
         !(
-          file === 'components/vela/tactile.ts' &&
+          file === 'lib/tactile.ts' &&
           /^hover:\[&_svg\]:(scale-\[1\.08\]|rotate-\[-7deg\])$/.test(found[0])
         )
       ) {

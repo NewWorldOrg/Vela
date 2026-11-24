@@ -48,12 +48,9 @@ import {
   A_FULL_DAY_WINDOW,
 } from '@/stories/fixtures/a-full-day'
 import { ARRIVAL_SPAN_MS, GUIDE_FACES } from '@/lib/arrival'
-import { HOUR_REM, hourPxIn } from '@/components/guide/guide-metrics'
+import { HOUR_REM, hourPxIn } from '@/lib/guide-metrics'
 import { GuideView } from '@/components/guide/guide-view'
-import {
-  NOTIFY_START,
-  STOP_NOTIFYING,
-} from '@/components/notifications/wording'
+import { NOTIFY_START, STOP_NOTIFYING } from '@/lib/notifications-wording'
 import { inTheApp } from '@/stories/frames'
 import { FROM_600, NARROW_PHONE, PHONE } from '@/stories/rows-as-cards'
 

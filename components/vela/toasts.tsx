@@ -11,7 +11,7 @@ import {
 } from 'react'
 
 import { cn } from '@/lib/utils'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 
 export const TOAST_MS = 5_000
 

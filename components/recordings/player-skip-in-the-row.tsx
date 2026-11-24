@@ -5,10 +5,7 @@ import { useCallback, useState, useSyncExternalStore } from 'react'
 import { cn } from '@/lib/utils'
 import { CloseIcon } from '@/components/vela/icons'
 import { PlayerTip } from '@/components/recordings/player-tip'
-import {
-  PLAYER_BUTTON,
-  PLAYER_GLYPH_BUTTON,
-} from '@/components/recordings/player-palette'
+import { PLAYER_BUTTON, PLAYER_GLYPH_BUTTON } from '@/lib/player-palette'
 import {
   SKIP_ONLY,
   skipNameInTheRow,

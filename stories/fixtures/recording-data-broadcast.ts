@@ -1,8 +1,8 @@
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { BmlModule } from '@/lib/bml/resources'
 import { modulePayload } from '@/lib/bml/resources'
-import type { DataBroadcastTimeline } from '@/lib/recording-data-broadcast'
-import type { ReadDataBroadcastModule } from '@/components/recordings/read-data-broadcast'
+import type { DataBroadcastTimeline } from '@/lib/recording-data-broadcast-timeline'
+import type { ReadDataBroadcastModule } from '@/lib/read-data-broadcast'
 
 export function throughout(catalog: BmlCatalog): DataBroadcastTimeline {
   return {

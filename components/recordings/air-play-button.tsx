@@ -5,8 +5,8 @@ import { useState, type RefObject } from 'react'
 import { type Handover } from '@/lib/external-player'
 import { Spinner } from '@/components/vela/spinner'
 import { AirPlayIcon } from '@/components/vela/icons'
-import { PLAYER_GLYPH_BUTTON } from '@/components/recordings/player-palette'
-import { ticket } from '@/components/recordings/handing-over'
+import { PLAYER_GLYPH_BUTTON } from '@/lib/player-palette'
+import { ticket } from '@/hooks/useHandingOver'
 
 type Picker = { webkitShowPlaybackTargetPicker?: () => void }
 

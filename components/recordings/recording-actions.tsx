@@ -16,10 +16,7 @@ import { ActionRow } from '@/components/vela/action-row'
 import { TrashIcon } from '@/components/vela/icons'
 import { useToast } from '@/components/vela/toasts'
 import { useOnAPhone } from '@/hooks/usePhone'
-import {
-  holdDeletion,
-  releaseDeletion,
-} from '@/components/recordings/held-deletions'
+import { holdDeletion, releaseDeletion } from '@/hooks/useHeldDeletions'
 import { ExternalPlayerOpener } from '@/components/recordings/external-player-opener'
 import { DeleteRecordingDialog } from '@/components/recordings/delete-recording-dialog'
 import { UnfinishedDeletionChip } from '@/components/recordings/unfinished-deletion-chip'

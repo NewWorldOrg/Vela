@@ -13,7 +13,7 @@ import { SkipEvents } from '@/lib/skip-events'
 import {
   sendSeekWhileLeaving,
   type SendSeekWhileLeaving,
-} from '@/components/recordings/send-seek-while-leaving'
+} from '@/lib/send-seek-while-leaving'
 import type {
   SeekEvent,
   SkipEvent,

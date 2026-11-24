@@ -2,10 +2,7 @@
 
 import { useSyncExternalStore } from 'react'
 
-import {
-  liveCarriage,
-  type LiveCarriage,
-} from '@/components/live/live-carriage'
+import { liveCarriage, type LiveCarriage } from '@/lib/live-carriage'
 
 const nothingToFollow = () => () => {}
 

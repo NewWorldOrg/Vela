@@ -66,7 +66,7 @@ const THE_ROW = 'components/vela/action-row.tsx'
 
 const THE_EMPTY_VALUE = 'lib/empty-value.ts'
 
-const THE_BAND = 'components/vela/band.ts'
+const THE_BAND = 'lib/band.ts'
 
 const THE_SYSTEM_TERMS = 'lib/system-terms.ts'
 

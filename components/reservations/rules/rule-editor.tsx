@@ -113,7 +113,7 @@ import {
   subgenreLabelOf,
 } from '@/lib/search-condition'
 import type { RuleActions } from '@/components/reservations/rules-view'
-import { SIGNED_OUT } from '@/components/reservations/rules/signed-out'
+import { SIGNED_OUT } from '@/lib/rules-signed-out'
 import { Count } from '@/components/reservations/rules/count'
 import { Excluded } from '@/components/reservations/rules/excluded'
 

@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-import { cardPlace } from '@/components/ui/table-cards'
+import { cardPlace } from '@/lib/table-cards'
 import {
   CheckIcon,
   MarkDots,

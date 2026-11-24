@@ -5,11 +5,8 @@ import { useId, useRef, useState, type Ref } from 'react'
 import { cn } from '@/lib/utils'
 import { foldColumnBeside } from '@/lib/live-fold'
 import { useHeight } from '@/hooks/useHeight'
-import { useFoldingChannels, useSettled } from '@/components/live/channel-fold'
-import {
-  COLUMN_BODY,
-  PLAYER_SIDE_COLUMN,
-} from '@/components/live/remote-column-palette'
+import { useFoldingChannels, useSettled } from '@/hooks/useFoldingChannels'
+import { COLUMN_BODY, PLAYER_SIDE_COLUMN } from '@/lib/remote-column-palette'
 import { ColumnHead } from '@/components/live/column-head'
 import { RemoteSlot } from '@/components/live/remote-slot'
 

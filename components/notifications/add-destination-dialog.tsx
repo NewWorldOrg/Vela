@@ -21,7 +21,7 @@ import {
   LinkIcon,
   PlusIcon,
 } from '@/components/vela/icons'
-import { pressable } from '@/components/vela/tactile'
+import { pressable } from '@/lib/tactile'
 import {
   NoticeDialogContent,
   NoticeDialogFooter,
