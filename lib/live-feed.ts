@@ -1,4 +1,3 @@
-import { LivePictures } from '@/lib/live-pictures'
 import { codecsOf, mimeOf } from '@/lib/live-wire'
 import { MediaFeed, type FeedFault } from '@/lib/media-feed'
 
@@ -6,8 +5,6 @@ export type { FeedFault } from '@/lib/media-feed'
 
 export class LiveFeed {
   private readonly feed: MediaFeed
-
-  private readonly pictures = new LivePictures()
 
   constructor(
     video: HTMLVideoElement,
@@ -24,12 +21,10 @@ export class LiveFeed {
   header(init: Uint8Array): void {
     const codecs = codecsOf(init)
 
-    this.pictures.header(init)
     this.feed.header(init, codecs && mimeOf(codecs))
   }
 
   append(bytes: Uint8Array): void {
-    this.pictures.fragment(bytes, this.feed.start())
     this.feed.append(bytes)
   }
 
@@ -43,10 +38,6 @@ export class LiveFeed {
 
   start(): number | undefined {
     return this.feed.start()
-  }
-
-  pictureFrom(): number | undefined {
-    return this.pictures.fromOf(this.feed.runs())
   }
 
   close(): void {

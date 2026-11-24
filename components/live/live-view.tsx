@@ -133,7 +133,6 @@ export function LiveView({
   lineRelayOf,
   captionStyle,
   formatChoice = 'auto',
-  startBuffer,
   askBrowser,
   onRecord,
   onTakeTheRecordingBack,
@@ -156,7 +155,6 @@ export function LiveView({
   lineRelayOf?: (channel: string) => LineRelay
   captionStyle?: CaptionStyle
   formatChoice?: FormatChoice
-  startBuffer?: number
   askBrowser?: FormatProbe
 }) {
   const router = useRouter()
@@ -466,7 +464,6 @@ export function LiveView({
           autoOpensDataBroadcast={autoOpensDataBroadcast}
           captionStyle={captionStyle}
           formatChoice={formatChoice}
-          startBuffer={startBuffer}
           askBrowser={askBrowser}
           lineRelayOf={lineRelayOf}
           remoteInTheColumn={wide}

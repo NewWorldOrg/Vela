@@ -11,7 +11,6 @@ import {
 } from '@/lib/stored-flag'
 import { CAPTION_STYLE_COOKIE, captionStyleOf } from '@/lib/caption-style'
 import { FORMAT_COOKIE, formatChoiceOf } from '@/lib/playback-format'
-import { LIVE_BUFFER_COOKIE, liveBufferOf } from '@/lib/live-buffer'
 import { EPG_COLLECTION_EVENT, PROGRAMS_EVENT } from '@/repository/events'
 import { getLiveScreen } from '@/repository/live'
 import { RefreshOnSignal } from '@/components/vela/refresh-on-signal'
@@ -55,7 +54,6 @@ export default async function Page({
         )}
         captionStyle={captionStyleOf(jar.get(CAPTION_STYLE_COOKIE)?.value)}
         formatChoice={formatChoiceOf(jar.get(FORMAT_COOKIE)?.value)}
-        startBuffer={liveBufferOf(jar.get(LIVE_BUFFER_COOKIE)?.value)}
       />
     </>
   )

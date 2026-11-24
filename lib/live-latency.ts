@@ -1,10 +1,10 @@
-import { PICTURE_NEAR_SECONDS } from '@/lib/live-buffer'
-
 export const PART_SECONDS = 0.05
+
+export const TARGET_SECONDS = 0.6
 
 export const TOLERANCE_SECONDS = 0.4
 
-export const NEAR_TOLERANCE_SECONDS = 0.1
+export const NEAR_TOLERANCE_SECONDS = 0.2
 
 export const CATCH_UP_RATE = 1.05
 
@@ -12,7 +12,9 @@ export const EASE_OFF_RATE = 0.95
 
 export const SEEK_FROM_SECONDS = 8
 
-export const WARN_FROM_SECONDS = 1
+export const STALL_ALLOWANCE_SECONDS = 0.2
+
+export const STALL_ALLOWANCE_CAP_SECONDS = 1.0
 
 export interface LivePlayhead {
   rate: number
@@ -20,7 +22,7 @@ export interface LivePlayhead {
   edge: number
   reach: number
   from: number
-  target: number
+  stalls: number
 }
 
 export interface LiveHold {
@@ -28,22 +30,33 @@ export interface LiveHold {
   seekTo?: number
 }
 
-export function windowOf(target: number): { start: number; stop: number } {
+export function targetOf(stalls: number): number {
+  return (
+    TARGET_SECONDS +
+    Math.min(stalls * STALL_ALLOWANCE_SECONDS, STALL_ALLOWANCE_CAP_SECONDS)
+  )
+}
+
+export function windowOf(stalls: number): { start: number; stop: number } {
+  const target = targetOf(stalls)
+
   return { start: target + TOLERANCE_SECONDS, stop: target }
 }
 
-export function nearWindowOf(target: number): { start: number; stop: number } {
+export function nearWindowOf(stalls: number): { start: number; stop: number } {
+  const target = targetOf(stalls)
+
   return { start: target - NEAR_TOLERANCE_SECONDS, stop: target }
 }
 
 export function holdOf(playhead: LivePlayhead): LiveHold {
-  const { at, edge, reach, from, target, rate } = playhead
+  const { at, edge, reach, from, stalls, rate } = playhead
   const behind = Math.max(0, edge - at)
-  const window = windowOf(target)
-  const near = nearWindowOf(target)
+  const window = windowOf(stalls)
+  const near = nearWindowOf(stalls)
   const toTheEdge = {
     rate: 1,
-    seekTo: Math.max(from, edge - target),
+    seekTo: Math.max(from, edge - targetOf(stalls)),
   }
 
   if (behind >= SEEK_FROM_SECONDS) {
@@ -74,28 +87,6 @@ export function reachOf(runs: readonly LiveRun[], at: number): number {
   const holding = runs.find((run) => run.from <= at && at <= run.to)
 
   return holding ? holding.to : at
-}
-
-export function pictureFromOf(
-  runs: readonly LiveRun[],
-  pictures: readonly number[],
-): number | undefined {
-  const run = runs.at(-1)
-
-  if (!run) {
-    return undefined
-  }
-
-  const heldBefore = runs.at(-2)?.to ?? Number.NEGATIVE_INFINITY
-  const since = pictures.filter((picture) => picture > heldBefore)
-  const running = Math.max(...since.filter((picture) => picture <= run.from))
-  const coming = Math.min(...since.filter((picture) => picture > run.from))
-
-  if (running >= run.from - PICTURE_NEAR_SECONDS) {
-    return run.from
-  }
-
-  return coming <= run.to + PICTURE_NEAR_SECONDS ? coming : undefined
 }
 
 export const SUPPLY_GRACE_SECONDS = 0.5
@@ -133,5 +124,5 @@ export function latencyTone(
     return 'err'
   }
 
-  return seconds > WARN_FROM_SECONDS ? 'warn' : 'ok'
+  return seconds > windowOf(0).start ? 'warn' : 'ok'
 }
