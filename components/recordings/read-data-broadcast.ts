@@ -1,5 +1,5 @@
 import type { BrowserDecoding } from '@/lib/browser-decodes'
-import type { PlacedVersion } from '@/lib/recording-data-broadcast'
+import type { PlacedVersion } from '@/lib/recording-data-broadcast-timeline'
 import type { PlaybackSource } from '@/repository/playback-sources'
 import {
   dataBroadcastRead,

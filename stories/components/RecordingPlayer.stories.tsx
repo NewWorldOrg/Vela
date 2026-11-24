@@ -39,7 +39,7 @@ import {
 } from '@/stories/fixtures/frames'
 import { Player } from '@/components/recordings/player'
 import type { ReadCaptions } from '@/components/recordings/read-captions'
-import type { CaptionWindow } from '@/lib/recording-captions'
+import type { CaptionWindow } from '@/lib/recording-caption-timeline'
 import type { CaptionPicture } from '@/lib/live-wire'
 import { containedIn, placedOn } from '@/lib/caption-placement'
 import { CAPTION_STYLE_COOKIE } from '@/lib/caption-style'

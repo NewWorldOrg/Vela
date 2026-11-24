@@ -10,7 +10,7 @@ import {
   whatTheCaptionsNeed,
   type CaptionWindow,
   type TimedCaption,
-} from '@/lib/recording-captions'
+} from '@/lib/recording-caption-timeline'
 
 const CANVAS = { width: 1440, height: 1080 }
 

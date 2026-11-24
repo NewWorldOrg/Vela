@@ -5,7 +5,7 @@ import {
   whatTheCaptionsNeed,
   type CaptionTimeline,
   type TimedCaption,
-} from '@/lib/recording-captions'
+} from '@/lib/recording-caption-timeline'
 import type { CaptionWindowRead } from '@/repository/video-captions'
 import {
   CaptionSurface,

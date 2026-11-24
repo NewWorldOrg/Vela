@@ -9,7 +9,7 @@ import {
   type DataBroadcastTimeline,
   type PlacedVersion,
   type TimedEvent,
-} from '@/lib/recording-data-broadcast'
+} from '@/lib/recording-data-broadcast-timeline'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
 import {
   MOST_READS_AT_ONCE,

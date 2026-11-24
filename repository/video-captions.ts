@@ -1,7 +1,10 @@
 import type { BrowserDecoding } from '@/lib/browser-decodes'
 import type { components } from '@/repository/client/schema'
 import type { PlaybackSource } from '@/repository/playback-sources'
-import type { CaptionWindow, TimedCaption } from '@/lib/recording-captions'
+import type {
+  CaptionWindow,
+  TimedCaption,
+} from '@/lib/recording-caption-timeline'
 
 export type CaptionStanding = 'ready' | 'coming' | 'none'
 

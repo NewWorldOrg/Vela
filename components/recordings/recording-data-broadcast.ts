@@ -22,7 +22,7 @@ import {
   versionsAt,
   type DataBroadcastTimeline,
   type PlacedVersion,
-} from '@/lib/recording-data-broadcast'
+} from '@/lib/recording-data-broadcast-timeline'
 import type { DataBroadcastRead } from '@/repository/video-data-broadcast'
 
 export type ReadTimeline = (signal: AbortSignal) => Promise<DataBroadcastRead>

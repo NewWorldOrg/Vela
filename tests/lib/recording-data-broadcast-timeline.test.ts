@@ -16,7 +16,7 @@ import {
   type BroadcastVersion,
   type DataBroadcastTimeline,
   type TimedEvent,
-} from '@/lib/recording-data-broadcast'
+} from '@/lib/recording-data-broadcast-timeline'
 
 function version(
   id: number,

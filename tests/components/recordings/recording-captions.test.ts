@@ -5,7 +5,10 @@ import {
   RecordingCaptions,
   RESTS_AFTER_A_REFUSAL_MS,
 } from '@/components/recordings/recording-captions'
-import type { CaptionWindow, TimedCaption } from '@/lib/recording-captions'
+import type {
+  CaptionWindow,
+  TimedCaption,
+} from '@/lib/recording-caption-timeline'
 import type { CaptionWindowRead } from '@/repository/video-captions'
 
 const READ_MS = 100

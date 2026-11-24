@@ -4,7 +4,7 @@ import {
   timelineOf,
   type DataBroadcastTimeline,
   type PlacedVersion,
-} from '@/lib/recording-data-broadcast'
+} from '@/lib/recording-data-broadcast-timeline'
 
 export type DataBroadcastRead =
   | { state: 'read'; timeline: DataBroadcastTimeline }

@@ -5,7 +5,7 @@ import {
   MOST_PRIVATE_DATA_BYTES,
 } from '@/lib/bml/event-message'
 import { PTS_HERTZ } from '@/lib/live-wire'
-import { READS_AHEAD_WITHIN_SEC } from '@/lib/recording-captions'
+import { READS_AHEAD_WITHIN_SEC } from '@/lib/recording-caption-timeline'
 
 export { READS_AHEAD_WITHIN_SEC }
 
