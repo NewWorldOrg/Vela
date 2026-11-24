@@ -234,6 +234,7 @@ const THE_SUITE = [
   'tests/scripts/eslint-rules.test.ts',
   'tests/scripts/fetch-denpa-font.test.ts',
   'tests/scripts/no-comments.test.ts',
+  'tests/storybook/a-file-sits-with-its-kind.test.ts',
   'tests/storybook/a-story-left-running-takes-nothing-with-it.test.ts',
   'tests/storybook/cursor-exempt.test.ts',
   'tests/storybook/every-icon-is-in-the-catalogue.test.ts',
