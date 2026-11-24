@@ -38,7 +38,7 @@ async function sourceFiles(dir: string): Promise<string[]> {
 test('whether a player is in fullscreen is heard in one place, and never copied into state', async () => {
   const listening: string[] = []
 
-  for (const dir of ['app', 'components', 'hooks', 'lib']) {
+  for (const dir of ['app', 'components', 'hooks', 'lib', 'repository']) {
     for (const file of await sourceFiles(dir)) {
       const source = await readFile(path.join(ROOT, file), 'utf8')
 

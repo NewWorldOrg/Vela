@@ -13,9 +13,7 @@ const ROOT = path.resolve(
   '..',
 )
 
-const SCREENS = ['app', 'components']
-
-const READ = [...SCREENS, 'hooks', 'lib']
+const READ = ['app', 'components', 'hooks', 'lib', 'repository']
 
 const NOT_SOURCE = new Set([
   '.git',
@@ -48,6 +46,15 @@ const AN_EMPTY_STATE_TITLE = /<EmptyState\b[\s\S]{0,320}?title="([^"]*)"/g
 
 const A_DASH = /(?:'|>)([-‐-―−])(?:'|<)/g
 
+const SPLITS_OR_JOINS_ON_A_HYPHEN = new Set([
+  'lib/capture-name.ts',
+  'lib/format.ts',
+  'lib/web-push.ts',
+  'repository/reservations.ts',
+  'repository/rules.ts',
+  'repository/services.ts',
+])
+
 const SAYS_IT_IN_ENGLISH = /Loading/
 
 const A_TOASTER = /<Toaster\b/
@@ -77,12 +84,10 @@ async function sourceFiles(dir: string): Promise<string[]> {
   return found
 }
 
-async function everySource(
-  dirs: string[] = READ,
-): Promise<{ file: string; source: string }[]> {
+async function everySource(): Promise<{ file: string; source: string }[]> {
   const read: { file: string; source: string }[] = []
 
-  for (const dir of dirs) {
+  for (const dir of READ) {
     for (const file of await sourceFiles(dir)) {
       read.push({ file, source: await readFile(path.join(ROOT, file), 'utf8') })
     }
@@ -182,7 +187,11 @@ test('the sign for a value that is not there is named once', async () => {
 
   const dashes = new Set<string>()
 
-  for (const { file, source } of await everySource(SCREENS)) {
+  for (const { file, source } of await everySource()) {
+    if (SPLITS_OR_JOINS_ON_A_HYPHEN.has(file)) {
+      continue
+    }
+
     for (const dash of source.matchAll(A_DASH)) {
       dashes.add(dash[1])
       assert.equal(
@@ -232,7 +241,7 @@ test('a way of speaking that is never used is not wired up', async () => {
 test('the kinds of broadcast are spelt from the one table', async () => {
   assert.equal(BROADCAST_KIND_LABEL.terrestrial, '地上波')
 
-  for (const { file, source } of await everySource([...READ, 'repository'])) {
+  for (const { file, source } of await everySource()) {
     if (file === THE_KINDS || file.includes('client/schema')) {
       continue
     }

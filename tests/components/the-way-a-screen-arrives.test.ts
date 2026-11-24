@@ -29,9 +29,7 @@ const THE_LONG_LISTS = [
   'components/live/channel-grid.tsx',
 ]
 
-const SCREENS = ['app', 'components']
-
-const READ = [...SCREENS, 'hooks', 'lib']
+const READ = ['app', 'components', 'hooks', 'lib', 'repository']
 
 const NOT_SOURCE = new Set([
   '.git',
@@ -161,6 +159,8 @@ const WRITES_ITS_OWN_DELAY = /animationDelay|animation-delay\s*:/
 
 const WRITES_ITS_OWN_ANIMATION = /animation\s*:|animate-\[/
 
+const NAMES_A_PARAMETER_ANIMATION = 'lib/bml/mng.ts'
+
 const THE_OLD_BLINK = /animate-pulse/
 
 async function sourceFiles(dir: string): Promise<string[]> {
@@ -186,12 +186,10 @@ async function sourceFiles(dir: string): Promise<string[]> {
   return found
 }
 
-async function everySource(
-  dirs: string[] = READ,
-): Promise<{ file: string; source: string }[]> {
+async function everySource(): Promise<{ file: string; source: string }[]> {
   const read: { file: string; source: string }[] = []
 
-  for (const dir of dirs) {
+  for (const dir of READ) {
     for (const file of await sourceFiles(dir)) {
       read.push({ file, source: await readFile(path.join(ROOT, file), 'utf8') })
     }
@@ -292,7 +290,11 @@ test('every delay is handed down through the variables, not written on a part', 
 })
 
 test('no screen declares a movement of its own', async () => {
-  for (const { file, source } of await everySource(SCREENS)) {
+  for (const { file, source } of await everySource()) {
+    if (file === NAMES_A_PARAMETER_ANIMATION) {
+      continue
+    }
+
     assert.doesNotMatch(
       source,
       WRITES_ITS_OWN_ANIMATION,
@@ -802,7 +804,7 @@ test('every part that moves hears the switch in the settings, not the machine al
     'still: does not stop what the machine or the switch in the settings stops',
   )
 
-  for (const dir of ['app', 'components', 'hooks', 'lib']) {
+  for (const dir of READ) {
     for (const file of await sourceFiles(dir)) {
       const source = await readFile(path.join(ROOT, file), 'utf8')
 

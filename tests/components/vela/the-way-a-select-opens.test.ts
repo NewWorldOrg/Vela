@@ -6,7 +6,7 @@ import { test } from 'node:test'
 
 const WHERE_THE_DIRECTION_IS_DECLARED = 'components/ui/select.tsx'
 
-const READ = ['app', 'components', 'hooks', 'lib', 'stories']
+const READ = ['app', 'components', 'hooks', 'lib', 'repository', 'stories']
 
 const NOT_SOURCE = new Set([
   '.git',
