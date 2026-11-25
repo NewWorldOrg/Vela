@@ -762,6 +762,17 @@ export function onGrid(rect: Rect, resolution: Size, aspect: Aspect): Rect {
   }
 }
 
+export function withinPlane(rect: Rect, resolution: Size): Rect | null {
+  const left = Math.max(0, rect.left)
+  const top = Math.max(0, rect.top)
+  const right = Math.min(resolution.width, rect.left + rect.width)
+  const bottom = Math.min(resolution.height, rect.top + rect.height)
+
+  return right > left && bottom > top
+    ? { left, top, width: right - left, height: bottom - top }
+    : null
+}
+
 export const BASE_STYLE = [
   'html, body { margin: 0; padding: 0; overflow: hidden; background: transparent; }',
   '#bml-plane { position: absolute; left: 0; top: 0; overflow: hidden; transform-origin: 0 0; }',

@@ -14,6 +14,7 @@ import {
   pixelsOf,
   specificityOf,
   styleSheetOf,
+  withinPlane,
   type Aspect,
   type BmlFeatures,
   type StyleRule,
@@ -599,15 +600,10 @@ class Conversion {
       return null
     }
 
-    const { left: placedLeft, top: placedTop } = this.placeOf(node, offset)
-    const left = Math.max(0, placedLeft)
-    const top = Math.max(0, placedTop)
-    const right = Math.min(this.resolution.width, placedLeft + width)
-    const bottom = Math.min(this.resolution.height, placedTop + height)
-
-    return right > left && bottom > top
-      ? { left, top, width: right - left, height: bottom - top }
-      : null
+    return withinPlane(
+      { ...this.placeOf(node, offset), width, height },
+      this.resolution,
+    )
   }
 
   cutStills(): void {

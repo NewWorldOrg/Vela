@@ -1,3 +1,4 @@
+import type { Rect, Size } from '@/lib/caption-placement'
 import type { BmlPage, PageElement, PageNode } from '@/lib/bml/document'
 import { stillCut, videoHole } from '@/lib/bml/style'
 
@@ -46,6 +47,55 @@ function kept(name: string, value: string): boolean {
   )
 }
 
+function cutStill(element: HTMLElement, cut: Rect | null): void {
+  if (!cut) {
+    element.removeAttribute('data-bml-still')
+
+    return
+  }
+
+  element.setAttribute('data-bml-still', '')
+  Object.entries(stillCut(cut)).forEach(([name, value]) =>
+    element.style.setProperty(name, value),
+  )
+}
+
+function cutHole(body: HTMLElement, rect: Rect | null, resolution: Size): void {
+  if (!rect) {
+    body.removeAttribute('data-bml-hole')
+
+    return
+  }
+
+  body.setAttribute('data-bml-hole', '')
+  Object.entries(videoHole(rect, resolution)).forEach(([name, value]) =>
+    body.style.setProperty(name, value),
+  )
+}
+
+export function moveVideo(
+  page: BmlPage,
+  mounted: MountedPage,
+  rect: Rect | null,
+): void {
+  const first = page.videoRect
+
+  cutHole(mounted.body, rect, page.resolution)
+  mounted.nodes.forEach((node, element) => {
+    if (node.cut && first) {
+      cutStill(
+        element,
+        rect && {
+          left: rect.left - first.left + node.cut.left,
+          top: rect.top - first.top + node.cut.top,
+          width: rect.width,
+          height: rect.height,
+        },
+      )
+    }
+  })
+}
+
 function build(node: PageNode, building: Building): Node {
   const { document, byNavIndex, byId, nodes } = building
 
@@ -80,9 +130,7 @@ function build(node: PageNode, building: Building): Node {
   }
 
   if (node.cut) {
-    Object.entries(stillCut(node.cut)).forEach(([name, value]) =>
-      element.style.setProperty(name, value),
-    )
+    cutStill(element, node.cut)
   }
 
   if (node.tag === 'input') {
@@ -117,12 +165,7 @@ export function mountPage(page: BmlPage, plane: HTMLElement): MountedPage {
   plane.style.width = `${page.resolution.width}px`
   plane.style.height = `${page.resolution.height}px`
 
-  if (page.videoRect) {
-    body.setAttribute('data-bml-hole', '')
-    Object.entries(videoHole(page.videoRect, page.resolution)).forEach(
-      ([name, value]) => body.style.setProperty(name, value),
-    )
-  }
+  cutHole(body, page.videoRect, page.resolution)
 
   return {
     body,

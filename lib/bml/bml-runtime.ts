@@ -1,3 +1,4 @@
+import type { Rect } from '@/lib/caption-placement'
 import {
   browserOf,
   registersOf,
@@ -100,7 +101,7 @@ import {
   type MngBitmap,
   type MngCanvas,
 } from '@/lib/bml/mng-player'
-import { mountPage, type MountedPage } from '@/lib/bml/page'
+import { mountPage, moveVideo, type MountedPage } from '@/lib/bml/page'
 
 const ACTIVE_MS = 150
 
@@ -117,6 +118,8 @@ const DATA_BUTTON_EVERY_MS = 500
 const MOST_DATA_BUTTON_PRESSES = 20
 
 const MOST_ANIMATED_PIXELS = 2 * MNG_LIMITS.pixels
+
+const PICTURES_COUNTED_FOR_MS = 60_000
 
 const LOCKED = 0
 
@@ -150,6 +153,10 @@ interface Shown {
   focused: HTMLElement | null
   urls: string[]
   players: Map<HTMLElement, MngPlayer<MngBitmap>>
+  wanted: Map<HTMLElement, string>
+  askedAt: number[]
+  videoRect: Rect | null
+  toldRect: Rect | null | undefined
   usedKeys: UsedKeyGroup[]
   nptTold: Set<EventItem>
 }
@@ -685,12 +692,17 @@ export class BmlRuntime {
       focused: null,
       urls,
       players: new Map(),
+      wanted: new Map(),
+      askedAt: [],
+      videoRect: page.videoRect,
+      toldRect: undefined,
       usedKeys: page.usedKeys,
       nptTold: new Set(),
     }
 
     this.shown = shown
     this.fit()
+    this.placeVideo(shown, document.videoRect(page.resolution))
     mounted.nodes.forEach((node, element) => {
       if (node.mng) {
         this.animate(shown, element, node.mng)
@@ -749,16 +761,40 @@ export class BmlRuntime {
     }, 0)
   }
 
-  private tellVideoRect(shown: Shown): void {
-    const rect = shown.page.videoRect
+  private rectToTell(shown: Shown): Rect | null {
+    return shown.videoRect && !shown.document.cannotBeSeen()
+      ? onGrid(shown.videoRect, shown.page.resolution, shown.page.aspect)
+      : null
+  }
 
-    this.say({
-      kind: 'videoRect',
-      rect:
-        rect && !shown.document.cannotBeSeen()
-          ? onGrid(rect, shown.page.resolution, shown.page.aspect)
-          : null,
-    })
+  private tellVideoRect(shown: Shown): void {
+    shown.toldRect = this.rectToTell(shown)
+    this.say({ kind: 'videoRect', rect: shown.toldRect })
+  }
+
+  private followVideo(): void {
+    const shown = this.shown
+    const rect = shown?.document.movedVideoRect(shown.page.resolution)
+
+    if (shown && rect !== undefined) {
+      this.placeVideo(shown, rect)
+    }
+  }
+
+  private placeVideo(shown: Shown, rect: Rect | null): void {
+    if (sameRect(rect, shown.videoRect)) {
+      return
+    }
+
+    shown.videoRect = rect
+    moveVideo(shown.page, shown.mounted, rect)
+
+    if (
+      shown.toldRect !== undefined &&
+      !sameRect(shown.toldRect, this.rectToTell(shown))
+    ) {
+      this.tellVideoRect(shown)
+    }
   }
 
   private scriptAt(path: string): string | null {
@@ -820,6 +856,7 @@ export class BmlRuntime {
           ? this.urlOf(resource, shown.page.palette, shown.urls)
           : null
       },
+      sentFor: (element, reference) => this.sendFor(element, reference),
       animate: (element, reference) => this.animateFrom(element, reference),
       resolve: (reference) => {
         const base = this.shown?.page.address
@@ -965,6 +1002,8 @@ export class BmlRuntime {
 
     if (this.depth === 0) {
       this.settle()
+      this.followPictures()
+      this.followVideo()
     }
 
     return (
@@ -1003,14 +1042,67 @@ export class BmlRuntime {
 
   private took(id: number, module: BmlModule | null): void {
     const pending = this.pending
+    const allIn = this.requests.took(id, module)
 
-    if (!this.requests.took(id, module) || pending?.url === undefined) {
+    if (allIn && pending?.url !== undefined) {
+      this.launch(pending, false)
+      this.presses = 0
+      this.nudge()
+    }
+
+    this.followPictures()
+  }
+
+  private sendFor(element: HTMLElement, reference: string): boolean {
+    const shown = this.shown
+    const base = shown?.page.address
+    const url = base ? resolveReference(reference, base)?.url : undefined
+
+    shown?.wanted.delete(element)
+
+    if (!shown || url === undefined || this.requests.has(url)) {
+      return false
+    }
+
+    shown.wanted.set(element, url)
+
+    return true
+  }
+
+  private followPictures(): void {
+    const shown = this.shown
+
+    if (!shown) {
       return
     }
 
-    this.launch(pending, false)
-    this.presses = 0
-    this.nudge()
+    const refused =
+      this.pending === null && !this.requests.awaiting
+        ? this.askForPictures(shown)
+        : []
+
+    shown.wanted.forEach((url, element) => {
+      if (this.requests.has(url)) {
+        shown.wanted.delete(element)
+        shown.document.pictureCame(element)
+      }
+    })
+    this.requests.forget(refused)
+  }
+
+  private askForPictures(shown: Shown): string[] {
+    const now = this.now()
+    const recent = shown.askedAt.filter(
+      (at) => now - at < PICTURES_COUNTED_FOR_MS,
+    )
+    const { asked, refused } = this.requests.fetch(
+      shown.wanted.values(),
+      recent.length,
+    )
+
+    shown.askedAt = [...recent, ...Array.from({ length: asked }, () => now)]
+
+    return refused
   }
 
   private settle(): void {
@@ -1689,6 +1781,18 @@ export class BmlRuntime {
 }
 
 const MOST_REASON = 200
+
+function sameRect(one: Rect | null, other: Rect | null): boolean {
+  return (
+    one === other ||
+    (one !== null &&
+      other !== null &&
+      one.left === other.left &&
+      one.top === other.top &&
+      one.width === other.width &&
+      one.height === other.height)
+  )
+}
 
 function registerText(value: unknown): string {
   const text =

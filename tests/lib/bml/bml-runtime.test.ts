@@ -4,6 +4,7 @@ import { mock, test } from 'node:test'
 import { BmlRuntime, type RuntimeOptions } from '@/lib/bml/bml-runtime'
 import type { BmlCatalog } from '@/lib/bml/catalog'
 import type { ReceiverId } from '@/lib/bml/line'
+import { MOST_FETCHES_FOR_A_PAGE } from '@/lib/bml/line-requests'
 import {
   MOST_REGISTER,
   RUNTIME_ORIGIN,
@@ -220,6 +221,347 @@ test('a JPEG drawn over the whole page has the video’s rectangle cut out of it
   )
   assert.equal(mark?.getAttribute('data-bml-still'), null)
   assert.deepEqual(mark?.style.properties, {})
+})
+
+function named(
+  element: FakeElement | null | undefined,
+  prefix: string,
+): Record<string, string> {
+  return Object.fromEntries(
+    Object.entries(element?.style.properties ?? {}).filter(([name]) =>
+      name.startsWith(prefix),
+    ),
+  )
+}
+
+function holeOf(plane: FakeElement): Record<string, string> | null {
+  const body = plane.find('data-bml-tag', 'body')
+
+  return body?.hasAttribute('data-bml-hole') ? named(body, '--bml-hole-') : null
+}
+
+function videoRectsOf(heard: RuntimeMessage[]): unknown[] {
+  return heard.flatMap((message) =>
+    message.kind === 'videoRect' ? [message.rect] : [],
+  )
+}
+
+const MOVES_ITS_VIDEO = bml(
+  '<object id="video" type="video/X-arib-mpeg2" style="left: 480px; top: 0px; width: 480px; height: 270px"/>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+  '<script>' +
+    'var video = document.getElementById("video").normalStyle;' +
+    'var body = document.getElementById("body");' +
+    'function pressed(code) {' +
+    '  if (code == 21) { video.width = "240px"; video.height = "135px"; video.left = "666px"; video.top = "30px"; }' +
+    '  if (code == 22) { video.left = "0px"; video.left = "100px"; video.left = "666px"; }' +
+    '  if (code == 23) { video.visibility = "hidden"; }' +
+    '  if (code == 24) { video.visibility = "visible"; }' +
+    '  if (code == 6) { video.display = "none"; }' +
+    '  if (code == 7) { video.display = "block"; }' +
+    '  if (code == 8) { video.left = "800px"; video.top = "-35px"; }' +
+    '  if (code == 9) { document.getElementById("keys").normalStyle.left = "10px"; }' +
+    '  if (code == 10) { body.invisible = true; video.left = "0px"; }' +
+    '  if (code == 11) { body.invisible = false; }' +
+    '}' +
+    '</script>',
+).replace('<body>', '<body id="body">')
+
+test('a script that moves and resizes the video has the player told once where it now lies, and the ground is cut there', () => {
+  const { heard, send, forget, plane } = opened(MOVES_ITS_VIDEO)
+
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '0px',
+    '--bml-hole-right': '0px',
+    '--bml-hole-bottom': '270px',
+    '--bml-hole-left': '480px',
+  })
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'videoRect',
+      rect: { left: 666, top: 30, width: 240, height: 135 },
+    },
+  ])
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '30px',
+    '--bml-hole-right': '54px',
+    '--bml-hole-bottom': '375px',
+    '--bml-hole-left': '666px',
+  })
+})
+
+test('a script that leaves the video where it lay, by writing what it already held, by coming back to it within one run or by moving something else, has the player told nothing', () => {
+  const { heard, send, forget } = opened(MOVES_ITS_VIDEO)
+
+  send({ kind: 'key', key: 'blue' })
+  forget()
+  send({ kind: 'key', key: 'blue' })
+  send({ kind: 'key', key: 'red' })
+  send({ kind: 'key', key: '4' })
+
+  assert.deepEqual(heard(), [])
+})
+
+test('a video a script moves past the plane’s edge is cut to the plane', () => {
+  const { heard, send, forget, plane } = opened(MOVES_ITS_VIDEO)
+
+  forget()
+  send({ kind: 'key', key: '3' })
+
+  assert.deepEqual(videoRectsOf(heard()), [
+    { left: 800, top: 0, width: 160, height: 235 },
+  ])
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '0px',
+    '--bml-hole-right': '0px',
+    '--bml-hole-bottom': '305px',
+    '--bml-hole-left': '800px',
+  })
+})
+
+test('a video a script hides, or takes out of the layout, is told to the player as no rectangle and the ground is whole, as with a body that cannot be seen, until the script shows it again', () => {
+  for (const [hide, show] of [
+    ['green', 'yellow'],
+    ['1', '2'],
+  ] as const) {
+    const { heard, send, forget, plane } = opened(MOVES_ITS_VIDEO)
+
+    forget()
+    send({ kind: 'key', key: hide })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }], hide)
+    assert.equal(holeOf(plane), null, hide)
+
+    forget()
+    send({ kind: 'key', key: show })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: START_RECT }], show)
+    assert.deepEqual(
+      holeOf(plane),
+      {
+        '--bml-hole-top': '0px',
+        '--bml-hole-right': '0px',
+        '--bml-hole-bottom': '270px',
+        '--bml-hole-left': '480px',
+      },
+      show,
+    )
+  }
+})
+
+test('a video moved while the body cannot be seen is told to the player where it lies once the body shows', () => {
+  const { heard, send, forget } = opened(MOVES_ITS_VIDEO)
+
+  forget()
+  send({ kind: 'key', key: '5' })
+
+  assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }])
+
+  forget()
+  send({ kind: 'key', key: '6' })
+
+  assert.deepEqual(heard(), [
+    { kind: 'videoRect', rect: { left: 0, top: 0, width: 480, height: 270 } },
+  ])
+})
+
+const PLACES_ITS_VIDEO_AT_ONCE = bml(
+  '<object id="video" type="video/X-arib-mpeg2" style="left: 480px; top: 0px; width: 480px; height: 270px"/>',
+  '<script>' +
+    'var video = document.getElementById("video").normalStyle;' +
+    'video.left = "0px"; video.width = "320px"; video.height = "180px";' +
+    '</script>',
+)
+
+test('a video the document’s first script moves is told to the player once, where the script left it', () => {
+  const { heard, plane } = opened(PLACES_ITS_VIDEO_AT_ONCE)
+
+  assert.deepEqual(videoRectsOf(heard()), [NEXT_RECT])
+  assert.deepEqual(holeOf(plane), {
+    '--bml-hole-top': '0px',
+    '--bml-hole-right': '640px',
+    '--bml-hole-bottom': '360px',
+    '--bml-hole-left': '0px',
+  })
+})
+
+const VIDEO_IN_A_BOX = bml(
+  '<div id="box" style="left: 100px; top: 50px; width: 800px; height: 400px">' +
+    '<object type="video/X-arib-mpeg2" style="left: 20px; top: 10px; width: 480px; height: 270px"/>' +
+    '</div>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="document.getElementById(&quot;box&quot;).normalStyle.left = &quot;200px&quot;">keys</p>',
+)
+
+test('a video inside a box a script moves is told to the player where the box has carried it', () => {
+  const { heard, send, forget } = opened(VIDEO_IN_A_BOX)
+
+  assert.deepEqual(videoRectsOf(heard()), [
+    { left: 120, top: 60, width: 480, height: 270 },
+  ])
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [
+    {
+      kind: 'videoRect',
+      rect: { left: 220, top: 60, width: 480, height: 270 },
+    },
+  ])
+})
+
+function boxed(box = '', video = ''): string {
+  return bml(
+    `<div id="box" style="left: 100px; top: 50px; width: 800px; height: 400px${box}">` +
+      `<object id="video" type="video/X-arib-mpeg2" style="left: 20px; top: 10px; width: 480px; height: 270px${video}"/>` +
+      '</div>' +
+      '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+    '<script>' +
+      'var box = document.getElementById("box").normalStyle;' +
+      'var video = document.getElementById("video").normalStyle;' +
+      'function pressed(code) {' +
+      '  if (code == 21) { box.visibility = "hidden"; }' +
+      '  if (code == 22) { box.visibility = "visible"; }' +
+      '  if (code == 23) { box.display = "none"; }' +
+      '  if (code == 24) { box.display = "block"; }' +
+      '  if (code == 6) { video.visibility = "visible"; }' +
+      '}' +
+      '</script>',
+  )
+}
+
+const BOXED_RECT = { left: 120, top: 60, width: 480, height: 270 }
+
+const BOXED_HOLE = {
+  '--bml-hole-top': '60px',
+  '--bml-hole-right': '360px',
+  '--bml-hole-bottom': '210px',
+  '--bml-hole-left': '120px',
+}
+
+test('a video inside a box a script hides, or takes out of the layout, is told to the player as no rectangle and the ground is whole until the script shows the box again', () => {
+  for (const [hide, show] of [
+    ['blue', 'red'],
+    ['green', 'yellow'],
+  ] as const) {
+    const { heard, send, forget, plane } = opened(boxed())
+
+    forget()
+    send({ kind: 'key', key: hide })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }], hide)
+    assert.equal(holeOf(plane), null, hide)
+
+    forget()
+    send({ kind: 'key', key: show })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: BOXED_RECT }], show)
+    assert.deepEqual(holeOf(plane), BOXED_HOLE, show)
+  }
+})
+
+test('a video that says it is visible stays where it lies while the box around it is hidden, and goes with a box taken out of the layout', () => {
+  const { heard, send, forget, plane } = opened(
+    boxed('', '; visibility: visible'),
+  )
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [])
+  assert.deepEqual(holeOf(plane), BOXED_HOLE)
+
+  send({ kind: 'key', key: 'green' })
+
+  assert.deepEqual(heard(), [{ kind: 'videoRect', rect: null }])
+  assert.equal(holeOf(plane), null)
+})
+
+test('a video the document itself hides, or holds in a box it hides or takes out of the layout, has no rectangle from the start and the ground is whole, until a script shows it', () => {
+  for (const [box, video, show] of [
+    ['', '; visibility: hidden', '1'],
+    ['; visibility: hidden', '', 'red'],
+    ['; display: none', '', 'yellow'],
+  ] as const) {
+    const { heard, send, forget, plane } = opened(boxed(box, video))
+
+    assert.deepEqual(videoRectsOf(heard()), [null], show)
+    assert.equal(holeOf(plane), null, show)
+
+    forget()
+    send({ kind: 'key', key: show })
+
+    assert.deepEqual(heard(), [{ kind: 'videoRect', rect: BOXED_RECT }], show)
+    assert.deepEqual(holeOf(plane), BOXED_HOLE, show)
+  }
+})
+
+const MOVES_ITS_VIDEO_OVER_STILLS = bml(
+  '<object id="ground" type="image/jpeg" data="ground.jpg" style="left: 0px; top: 0px; width: 960px; height: 540px"/>' +
+    '<div style="left: 100px; top: 50px; width: 400px; height: 300px">' +
+    '<object id="inset" type="image/jpeg" data="ground.jpg" style="left: 10px; top: 10px; width: 200px; height: 100px"/>' +
+    '</div>' +
+    '<object id="video" type="video/X-arib-mpeg2" style="left: 24px; top: 14px; width: 720px; height: 405px"/>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+  '<script>' +
+    'var video = document.getElementById("video").normalStyle;' +
+    'function pressed(code) {' +
+    '  if (code == 21) { video.left = "600px"; video.top = "20px"; video.width = "320px"; video.height = "180px"; }' +
+    '  if (code == 23) { video.visibility = "hidden"; }' +
+    '  if (code == 24) { video.visibility = "visible"; }' +
+    '}' +
+    '</script>',
+)
+
+test('the JPEGs behind a video a script moves are cut where it now lies, each in its own place, and are whole while it is hidden', () => {
+  const opening = frame()
+
+  opening.send({ kind: 'catalog', catalog: CATALOG })
+  opening.send({
+    kind: 'module',
+    module: module(0, {
+      'startup.bml': ['bml', MOVES_ITS_VIDEO_OVER_STILLS],
+      'ground.jpg': ['jpeg', 'jpeg'],
+    }),
+  })
+  opening.send({ kind: 'open' })
+  opening.send({ kind: 'key', key: 'blue' })
+
+  const moved = {
+    ground: {
+      '--bml-cut-left': '600px',
+      '--bml-cut-top': '20px',
+      '--bml-cut-width': '320px',
+      '--bml-cut-height': '180px',
+    },
+    inset: {
+      '--bml-cut-left': '490px',
+      '--bml-cut-top': '-40px',
+      '--bml-cut-width': '320px',
+      '--bml-cut-height': '180px',
+    },
+  }
+
+  for (const id of ['ground', 'inset'] as const) {
+    assert.deepEqual(named(opening.element(id), '--bml-cut-'), moved[id], id)
+  }
+
+  opening.send({ kind: 'key', key: 'green' })
+
+  for (const id of ['ground', 'inset'] as const) {
+    assert.equal(opening.element(id)?.getAttribute('data-bml-still'), null, id)
+  }
+
+  opening.send({ kind: 'key', key: 'yellow' })
+
+  for (const id of ['ground', 'inset'] as const) {
+    assert.equal(opening.element(id)?.getAttribute('data-bml-still'), '', id)
+    assert.deepEqual(named(opening.element(id), '--bml-cut-'), moved[id], id)
+  }
 })
 
 test('opening at the start document of another component draws that one', () => {
@@ -2430,6 +2772,266 @@ test('with the setting off a document over the line is not fetched', () => {
 
   assert.deepEqual(heard(), [{ kind: 'line', said: 'off' }])
   assert.ok(element('go'))
+})
+
+const MAP = 'http://example.test/maps/map.jpg'
+
+const DRAWS_A_MAP = bml(
+  '<object id="map" type="image/jpeg"/>' +
+    '<p id="keys" style="nav-index: 0" onkeydown="pressed(document.currentEvent.keyCode)">keys</p>',
+  '<script>' +
+    'var map = document.getElementById("map");' +
+    'var MAP = "http://example.test/maps/map.jpg";' +
+    'function counted(register) { browser.Ureg[register] = String(Number(browser.Ureg[register] || "0") + 1); return browser.Ureg[register]; }' +
+    'function pressed(code) {' +
+    '  if (code == 21) { map.data = MAP + "?at=1"; map.data = MAP + "?at=1"; }' +
+    '  if (code == 22) { map.data = MAP + "?at=2"; }' +
+    '  if (code == 23) { map.data = MAP + "?try=" + counted(1); browser.transmitTextDataOverIP("http://example.test/time", "", "EUC-JP"); }' +
+    '  if (code == 24) { map.data = "ftp://example.test/maps/map.jpg"; map.data = "http://example.test/" + new Array(2100).join("m") + ".jpg"; }' +
+    '  if (code == 6) { map.data = MAP + "?n=" + counted(2); }' +
+    '  if (code == 7) { browser.reloadActiveDocument(); }' +
+    '  if (code == 8) { map.data = MAP + "?at=3"; browser.launchDocument("~/0001/next.bml", "cut"); }' +
+    '  if (code == 9) { map.data = MAP + "?at=4"; browser.launchDocument("http://example.test/bml/gone.bml"); }' +
+    '}' +
+    '</script>',
+)
+
+const MAP_FETCHED = fetchedModule({ 'map.jpg': ['jpeg', JPEG] })
+
+function fetchesOf(heard: RuntimeMessage[]): string[] {
+  return heard.flatMap((message) =>
+    message.kind === 'fetch' ? [`${message.id} ${message.uri}`] : [],
+  )
+}
+
+test('a picture over the line a script gives an image is fetched once however often it is given, and goes in when it comes without a warning', () => {
+  const { heard, send, forget, element, warnings } = overTheLine(
+    DRAWS_A_MAP,
+    'on',
+  )
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [{ kind: 'fetch', id: 1, uri: `${MAP}?at=1` }])
+  assert.equal(element('map')?.getAttribute('src'), null)
+
+  forget()
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  const first = element('map')?.getAttribute('src') ?? ''
+
+  assert.match(first, /^blob:/)
+  assert.deepEqual(heard(), [])
+
+  send({ kind: 'key', key: 'blue' })
+
+  assert.deepEqual(heard(), [])
+  assert.match(element('map')?.getAttribute('src') ?? '', /^blob:/)
+  assert.deepEqual(warnings, [])
+})
+
+test('a picture over the line that comes after the script gave the image another does not go in, and the other does when it comes', () => {
+  const { heard, send, forget, element } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'blue' })
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(fetchesOf(heard()), [`1 ${MAP}?at=1`, `2 ${MAP}?at=2`])
+
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  assert.equal(element('map')?.getAttribute('src'), null)
+
+  send({ kind: 'fetched', id: 2, module: MAP_FETCHED })
+
+  assert.match(element('map')?.getAttribute('src') ?? '', /^blob:/)
+})
+
+test('a handler run again after each answer it waited on names its picture anew each time, and only the last it named is fetched', () => {
+  const { heard, send, forget, element } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'green' })
+
+  assert.deepEqual(
+    heard().map((message) => message.kind),
+    ['transmit'],
+  )
+
+  forget()
+  send({ kind: 'transmitted', id: 1, answer: ANSWERED })
+
+  assert.deepEqual(heard(), [{ kind: 'fetch', id: 2, uri: `${MAP}?try=2` }])
+
+  send({ kind: 'fetched', id: 2, module: MAP_FETCHED })
+
+  assert.match(element('map')?.getAttribute('src') ?? '', /^blob:/)
+})
+
+test('a picture over the line that could not be fetched is a missing image, as one the document names from the start is, and is not asked for again', () => {
+  const { heard, send, forget, element, warnings } = overTheLine(
+    DRAWS_A_MAP,
+    'on',
+  )
+
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(warnings, [])
+
+  forget()
+  send({ kind: 'fetched', id: 1, module: null })
+
+  assert.equal(element('map')?.getAttribute('src'), null)
+  assert.deepEqual(warnings, [`data broadcast: missing image: ${MAP}?at=2`])
+
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(heard(), [])
+  assert.equal(warnings.length, 2)
+})
+
+test('a reference a script gives an image that is not one over the line, or is too long for one, is a missing image and nothing is asked', () => {
+  const { heard, send, forget, warnings } = overTheLine(DRAWS_A_MAP, 'on')
+
+  forget()
+  send({ kind: 'key', key: 'yellow' })
+
+  assert.deepEqual(heard(), [])
+  assert.equal(warnings.length, 2)
+  assert.match(warnings[0], /^data broadcast: missing image: ftp:/)
+  assert.match(warnings[1], /^data broadcast: missing image: http:/)
+})
+
+const NAMES_A_MAP = bml(
+  `<object id="map" type="image/jpeg" data="${MAP}?at=2"/>`,
+)
+
+test('with the setting off, and where there is no line, a picture a script gives an image is asked of the player as one the document names from the start is, and the player’s refusal leaves it missing', () => {
+  for (const line of ['off', 'none'] as const) {
+    const named = overTheLine(NAMES_A_MAP, line)
+    const given = overTheLine(DRAWS_A_MAP, line)
+
+    given.forget()
+    given.send({ kind: 'key', key: 'red' })
+
+    assert.deepEqual(fetchesOf(named.heard()), [`1 ${MAP}?at=2`], line)
+    assert.deepEqual(fetchesOf(given.heard()), [`1 ${MAP}?at=2`], line)
+
+    given.send({ kind: 'fetched', id: 1, module: null })
+
+    assert.equal(given.element('map')?.getAttribute('src'), null, line)
+    assert.deepEqual(
+      given.warnings,
+      [`data broadcast: missing image: ${MAP}?at=2`],
+      line,
+    )
+  }
+})
+
+function atTheMost() {
+  const opening = overTheLine(DRAWS_A_MAP, 'on')
+
+  opening.forget()
+
+  for (let press = 0; press < MOST_FETCHES_FOR_A_PAGE; press += 1) {
+    opening.send({ kind: 'key', key: '1' })
+  }
+
+  assert.equal(fetchesOf(opening.heard()).length, MOST_FETCHES_FOR_A_PAGE)
+  opening.send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+  opening.forget()
+
+  return opening
+}
+
+test('the pictures a document’s scripts give it are fetched no more often within a minute than a page may fetch, one given after that is a missing image though earlier ones have come, and the same one is fetched when given again once the minute has passed', () => {
+  const { heard, send, timers, warnings } = atTheMost()
+  const missing = `data broadcast: missing image: ${MAP}?at=2`
+
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(heard(), [])
+  assert.deepEqual(warnings, [missing])
+
+  timers.tick(59_000)
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(heard(), [])
+  assert.deepEqual(warnings, [missing, missing])
+
+  timers.tick(1_000)
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(fetchesOf(heard()), [
+    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?at=2`,
+  ])
+  assert.deepEqual(warnings, [missing, missing])
+})
+
+test('a document drawn again begins the count of the pictures its scripts give it again', () => {
+  const { heard, send, forget, warnings } = atTheMost()
+
+  send({ kind: 'key', key: '2' })
+  forget()
+  send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(fetchesOf(heard()), [
+    `${MOST_FETCHES_FOR_A_PAGE + 1} ${MAP}?at=2`,
+  ])
+  assert.deepEqual(warnings, [])
+})
+
+test('a picture a script gives a document that is set to give way to one still awaited is not fetched, and is once the other turns out not to come', () => {
+  const awaited = overTheLine(DRAWS_A_MAP, 'on')
+
+  awaited.forget()
+  awaited.send({ kind: 'key', key: '3' })
+  awaited.send({ kind: 'key', key: 'red' })
+
+  assert.deepEqual(awaited.heard(), [{ kind: 'waiting', waiting: true }])
+
+  const refused = overTheLine(DRAWS_A_MAP, 'on')
+
+  refused.forget()
+  refused.send({ kind: 'key', key: '4' })
+
+  assert.deepEqual(refused.heard(), [
+    { kind: 'fetch', id: 1, uri: 'http://example.test/bml/gone.bml' },
+    { kind: 'waiting', waiting: true },
+  ])
+
+  refused.forget()
+  refused.send({ kind: 'fetched', id: 1, module: null })
+
+  assert.deepEqual(refused.heard(), [
+    { kind: 'waiting', waiting: false },
+    { kind: 'fetch', id: 2, uri: `${MAP}?at=4` },
+  ])
+  assert.ok(refused.element('map'))
+})
+
+test('a picture that comes for a page already left goes nowhere', () => {
+  const { send, element, warnings } = overTheLine(
+    DRAWS_A_MAP.replace(
+      'function pressed(code) {',
+      'function pressed(code) { if (code == 18) { browser.launchDocument("~/0001/next.bml", "cut"); }',
+    ),
+    'on',
+  )
+
+  send({
+    kind: 'module',
+    module: module(1, { 'next.bml': ['bml', NEXT] }),
+  })
+  send({ kind: 'key', key: 'red' })
+  send({ kind: 'key', key: 'enter' })
+  send({ kind: 'fetched', id: 1, module: MAP_FETCHED })
+
+  assert.equal(element('map'), null)
+  assert.deepEqual(warnings, [])
 })
 
 test('the bundled face is loaded with its line box as tall as its em square', (t) => {
