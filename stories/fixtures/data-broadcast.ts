@@ -236,8 +236,14 @@ function ticked() {
   count.firstChild.data = String(Number(count.firstChild.data) + 1);
 }
 function spin() {
-  var until = new Date().getTime() + 2600;
-  while (new Date().getTime() < until) {}
+  var spent = 0;
+  var last = new Date().getTime();
+  while (spent < 2600) {
+    var now = new Date().getTime();
+    var step = now - last;
+    if (step >= 0 && step <= 50) { spent = spent + step; }
+    last = now;
+  }
 }
 browser.setInterval("ticked()", 1000, 60);
 ]]></script>
