@@ -468,3 +468,15 @@ test('the caption frames ride the channels the API set aside for them', () => {
   assert.equal(shown?.channel, 'caption')
   assert.equal(shown?.pts, 4_500_000)
 })
+
+test('a still is the JPEG on channel 0x02, timed by the clock of the picture it shows', () => {
+  const jpeg = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
+  const bytes = frameOf('still', 4_500_000, jpeg)
+
+  assert.equal(bytes[0], 0x02)
+  assert.deepEqual(readFrame(bytes), {
+    channel: 'still',
+    pts: 4_500_000,
+    payload: jpeg,
+  })
+})

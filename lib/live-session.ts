@@ -42,6 +42,7 @@ export type OpenSocket = (href: string) => LiveSocket
 export interface LiveSessionEvents {
   onHeader: (init: Uint8Array) => void
   onPicture: (payload: Uint8Array, pts: number) => void
+  onStill: (jpeg: Uint8Array, pts: number) => void
   onCaptionCanvas: (canvas: CaptionCanvas) => void
   onCaption: (picture: CaptionPicture | null, pts: number) => void
   onDataBroadcast: (payload: Uint8Array, pts: number) => void
@@ -91,6 +92,7 @@ export function openLiveSession(
   let said: 'nothing' | 'refusal' | 'ending' | 'dropped' = 'nothing'
   let leaving = false
   let headerGiven = false
+  let stillGiven = false
   let lastPicturePts = -1
   let lastCaptionPts = -1
   let laying: LiveSocket | null = null
@@ -154,6 +156,12 @@ export function openLiveSession(
 
         if (socket === laying) {
           carry()
+        }
+        break
+      case 'still':
+        if (socket === carrying && !stillGiven && lastPicturePts < 0) {
+          stillGiven = true
+          events.onStill(frame.payload, frame.pts)
         }
         break
       case 'captionHeader': {

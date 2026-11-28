@@ -40,6 +40,8 @@ const CAPTION: CaptionPicture = {
 
 const PING = new Uint8Array([0x01])
 
+const STILL = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
+
 class Wire implements LiveSocket {
   binaryType: BinaryType = 'blob'
 
@@ -78,6 +80,10 @@ class Wire implements LiveSocket {
     this.carry(frameOf('picture', pts, PICTURE))
   }
 
+  still(pts: number): void {
+    this.carry(frameOf('still', pts, STILL))
+  }
+
   caption(pts: number): void {
     this.carry(frameOf('caption', pts, captionPayload(CAPTION)))
   }
@@ -99,6 +105,7 @@ function bench(context: TestContext) {
   const heard = {
     headers: [] as Uint8Array[],
     pictures: [] as number[],
+    stills: [] as [Uint8Array, number][],
     captions: [] as number[],
     broadcast: [] as [number, number][],
     canvases: 0,
@@ -111,6 +118,7 @@ function bench(context: TestContext) {
   const events: LiveSessionEvents = {
     onHeader: (init) => heard.headers.push(init),
     onPicture: (_payload, pts) => heard.pictures.push(pts),
+    onStill: (jpeg, pts) => heard.stills.push([jpeg, pts]),
     onCaptionCanvas: () => {
       heard.canvases += 1
     },
@@ -565,4 +573,52 @@ test('what a wire replays as it opens, before any picture and older than the cat
     [0x02, 300],
     [0x02, 600],
   ])
+})
+
+test('the still that opens a session is handed on with its clock', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].still(A_FRAGMENT)
+  wires[0].picture(A_FRAGMENT)
+
+  assert.deepEqual(heard.stills, [[STILL, A_FRAGMENT]])
+  assert.deepEqual(heard.pictures, [A_FRAGMENT])
+})
+
+test('a still that comes after the first picture is not handed on', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].picture(A_FRAGMENT)
+  wires[0].still(A_FRAGMENT * 2)
+
+  assert.deepEqual(heard.stills, [])
+})
+
+test('only the first still is handed on', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].still(A_FRAGMENT)
+  wires[0].still(A_FRAGMENT * 2)
+
+  assert.deepEqual(
+    heard.stills.map(([, pts]) => pts),
+    [A_FRAGMENT],
+  )
+})
+
+test('a fresh wire opening with a still of its own does not hand it on', (context) => {
+  const { wires, heard } = bench(context)
+
+  wires[0].header()
+  wires[0].still(A_FRAGMENT)
+  wires[0].picture(A_FRAGMENT)
+  context.mock.timers.tick(FRESH_WIRE_EVERY_MS)
+
+  wires[1].header()
+  wires[1].still(A_FRAGMENT * 2)
+  wires[1].picture(A_FRAGMENT * 2)
+
+  assert.equal(heard.stills.length, 1)
 })

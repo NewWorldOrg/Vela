@@ -5,6 +5,7 @@ export const PTS_HERTZ = 90_000
 export const LIVE_CHANNEL = {
   pictureHeader: 0x00,
   picture: 0x01,
+  still: 0x02,
   soundHeader: 0x10,
   sound: 0x11,
   captionHeader: 0x20,
