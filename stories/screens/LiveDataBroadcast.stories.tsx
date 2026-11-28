@@ -69,6 +69,7 @@ import {
   soundingModules,
 } from '@/stories/fixtures/data-broadcast'
 import { inTheApp } from '@/stories/frames'
+import { STILL_FIXTURE } from '@/stories/fixtures/stills'
 import { hearingTheSounds, type HeardSound } from '@/stories/heard-sounds'
 
 class BroadcastSocket implements LiveSocket {
@@ -121,6 +122,16 @@ function carrying(...broadcast: Uint8Array[]): OpenSocket {
   return () =>
     new BroadcastSocket([
       frameOf('control', 0, progressPayload(LOCKED)),
+      PICTURED,
+      ...broadcast.map((payload) => frameOf('dataBroadcast', 0, payload)),
+    ])
+}
+
+function carryingAStill(...broadcast: Uint8Array[]): OpenSocket {
+  return () =>
+    new BroadcastSocket([
+      frameOf('control', 0, progressPayload(LOCKED)),
+      frameOf('still', 0, STILL_FIXTURE),
       PICTURED,
       ...broadcast.map((payload) => frameOf('dataBroadcast', 0, payload)),
     ])
@@ -324,6 +335,32 @@ export const 放送が求めていなければ自動で開かない: Story = {
     await afterTheArrival(canvasElement)
     await expect(toggle).toHaveAttribute('aria-pressed', 'false')
     await expect(canvasElement.querySelector('iframe')).toBeNull()
+  },
+}
+
+export const 静止画はデータ放送の下: Story = {
+  args: { openSocket: carryingAStill(CATALOG, ...modules()) },
+  play: async ({ canvasElement }) => {
+    await opened(canvasElement)
+
+    const still = onTheScreen(canvasElement, 'live-still')
+    const picture = onTheScreen(canvasElement, 'player-picture')
+    const frame = await waitFor(() => {
+      const found = canvasElement.querySelector('iframe')
+
+      if (!found) {
+        throw new Error('the data broadcast has no frame yet')
+      }
+
+      return found
+    })
+
+    await expect(still.parentElement).toBe(picture)
+    await expect(
+      picture.compareDocumentPosition(frame) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    await expect(getComputedStyle(still).zIndex).toBe('auto')
+    await expect(getComputedStyle(frame).zIndex).toBe('1')
   },
 }
 

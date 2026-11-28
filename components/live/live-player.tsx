@@ -156,7 +156,7 @@ import {
   type OpenPlaylist,
 } from '@/lib/live-playlist'
 import { useLiveCarriage } from '@/hooks/useLiveCarriage'
-import { LiveStart } from '@/lib/live-start'
+import { LiveStart, LiveStill } from '@/lib/live-start'
 import {
   askLiveBacklog,
   askWhetherSignedOut,
@@ -337,6 +337,10 @@ export function LivePlayer({
   const [chosenSound, setChosenSound] = useState<SoundChoice | null>(null)
   const [retries, setRetries] = useState<Retries | null>(null)
   const [held, setHeld] = useState<Running | null>(null)
+  const [stillShown, setStillShown] = useState<{
+    key: string
+    href: string
+  } | null>(null)
   const [muted, setMuted] = useState(false)
   const [volume, setVolume] = useState(1)
   const [said, setSaid] = useState<{
@@ -476,6 +480,7 @@ export function LivePlayer({
     }
 
     let settled = false
+    let still: LiveStill | null = null
 
     element.playbackRate = 1
     stalls.current = 0
@@ -486,6 +491,7 @@ export function LivePlayer({
       }
 
       settled = true
+      still?.close()
       change((was) => ({ ...was, phase: 'faulted', fault: why }))
       element.pause()
     }
@@ -639,6 +645,10 @@ export function LivePlayer({
       ? new CaptionLayer(overlay.current, element, captionBoard)
       : null
 
+    still = new LiveStill(element, (href) =>
+      setStillShown(href === null ? null : { key, href }),
+    )
+
     captions.current = layer
     broadcastFeed.reset()
 
@@ -653,6 +663,7 @@ export function LivePlayer({
           feed.append(bytes)
           pictureCame()
         },
+        onStill: (jpeg) => still?.offer(jpeg),
         onCaptionCanvas: (canvas) => layer?.canvasOf(canvas),
         onCaption: (picture, pts) => layer?.offer(picture, pts),
         onDataBroadcast: (payload, pts) => {
@@ -774,6 +785,7 @@ export function LivePlayer({
       clearInterval(following)
       session.leave()
       feed.close()
+      still?.close()
       layer?.close()
       captions.current = null
       broadcastFeed.reset()
@@ -813,6 +825,8 @@ export function LivePlayer({
   const broadcastOffered = broadcast.offered && !playlist
   const hasPicture =
     phase === 'playing' || phase === 'paused' || phase === 'buffering'
+  const stillHref =
+    stillShown?.key === key && phase !== 'faulted' ? stillShown.href : undefined
 
   const capture = async () => {
     const got = await takeCapture({
@@ -1411,6 +1425,16 @@ export function LivePlayer({
                     !hasPicture && 'invisible',
                   )}
                 />
+                {stillHref && (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={stillHref}
+                    alt=""
+                    aria-hidden="true"
+                    data-slot="live-still"
+                    className="pointer-events-none absolute inset-0 size-full object-contain"
+                  />
+                )}
                 <canvas
                   ref={overlay}
                   aria-hidden="true"
@@ -1534,7 +1558,7 @@ export function LivePlayer({
               startup={running.startup}
               elapsedMs={running.elapsedMs}
               reconnecting={reconnecting}
-              brief={compact}
+              brief={compact || stillHref !== undefined}
               channelName={lead ? channel?.name : undefined}
               className={compact ? LIVE_SENDS_PLACE : undefined}
             />
