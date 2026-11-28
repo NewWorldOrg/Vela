@@ -2,7 +2,7 @@ import assert from 'node:assert/strict'
 import { test } from 'node:test'
 
 import { TARGET_SECONDS } from '@/lib/live-latency'
-import { LiveStart } from '@/lib/live-start'
+import { LiveStart, LiveStill } from '@/lib/live-start'
 
 const ON_AIR_AT = 43_210.5
 
@@ -106,4 +106,181 @@ test('a play the browser refuses is told once', async () => {
 
   assert.equal(refusals(), 1)
   assert.equal(picture.plays, 1)
+})
+
+const JPEG = new Uint8Array([0xff, 0xd8, 0xff, 0xd9])
+
+type Heard = 'playing' | 'timeupdate'
+
+class Screen {
+  currentTime = 0
+
+  readonly listening = new Map<Heard, Set<() => void>>()
+
+  addEventListener(type: Heard, listener: () => void): void {
+    const set = this.listening.get(type) ?? new Set()
+
+    set.add(listener)
+    this.listening.set(type, set)
+  }
+
+  removeEventListener(type: Heard, listener: () => void): void {
+    this.listening.get(type)?.delete(listener)
+  }
+
+  says(type: Heard): void {
+    for (const listener of this.listening.get(type) ?? []) {
+      listener()
+    }
+  }
+
+  listeners(): number {
+    return [...this.listening.values()].reduce((sum, set) => sum + set.size, 0)
+  }
+}
+
+class FramingScreen extends Screen {
+  armed: (() => void) | null = null
+
+  cancelled: number[] = []
+
+  requestVideoFrameCallback(callback: () => void): number {
+    this.armed = callback
+
+    return 7
+  }
+
+  cancelVideoFrameCallback(handle: number): void {
+    this.armed = null
+    this.cancelled.push(handle)
+  }
+
+  presents(): void {
+    const armed = this.armed
+
+    this.armed = null
+    armed?.()
+  }
+}
+
+function stillOn(screen: Screen) {
+  const shown: (string | null)[] = []
+  const made: Uint8Array[] = []
+  const freed: string[] = []
+  const still = new LiveStill(screen, (href) => shown.push(href), {
+    make: (jpeg) => {
+      made.push(jpeg)
+
+      return `blob:still-${made.length}`
+    },
+    free: (href) => freed.push(href),
+  })
+
+  return { still, shown, made, freed }
+}
+
+test('a still offered before the first picture is shown', () => {
+  const { still, shown, made } = stillOn(new FramingScreen())
+
+  still.offer(JPEG)
+
+  assert.deepEqual(made, [JPEG])
+  assert.deepEqual(shown, ['blob:still-1'])
+})
+
+test('the still is taken off and its address freed once the first picture is presented', () => {
+  const screen = new FramingScreen()
+  const { still, shown, freed } = stillOn(screen)
+
+  still.offer(JPEG)
+  screen.presents()
+
+  assert.deepEqual(shown, ['blob:still-1', null])
+  assert.deepEqual(freed, ['blob:still-1'])
+})
+
+test('a still that comes after the first picture was presented is not shown', () => {
+  const screen = new FramingScreen()
+  const { still, shown, made } = stillOn(screen)
+
+  screen.presents()
+  still.offer(JPEG)
+
+  assert.deepEqual(made, [])
+  assert.deepEqual(shown, [])
+})
+
+test('a second still does not replace the first', () => {
+  const { still, shown, made } = stillOn(new FramingScreen())
+
+  still.offer(JPEG)
+  still.offer(JPEG)
+
+  assert.equal(made.length, 1)
+  assert.deepEqual(shown, ['blob:still-1'])
+})
+
+test('closing takes the still off, frees its address and stops waiting for a frame', () => {
+  const screen = new FramingScreen()
+  const { still, shown, freed } = stillOn(screen)
+
+  still.offer(JPEG)
+  still.close()
+
+  assert.deepEqual(shown, ['blob:still-1', null])
+  assert.deepEqual(freed, ['blob:still-1'])
+  assert.equal(screen.armed, null)
+  assert.deepEqual(screen.cancelled, [7])
+
+  still.offer(JPEG)
+
+  assert.equal(shown.length, 2)
+})
+
+test('closing with no still shown tells nothing', () => {
+  const { still, shown, freed } = stillOn(new FramingScreen())
+
+  still.close()
+
+  assert.deepEqual(shown, [])
+  assert.deepEqual(freed, [])
+})
+
+test('without frame callbacks, the still stays through playing until the playhead moves on', () => {
+  const screen = new Screen()
+  const { still, shown, freed } = stillOn(screen)
+
+  screen.currentTime = ON_AIR_AT
+  still.offer(JPEG)
+  screen.says('timeupdate')
+  screen.says('playing')
+  screen.says('timeupdate')
+
+  assert.deepEqual(shown, ['blob:still-1'])
+
+  screen.currentTime = ON_AIR_AT + 0.04
+  screen.says('timeupdate')
+
+  assert.deepEqual(shown, ['blob:still-1', null])
+  assert.deepEqual(freed, ['blob:still-1'])
+})
+
+test('a playhead set before playing does not count as the picture moving', () => {
+  const screen = new Screen()
+  const { still, shown } = stillOn(screen)
+
+  still.offer(JPEG)
+  screen.currentTime = ON_AIR_AT
+  screen.says('timeupdate')
+
+  assert.deepEqual(shown, ['blob:still-1'])
+})
+
+test('closing without frame callbacks stops listening to the picture', () => {
+  const screen = new Screen()
+  const { still } = stillOn(screen)
+
+  still.close()
+
+  assert.equal(screen.listeners(), 0)
 })

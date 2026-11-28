@@ -207,6 +207,7 @@ test('a session for the address takes the wire opened ahead instead of opening i
   const events = {
     onHeader: () => {},
     onPicture: (_payload: Uint8Array, pts: number) => pictures.push(pts),
+    onStill: () => {},
     onCaptionCanvas: () => {},
     onCaption: () => {},
     onDataBroadcast: () => {},
@@ -237,6 +238,7 @@ test('a session for another address opens its own wire', (context) => {
   const events = {
     onHeader: () => {},
     onPicture: () => {},
+    onStill: () => {},
     onCaptionCanvas: () => {},
     onCaption: () => {},
     onDataBroadcast: () => {},

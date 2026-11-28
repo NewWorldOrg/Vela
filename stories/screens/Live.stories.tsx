@@ -72,6 +72,7 @@ import {
   CAPTION_CANVAS_FIXTURE,
   CAPTION_PICTURE_FIXTURE,
 } from '@/stories/fixtures/captions'
+import { STILL_FIXTURE, STILL_FIXTURE_SIZE } from '@/stories/fixtures/stills'
 import type { AskBacklog, LiveSocket, OpenSocket } from '@/lib/live-session'
 import { LiveView } from '@/components/live/live-view'
 import type { OpenPlaylist } from '@/lib/live-playlist'
@@ -216,6 +217,28 @@ const captioned = scripted((socket) => {
   socket.say(progress(SECURED))
   socket.say(CAPTION_CANVAS)
   socket.say(CAPTION_SHOWN)
+})
+
+const STILL = frameOf('still', 0, STILL_FIXTURE)
+
+const stillFirst = scripted((socket) => {
+  socket.say(progress(LOCKED))
+  socket.say(STILL)
+})
+
+const stillUnderACaption = scripted((socket) => {
+  socket.say(progress(SECURED))
+  socket.say(STILL)
+  socket.say(CAPTION_CANVAS)
+  socket.say(CAPTION_SHOWN)
+})
+
+const stillOnTheFirstWireOnly = scripted((socket) => {
+  socket.say(progress(LOCKED))
+
+  if (opened.length === 1) {
+    socket.say(STILL)
+  }
 })
 
 const uncaptioned = scripted((socket) => {
@@ -2153,6 +2176,174 @@ function captionLayer(canvasElement: HTMLElement): HTMLElement {
   }
 
   return layer
+}
+
+function theStill(canvasElement: HTMLElement): HTMLImageElement | null {
+  return canvasElement.querySelector<HTMLImageElement>(
+    '[data-slot="live-still"]',
+  )
+}
+
+async function stillShown(canvasElement: HTMLElement): Promise<string> {
+  const still = await waitFor(() => {
+    const found = theStill(canvasElement)
+
+    if (!found) {
+      throw new Error('no still is on the screen yet')
+    }
+
+    return found
+  })
+
+  await waitFor(() => expect(still.naturalWidth).toBe(STILL_FIXTURE_SIZE.width))
+
+  return still.src
+}
+
+const framesAwaited: VideoFrameRequestCallback[] = []
+
+function presentingFramesByHand() {
+  framesAwaited.length = 0
+
+  const framing = spyOn(
+    HTMLVideoElement.prototype,
+    'requestVideoFrameCallback',
+  ).mockImplementation((callback) => {
+    framesAwaited.push(callback)
+
+    return framesAwaited.length
+  })
+  const freeing = spyOn(URL, 'revokeObjectURL')
+
+  return () => {
+    framing.mockRestore()
+    freeing.mockRestore()
+  }
+}
+
+function aFrameIsPresented() {
+  for (const callback of framesAwaited.splice(0)) {
+    callback(performance.now(), {} as VideoFrameCallbackMetadata)
+  }
+}
+
+export const 静止画が先に届き映像が出たら外す: Story = {
+  args: { openSocket: stillFirst },
+  beforeEach: presentingFramesByHand,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const href = await stillShown(canvasElement)
+    const still = theStill(canvasElement)!
+    const video = canvasElement.querySelector('video')!
+
+    await expect(livePlayer(canvasElement)).toHaveAttribute(
+      'data-phase',
+      'starting',
+    )
+    await expect(
+      canvasElement.querySelector('[data-slot="live-startup-brief"]'),
+    ).toHaveTextContent(/を準備しています/)
+    await expect(canvas.queryByText('最初の絵')).toBeNull()
+    await expect(still.getBoundingClientRect().toJSON()).toEqual(
+      video.getBoundingClientRect().toJSON(),
+    )
+    await expect(getComputedStyle(still).objectFit).toBe(
+      getComputedStyle(video).objectFit,
+    )
+
+    await userEvent.click(canvas.getByRole('button', { name: '消音' }))
+    await expect(canvas.getByRole('button', { name: '消音' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    )
+
+    opened[0].say(PICTURED)
+
+    await waitFor(() =>
+      expect(livePlayer(canvasElement)).toHaveAttribute(
+        'data-phase',
+        'buffering',
+      ),
+    )
+    await expect(canvas.getByText('バッファリング中')).toBeVisible()
+    await expect(theStill(canvasElement)).not.toBeNull()
+    await expect(URL.revokeObjectURL).not.toHaveBeenCalled()
+
+    aFrameIsPresented()
+
+    await waitFor(() => expect(theStill(canvasElement)).toBeNull())
+    await expect(URL.revokeObjectURL).toHaveBeenCalledWith(href)
+  },
+}
+
+export const 静止画は字幕の下: Story = {
+  args: { openSocket: stillUnderACaption },
+  play: async ({ canvasElement }) => {
+    await stillShown(canvasElement)
+    await waitFor(() =>
+      expect(captionLayer(canvasElement)).toHaveAttribute(
+        'data-caption',
+        'shown',
+      ),
+    )
+
+    const still = theStill(canvasElement)!
+    const layer = captionLayer(canvasElement)
+
+    await expect(still.parentElement).toBe(layer.parentElement)
+    await expect(
+      still.compareDocumentPosition(layer) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy()
+    await expect(getComputedStyle(still).zIndex).toBe('auto')
+    await expect(getComputedStyle(layer).zIndex).toBe('auto')
+  },
+}
+
+export const 静止画は局を替えたら外す: Story = {
+  args: { openSocket: stillOnTheFirstWireOnly },
+  beforeEach: presentingFramesByHand,
+  render: (args) => <Choosing {...args} from={CHOSEN.watching!.channel.id} />,
+  play: async ({ canvasElement }) => {
+    const href = await stillShown(canvasElement)
+    const list = canvasElement.querySelector<HTMLElement>(
+      '[data-slot="channel-list"]',
+    )!
+
+    await userEvent.click(
+      within(list).getByRole('button', { name: /中央テレビ1/ }),
+    )
+
+    await waitFor(() => expect(opened).toHaveLength(2))
+    await waitFor(() => expect(theStill(canvasElement)).toBeNull())
+    await expect(URL.revokeObjectURL).toHaveBeenCalledWith(href)
+  },
+}
+
+export const 静止画は撤収で外す: Story = {
+  args: { openSocket: stillFirst },
+  beforeEach: presentingFramesByHand,
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+    const href = await stillShown(canvasElement)
+
+    opened[0].say(frameOf('control', 0, endingPayload('wentQuiet')))
+
+    await expect(
+      await canvas.findByText('映像が届かなくなりました'),
+    ).toBeVisible()
+    await expect(theStill(canvasElement)).toBeNull()
+    await expect(URL.revokeObjectURL).toHaveBeenCalledWith(href)
+  },
+}
+
+export const 静止画が届かなければ今までどおり: Story = {
+  args: { openSocket: stalling },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement)
+
+    await expect(await canvas.findByText('バッファリング中')).toBeVisible()
+    await expect(theStill(canvasElement)).toBeNull()
+  },
 }
 
 export const 字幕あり: Story = {
